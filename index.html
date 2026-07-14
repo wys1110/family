@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f3ef" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-date-tap" />
+    <link rel="stylesheet" href="styles.css?v=20260715-family-members" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -97,10 +97,6 @@
             </div>
             <div class="quick-options">
               <div class="member-chips" id="quickMemberChips" role="group" aria-label="가족 구성원 선택">
-                <button class="member-chip selected" type="button" data-member="가족">가족</button>
-                <button class="member-chip" type="button" data-member="아빠">아빠</button>
-                <button class="member-chip" type="button" data-member="엄마">엄마</button>
-                <button class="member-chip" type="button" data-member="도윤">도윤</button>
               </div>
               <button class="quick-time-button" id="quickTimeButton" type="button" aria-expanded="false">＋ 시간</button>
               <input class="quick-time-input" id="quickEventTime" type="time" aria-label="일정 시간" hidden />
@@ -206,10 +202,6 @@
         <fieldset class="member-fieldset">
           <legend>누구 일정인가요?</legend>
           <div class="member-selector" id="eventMemberSelector">
-            <button class="selected" type="button" data-member="가족"><i></i>가족</button>
-            <button type="button" data-member="아빠"><i></i>아빠</button>
-            <button type="button" data-member="엄마"><i></i>엄마</button>
-            <button type="button" data-member="도윤"><i></i>도윤</button>
           </div>
           <input id="eventMember" type="hidden" value="가족" />
         </fieldset>
@@ -218,6 +210,24 @@
           <button type="button" class="danger-button" id="deleteEventButton">삭제</button>
           <button type="submit" class="primary-button" id="eventSubmitButton">일정 추가</button>
         </div>
+      </form>
+    </dialog>
+
+    <dialog id="memberDialog" class="sheet-dialog compact">
+      <form id="memberForm" method="dialog">
+        <div class="sheet-handle"></div>
+        <div class="dialog-header">
+          <div><p class="eyebrow">가족 캘린더</p><h2>가족 구성원 추가</h2></div>
+          <button type="button" class="close-button" data-close="memberDialog" aria-label="닫기">×</button>
+        </div>
+        <p class="member-dialog-copy">이름과 색상을 정하면 모든 일정 화면에서 같은 색으로 구분돼요.</p>
+        <label>이름<input id="memberName" maxlength="20" placeholder="예: 할머니, 민준" autocomplete="off" required /></label>
+        <fieldset class="color-fieldset">
+          <legend>대표 색상</legend>
+          <input id="memberColor" type="hidden" />
+          <div class="member-color-palette" id="memberColorPalette"></div>
+        </fieldset>
+        <button class="primary-button member-submit-button" type="submit">구성원 추가하기</button>
       </form>
     </dialog>
 
@@ -325,8 +335,8 @@
 
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
-    <script src="config.js?v=20260715-date-tap"></script>
+    <script src="config.js?v=20260715-family-members"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-date-tap"></script>
+    <script src="app.js?v=20260715-family-members"></script>
   </body>
 </html>
