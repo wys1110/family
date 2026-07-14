@@ -34,10 +34,17 @@ create table public.growth_entries (
   household_id uuid not null references public.households(id) on delete cascade,
   title text not null check (char_length(title) between 1 and 60),
   entry_date date not null,
-  category text not null default '기타' check (category in ('첫 순간', '건강', '수유·이유식', '수면', '놀이', '기타')),
+  entry_time time,
+  category text not null default '기타' check (category in ('첫 순간', '성장', '수유·이유식', '수면', '기저귀', '건강·병원', '놀이', '기타')),
   height_cm numeric(5,1) check (height_cm > 0 and height_cm <= 250),
   weight_kg numeric(5,2) check (weight_kg > 0 and weight_kg <= 200),
+  head_cm numeric(4,1) check (head_cm > 0 and head_cm <= 100),
+  feeding_ml integer check (feeding_ml > 0 and feeding_ml <= 3000),
+  sleep_minutes integer check (sleep_minutes > 0 and sleep_minutes <= 1440),
+  temperature_c numeric(3,1) check (temperature_c between 30 and 45),
+  diaper_kind text check (diaper_kind in ('소변', '대변', '소변·대변')),
   note text check (char_length(note) <= 1000),
+  photo_paths text[] not null default '{}',
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -64,6 +71,20 @@ create policy "members can view growth entries" on public.growth_entries for sel
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete growth entries" on public.growth_entries for delete to authenticated using (public.is_household_member(household_id));
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('growth-photos', 'growth-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+create policy "family can view growth photos" on storage.objects for select to authenticated
+using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+create policy "family can upload growth photos" on storage.objects for insert to authenticated
+with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+create policy "family can update growth photos" on storage.objects for update to authenticated
+using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid))
+with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+create policy "family can delete growth photos" on storage.objects for delete to authenticated
+using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
 
 create or replace function public.create_household(household_name text)
 returns uuid language plpgsql security definer set search_path = public

@@ -1,10 +1,15 @@
 const MEMBERS = ["가족", "아빠", "엄마", "도윤"];
 const STORAGE_KEY = "family-calendar-events-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
+const GROWTH_PHOTO_BUCKET = "growth-photos";
+const MAX_GROWTH_PHOTOS = 4;
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const ALLOWED_GROWTH_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
+let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], newPhotos: [] };
 
 function dateKey(date) {
   const y = date.getFullYear();
@@ -66,13 +71,42 @@ async function loadRemoteData() {
     state.supabase.from("growth_entries").select("*").eq("household_id", state.household.id).order("entry_date", { ascending: false }),
   ]);
   if (eventsResult.error) toast("일정을 불러오지 못했어요"); else state.events = eventsResult.data.map(fromRemote);
-  if (growthResult.error) toast("성장일기를 불러오지 못했어요"); else state.growthEntries = growthResult.data.map(fromGrowthRemote);
+  if (growthResult.error) toast("성장일기를 불러오지 못했어요");
+  else {
+    state.growthEntries = growthResult.data.map(fromGrowthRemote);
+    await hydrateGrowthPhotoUrls(state.growthEntries);
+  }
 }
 
 function fromRemote(row) { return { id: row.id, title: row.title, date: row.event_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }; }
 function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
-function fromGrowthRemote(row) { return { id: row.id, title: row.title, date: row.entry_date, category: row.category, height: row.height_cm, weight: row.weight_kg, note: row.note || "" }; }
-function toGrowthRemote(entry) { return { id: entry.id, household_id: state.household.id, title: entry.title, entry_date: entry.date, category: entry.category, height_cm: entry.height || null, weight_kg: entry.weight || null, note: entry.note || null, created_by: state.session.user.id }; }
+function fromGrowthRemote(row) {
+  return {
+    id: row.id, title: row.title, date: row.entry_date, time: row.entry_time?.slice(0, 5) || "", category: row.category,
+    height: row.height_cm, weight: row.weight_kg, head: row.head_cm, feedingMl: row.feeding_ml,
+    sleepMinutes: row.sleep_minutes, temperature: row.temperature_c, diaperKind: row.diaper_kind || "",
+    note: row.note || "", photoPaths: row.photo_paths || [], photoUrls: [],
+  };
+}
+function toGrowthRemote(entry) {
+  return {
+    id: entry.id, household_id: state.household.id, title: entry.title, entry_date: entry.date,
+    entry_time: entry.time || null, category: entry.category, height_cm: entry.height || null,
+    weight_kg: entry.weight || null, head_cm: entry.head || null, feeding_ml: entry.feedingMl || null,
+    sleep_minutes: entry.sleepMinutes || null, temperature_c: entry.temperature || null,
+    diaper_kind: entry.diaperKind || null, note: entry.note || null, photo_paths: entry.photoPaths || [],
+    created_by: state.session.user.id,
+  };
+}
+
+async function hydrateGrowthPhotoUrls(entries) {
+  const paths = [...new Set(entries.flatMap((entry) => entry.photoPaths || []))];
+  if (!state.supabase || !paths.length) return;
+  const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600);
+  if (error) return;
+  const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
+  entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
+}
 
 function bindUi() {
   $("#prevMonth").addEventListener("click", () => changeMonth(-1));
@@ -94,6 +128,10 @@ function bindUi() {
   document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.addEventListener("click", () => applyDateShortcut(button.dataset.dateShortcut)));
   $("#growthForm").addEventListener("submit", saveGrowthEntry);
   $("#deleteGrowthButton").addEventListener("click", deleteGrowthEntry);
+  $("#growthCategory").addEventListener("change", syncGrowthFields);
+  $("#growthPhotos").addEventListener("change", addGrowthPhotos);
+  $("#growthPhotoPreview").addEventListener("click", removeGrowthPhoto);
+  document.querySelectorAll("[data-growth-quick]").forEach((button) => button.addEventListener("click", () => openGrowthDialog(null, button.dataset.growthQuick)));
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
 }
 
@@ -339,33 +377,175 @@ async function deleteEvent() {
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
 
 function renderGrowth() {
-  const entries = [...state.growthEntries].sort((a, b) => b.date.localeCompare(a.date));
+  const entries = [...state.growthEntries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
   $("#growthCount").textContent = `${entries.length}개 기록`;
   const latestSize = entries.find((entry) => entry.height || entry.weight);
   $("#growthSummary").textContent = latestSize ? [latestSize.height && `키 ${latestSize.height}cm`, latestSize.weight && `몸무게 ${latestSize.weight}kg`].filter(Boolean).join(" · ") : entries.length ? `${entries.length}개의 순간을 간직했어요` : "첫 기록을 남겨보세요";
   const list = $("#growthList");
   if (!entries.length) { list.innerHTML = `<div class="empty-state">아직 성장 기록이 없어요.<br />오늘의 도윤이를 남겨보세요.</div>`; return; }
-  list.innerHTML = entries.map((entry) => `<button class="growth-entry" data-id="${entry.id}"><span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span><span class="growth-body"><i>${escapeHtml(entry.category)}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || [entry.height && `키 ${entry.height}cm`, entry.weight && `몸무게 ${entry.weight}kg`].filter(Boolean).join(" · "))}</small></span><span class="growth-arrow">›</span></button>`).join("");
+  list.innerHTML = entries.map((entry) => {
+    const preview = entry.photoUrls?.find(Boolean);
+    const meta = growthEntryMeta(entry);
+    return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count">📷 ${entry.photoPaths.length}</span>` : `<span class="growth-arrow">›</span>`}</button>`;
+  }).join("");
   list.querySelectorAll(".growth-entry").forEach((item) => item.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === item.dataset.id))));
 }
 
-function openGrowthDialog(entry = null) {
+function growthEntryMeta(entry) {
+  const parts = [];
+  if (entry.height) parts.push(`키 ${entry.height}cm`);
+  if (entry.weight) parts.push(`몸무게 ${entry.weight}kg`);
+  if (entry.head) parts.push(`머리둘레 ${entry.head}cm`);
+  if (entry.feedingMl) parts.push(`${entry.feedingMl}ml`);
+  if (entry.sleepMinutes) parts.push(formatDuration(entry.sleepMinutes));
+  if (entry.temperature) parts.push(`${entry.temperature}°C`);
+  if (entry.diaperKind) parts.push(entry.diaperKind);
+  return parts.join(" · ");
+}
+
+function formatDuration(minutes) {
+  const hours = Math.floor(minutes / 60); const rest = minutes % 60;
+  return [hours && `${hours}시간`, rest && `${rest}분`].filter(Boolean).join(" ") || "0분";
+}
+
+function defaultGrowthTitle(category) {
+  return ({ "수유·이유식": "수유 기록", "수면": "수면 기록", "기저귀": "기저귀 기록", "건강·병원": "건강 기록", "성장": "성장 측정", "첫 순간": "새로운 첫 순간", "놀이": "오늘의 놀이", "기타": "도윤이 기록" })[category] || "도윤이 기록";
+}
+
+function openGrowthDialog(entry = null, category = "첫 순간") {
   $("#growthDialogTitle").textContent = entry ? "성장 기록 수정" : "새 성장 기록";
-  $("#growthId").value = entry?.id || ""; $("#growthEntryTitle").value = entry?.title || ""; $("#growthDate").value = entry?.date || dateKey(new Date()); $("#growthCategory").value = entry?.category || "첫 순간"; $("#growthHeight").value = entry?.height || ""; $("#growthWeight").value = entry?.weight || ""; $("#growthNote").value = entry?.note || "";
+  resetGrowthPhotoDraft();
+  growthPhotoDraft.existingPaths = [...(entry?.photoPaths || [])];
+  growthPhotoDraft.existingUrls = [...(entry?.photoUrls || [])];
+  $("#growthId").value = entry?.id || "";
+  $("#growthEntryTitle").value = entry?.title || "";
+  $("#growthDate").value = entry?.date || dateKey(new Date());
+  $("#growthTime").value = entry?.time || new Date().toTimeString().slice(0, 5);
+  $("#growthCategory").value = entry?.category || category;
+  $("#growthHeight").value = entry?.height || ""; $("#growthWeight").value = entry?.weight || ""; $("#growthHead").value = entry?.head || "";
+  $("#growthFeedingMl").value = entry?.feedingMl || ""; $("#growthSleepMinutes").value = entry?.sleepMinutes || "";
+  $("#growthTemperature").value = entry?.temperature || ""; $("#growthDiaperKind").value = entry?.diaperKind || "";
+  $("#growthNote").value = entry?.note || "";
+  syncGrowthFields(); renderGrowthPhotoPreview();
   $("#deleteGrowthButton").classList.toggle("visible", Boolean(entry)); $("#growthDialog").showModal(); setTimeout(() => $("#growthEntryTitle").focus(), 100);
 }
+
+function syncGrowthFields() {
+  const category = $("#growthCategory").value;
+  document.querySelectorAll("[data-growth-fields]").forEach((group) => { group.hidden = group.dataset.growthFields !== category; });
+  const placeholders = { "수유·이유식": "예: 분유를 맛있게 먹었어요", "수면": "예: 낮잠을 푹 잤어요", "기저귀": "예: 기저귀 갈았어요", "건강·병원": "예: 예방접종 다녀왔어요", "성장": "예: 한 달 성장 측정", "첫 순간": "예: 처음으로 뒤집었어요" };
+  $("#growthEntryTitle").placeholder = placeholders[category] || "오늘의 도윤이를 적어주세요";
+}
+
+function resetGrowthPhotoDraft() {
+  growthPhotoDraft.newPhotos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+  growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], newPhotos: [] };
+  $("#growthPhotos").value = "";
+}
+
+async function addGrowthPhotos(event) {
+  const files = [...event.target.files]; event.target.value = "";
+  if (!state.supabase || !state.household) return toast("사진은 로그인한 가족 공간에서 저장할 수 있어요");
+  const available = MAX_GROWTH_PHOTOS - growthPhotoDraft.existingPaths.length - growthPhotoDraft.newPhotos.length;
+  if (available <= 0) return toast("사진은 기록당 4장까지 올릴 수 있어요");
+  for (const file of files.slice(0, available)) {
+    if (!ALLOWED_GROWTH_PHOTO_TYPES.has(file.type)) { toast("JPG, PNG, WebP 또는 HEIC 사진만 올릴 수 있어요"); continue; }
+    if (file.size > MAX_PHOTO_BYTES) { toast(`${file.name}은 10MB보다 커요`); continue; }
+    const prepared = await prepareGrowthPhoto(file);
+    growthPhotoDraft.newPhotos.push({ id: uid(), file: prepared, previewUrl: URL.createObjectURL(prepared) });
+  }
+  if (files.length > available) toast(`사진은 최대 ${MAX_GROWTH_PHOTOS}장까지 선택돼요`);
+  renderGrowthPhotoPreview();
+}
+
+async function prepareGrowthPhoto(file) {
+  if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size < 600 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1) { bitmap.close(); return file; }
+    const canvas = document.createElement("canvas"); canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", .84));
+    return blob || file;
+  } catch { return file; }
+}
+
+function renderGrowthPhotoPreview() {
+  const root = $("#growthPhotoPreview"); const items = [];
+  growthPhotoDraft.existingPaths.forEach((path, index) => items.push({ type: "existing", key: path, url: growthPhotoDraft.existingUrls[index] }));
+  growthPhotoDraft.newPhotos.forEach((photo) => items.push({ type: "new", key: photo.id, url: photo.previewUrl }));
+  root.innerHTML = items.map((item) => `<figure class="growth-photo-item"><img src="${escapeHtml(item.url || "")}" alt="선택한 도윤이 사진" /><button type="button" data-photo-type="${item.type}" data-photo-key="${escapeHtml(item.key)}" aria-label="사진 제거">×</button></figure>`).join("");
+  $("#growthPhotoAddButton").hidden = items.length >= MAX_GROWTH_PHOTOS;
+}
+
+function removeGrowthPhoto(event) {
+  const button = event.target.closest("[data-photo-key]"); if (!button) return;
+  if (button.dataset.photoType === "existing") {
+    const index = growthPhotoDraft.existingPaths.indexOf(button.dataset.photoKey);
+    if (index >= 0) { growthPhotoDraft.removedPaths.push(growthPhotoDraft.existingPaths[index]); growthPhotoDraft.existingPaths.splice(index, 1); growthPhotoDraft.existingUrls.splice(index, 1); }
+  } else {
+    const index = growthPhotoDraft.newPhotos.findIndex((photo) => photo.id === button.dataset.photoKey);
+    if (index >= 0) { URL.revokeObjectURL(growthPhotoDraft.newPhotos[index].previewUrl); growthPhotoDraft.newPhotos.splice(index, 1); }
+  }
+  renderGrowthPhotoPreview();
+}
+
+async function uploadGrowthPhotos(entryId) {
+  const uploaded = [];
+  for (const photo of growthPhotoDraft.newPhotos) {
+    const type = photo.file.type || "image/jpeg"; const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg";
+    const path = `${state.household.id}/${entryId}/${uid()}.${extension}`;
+    const { error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, photo.file, { contentType: type, cacheControl: "3600", upsert: false });
+    if (error) {
+      if (uploaded.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploaded);
+      throw error;
+    }
+    uploaded.push(path);
+  }
+  return uploaded;
+}
+
 async function saveGrowthEntry(event) {
   event.preventDefault();
   if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
-  const entry = { id: $("#growthId").value || uid(), title: $("#growthEntryTitle").value.trim(), date: $("#growthDate").value, category: $("#growthCategory").value, height: $("#growthHeight").value ? Number($("#growthHeight").value) : null, weight: $("#growthWeight").value ? Number($("#growthWeight").value) : null, note: $("#growthNote").value.trim() };
-  if (state.supabase && state.session) { const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)); if (error) return toast("성장 기록을 저장하지 못했어요"); }
+  const category = $("#growthCategory").value;
+  const entry = {
+    id: $("#growthId").value || uid(), title: $("#growthEntryTitle").value.trim() || defaultGrowthTitle(category),
+    date: $("#growthDate").value, time: $("#growthTime").value, category,
+    height: category === "성장" ? numberOrNull($("#growthHeight").value) : null,
+    weight: category === "성장" ? numberOrNull($("#growthWeight").value) : null,
+    head: category === "성장" ? numberOrNull($("#growthHead").value) : null,
+    feedingMl: category === "수유·이유식" ? numberOrNull($("#growthFeedingMl").value) : null,
+    sleepMinutes: category === "수면" ? numberOrNull($("#growthSleepMinutes").value) : null,
+    temperature: category === "건강·병원" ? numberOrNull($("#growthTemperature").value) : null,
+    diaperKind: category === "기저귀" ? $("#growthDiaperKind").value : "",
+    note: $("#growthNote").value.trim(), photoPaths: [...growthPhotoDraft.existingPaths], photoUrls: [...growthPhotoDraft.existingUrls],
+  };
+  let uploadedPaths = [];
+  if (state.supabase && state.session) {
+    try { uploadedPaths = await uploadGrowthPhotos(entry.id); } catch { return toast("사진을 올리지 못했어요. 다시 시도해 주세요"); }
+    entry.photoPaths.push(...uploadedPaths);
+    const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+    if (error) {
+      if (uploadedPaths.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploadedPaths);
+      return toast("성장 기록을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
+    }
+    if (growthPhotoDraft.removedPaths.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(growthPhotoDraft.removedPaths);
+    await hydrateGrowthPhotoUrls([entry]);
+  }
   const index = state.growthEntries.findIndex((item) => item.id === entry.id); if (index >= 0) state.growthEntries[index] = entry; else state.growthEntries.push(entry);
-  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); $("#growthDialog").close(); renderGrowth(); toast("도윤이의 오늘을 기록했어요");
+  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast("도윤이의 오늘을 기록했어요");
 }
+function numberOrNull(value) { return value === "" ? null : Number(value); }
 async function deleteGrowthEntry() {
   const id = $("#growthId").value; if (!id || !confirm("이 성장 기록을 삭제할까요?")) return;
-  if (state.supabase && state.session) { const { error } = await state.supabase.from("growth_entries").delete().eq("id", id); if (error) return toast("기록을 삭제하지 못했어요"); }
-  state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); $("#growthDialog").close(); renderGrowth(); toast("성장 기록을 삭제했어요");
+  const target = state.growthEntries.find((entry) => entry.id === id);
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("growth_entries").delete().eq("id", id); if (error) return toast("기록을 삭제하지 못했어요");
+    if (target?.photoPaths?.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths);
+  }
+  state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast("성장 기록을 삭제했어요");
 }
 
 function openAccountDialog() { renderAccount(); $("#accountDialog").showModal(); }
