@@ -44,7 +44,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 ## 주요 기능
 
 - 월간 달력 및 오늘 일정
-- 일정 추가·수정·삭제
+- 일정 추가·수정·삭제 및 시작일–종료일 범위 지정
 - 아빠·엄마·도윤 구성원별 표시
 - 브라우저 로컬 저장
 - Supabase 이메일 로그인 및 가족 초대 코드
@@ -57,3 +57,5 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 이미 초기 스키마를 적용한 프로젝트에서 성장일기를 추가하려면 SQL Editor에서 [`supabase/migrations/20260714_growth_diary.sql`](supabase/migrations/20260714_growth_diary.sql)을 한 번 실행합니다.
 
 기존 성장일기에 상세 기록과 사진 업로드를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_growth_records_and_photos.sql`](supabase/migrations/20260715_growth_records_and_photos.sql)을 한 번 실행합니다. 이 마이그레이션은 비공개 `growth-photos` 버킷과 가족 단위 Storage RLS 정책도 함께 만듭니다.
+
+기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.
