@@ -21,6 +21,7 @@ create table public.events (
   household_id uuid not null references public.households(id) on delete cascade,
   title text not null check (char_length(title) between 1 and 60),
   event_date date not null,
+  event_end_date date not null check (event_end_date >= event_date),
   event_time time,
   member text not null default '가족' check (member in ('가족', '아빠', '엄마', '도윤')),
   note text check (char_length(note) <= 300),
