@@ -1,15 +1,19 @@
 const MEMBERS = ["가족", "아빠", "엄마", "도윤"];
 const STORAGE_KEY = "family-calendar-events-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
+const BABY_STORAGE_KEY = "family-babies-v1";
+const ACTIVE_BABY_KEY = "family-active-baby-v1";
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_GROWTH_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
 let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], newPhotos: [] };
+let activeQuickCategory = null;
+let activeQuickPresets = [];
 
 function dateKey(date) {
   const y = date.getFullYear();
@@ -65,12 +69,14 @@ async function bootstrapData() {
   if (state.supabase && state.session) {
     const { data: memberships } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
     state.household = memberships?.[0]?.households || null;
-    if (state.household) await loadRemoteData(); else { state.events = []; state.growthEntries = []; }
+    if (state.household) await loadRemoteData(); else { state.babies = []; state.events = []; state.growthEntries = []; }
   } else {
     state.household = null;
+    state.babies = JSON.parse(localStorage.getItem(BABY_STORAGE_KEY) || "[]");
     state.events = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeEvent);
     state.growthEntries = JSON.parse(localStorage.getItem(GROWTH_STORAGE_KEY) || "[]");
   }
+  selectInitialBaby();
   render();
   updateAuthGate();
   if (state.session && !state.household && !state.onboardingPrompted) {
@@ -80,10 +86,12 @@ async function bootstrapData() {
 }
 
 async function loadRemoteData() {
-  const [eventsResult, growthResult] = await Promise.all([
+  const [babiesResult, eventsResult, growthResult] = await Promise.all([
+    state.supabase.from("babies").select("*").eq("household_id", state.household.id).order("birth_date"),
     state.supabase.from("events").select("*").eq("household_id", state.household.id).order("event_date"),
     state.supabase.from("growth_entries").select("*").eq("household_id", state.household.id).order("entry_date", { ascending: false }),
   ]);
+  if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요"); else state.babies = babiesResult.data.map(fromBabyRemote);
   if (eventsResult.error) toast("일정을 불러오지 못했어요"); else state.events = eventsResult.data.map(fromRemote);
   if (growthResult.error) toast("성장일기를 불러오지 못했어요");
   else {
@@ -94,23 +102,33 @@ async function loadRemoteData() {
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
 function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_end_date: event.endDate || event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
+function fromBabyRemote(row) { return { id: row.id, name: row.name, birthDate: row.birth_date, birthTime: row.birth_time?.slice(0, 5) || "", sex: row.sex || "", birthWeight: row.birth_weight_kg, birthHeight: row.birth_height_cm }; }
+function toBabyRemote(baby) { return { id: baby.id, household_id: state.household.id, name: baby.name, birth_date: baby.birthDate, birth_time: baby.birthTime || null, sex: baby.sex || null, birth_weight_kg: baby.birthWeight || null, birth_height_cm: baby.birthHeight || null, created_by: state.session.user.id }; }
 function fromGrowthRemote(row) {
   return {
-    id: row.id, title: row.title, date: row.entry_date, time: row.entry_time?.slice(0, 5) || "", category: row.category,
+    id: row.id, babyId: row.baby_id || null, title: row.title, date: row.entry_date, time: row.entry_time?.slice(0, 5) || "", category: row.category,
     height: row.height_cm, weight: row.weight_kg, head: row.head_cm, feedingMl: row.feeding_ml,
+    feedingType: row.feeding_type || "", feedingSide: row.feeding_side || "", feedingMinutes: row.feeding_minutes,
     sleepMinutes: row.sleep_minutes, temperature: row.temperature_c, diaperKind: row.diaper_kind || "",
     note: row.note || "", photoPaths: row.photo_paths || [], photoUrls: [],
   };
 }
 function toGrowthRemote(entry) {
   return {
-    id: entry.id, household_id: state.household.id, title: entry.title, entry_date: entry.date,
+    id: entry.id, household_id: state.household.id, baby_id: entry.babyId || state.activeBabyId, title: entry.title, entry_date: entry.date,
     entry_time: entry.time || null, category: entry.category, height_cm: entry.height || null,
     weight_kg: entry.weight || null, head_cm: entry.head || null, feeding_ml: entry.feedingMl || null,
+    feeding_type: entry.feedingType || null, feeding_side: entry.feedingSide || null, feeding_minutes: entry.feedingMinutes || null,
     sleep_minutes: entry.sleepMinutes || null, temperature_c: entry.temperature || null,
     diaper_kind: entry.diaperKind || null, note: entry.note || null, photo_paths: entry.photoPaths || [],
     created_by: state.session.user.id,
   };
+}
+
+function selectInitialBaby() {
+  const saved = localStorage.getItem(ACTIVE_BABY_KEY);
+  state.activeBabyId = state.babies.some((baby) => baby.id === saved) ? saved : state.babies[0]?.id || null;
+  if (state.activeBabyId) localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId);
 }
 
 async function hydrateGrowthPhotoUrls(entries) {
@@ -147,7 +165,15 @@ function bindUi() {
   $("#growthCategory").addEventListener("change", syncGrowthFields);
   $("#growthPhotos").addEventListener("change", addGrowthPhotos);
   $("#growthPhotoPreview").addEventListener("click", removeGrowthPhoto);
-  document.querySelectorAll("[data-growth-quick]").forEach((button) => button.addEventListener("click", () => openGrowthDialog(null, button.dataset.growthQuick)));
+  document.querySelectorAll("[data-growth-quick]").forEach((button) => button.addEventListener("click", () => openGrowthQuick(button.dataset.growthQuick)));
+  $("#addBabyButton").addEventListener("click", () => openBabyDialog());
+  $("#babyEmptyState").addEventListener("click", (event) => { if (event.target.closest("[data-open-baby]")) openBabyDialog(); });
+  $("#editBabyButton").addEventListener("click", () => openBabyDialog(activeBaby()));
+  $("#babyForm").addEventListener("submit", saveBaby);
+  $("#babySelector").addEventListener("click", selectBabyFromEvent);
+  $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
+  $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
+  $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
 }
 
@@ -426,18 +452,114 @@ async function deleteEvent() {
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
 
 function renderGrowth() {
-  const entries = [...state.growthEntries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
+  const baby = activeBaby();
+  $("#babyEmptyState").hidden = Boolean(baby);
+  $("#babyJournalContent").hidden = !baby;
+  if (!baby) return;
+
+  renderBabyProfile(baby);
+  const allEntries = activeBabyEntries();
+  renderTodayCareSummary(allEntries);
+  renderGrowthInsights(allEntries);
+  renderRecentPhotos(allEntries);
+  renderGrowthFilters();
+  const entries = filterGrowthEntries(allEntries).sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
   $("#growthCount").textContent = `${entries.length}개 기록`;
-  const latestSize = entries.find((entry) => entry.height || entry.weight);
-  $("#growthSummary").textContent = latestSize ? [latestSize.height && `키 ${latestSize.height}cm`, latestSize.weight && `몸무게 ${latestSize.weight}kg`].filter(Boolean).join(" · ") : entries.length ? `${entries.length}개의 순간을 간직했어요` : "첫 기록을 남겨보세요";
   const list = $("#growthList");
-  if (!entries.length) { list.innerHTML = `<div class="empty-state">아직 성장 기록이 없어요.<br />오늘의 도윤이를 남겨보세요.</div>`; return; }
+  if (!entries.length) { list.innerHTML = `<div class="empty-state premium-empty"><strong>아직 표시할 기록이 없어요</strong><span>빠른 기록으로 ${escapeHtml(baby.name)}의 오늘을 남겨보세요.</span></div>`; return; }
   list.innerHTML = entries.map((entry) => {
     const preview = entry.photoUrls?.find(Boolean);
     const meta = growthEntryMeta(entry);
-    return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count">📷 ${entry.photoPaths.length}</span>` : `<span class="growth-arrow">›</span>`}</button>`;
+    return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count"><b>${entry.photoPaths.length}</b> photos</span>` : `<span class="growth-arrow">›</span>`}</button>`;
   }).join("");
   list.querySelectorAll(".growth-entry").forEach((item) => item.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === item.dataset.id))));
+}
+
+function activeBaby() { return state.babies.find((baby) => baby.id === state.activeBabyId) || null; }
+function activeBabyEntries() {
+  if (!state.activeBabyId) return [];
+  return state.growthEntries.filter((entry) => entry.babyId === state.activeBabyId || (!entry.babyId && state.babies.length === 1));
+}
+
+function renderBabyProfile(baby) {
+  $("#babySelector").hidden = state.babies.length < 2;
+  $("#babySelector").innerHTML = state.babies.map((item) => `<button type="button" class="${item.id === baby.id ? "active" : ""}" data-baby-id="${item.id}"><span>${escapeHtml(item.name.charAt(0))}</span>${escapeHtml(item.name)}</button>`).join("");
+  $("#babyMonogram").textContent = baby.name.charAt(0);
+  $("#activeBabyName").textContent = baby.name;
+  const days = daysFromBirth(baby.birthDate);
+  const birth = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(parseDate(baby.birthDate));
+  $("#babyBirthLabel").textContent = `${birth} 태어남`;
+  if (days >= 0) {
+    $("#babyDday").innerHTML = `<small>D-DAY</small><strong>D+${days}</strong>`;
+    $("#babyAgeLabel").textContent = `태어난 지 ${days + 1}일째`;
+  } else {
+    $("#babyDday").innerHTML = `<small>만날 날까지</small><strong>D${days}</strong>`;
+    $("#babyAgeLabel").textContent = `${Math.abs(days)}일 남았어요`;
+  }
+}
+
+function daysFromBirth(birthDate) {
+  const [y, m, d] = birthDate.split("-").map(Number); const today = new Date();
+  return Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(y, m - 1, d)) / 86400000);
+}
+
+function renderTodayCareSummary(entries) {
+  const today = dateKey(new Date()); const items = entries.filter((entry) => entry.date === today);
+  const feeding = items.filter((entry) => entry.category === "수유·이유식");
+  const sleep = items.filter((entry) => entry.category === "수면");
+  const diapers = items.filter((entry) => entry.category === "기저귀");
+  const feedingMl = feeding.reduce((sum, entry) => sum + (entry.feedingMl || 0), 0);
+  const sleepMinutes = sleep.reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0);
+  const cards = [
+    ["수유", feedingMl ? `${feedingMl}ml` : `${feeding.length}회`, `${feeding.length}회 기록`],
+    ["수면", sleepMinutes ? formatDuration(sleepMinutes) : `${sleep.length}회`, `${sleep.length}회 기록`],
+    ["기저귀", `${diapers.length}회`, diapers.length ? "오늘 교체" : "기록 없음"],
+    ["오늘", `${items.length}개`, "전체 기록"],
+  ];
+  $("#todayCareSummary").innerHTML = cards.map(([label, value, note]) => `<article><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+}
+
+function renderGrowthInsights(entries) {
+  const measured = entries.filter((entry) => entry.height || entry.weight || entry.head).sort((a, b) => b.date.localeCompare(a.date));
+  const latest = measured[0]; const baby = activeBaby();
+  if (!latest) {
+    $("#growthInsightRow").innerHTML = `<article class="growth-insight-empty"><div><p class="eyebrow">GROWTH</p><strong>첫 성장 측정을 남겨보세요</strong><span>키·몸무게·머리둘레의 변화를 이어서 볼 수 있어요.</span></div><button type="button" data-growth-quick="성장">측정 기록</button></article>`;
+    $("#growthInsightRow [data-growth-quick]").addEventListener("click", () => openGrowthDialog(null, "성장"));
+    return;
+  }
+  const values = [["키", latest.height, "cm"], ["몸무게", latest.weight, "kg"], ["머리둘레", latest.head, "cm"]];
+  $("#growthInsightRow").innerHTML = `<div class="insight-title"><p class="eyebrow">LATEST GROWTH</p><strong>${escapeHtml(baby.name)}의 최근 성장</strong><span>${latest.date.replaceAll("-", ".")}</span></div>${values.map(([label, value, unit]) => `<article><span>${label}</span><strong>${value || "—"}<small>${value ? unit : ""}</small></strong></article>`).join("")}`;
+}
+
+function renderRecentPhotos(entries) {
+  const photos = [...entries].sort((a, b) => b.date.localeCompare(a.date)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry }))).filter((item) => item.url).slice(0, 6);
+  $("#recentPhotoSection").hidden = !photos.length;
+  if (!photos.length) return;
+  $("#recentPhotoCount").textContent = `${photos.length}장`;
+  $("#recentPhotoGrid").innerHTML = photos.map(({ url, entry }) => `<button type="button" data-entry-id="${entry.id}"><img src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
+  $("#recentPhotoGrid").querySelectorAll("[data-entry-id]").forEach((button) => button.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === button.dataset.entryId))));
+}
+
+function filterGrowthEntries(entries) {
+  if (state.growthFilter === "today") return entries.filter((entry) => entry.date === dateKey(new Date()));
+  if (state.growthFilter === "photo") return entries.filter((entry) => entry.photoPaths?.length);
+  if (state.growthFilter !== "all") return entries.filter((entry) => entry.category === state.growthFilter);
+  return entries;
+}
+
+function renderGrowthFilters() {
+  $("#growthFilterBar").querySelectorAll("[data-growth-filter]").forEach((button) => button.classList.toggle("active", button.dataset.growthFilter === state.growthFilter));
+}
+
+function changeGrowthFilter(event) {
+  const button = event.target.closest("[data-growth-filter]"); if (!button) return;
+  state.growthFilter = button.dataset.growthFilter; renderGrowth();
+}
+
+function selectBabyFromEvent(event) {
+  const button = event.target.closest("[data-baby-id]"); if (!button) return;
+  state.activeBabyId = button.dataset.babyId; state.growthFilter = "all";
+  localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId); renderGrowth();
 }
 
 function growthEntryMeta(entry) {
@@ -445,6 +567,8 @@ function growthEntryMeta(entry) {
   if (entry.height) parts.push(`키 ${entry.height}cm`);
   if (entry.weight) parts.push(`몸무게 ${entry.weight}kg`);
   if (entry.head) parts.push(`머리둘레 ${entry.head}cm`);
+  if (entry.feedingType) parts.push([entry.feedingType, entry.feedingSide].filter(Boolean).join(" "));
+  if (entry.feedingMinutes) parts.push(`${entry.feedingMinutes}분`);
   if (entry.feedingMl) parts.push(`${entry.feedingMl}ml`);
   if (entry.sleepMinutes) parts.push(formatDuration(entry.sleepMinutes));
   if (entry.temperature) parts.push(`${entry.temperature}°C`);
@@ -457,12 +581,60 @@ function formatDuration(minutes) {
   return [hours && `${hours}시간`, rest && `${rest}분`].filter(Boolean).join(" ") || "0분";
 }
 
+function quickPresets(category) {
+  if (category === "수유·이유식") return [
+    { label: "왼쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 10 },
+    { label: "오른쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 10 },
+    { label: "양쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 20 },
+    { label: "80 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 80 },
+    { label: "100 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 100 },
+    { label: "120 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 120 },
+  ];
+  if (category === "수면") return [30, 60, 90, 120, 180, 480].map((minutes) => ({ label: formatDuration(minutes), note: minutes >= 180 ? "긴 잠" : "수면", title: "수면 기록", sleepMinutes: minutes }));
+  if (category === "기저귀") return ["소변", "대변", "소변·대변"].map((kind) => ({ label: kind, note: "기저귀", title: "기저귀 교체", diaperKind: kind }));
+  return [];
+}
+
+function openGrowthQuick(category) {
+  if (!activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
+  const presets = quickPresets(category);
+  if (!presets.length) { openGrowthDialog(null, category); return; }
+  activeQuickCategory = category; activeQuickPresets = presets;
+  const title = category === "수유·이유식" ? "수유를 바로 기록해요" : category === "수면" ? "얼마나 잤나요?" : "기저귀 상태를 골라요";
+  $("#quickLogTitle").textContent = title;
+  $("#quickLogCopy").textContent = "가장 가까운 값을 누르면 현재 시간으로 즉시 저장됩니다.";
+  $("#quickPresetGrid").innerHTML = presets.map((preset, index) => `<button type="button" data-preset-index="${index}"><span>${escapeHtml(preset.label)}</span><small>${escapeHtml(preset.note)}</small></button>`).join("");
+  $("#quickLogDialog").showModal();
+}
+
+async function saveGrowthPresetFromEvent(event) {
+  const button = event.target.closest("[data-preset-index]"); if (!button) return;
+  const preset = activeQuickPresets[Number(button.dataset.presetIndex)]; if (!preset) return;
+  button.disabled = true;
+  const now = new Date();
+  const entry = {
+    id: uid(), babyId: state.activeBabyId, title: preset.title, date: dateKey(now), time: now.toTimeString().slice(0, 5), category: activeQuickCategory,
+    height: null, weight: null, head: null, feedingMl: preset.feedingMl || null, feedingType: preset.feedingType || "", feedingSide: preset.feedingSide || "", feedingMinutes: preset.feedingMinutes || null,
+    sleepMinutes: preset.sleepMinutes || null, temperature: null, diaperKind: preset.diaperKind || "", note: "", photoPaths: [], photoUrls: [],
+  };
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+    if (error) { button.disabled = false; return toast("기록하지 못했어요. DB 업데이트를 확인해 주세요"); }
+  }
+  state.growthEntries.push(entry);
+  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+  $("#quickLogDialog").close(); renderGrowth(); toast(`${preset.label} 기록 완료`);
+}
+
 function defaultGrowthTitle(category) {
-  return ({ "수유·이유식": "수유 기록", "수면": "수면 기록", "기저귀": "기저귀 기록", "건강·병원": "건강 기록", "성장": "성장 측정", "첫 순간": "새로운 첫 순간", "놀이": "오늘의 놀이", "기타": "도윤이 기록" })[category] || "도윤이 기록";
+  const name = activeBaby()?.name || "아기";
+  return ({ "수유·이유식": "수유 기록", "수면": "수면 기록", "기저귀": "기저귀 기록", "건강·병원": "건강 기록", "성장": "성장 측정", "첫 순간": "새로운 첫 순간", "놀이": "오늘의 놀이", "기타": `${name} 기록` })[category] || `${name} 기록`;
 }
 
 function openGrowthDialog(entry = null, category = "첫 순간") {
+  if (!entry && !activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
   $("#growthDialogTitle").textContent = entry ? "성장 기록 수정" : "새 성장 기록";
+  $("#growthDialogEyebrow").textContent = `${activeBaby()?.name || "아기"} 성장일기`;
   resetGrowthPhotoDraft();
   growthPhotoDraft.existingPaths = [...(entry?.photoPaths || [])];
   growthPhotoDraft.existingUrls = [...(entry?.photoUrls || [])];
@@ -472,7 +644,7 @@ function openGrowthDialog(entry = null, category = "첫 순간") {
   $("#growthTime").value = entry?.time || new Date().toTimeString().slice(0, 5);
   $("#growthCategory").value = entry?.category || category;
   $("#growthHeight").value = entry?.height || ""; $("#growthWeight").value = entry?.weight || ""; $("#growthHead").value = entry?.head || "";
-  $("#growthFeedingMl").value = entry?.feedingMl || ""; $("#growthSleepMinutes").value = entry?.sleepMinutes || "";
+  $("#growthFeedingMl").value = entry?.feedingMl || ""; $("#growthFeedingType").value = entry?.feedingType || ""; $("#growthFeedingSide").value = entry?.feedingSide || ""; $("#growthFeedingMinutes").value = entry?.feedingMinutes || ""; $("#growthSleepMinutes").value = entry?.sleepMinutes || "";
   $("#growthTemperature").value = entry?.temperature || ""; $("#growthDiaperKind").value = entry?.diaperKind || "";
   $("#growthNote").value = entry?.note || "";
   syncGrowthFields(); renderGrowthPhotoPreview();
@@ -483,7 +655,33 @@ function syncGrowthFields() {
   const category = $("#growthCategory").value;
   document.querySelectorAll("[data-growth-fields]").forEach((group) => { group.hidden = group.dataset.growthFields !== category; });
   const placeholders = { "수유·이유식": "예: 분유를 맛있게 먹었어요", "수면": "예: 낮잠을 푹 잤어요", "기저귀": "예: 기저귀 갈았어요", "건강·병원": "예: 예방접종 다녀왔어요", "성장": "예: 한 달 성장 측정", "첫 순간": "예: 처음으로 뒤집었어요" };
-  $("#growthEntryTitle").placeholder = placeholders[category] || "오늘의 도윤이를 적어주세요";
+  $("#growthEntryTitle").placeholder = placeholders[category] || `오늘의 ${activeBaby()?.name || "아기"}를 적어주세요`;
+}
+
+function openBabyDialog(baby = null) {
+  $("#babyDialogTitle").textContent = baby ? "프로필 수정" : "아기 추가";
+  $("#babySubmitButton").textContent = baby ? "변경사항 저장" : "프로필 만들기";
+  $("#babyId").value = baby?.id || ""; $("#babyName").value = baby?.name || "";
+  $("#babyBirthDate").value = baby?.birthDate || ""; $("#babyBirthTime").value = baby?.birthTime || "";
+  $("#babySex").value = baby?.sex || ""; $("#babyBirthWeight").value = baby?.birthWeight || ""; $("#babyBirthHeight").value = baby?.birthHeight || "";
+  $("#babyDialog").showModal(); setTimeout(() => $("#babyName").focus(), 100);
+}
+
+async function saveBaby(event) {
+  event.preventDefault();
+  if (state.supabase && !state.household) { $("#babyDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
+  const isNew = !$("#babyId").value;
+  const baby = { id: $("#babyId").value || uid(), name: $("#babyName").value.trim(), birthDate: $("#babyBirthDate").value, birthTime: $("#babyBirthTime").value, sex: $("#babySex").value, birthWeight: numberOrNull($("#babyBirthWeight").value), birthHeight: numberOrNull($("#babyBirthHeight").value) };
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("babies").upsert(toBabyRemote(baby));
+    if (error) return toast("아기 프로필을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
+    if (isNew && state.babies.length === 0) await state.supabase.from("growth_entries").update({ baby_id: baby.id }).eq("household_id", state.household.id).is("baby_id", null);
+  }
+  const index = state.babies.findIndex((item) => item.id === baby.id); if (index >= 0) state.babies[index] = baby; else state.babies.push(baby);
+  if (isNew && state.babies.length === 1) state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = baby.id; });
+  state.activeBabyId = baby.id; localStorage.setItem(ACTIVE_BABY_KEY, baby.id);
+  if (!state.supabase) { localStorage.setItem(BABY_STORAGE_KEY, JSON.stringify(state.babies)); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
+  $("#babyDialog").close(); renderGrowth(); toast(isNew ? `${baby.name}의 성장일기를 시작했어요` : "아기 프로필을 수정했어요");
 }
 
 function resetGrowthPhotoDraft() {
@@ -524,7 +722,7 @@ function renderGrowthPhotoPreview() {
   const root = $("#growthPhotoPreview"); const items = [];
   growthPhotoDraft.existingPaths.forEach((path, index) => items.push({ type: "existing", key: path, url: growthPhotoDraft.existingUrls[index] }));
   growthPhotoDraft.newPhotos.forEach((photo) => items.push({ type: "new", key: photo.id, url: photo.previewUrl }));
-  root.innerHTML = items.map((item) => `<figure class="growth-photo-item"><img src="${escapeHtml(item.url || "")}" alt="선택한 도윤이 사진" /><button type="button" data-photo-type="${item.type}" data-photo-key="${escapeHtml(item.key)}" aria-label="사진 제거">×</button></figure>`).join("");
+  root.innerHTML = items.map((item) => `<figure class="growth-photo-item"><img src="${escapeHtml(item.url || "")}" alt="선택한 ${escapeHtml(activeBaby()?.name || "아기")} 사진" /><button type="button" data-photo-type="${item.type}" data-photo-key="${escapeHtml(item.key)}" aria-label="사진 제거">×</button></figure>`).join("");
   $("#growthPhotoAddButton").hidden = items.length >= MAX_GROWTH_PHOTOS;
 }
 
@@ -560,12 +758,15 @@ async function saveGrowthEntry(event) {
   if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const category = $("#growthCategory").value;
   const entry = {
-    id: $("#growthId").value || uid(), title: $("#growthEntryTitle").value.trim() || defaultGrowthTitle(category),
+    id: $("#growthId").value || uid(), babyId: state.growthEntries.find((item) => item.id === $("#growthId").value)?.babyId || state.activeBabyId, title: $("#growthEntryTitle").value.trim() || defaultGrowthTitle(category),
     date: $("#growthDate").value, time: $("#growthTime").value, category,
     height: category === "성장" ? numberOrNull($("#growthHeight").value) : null,
     weight: category === "성장" ? numberOrNull($("#growthWeight").value) : null,
     head: category === "성장" ? numberOrNull($("#growthHead").value) : null,
     feedingMl: category === "수유·이유식" ? numberOrNull($("#growthFeedingMl").value) : null,
+    feedingType: category === "수유·이유식" ? $("#growthFeedingType").value : "",
+    feedingSide: category === "수유·이유식" ? $("#growthFeedingSide").value : "",
+    feedingMinutes: category === "수유·이유식" ? numberOrNull($("#growthFeedingMinutes").value) : null,
     sleepMinutes: category === "수면" ? numberOrNull($("#growthSleepMinutes").value) : null,
     temperature: category === "건강·병원" ? numberOrNull($("#growthTemperature").value) : null,
     diaperKind: category === "기저귀" ? $("#growthDiaperKind").value : "",
@@ -584,7 +785,7 @@ async function saveGrowthEntry(event) {
     await hydrateGrowthPhotoUrls([entry]);
   }
   const index = state.growthEntries.findIndex((item) => item.id === entry.id); if (index >= 0) state.growthEntries[index] = entry; else state.growthEntries.push(entry);
-  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast("도윤이의 오늘을 기록했어요");
+  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast(`${activeBaby()?.name || "아기"}의 오늘을 기록했어요`);
 }
 function numberOrNull(value) { return value === "" ? null : Number(value); }
 async function deleteGrowthEntry() {
