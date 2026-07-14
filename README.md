@@ -32,6 +32,15 @@ anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema
 
 `main` 브랜치에 반영되면 `.github/workflows/pages.yml`이 정적 사이트를 자동 배포합니다. 저장소의 **Settings → Pages → Source**가 **GitHub Actions**로 설정되어 있어야 합니다.
 
+## Google 로그인 설정
+
+1. Google Cloud에서 OAuth 2.0 Client ID를 **Web application**으로 생성합니다.
+2. Authorized JavaScript origins에 `https://wys1110.github.io`를 추가합니다.
+3. Authorized redirect URI에 `https://ljutcgmgtqfkwkxdbiyb.supabase.co/auth/v1/callback`을 추가합니다.
+4. Supabase **Authentication → Providers → Google**에서 Google Client ID와 Client Secret을 입력하고 활성화합니다.
+
+Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지 않습니다. 자세한 내용은 [Supabase Google 로그인 공식 문서](https://supabase.com/docs/guides/auth/social-login/auth-google)를 참고하세요.
+
 ## 주요 기능
 
 - 월간 달력 및 오늘 일정
@@ -39,4 +48,8 @@ anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema
 - 아빠·엄마·도윤 구성원별 표시
 - 브라우저 로컬 저장
 - Supabase 이메일 로그인 및 가족 초대 코드
+- Google 소셜 로그인
 - 가족 단위 RLS 데이터 보호
+- 도윤이 성장일기(날짜, 분류, 키, 몸무게, 메모)
+
+이미 초기 스키마를 적용한 프로젝트에서 성장일기를 추가하려면 SQL Editor에서 [`supabase/migrations/20260714_growth_diary.sql`](supabase/migrations/20260714_growth_diary.sql)을 한 번 실행합니다.
