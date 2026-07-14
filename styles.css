@@ -85,3 +85,29 @@ h2 { margin-bottom:0; font-size:22px; font-weight:720; letter-spacing:-.035em; }
 @media (max-width:520px) { .calendar-day { min-height:61px; }.calendar-help { font-size:8px; }.agenda-main { padding-left:9px; padding-right:7px; }.quick-options { flex-wrap:wrap; }.member-chips { min-width:220px; }.quick-time-input { margin-left:auto; }.sheet-dialog { max-height:calc(100dvh - 8px); } }
 @media (max-width:390px) { .auth-panel { padding:33px 20px 27px; border-radius:28px; }.gate-login-form { grid-template-columns:1fr; }.gate-login-form button { min-height:46px; }.hero-card,.growth-hero { padding:23px 21px; }.family-stack { display:none; }.calendar-day { min-height:57px; padding-left:1px; padding-right:1px; }.calendar-card { padding-left:7px; padding-right:7px; }.day-number { width:25px; height:25px; }.day-event-preview { padding-left:2px; padding-right:2px; font-size:7px; }.growth-sprout { width:58px; height:58px; font-size:27px; }.sheet-dialog { width:calc(100% - 8px); border-radius:28px; }.quick-add-card { padding:10px; }.quick-add-heading { grid-template-columns:39px minmax(0,1fr) 50px; gap:8px; }.quick-date-badge { width:39px; }.member-selector { gap:4px; }.member-selector button { padding:0 4px; }.date-shortcuts button { flex:1; padding:0 6px; }.form-row.three-columns { grid-template-columns:1fr; } }
 @media (max-width:520px) { .baby-profile-card { padding:21px 18px; }.baby-profile-main { grid-template-columns:52px minmax(0,1fr) auto; gap:11px; }.baby-monogram { width:52px; height:52px; border-radius:18px; }.baby-profile-copy h2 { font-size:24px; }.baby-dday { min-width:62px; }.baby-dday strong { font-size:20px; }.baby-edit-button { margin-left:63px; }.today-care-grid { gap:4px; }.today-care-grid strong { font-size:13px; }.growth-insight-row { grid-template-columns:repeat(3,1fr); }.insight-title { grid-column:1/-1; min-height:auto; }.recent-photo-grid { grid-template-columns:repeat(3,1fr); }.quick-preset-grid button { min-height:68px; } }
+
+/* Family member color system */
+.day-event-preview { color:var(--member-color,var(--green)); background:color-mix(in srgb,var(--member-color,var(--green)) 15%,transparent); }
+.agenda-item .bar,.drag-ghost .bar { background:var(--member-color,var(--green)); }
+.agenda-main .member-dot { display:inline-block; width:6px; height:6px; margin-right:5px; border-radius:50%; background:var(--member-color,var(--green)); vertical-align:1px; }
+.member-chip { display:inline-flex; align-items:center; gap:5px; border:1px solid color-mix(in srgb,var(--member-color,var(--green)) 24%,transparent); color:var(--member-color,var(--green)); background:color-mix(in srgb,var(--member-color,var(--green)) 9%,var(--surface)); }
+.member-chip i { width:6px; height:6px; border-radius:50%; background:currentColor; }
+.member-chip.selected { color:white; border-color:var(--member-color,var(--green)); background:var(--member-color,var(--green)); }
+.member-add-chip { min-height:28px; padding:0 10px; border:1px dashed var(--separator); border-radius:9px; color:var(--blue); background:transparent; font-size:10px; font-weight:700; white-space:nowrap; cursor:pointer; }
+.member-selector { grid-template-columns:repeat(auto-fit,minmax(82px,1fr)); }
+.member-selector button[data-member] i { background:var(--member-color,var(--green)); }
+.member-selector button.selected { border-color:var(--member-color,var(--green)); color:var(--member-color,var(--green)); background:color-mix(in srgb,var(--member-color,var(--green)) 11%,var(--surface)); }
+.member-selector .member-selector-add { border-style:dashed; color:var(--blue); background:transparent; }
+.member-selector .member-selector-add i { display:grid; place-items:center; width:17px; height:17px; color:white; background:var(--blue); font-style:normal; font-size:13px; }
+.member-dialog-copy { margin:-8px 2px 20px; color:var(--secondary); font-size:11px; line-height:1.55; }
+.color-fieldset { margin:0 0 22px; padding:0; border:0; }
+.color-fieldset legend { margin-bottom:10px; color:var(--secondary); font-size:11px; font-weight:600; }
+.member-color-palette { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; }
+.color-choice { display:grid; place-items:center; aspect-ratio:1; min-width:0; padding:0; border:2px solid transparent; border-radius:50%; background:transparent; cursor:pointer; }
+.color-choice i { width:28px; height:28px; border:3px solid white; border-radius:50%; background:var(--choice-color); box-shadow:0 2px 8px rgba(0,0,0,.13); }
+.color-choice.selected { border-color:var(--choice-color); }
+.member-submit-button { width:100%; min-height:50px; border:0; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; }
+@media (max-width:390px) { .member-color-palette { grid-template-columns:repeat(4,1fr); }.member-selector { grid-template-columns:repeat(2,1fr); } }
+.family-chip.dad { background:rgba(181,125,75,.72); }
+.family-chip.mom { background:rgba(165,109,120,.76); }
+.family-chip.baby { background:rgba(75,145,168,.78); }
