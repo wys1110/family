@@ -1,9 +1,10 @@
 const MEMBERS = ["가족", "아빠", "엄마", "도윤"];
 const STORAGE_KEY = "family-calendar-events-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
+let dragState = null;
 
 function dateKey(date) {
   const y = date.getFullYear();
@@ -13,7 +14,17 @@ function parseDate(key) { const [y, m, d] = key.split("-").map(Number); return n
 function startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function escapeHtml(value = "") { return value.replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]); }
-function toast(message) { const el = $("#toast"); el.textContent = message; el.classList.add("show"); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove("show"), 1800); }
+function toast(message, action = null) {
+  const el = $("#toast");
+  $("#toastMessage").textContent = message;
+  const button = $("#toastAction");
+  button.hidden = !action;
+  button.textContent = action?.label || "";
+  button.onclick = action ? () => { el.classList.remove("show"); action.run(); } : null;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), action ? 4500 : 2200);
+}
 
 async function init() {
   bindUi();
@@ -72,8 +83,15 @@ function bindUi() {
   $("#accountButton").addEventListener("click", openAccountDialog);
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
+  $("#quickEventForm").addEventListener("submit", quickAddEvent);
+  $("#quickTimeButton").addEventListener("click", toggleQuickTime);
+  document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.addEventListener("click", () => selectQuickMember(button.dataset.member)));
   $("#eventForm").addEventListener("submit", saveEvent);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
+  $("#eventAllDay").addEventListener("change", syncAllDayControl);
+  $("#eventDate").addEventListener("change", syncDateShortcutSelection);
+  document.querySelectorAll("#eventMemberSelector [data-member]").forEach((button) => button.addEventListener("click", () => selectEventMember(button.dataset.member)));
+  document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.addEventListener("click", () => applyDateShortcut(button.dataset.dateShortcut)));
   $("#growthForm").addEventListener("submit", saveGrowthEntry);
   $("#deleteGrowthButton").addEventListener("click", deleteGrowthEntry);
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
@@ -114,38 +132,203 @@ function renderCalendar() {
     if (day.getMonth() !== month) button.classList.add("outside");
     if (key === state.selectedDate) button.classList.add("selected");
     if (key === dateKey(new Date())) button.classList.add("today");
+    button.dataset.date = key;
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개`);
-    button.innerHTML = `<span class="day-number">${day.getDate()}</span><span class="event-dots">${dayEvents.slice(0, 3).map((e) => `<i class="event-dot ${e.member}"></i>`).join("")}</span>`;
+    const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
+    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.member}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
     button.addEventListener("click", () => { state.selectedDate = key; if (day.getMonth() !== month) state.viewDate = startOfMonth(day); renderCalendar(); renderAgenda(); });
     grid.appendChild(button);
   }
+  grid.querySelectorAll(".day-event-preview").forEach((preview) => {
+    preview.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const item = state.events.find((entry) => entry.id === preview.dataset.eventId);
+      if (item) openEventDialog(item);
+    });
+  });
 }
 
 function renderAgenda() {
   const date = parseDate(state.selectedDate); const events = state.events.filter((event) => event.date === state.selectedDate).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
   $("#agendaTitle").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(date);
   $("#agendaCount").textContent = `${events.length}개 일정`;
+  $("#quickDateBadge").innerHTML = `<strong>${date.getDate()}</strong><span>${date.getMonth() + 1}월</span>`;
   const list = $("#agendaList");
-  if (!events.length) { list.innerHTML = `<div class="empty-state">아직 일정이 없어요.<br />가족의 소중한 계획을 남겨보세요.</div>`; return; }
-  list.innerHTML = events.map((event) => `<button class="agenda-item" data-id="${event.id}"><i class="bar ${event.member}"></i><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="time">${event.time || "종일"}</span></button>`).join("");
-  list.querySelectorAll(".agenda-item").forEach((item) => item.addEventListener("click", () => openEventDialog(state.events.find((event) => event.id === item.dataset.id))));
+  if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>위 입력창에 이름만 적으면 바로 추가할 수 있어요.</span></div>`; return; }
+  list.innerHTML = events.map((event) => `<article class="agenda-item" data-id="${event.id}"><i class="bar ${event.member}"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="time">${event.time || "종일"}</span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
+  list.querySelectorAll(".agenda-item").forEach((item) => {
+    const event = state.events.find((entry) => entry.id === item.dataset.id);
+    item.querySelector(".agenda-main").addEventListener("click", () => openEventDialog(event));
+    item.querySelector(".edit-event-button").addEventListener("click", () => openEventDialog(event));
+    bindDragHandle(item.querySelector(".drag-handle"), event);
+  });
+}
+
+function selectQuickMember(member) {
+  state.quickMember = member;
+  document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.classList.toggle("selected", button.dataset.member === member));
+}
+
+function toggleQuickTime() {
+  const input = $("#quickEventTime");
+  const show = input.hidden;
+  input.hidden = !show;
+  $("#quickTimeButton").classList.toggle("active", show);
+  $("#quickTimeButton").setAttribute("aria-expanded", String(show));
+  $("#quickTimeButton").textContent = show ? "시간 제거" : "＋ 시간";
+  if (show) input.focus(); else input.value = "";
+}
+
+async function quickAddEvent(event) {
+  event.preventDefault();
+  if (state.supabase && !state.household) return toast("먼저 가족 공간을 만들어주세요");
+  const title = $("#quickEventTitle").value.trim();
+  if (!title) return;
+  const item = { id: uid(), title, date: state.selectedDate, time: $("#quickEventTime").value, member: state.quickMember, note: "" };
+  if (!await storeEvent(item)) return;
+  state.events.push(item);
+  persistLocal();
+  $("#quickEventTitle").value = "";
+  render();
+  $("#quickEventTitle").focus();
+  toast("일정을 바로 추가했어요", { label: "수정", run: () => openEventDialog(item) });
+}
+
+function bindDragHandle(handle, event) {
+  handle.addEventListener("pointerdown", (pointerEvent) => {
+    if (pointerEvent.button !== undefined && pointerEvent.button !== 0) return;
+    pointerEvent.preventDefault();
+    beginEventDrag(pointerEvent, event, handle);
+  });
+}
+
+function beginEventDrag(pointerEvent, event, source) {
+  if (dragState) finishEventDrag(null);
+  const ghost = $("#dragGhost");
+  dragState = { pointerId: pointerEvent.pointerId, event, source, targetDate: null };
+  source.setPointerCapture?.(pointerEvent.pointerId);
+  ghost.innerHTML = `<i class="bar ${event.member}"></i><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)} · 날짜 이동</small></span>`;
+  ghost.classList.add("show");
+  document.body.classList.add("dragging-event");
+  moveDragGhost(pointerEvent.clientX, pointerEvent.clientY);
+  source.addEventListener("pointermove", updateEventDrag);
+  source.addEventListener("pointerup", finishEventDrag);
+  source.addEventListener("pointercancel", finishEventDrag);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function moveDragGhost(x, y) {
+  const ghost = $("#dragGhost");
+  ghost.style.transform = `translate3d(${Math.min(x + 14, window.innerWidth - 230)}px, ${Math.max(12, y - 34)}px, 0)`;
+}
+
+function updateEventDrag(pointerEvent) {
+  if (!dragState || pointerEvent.pointerId !== dragState.pointerId) return;
+  pointerEvent.preventDefault();
+  moveDragGhost(pointerEvent.clientX, pointerEvent.clientY);
+  if (pointerEvent.clientY < 72) window.scrollBy(0, -12);
+  if (pointerEvent.clientY > window.innerHeight - 72) window.scrollBy(0, 12);
+  document.querySelectorAll(".calendar-day.drop-target").forEach((day) => day.classList.remove("drop-target"));
+  const target = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY)?.closest(".calendar-day");
+  dragState.targetDate = target?.dataset.date || null;
+  if (target) target.classList.add("drop-target");
+}
+
+function finishEventDrag(pointerEvent) {
+  if (!dragState || (pointerEvent && pointerEvent.pointerId !== dragState.pointerId)) return;
+  const { source, event } = dragState;
+  const targetDate = pointerEvent?.type === "pointercancel" ? null : dragState.targetDate;
+  source.removeEventListener("pointermove", updateEventDrag);
+  source.removeEventListener("pointerup", finishEventDrag);
+  source.removeEventListener("pointercancel", finishEventDrag);
+  document.querySelectorAll(".calendar-day.drop-target").forEach((day) => day.classList.remove("drop-target"));
+  $("#dragGhost").classList.remove("show");
+  document.body.classList.remove("dragging-event");
+  dragState = null;
+  if (!targetDate) return toast("이동할 날짜 위에 놓아주세요");
+  moveEventToDate(event.id, targetDate);
+}
+
+async function moveEventToDate(id, targetDate, offerUndo = true) {
+  const event = state.events.find((item) => item.id === id);
+  if (!event || event.date === targetDate) return toast("같은 날짜의 일정이에요");
+  const previousDate = event.date;
+  event.date = targetDate;
+  state.selectedDate = targetDate;
+  state.viewDate = startOfMonth(parseDate(targetDate));
+  render();
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("events").update({ event_date: targetDate, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) {
+      event.date = previousDate;
+      state.selectedDate = previousDate;
+      state.viewDate = startOfMonth(parseDate(previousDate));
+      render();
+      return toast("일정을 이동하지 못했어요");
+    }
+  } else {
+    persistLocal();
+  }
+  const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(targetDate));
+  toast(`${formatted}로 이동했어요`, offerUndo ? { label: "되돌리기", run: () => moveEventToDate(id, previousDate, false) } : null);
+}
+
+async function storeEvent(item) {
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("events").upsert(toRemote(item));
+    if (error) { toast("저장하지 못했어요"); return false; }
+  }
+  return true;
 }
 
 function openEventDialog(event = null) {
   $("#eventDialogTitle").textContent = event ? "일정 수정" : "새 일정";
-  $("#eventId").value = event?.id || ""; $("#eventTitle").value = event?.title || ""; $("#eventDate").value = event?.date || state.selectedDate; $("#eventTime").value = event?.time || ""; $("#eventMember").value = event?.member || MEMBERS[0]; $("#eventNote").value = event?.note || "";
+  $("#eventSubmitButton").textContent = event ? "변경사항 저장" : "일정 추가";
+  $("#eventId").value = event?.id || "";
+  $("#eventTitle").value = event?.title || "";
+  $("#eventDate").value = event?.date || state.selectedDate;
+  $("#eventTime").value = event?.time || "";
+  $("#eventAllDay").checked = !event?.time;
+  selectEventMember(event?.member || MEMBERS[0]);
+  $("#eventNote").value = event?.note || "";
+  syncAllDayControl();
+  syncDateShortcutSelection();
   $("#deleteEventButton").classList.toggle("visible", Boolean(event)); $("#eventDialog").showModal(); setTimeout(() => $("#eventTitle").focus(), 100);
+}
+
+function selectEventMember(member) {
+  $("#eventMember").value = member;
+  document.querySelectorAll("#eventMemberSelector [data-member]").forEach((button) => button.classList.toggle("selected", button.dataset.member === member));
+}
+
+function syncAllDayControl() {
+  const allDay = $("#eventAllDay").checked;
+  $("#eventTimeField").hidden = allDay;
+  if (allDay) $("#eventTime").value = "";
+}
+
+function applyDateShortcut(shortcut) {
+  const date = shortcut === "selected" ? parseDate(state.selectedDate) : new Date();
+  if (shortcut === "tomorrow") date.setDate(date.getDate() + 1);
+  $("#eventDate").value = dateKey(date);
+  syncDateShortcutSelection();
+}
+
+function syncDateShortcutSelection() {
+  const value = $("#eventDate").value;
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const values = { selected: state.selectedDate, today: dateKey(new Date()), tomorrow: dateKey(tomorrow) };
+  const active = value === values.today ? "today" : value === values.tomorrow ? "tomorrow" : value === values.selected ? "selected" : "";
+  document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.classList.toggle("active", button.dataset.dateShortcut === active));
 }
 
 async function saveEvent(event) {
   event.preventDefault();
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: $("#eventDate").value, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
-  if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").upsert(toRemote(item)); if (error) return toast("저장하지 못했어요");
-  }
+  if (!await storeEvent(item)) return;
   const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
-  persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast("일정을 저장했어요");
+  persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
 }
 
 async function deleteEvent() {
