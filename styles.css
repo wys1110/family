@@ -17,10 +17,11 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html { background: var(--bg); }
-body { margin: 0; min-height: 100vh; color: var(--label); background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", sans-serif; -webkit-font-smoothing: antialiased; }
+html { background: var(--bg); touch-action:pan-x pan-y; }
+body { margin: 0; min-height: 100vh; color: var(--label); background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", sans-serif; -webkit-font-smoothing: antialiased; touch-action:pan-x pan-y; }
 button, input, select, textarea { font: inherit; }
 button { color: inherit; }
+button,a { touch-action:manipulation; }
 .auth-required { overflow: hidden; }
 .auth-required .app-shell { visibility: hidden; }
 
@@ -119,3 +120,6 @@ h2 { margin-bottom:0; font-size:22px; font-weight:720; letter-spacing:-.035em; }
 .family-chip.dad { background:rgba(181,125,75,.72); }
 .family-chip.mom { background:rgba(165,109,120,.76); }
 .family-chip.baby { background:rgba(75,145,168,.78); }
+
+/* Keep mobile forms from triggering Safari's focus zoom. */
+@media (max-width:820px) { input,select,textarea { font-size:16px !important; } }
