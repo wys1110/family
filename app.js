@@ -10,6 +10,7 @@ const MEMBER_STORAGE_KEY = "family-calendar-members-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
 const BABY_STORAGE_KEY = "family-babies-v1";
 const ACTIVE_BABY_KEY = "family-active-baby-v1";
+const ACTIVE_VIEW_KEY = "family-active-view-v1";
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -26,7 +27,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -59,6 +60,12 @@ function escapeHtml(value = "") { return value.replace(/[&<>'"]/g, (c) => ({ "&"
 function validColor(color) { return /^#[0-9a-f]{6}$/i.test(color || "") ? color.toUpperCase() : MEMBER_COLORS[0]; }
 function memberColor(name) { return validColor(state.familyMembers.find((member) => member.name === name)?.color || DEFAULT_FAMILY_MEMBERS.find((member) => member.name === name)?.color); }
 function memberStyle(name) { return `--member-color:${memberColor(name)}`; }
+function storedActiveView() {
+  try {
+    const saved = localStorage.getItem(ACTIVE_VIEW_KEY);
+    return saved === "growth" ? "growth" : "calendar";
+  } catch { return "calendar"; }
+}
 function localMembers() {
   try {
     const saved = JSON.parse(localStorage.getItem(MEMBER_STORAGE_KEY) || "[]");
@@ -232,7 +239,7 @@ function bindUi() {
 }
 
 function changeMonth(delta) { state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1); renderCalendar(); }
-function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); updateSyncBadge(); }
+function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
   const quick = $("#quickMemberChips");
   const selector = $("#eventMemberSelector");
@@ -262,11 +269,13 @@ function updateAuthGate() {
   document.body.classList.toggle("auth-required", loginRequired);
 }
 function switchView(view) {
-  state.activeView = view;
-  $("#calendarView").hidden = view !== "calendar";
-  $("#growthView").hidden = view !== "growth";
-  document.querySelectorAll(".view-tab").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
-  $("#addEventButton").innerHTML = view === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
+  const nextView = view === "growth" ? "growth" : "calendar";
+  state.activeView = nextView;
+  try { localStorage.setItem(ACTIVE_VIEW_KEY, nextView); } catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
+  $("#calendarView").hidden = nextView !== "calendar";
+  $("#growthView").hidden = nextView !== "growth";
+  document.querySelectorAll(".view-tab").forEach((button) => button.classList.toggle("active", button.dataset.view === nextView));
+  $("#addEventButton").innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
 }
 
 function renderCalendar() {
