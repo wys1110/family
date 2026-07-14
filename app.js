@@ -14,6 +14,18 @@ const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_GROWTH_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+const FAMILY_VERSES = [
+  { text: "나와 내 집은 여호와를 섬기겠노라.", reference: "여호수아 24:15" },
+  { text: "사랑은 오래 참고 사랑은 온유하며.", reference: "고린도전서 13:4" },
+  { text: "모든 일을 사랑으로 행하라.", reference: "고린도전서 16:14" },
+  { text: "자녀는 여호와의 기업이요 태의 열매는 그의 상급이로다.", reference: "시편 127:3" },
+  { text: "마땅히 행할 길을 아이에게 가르치라.", reference: "잠언 22:6" },
+  { text: "서로 친절하게 하며 불쌍히 여기며 서로 용서하기를.", reference: "에베소서 4:32" },
+  { text: "사랑은 허다한 죄를 덮느니라.", reference: "베드로전서 4:8" },
+  { text: "두 사람이 한 사람보다 나음은 그들이 수고함으로 좋은 상을 얻을 것임이라.", reference: "전도서 4:9" },
+  { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
+  { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
+];
 const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
@@ -67,6 +79,8 @@ function toast(message, action = null) {
 
 async function init() {
   bindUi();
+  renderDailyVerse();
+  setInterval(renderDailyVerse, 60 * 1000);
   if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
     state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
     const { data } = await state.supabase.auth.getSession();
@@ -79,6 +93,14 @@ async function init() {
   }
   state.authReady = true;
   await bootstrapData();
+}
+
+function renderDailyVerse() {
+  const today = new Date();
+  const dayNumber = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000);
+  const verse = FAMILY_VERSES[dayNumber % FAMILY_VERSES.length];
+  $("#dailyVerseText").textContent = `“${verse.text}”`;
+  $("#dailyVerseReference").textContent = verse.reference;
 }
 
 async function bootstrapData() {
