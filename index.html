@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f6f1" />
+    <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
+    <title>우리 가족</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">우리 가족의 하루</p>
+          <h1>함께라서 좋은 날들</h1>
+        </div>
+        <button class="avatar-button" id="accountButton" aria-label="계정 및 저장 상태">
+          <span>우</span><i id="syncDot"></i>
+        </button>
+      </header>
+
+      <main>
+        <section class="hero-card">
+          <div>
+            <p id="todayLabel"></p>
+            <h2 id="todaySummary">오늘도 우리답게</h2>
+          </div>
+          <div class="family-stack" aria-label="가족 구성원">
+            <span class="family-chip dad">아빠</span>
+            <span class="family-chip mom">엄마</span>
+            <span class="family-chip baby">도윤</span>
+          </div>
+        </section>
+
+        <section class="calendar-card" aria-labelledby="monthLabel">
+          <div class="calendar-toolbar">
+            <div class="month-nav">
+              <button class="icon-button" id="prevMonth" aria-label="이전 달">‹</button>
+              <h2 id="monthLabel"></h2>
+              <button class="icon-button" id="nextMonth" aria-label="다음 달">›</button>
+            </div>
+            <button class="today-button" id="todayButton">오늘</button>
+          </div>
+          <div class="weekdays" aria-hidden="true">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </section>
+
+        <section class="agenda-section" aria-labelledby="agendaTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">선택한 날</p>
+              <h2 id="agendaTitle"></h2>
+            </div>
+            <span id="agendaCount" class="count-badge"></span>
+          </div>
+          <div id="agendaList" class="agenda-list"></div>
+        </section>
+      </main>
+
+      <button class="fab" id="addEventButton" aria-label="새 일정 추가"><span>＋</span> 일정 추가</button>
+    </div>
+
+    <dialog id="eventDialog" class="sheet-dialog">
+      <form id="eventForm" method="dialog">
+        <div class="sheet-handle"></div>
+        <div class="dialog-header">
+          <div><p class="eyebrow">가족 일정</p><h2 id="eventDialogTitle">새 일정</h2></div>
+          <button type="button" class="close-button" data-close="eventDialog" aria-label="닫기">×</button>
+        </div>
+        <input type="hidden" id="eventId" />
+        <label>일정 이름<input id="eventTitle" maxlength="60" placeholder="예: 도윤이 예방접종" required /></label>
+        <div class="form-row">
+          <label>날짜<input id="eventDate" type="date" required /></label>
+          <label>시간<input id="eventTime" type="time" /></label>
+        </div>
+        <label>누구 일정인가요?
+          <select id="eventMember"><option>가족</option><option>아빠</option><option>엄마</option><option>도윤</option></select>
+        </label>
+        <label>메모<textarea id="eventNote" maxlength="300" rows="3" placeholder="준비물이나 장소를 적어두세요"></textarea></label>
+        <div class="dialog-actions">
+          <button type="button" class="danger-button" id="deleteEventButton">삭제</button>
+          <button type="submit" class="primary-button">저장하기</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="accountDialog" class="sheet-dialog compact">
+      <div class="sheet-panel">
+        <div class="sheet-handle"></div>
+        <div class="dialog-header">
+          <div><p class="eyebrow">저장 및 공유</p><h2>우리 가족 공간</h2></div>
+          <button class="close-button" data-close="accountDialog" aria-label="닫기">×</button>
+        </div>
+        <div id="accountContent"></div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
