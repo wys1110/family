@@ -1,15 +1,17 @@
 :root {
-  --paper: #f8f6f1;
-  --ink: #292821;
-  --muted: #7e7b70;
-  --card: rgba(255, 255, 255, 0.82);
-  --line: #e8e3d8;
-  --sage: #93a58b;
-  --sage-deep: #667a60;
-  --apricot: #f4b985;
-  --rose: #e99b9c;
-  --sky: #91b9cf;
-  --shadow: 0 18px 50px rgba(74, 67, 53, 0.1);
+  --paper: #f3eee5;
+  --paper-deep: #e7ddcf;
+  --ink: #3b322d;
+  --muted: #84776e;
+  --card: #fffdf8;
+  --line: #d9cdbf;
+  --brown: #755846;
+  --brown-deep: #4d382d;
+  --sage: #8d9980;
+  --apricot: #d8a06f;
+  --rose: #c88f86;
+  --sky: #8eaab2;
+  --shadow: 0 18px 42px rgba(67, 48, 36, .12);
 }
 
 * { box-sizing: border-box; }
@@ -17,91 +19,62 @@
 html { background: var(--paper); }
 body {
   margin: 0;
+  min-height: 100vh;
   color: var(--ink);
   background:
-    radial-gradient(circle at 8% 0%, rgba(244,185,133,.22), transparent 25rem),
-    radial-gradient(circle at 100% 25%, rgba(145,185,207,.18), transparent 24rem),
+    radial-gradient(circle at 1px 1px, rgba(83,63,49,.055) 1px, transparent 0) 0 0 / 18px 18px,
+    linear-gradient(125deg, rgba(216,160,111,.1), transparent 35%),
     var(--paper);
   font-family: "Manrope", "Apple SD Gothic Neo", sans-serif;
-  min-height: 100vh;
 }
 button, input, select, textarea { font: inherit; }
 button { color: inherit; }
 .auth-required { overflow: hidden; }
-.auth-gate { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: max(22px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 18% 8%, rgba(244,185,133,.28), transparent 22rem), radial-gradient(circle at 90% 85%, rgba(145,185,207,.24), transparent 22rem), var(--paper); }
-.auth-panel { width: min(100%, 420px); padding: 34px 28px 28px; border: 1px solid rgba(232,227,216,.9); border-radius: 34px; background: rgba(255,255,255,.84); box-shadow: var(--shadow); text-align: center; backdrop-filter: blur(18px); }
-.auth-panel h1 { margin-bottom: 14px; font-size: clamp(29px, 8vw, 38px); line-height: 1.35; }
-.auth-copy { margin-bottom: 25px; color: var(--muted); font-size: 13px; line-height: 1.7; }
-.auth-illustration { display: flex; justify-content: center; align-items: end; height: 92px; margin-bottom: 24px; }
-.auth-face { display: grid; place-items: center; width: 74px; height: 74px; margin: 0 -5px; border: 5px solid white; border-radius: 50%; color: #fff; font-family: "Gowun Dodum", sans-serif; font-size: 14px; box-shadow: 0 10px 22px rgba(74,67,53,.12); }
-.dad-face { background: #8fa282; transform: rotate(-5deg); }.mom-face { background: #dc9b94; transform: rotate(5deg); }.baby-face { z-index: 1; width: 88px; height: 88px; background: #89b6cd; font-size: 17px; }
-.oauth-button { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 50px; border: 1px solid #dcd7cc; border-radius: 15px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 800; cursor: pointer; }
+.auth-required .app-shell { visibility: hidden; }
+
+.auth-gate { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: max(22px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom)); background: linear-gradient(115deg, rgba(203,170,141,.24), transparent 44%), radial-gradient(circle at 86% 82%, rgba(142,170,178,.2), transparent 24rem), var(--paper); }
+.auth-panel { position: relative; width: min(100%, 420px); padding: 35px 29px 27px; border: 1px solid #e2d8ca; border-radius: 7px; background: var(--card); box-shadow: 1px 3px 0 #e2d7c8, 0 28px 70px rgba(67,48,36,.16); text-align: center; transform: rotate(-.25deg); }
+.auth-panel::before { content: ""; position: absolute; z-index: 2; width: 94px; height: 27px; left: 50%; top: -14px; transform: translateX(-50%) rotate(-2deg); background: rgba(215,192,158,.67); box-shadow: 0 1px 2px rgba(80,60,44,.08); }
+.album-kicker { display: block; margin: 5px 0 22px; color: var(--brown); font-size: 9px; font-weight: 800; letter-spacing: .2em; }
+.auth-panel h1 { margin: 0 0 14px; font-family: "Gowun Batang", serif; font-size: clamp(29px, 8vw, 39px); font-weight: 700; line-height: 1.42; letter-spacing: -.06em; }
+.auth-copy { margin: 0 0 25px; color: var(--muted); font-family: "Gowun Batang", serif; font-size: 12px; line-height: 1.8; }
+.auth-illustration { display: flex; justify-content: center; align-items: center; height: 110px; margin-bottom: 24px; }
+.auth-face { position: relative; display: flex; justify-content: center; align-items: center; width: 82px; height: 94px; margin: 0 -5px; padding-bottom: 18px; border: 7px solid #fff; border-bottom-width: 24px; border-radius: 2px; color: #fff; background: #9a8b7e; font-family: "Nanum Pen Script", cursive; font-size: 17px; box-shadow: 0 8px 18px rgba(67,48,36,.16); }
+.auth-face::after { position: absolute; bottom: -21px; color: var(--ink); font-family: "Nanum Pen Script", cursive; font-size: 13px; }
+.dad-face { background: linear-gradient(145deg,#87937c,#a8ae96); transform: rotate(-7deg); }.dad-face::after { content: "아빠"; }.mom-face { background: linear-gradient(145deg,#bd8078,#d7aaa0); transform: rotate(7deg); }.mom-face::after { content: "엄마"; }.baby-face { z-index: 1; width: 94px; height: 108px; background: linear-gradient(145deg,#7f9da7,#afc4c5); font-size: 20px; transform: rotate(1deg); }.baby-face::after { content: "도윤"; }
+.auth-face { font-size: 0; }
+.auth-face::before { content: "♡"; font-family: "Gowun Batang", serif; font-size: 29px; opacity: .85; }
+.oauth-button { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 3px; background: #fffdfa; color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 2px 2px 0 #e7ddd0; cursor: pointer; }
 .google-mark { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; color: #4285f4; background: #f2f6ff; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; }
-.auth-divider { display: flex; align-items: center; gap: 12px; margin: 17px 0; color: #aaa499; font-size: 10px; }.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.gate-login-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }.gate-login-form input { min-width: 0; margin: 0; }.gate-login-form button { padding: 0 14px; border: 0; border-radius: 14px; background: var(--ink); color: white; font-size: 11px; font-weight: 800; cursor: pointer; }
-.auth-note { margin: 13px 0 0; color: #aaa499; font-size: 10px; }
-.app-shell { width: min(100%, 880px); margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) 18px 120px; }
-.view-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 16px; border-radius: 17px; background: #ebe7de; }.view-tab { min-height: 42px; border: 0; border-radius: 13px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }.view-tab.active { background: white; color: var(--ink); box-shadow: 0 5px 15px rgba(74,67,53,.08); }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 17px 0; color: #a39991; font-family: "Gowun Batang", serif; font-size: 10px; }.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.gate-login-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }.gate-login-form input { min-width: 0; margin: 0; }.gate-login-form button { padding: 0 14px; border: 0; border-radius: 3px; background: var(--brown-deep); color: white; font-size: 11px; font-weight: 800; cursor: pointer; }
+.auth-note { margin: 13px 0 0; color: #a79c94; font-size: 9px; }.handwritten-note { display: block; margin: 17px 0 -5px; color: var(--brown); font-family: "Nanum Pen Script", cursive; font-size: 20px; transform: rotate(-2deg); }
+
+.app-shell { width: min(100%, 880px); margin: 0 auto; padding: max(25px, env(safe-area-inset-top)) 18px 120px; }
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-.eyebrow { margin: 0 0 5px; color: var(--sage-deep); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 5px; color: var(--brown); font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 h1, h2, p { margin-top: 0; }
-h1 { margin-bottom: 0; font-family: "Gowun Dodum", sans-serif; font-size: clamp(25px, 5vw, 34px); font-weight: 400; letter-spacing: -.04em; }
-h2 { margin-bottom: 0; font-size: 21px; letter-spacing: -.04em; }
-.avatar-button { position: relative; width: 48px; height: 48px; border: 0; border-radius: 17px; background: var(--ink); color: white; font-family: "Gowun Dodum"; font-size: 18px; box-shadow: var(--shadow); }
-.avatar-button i { position: absolute; right: -2px; bottom: -2px; width: 13px; height: 13px; border: 3px solid var(--paper); border-radius: 50%; background: var(--apricot); }
-.avatar-button i.online { background: #66b66e; }
-.hero-card { display: flex; justify-content: space-between; align-items: end; min-height: 150px; padding: 26px; margin-bottom: 16px; border-radius: 30px; color: #fff; background: linear-gradient(135deg, #6d7f66, #9dae91); box-shadow: 0 20px 50px rgba(81,102,75,.2); overflow: hidden; position: relative; }
-.hero-card::after { content: ""; position: absolute; width: 150px; height: 150px; border: 34px solid rgba(255,255,255,.08); border-radius: 50%; right: -55px; top: -65px; }
-.hero-card p { margin-bottom: 8px; opacity: .78; font-size: 14px; }
-.hero-card h2 { font-family: "Gowun Dodum"; font-size: clamp(25px, 5vw, 34px); font-weight: 400; }
-.family-stack { display: flex; flex-direction: column; align-items: end; gap: 5px; z-index: 1; }
-.family-chip { padding: 6px 11px; border-radius: 999px; color: var(--ink); background: #fff; font-size: 11px; font-weight: 800; }
-.family-chip.mom { transform: translateX(-10px); background: #ffe2dc; }
-.family-chip.baby { transform: translateX(-3px); background: #dfeef4; }
-.calendar-card { padding: 20px 14px 16px; border: 1px solid rgba(232,227,216,.9); border-radius: 30px; background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-.calendar-toolbar, .month-nav, .section-heading { display: flex; align-items: center; }
-.calendar-toolbar { justify-content: space-between; padding: 0 4px 14px; }
-.month-nav { gap: 8px; }
-.month-nav h2 { min-width: 116px; text-align: center; font-size: 19px; }
-.icon-button, .today-button, .close-button { border: 0; background: transparent; cursor: pointer; }
-.icon-button { width: 33px; height: 33px; border-radius: 12px; background: #f1eee7; font-size: 25px; line-height: 1; }
-.today-button { padding: 8px 13px; border: 1px solid var(--line); border-radius: 12px; background: white; font-size: 12px; font-weight: 800; }
-.weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-.weekdays span { padding: 8px 0 12px; color: var(--muted); text-align: center; font-size: 11px; font-weight: 700; }
-.weekdays span:first-child { color: #c47775; }
-.calendar-day { position: relative; min-height: 62px; padding: 4px 3px; border: 0; border-radius: 17px; background: transparent; cursor: pointer; text-align: center; }
-.calendar-day:hover { background: #f4f1ea; }
-.calendar-day.outside { opacity: .28; }
-.calendar-day.selected { background: var(--ink); color: white; }
-.calendar-day.today:not(.selected) .day-number { color: var(--sage-deep); background: #e5eee0; }
-.day-number { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 10px; font-size: 12px; font-weight: 700; }
-.event-dots { display: flex; justify-content: center; gap: 3px; height: 8px; margin-top: 4px; }
-.event-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--sage); }
-.event-dot.엄마 { background: var(--rose); }.event-dot.아빠 { background: var(--apricot); }.event-dot.도윤 { background: var(--sky); }
-.agenda-section { padding: 28px 5px 0; }
-.growth-hero { display: flex; justify-content: space-between; align-items: center; min-height: 170px; padding: 28px; border-radius: 30px; color: #fff; background: linear-gradient(135deg, #91b9cf, #a9c9d8); box-shadow: 0 20px 50px rgba(81,129,153,.18); }.growth-hero h2 { margin-bottom: 9px; font-family: "Gowun Dodum"; font-size: clamp(27px, 6vw, 36px); font-weight: 400; }.growth-hero .eyebrow, .growth-hero p { color: white; }.growth-hero p { margin-bottom: 0; font-size: 12px; opacity: .8; }.growth-sprout { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 26px; background: rgba(255,255,255,.2); font-size: 36px; transform: rotate(4deg); }
-.growth-section { padding: 28px 5px 0; }.growth-list { display: grid; gap: 10px; }.growth-entry { display: grid; grid-template-columns: 48px 1fr 14px; gap: 14px; align-items: center; width: 100%; padding: 17px; border: 1px solid var(--line); border-radius: 21px; background: rgba(255,255,255,.76); cursor: pointer; text-align: left; }.growth-date { display: flex; flex-direction: column; align-items: center; padding: 7px 4px; border-radius: 14px; color: var(--sage-deep); background: #edf2e9; font-size: 9px; font-weight: 800; }.growth-date strong { font-size: 18px; line-height: 1.1; }.growth-body { min-width: 0; }.growth-body i { display: block; margin-bottom: 4px; color: var(--sky); font-size: 10px; font-style: normal; font-weight: 800; }.growth-body strong, .growth-body small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.growth-body strong { margin-bottom: 4px; font-size: 14px; }.growth-body small { color: var(--muted); font-size: 11px; }.growth-arrow { color: #aaa499; font-size: 22px; }
-.section-heading { justify-content: space-between; margin-bottom: 14px; }
-.section-heading h2 { font-family: "Gowun Dodum"; font-weight: 400; }
-.count-badge { padding: 6px 10px; border-radius: 999px; background: #ebe8e0; color: var(--muted); font-size: 11px; font-weight: 700; }
-.agenda-list { display: grid; gap: 10px; }
-.agenda-item { display: grid; grid-template-columns: 5px 1fr auto; gap: 14px; align-items: center; padding: 16px 18px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.72); cursor: pointer; text-align: left; }
-.agenda-item .bar { align-self: stretch; border-radius: 5px; background: var(--sage); }.agenda-item .bar.엄마 { background: var(--rose); }.agenda-item .bar.아빠 { background: var(--apricot); }.agenda-item .bar.도윤 { background: var(--sky); }
-.agenda-item strong { display: block; margin-bottom: 4px; font-size: 14px; }.agenda-item small { color: var(--muted); font-size: 11px; }.agenda-item .time { color: var(--muted); font-size: 12px; }
-.empty-state { padding: 28px 18px; border: 1px dashed #d9d3c6; border-radius: 20px; color: var(--muted); text-align: center; font-size: 13px; }
-.fab { position: fixed; z-index: 5; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 14px 21px; border: 0; border-radius: 18px; background: var(--ink); color: white; font-size: 13px; font-weight: 800; box-shadow: 0 14px 36px rgba(41,40,33,.26); cursor: pointer; }.fab span { font-size: 17px; vertical-align: -1px; }
-.sheet-dialog { width: min(calc(100% - 24px), 520px); margin: auto auto 12px; padding: 0; border: 0; border-radius: 30px; background: white; color: var(--ink); box-shadow: 0 30px 80px rgba(0,0,0,.22); }
-.sheet-dialog::backdrop { background: rgba(35,33,28,.44); backdrop-filter: blur(3px); }
-.sheet-dialog form, .sheet-panel { padding: 12px 22px 24px; }
-.sheet-handle { width: 42px; height: 5px; margin: 0 auto 16px; border-radius: 9px; background: #ddd8ce; }
-.dialog-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; }
-.close-button { width: 38px; height: 38px; border-radius: 50%; background: #f3f0ea; font-size: 23px; }
-label { display: block; margin-bottom: 15px; color: var(--muted); font-size: 11px; font-weight: 800; }
-input, select, textarea { width: 100%; margin-top: 7px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 14px; outline: none; color: var(--ink); background: #faf9f6; font-size: 14px; }
-input:focus, select:focus, textarea:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(147,165,139,.13); }
-textarea { resize: vertical; }.form-row { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; }
-.dialog-actions { display: flex; gap: 10px; margin-top: 22px; }.dialog-actions button { min-height: 48px; border: 0; border-radius: 15px; font-size: 13px; font-weight: 800; cursor: pointer; }.primary-button { flex: 1; background: var(--ink); color: white; }.danger-button { display: none; padding: 0 18px; background: #fbe8e6; color: #b95451; }.danger-button.visible { display: block; }
-.account-card { padding: 16px; margin-bottom: 12px; border-radius: 18px; background: #f6f3ed; }.account-card p { margin-bottom: 8px; color: var(--muted); font-size: 12px; line-height: 1.6; }.account-card strong { font-size: 14px; }.account-form { display: grid; gap: 9px; }.account-form input { margin: 0; }.account-form button, .secondary-button { padding: 13px; border: 0; border-radius: 14px; background: var(--sage-deep); color: white; font-size: 12px; font-weight: 800; }.secondary-button { background: #ece8df; color: var(--ink); }.invite-code { font-size: 24px; letter-spacing: .14em; }
-.toast { position: fixed; z-index: 20; left: 50%; bottom: 95px; transform: translate(-50%, 20px); padding: 11px 15px; border-radius: 13px; background: rgba(41,40,33,.92); color: white; font-size: 12px; opacity: 0; pointer-events: none; transition: .2s; }.toast.show { opacity: 1; transform: translate(-50%, 0); }
-@media (min-width: 700px) { .app-shell { padding-left: 30px; padding-right: 30px; }.calendar-day { min-height: 78px; }.sheet-dialog { margin: auto; }.agenda-list, .growth-list { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 390px) { .auth-panel { padding: 28px 20px 24px; }.gate-login-form { grid-template-columns: 1fr; }.gate-login-form button { min-height: 46px; }.hero-card { padding: 22px; }.family-stack { display: none; }.calendar-day { min-height: 55px; }.calendar-card { padding-left: 8px; padding-right: 8px; } }
+h1 { margin-bottom: 0; font-family: "Gowun Batang", serif; font-size: clamp(24px,5vw,33px); font-weight: 700; letter-spacing: -.06em; }.title-mark { color: var(--rose); font-size: .56em; vertical-align: 5px; }
+h2 { margin-bottom: 0; font-family: "Gowun Batang", serif; font-size: 21px; letter-spacing: -.05em; }
+.avatar-button { position: relative; width: 48px; height: 48px; border: 4px solid #fff; border-radius: 2px; background: var(--brown-deep); color: white; font-family: "Nanum Pen Script"; font-size: 20px; box-shadow: 3px 4px 0 #d8cbbb; transform: rotate(2deg); }
+.avatar-button i { position: absolute; right: -6px; bottom: -6px; width: 13px; height: 13px; border: 3px solid var(--paper); border-radius: 50%; background: var(--apricot); }.avatar-button i.online { background: #75926e; }
+.view-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #cfc0b0; }.view-tab { min-height: 42px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); font-family: "Gowun Batang", serif; font-size: 12px; font-weight: 700; cursor: pointer; }.view-tab.active { border-bottom-color: var(--brown); color: var(--brown-deep); }
+
+.hero-card { position: relative; display: flex; justify-content: space-between; align-items: end; min-height: 170px; padding: 30px 27px 25px; margin-bottom: 18px; overflow: hidden; border: 8px solid #fffdf8; border-bottom-width: 28px; border-radius: 3px; color: #fff; background: linear-gradient(135deg, rgba(65,51,43,.18), rgba(38,31,27,.1)), linear-gradient(135deg,#7f8874,#a5a68f); box-shadow: 2px 4px 0 #dfd4c6, var(--shadow); transform: rotate(-.3deg); }
+.hero-card::after { content: "우리의 오늘"; position: absolute; right: 12px; bottom: -23px; color: var(--ink); font-family: "Nanum Pen Script", cursive; font-size: 16px; }
+.album-stamp { position: absolute; right: 16px; top: 15px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.6); font-size: 8px; font-weight: 800; letter-spacing: .16em; transform: rotate(3deg); }
+.hero-card p { margin-bottom: 8px; color: white; opacity: .82; font-size: 12px; }.hero-card h2 { color: white; font-size: clamp(25px,5vw,34px); font-weight: 700; }
+.family-stack { display: flex; flex-direction: column; align-items: end; gap: 5px; z-index: 1; }.family-chip { padding: 5px 10px; border-radius: 2px; color: var(--ink); background: rgba(255,253,248,.92); font-family: "Nanum Pen Script"; font-size: 15px; transform: rotate(-2deg); }.family-chip.mom { transform: translateX(-10px) rotate(2deg); background: #f2d7cf; }.family-chip.baby { transform: translateX(-3px) rotate(-1deg); background: #d7e2e1; }
+
+.calendar-card { padding: 22px 15px 17px; border: 1px solid #ded3c6; border-radius: 4px; background: var(--card); box-shadow: 3px 4px 0 #e1d6c8, var(--shadow); transform: rotate(.12deg); }.calendar-toolbar,.month-nav,.section-heading { display:flex; align-items:center; }.calendar-toolbar { justify-content:space-between; padding:0 4px 14px; }.month-nav { gap:8px; }.month-nav h2 { min-width:116px; text-align:center; font-size:19px; }.icon-button,.today-button,.close-button { border:0; background:transparent; cursor:pointer; }.icon-button { width:33px; height:33px; border-radius:2px; background:#eee5da; font-size:25px; line-height:1; }.today-button { padding:8px 13px; border:1px solid var(--line); border-radius:2px; background:#fffdfa; font-size:11px; font-weight:800; }.weekdays,.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); }.weekdays span { padding:8px 0 12px; color:var(--muted); text-align:center; font-size:10px; font-weight:700; }.weekdays span:first-child { color:#b66f69; }.calendar-day { position:relative; min-height:62px; padding:4px 3px; border:0; border-radius:2px; background:transparent; cursor:pointer; text-align:center; }.calendar-day:hover { background:#f0e8dd; }.calendar-day.outside { opacity:.28; }.calendar-day.selected { color:white; background:var(--brown-deep); box-shadow:2px 2px 0 #ccbba9; transform:rotate(-2deg); }.calendar-day.today:not(.selected) .day-number { color:var(--brown-deep); border:1px solid var(--brown); }.day-number { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; font-size:11px; font-weight:700; }.event-dots { display:flex; justify-content:center; gap:3px; height:8px; margin-top:4px; }.event-dot { width:5px; height:5px; border-radius:50%; background:var(--sage); }.event-dot.엄마 { background:var(--rose); }.event-dot.아빠 { background:var(--apricot); }.event-dot.도윤 { background:var(--sky); }
+
+.agenda-section,.growth-section { padding:30px 5px 0; }.section-heading { justify-content:space-between; margin-bottom:14px; }.section-heading h2 { font-size:22px; }.count-badge { padding:5px 9px; border:1px solid #d5c7b8; border-radius:2px; color:var(--muted); background:#eee5da; font-size:9px; font-weight:800; transform:rotate(2deg); }.agenda-list,.growth-list { display:grid; gap:11px; }.agenda-item,.growth-entry { border:1px solid var(--line); border-radius:3px; background:var(--card); box-shadow:2px 3px 0 #e3d9cc; }.agenda-item { display:grid; grid-template-columns:5px 1fr auto; gap:14px; align-items:center; padding:16px 18px; cursor:pointer; text-align:left; }.agenda-item .bar { align-self:stretch; border-radius:0; background:var(--sage); }.agenda-item .bar.엄마 { background:var(--rose); }.agenda-item .bar.아빠 { background:var(--apricot); }.agenda-item .bar.도윤 { background:var(--sky); }.agenda-item strong { display:block; margin-bottom:4px; font-family:"Gowun Batang",serif; font-size:13px; }.agenda-item small,.agenda-item .time { color:var(--muted); font-size:10px; }.empty-state { padding:29px 18px; border:1px dashed #cdbdac; border-radius:3px; color:var(--muted); background:rgba(255,253,248,.5); font-family:"Gowun Batang",serif; font-size:12px; line-height:1.8; text-align:center; }
+
+.growth-hero { position:relative; display:flex; justify-content:space-between; align-items:center; min-height:175px; padding:29px; border:8px solid #fffdf8; border-bottom-width:27px; border-radius:3px; color:#fff; background:linear-gradient(135deg,#80979b,#b3beb6); box-shadow:3px 4px 0 #ddd2c4,var(--shadow); transform:rotate(.35deg); }.growth-hero::after { content:"Doyun's little days"; position:absolute; left:14px; bottom:-23px; color:var(--ink); font-family:"Nanum Pen Script"; font-size:16px; }.growth-hero h2 { margin-bottom:9px; color:white; font-size:clamp(27px,6vw,36px); }.growth-hero .eyebrow,.growth-hero p { color:white; }.growth-hero p { margin-bottom:0; font-size:11px; opacity:.8; }.growth-sprout { display:grid; place-items:center; width:75px; height:75px; border:1px solid rgba(255,255,255,.6); border-radius:50%; background:rgba(255,255,255,.15); font-size:34px; transform:rotate(5deg); }.growth-entry { display:grid; grid-template-columns:48px 1fr 14px; gap:14px; align-items:center; width:100%; padding:17px; cursor:pointer; text-align:left; }.growth-date { display:flex; flex-direction:column; align-items:center; padding:7px 4px; border:1px solid #cdbfac; border-radius:2px; color:var(--brown); background:#eee7da; font-size:8px; font-weight:800; transform:rotate(-2deg); }.growth-date strong { font-family:"Gowun Batang"; font-size:18px; line-height:1.1; }.growth-body { min-width:0; }.growth-body i { display:block; margin-bottom:4px; color:var(--rose); font-size:9px; font-style:normal; font-weight:800; letter-spacing:.08em; }.growth-body strong,.growth-body small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.growth-body strong { margin-bottom:4px; font-family:"Gowun Batang"; font-size:13px; }.growth-body small { color:var(--muted); font-size:10px; }.growth-arrow { color:#aa9b8e; font-size:22px; }
+
+.fab { position:fixed; z-index:5; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) rotate(-1deg); padding:14px 21px; border:1px solid #33251e; border-radius:3px; color:#fff; background:var(--brown-deep); font-size:12px; font-weight:800; box-shadow:4px 5px 0 rgba(117,88,70,.22); cursor:pointer; }.fab span { font-size:17px; vertical-align:-1px; }
+.sheet-dialog { width:min(calc(100% - 24px),520px); margin:auto auto 12px; padding:0; border:1px solid #d8cbbb; border-radius:5px; color:var(--ink); background:var(--card); box-shadow:0 30px 80px rgba(48,34,26,.26); }.sheet-dialog::backdrop { background:rgba(52,40,32,.52); backdrop-filter:blur(3px); }.sheet-dialog form,.sheet-panel { position:relative; padding:14px 22px 24px; }.sheet-dialog form::before,.sheet-panel::before { content:""; position:absolute; width:78px; height:22px; left:50%; top:-10px; transform:translateX(-50%) rotate(1deg); background:rgba(216,193,159,.7); }.sheet-handle { display:none; }.dialog-header { display:flex; justify-content:space-between; align-items:start; margin:17px 0 20px; }.close-button { width:36px; height:36px; border:1px solid var(--line); border-radius:50%; background:#f3ece2; font-size:22px; } label { display:block; margin-bottom:15px; color:var(--muted); font-size:10px; font-weight:800; } input,select,textarea { width:100%; margin-top:7px; padding:13px 14px; border:1px solid var(--line); border-radius:2px; outline:none; color:var(--ink); background:#fbf7f0; font-size:13px; } input:focus,select:focus,textarea:focus { border-color:var(--brown); box-shadow:0 0 0 3px rgba(117,88,70,.1); } textarea { resize:vertical; }.form-row { display:grid; grid-template-columns:1.2fr .8fr; gap:10px; }.dialog-actions { display:flex; gap:10px; margin-top:22px; }.dialog-actions button { min-height:48px; border:0; border-radius:2px; font-size:12px; font-weight:800; cursor:pointer; }.primary-button { flex:1; color:white; background:var(--brown-deep); }.danger-button { display:none; padding:0 18px; color:#a4534d; background:#f5dfda; }.danger-button.visible { display:block; }
+.account-card { padding:16px; margin-bottom:12px; border:1px solid var(--line); border-radius:3px; background:#f4ece1; }.account-card p { margin-bottom:8px; color:var(--muted); font-size:11px; line-height:1.7; }.account-card strong { font-family:"Gowun Batang"; font-size:13px; }.account-form { display:grid; gap:9px; }.account-form input { margin:0; }.account-form button,.secondary-button { padding:13px; border:0; border-radius:2px; color:white; background:var(--brown); font-size:11px; font-weight:800; }.secondary-button { color:var(--ink); background:#e9ded0; }.invite-code { font-family:"Gowun Batang"; font-size:24px; letter-spacing:.14em; }.toast { position:fixed; z-index:70; left:50%; bottom:95px; transform:translate(-50%,20px); padding:11px 15px; border-radius:2px; color:white; background:rgba(58,47,40,.94); font-size:11px; opacity:0; pointer-events:none; transition:.2s; }.toast.show { opacity:1; transform:translate(-50%,0); }
+
+@media (min-width:700px) { .app-shell { padding-left:30px; padding-right:30px; }.calendar-day { min-height:78px; }.sheet-dialog { margin:auto; }.agenda-list,.growth-list { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:390px) { .auth-panel { padding:31px 20px 24px; }.gate-login-form { grid-template-columns:1fr; }.gate-login-form button { min-height:46px; }.hero-card { padding:23px 20px 22px; }.family-stack { display:none; }.calendar-day { min-height:55px; }.calendar-card { padding-left:8px; padding-right:8px; }.growth-sprout { width:60px; height:60px; font-size:29px; } }
