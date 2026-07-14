@@ -16,6 +16,20 @@ function dateKey(date) {
   return `${y}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 function parseDate(key) { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d); }
+function normalizeEvent(event) { return { ...event, endDate: event.endDate || event.date }; }
+function eventOccursOn(event, key) { return event.date <= key && (event.endDate || event.date) >= key; }
+function dayDistance(startKey, endKey) {
+  const start = parseDate(startKey); const end = parseDate(endKey);
+  return Math.round((Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+}
+function addDays(key, days) { const date = parseDate(key); date.setDate(date.getDate() + days); return dateKey(date); }
+function formatEventRange(event) {
+  if (!event.endDate || event.endDate === event.date) return "";
+  const start = parseDate(event.date); const end = parseDate(event.endDate);
+  const startText = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric" }).format(start);
+  const endText = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric" }).format(end);
+  return `${startText}–${endText}`;
+}
 function startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function escapeHtml(value = "") { return value.replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]); }
@@ -54,7 +68,7 @@ async function bootstrapData() {
     if (state.household) await loadRemoteData(); else { state.events = []; state.growthEntries = []; }
   } else {
     state.household = null;
-    state.events = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    state.events = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeEvent);
     state.growthEntries = JSON.parse(localStorage.getItem(GROWTH_STORAGE_KEY) || "[]");
   }
   render();
@@ -78,8 +92,8 @@ async function loadRemoteData() {
   }
 }
 
-function fromRemote(row) { return { id: row.id, title: row.title, date: row.event_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }; }
-function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
+function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
+function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_end_date: event.endDate || event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
 function fromGrowthRemote(row) {
   return {
     id: row.id, title: row.title, date: row.entry_date, time: row.entry_time?.slice(0, 5) || "", category: row.category,
@@ -123,7 +137,9 @@ function bindUi() {
   $("#eventForm").addEventListener("submit", saveEvent);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
   $("#eventAllDay").addEventListener("change", syncAllDayControl);
-  $("#eventDate").addEventListener("change", syncDateShortcutSelection);
+  $("#eventHasRange").addEventListener("change", syncRangeControl);
+  $("#eventDate").addEventListener("change", syncRangeDates);
+  $("#eventEndDate").addEventListener("change", syncRangeDates);
   document.querySelectorAll("#eventMemberSelector [data-member]").forEach((button) => button.addEventListener("click", () => selectEventMember(button.dataset.member)));
   document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.addEventListener("click", () => applyDateShortcut(button.dataset.dateShortcut)));
   $("#growthForm").addEventListener("submit", saveGrowthEntry);
@@ -140,7 +156,7 @@ function render() { renderHeader(); renderCalendar(); renderAgenda(); renderGrow
 function renderHeader() {
   const today = new Date();
   $("#todayLabel").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "long" }).format(today);
-  const todayEvents = state.events.filter((event) => event.date === dateKey(today));
+  const todayEvents = state.events.filter((event) => eventOccursOn(event, dateKey(today)));
   $("#todaySummary").textContent = todayEvents.length ? `오늘은 ${todayEvents.length}개의 약속이 있어요` : "오늘도 우리답게";
 }
 function updateSyncBadge() { $("#syncDot").classList.toggle("online", Boolean(state.session && state.household)); }
@@ -165,7 +181,7 @@ function renderCalendar() {
   const grid = $("#calendarGrid"); grid.innerHTML = "";
   for (let i = 0; i < 42; i++) {
     const day = new Date(start); day.setDate(start.getDate() + i); const key = dateKey(day);
-    const dayEvents = state.events.filter((event) => event.date === key);
+    const dayEvents = state.events.filter((event) => eventOccursOn(event, key));
     const button = document.createElement("button"); button.className = "calendar-day";
     if (day.getMonth() !== month) button.classList.add("outside");
     if (key === state.selectedDate) button.classList.add("selected");
@@ -173,7 +189,7 @@ function renderCalendar() {
     button.dataset.date = key;
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개`);
     const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
-    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.member}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
+    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.member} ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
     button.addEventListener("click", () => { state.selectedDate = key; if (day.getMonth() !== month) state.viewDate = startOfMonth(day); renderCalendar(); renderAgenda(); });
     grid.appendChild(button);
   }
@@ -187,13 +203,13 @@ function renderCalendar() {
 }
 
 function renderAgenda() {
-  const date = parseDate(state.selectedDate); const events = state.events.filter((event) => event.date === state.selectedDate).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+  const date = parseDate(state.selectedDate); const events = state.events.filter((event) => eventOccursOn(event, state.selectedDate)).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
   $("#agendaTitle").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(date);
   $("#agendaCount").textContent = `${events.length}개 일정`;
   $("#quickDateBadge").innerHTML = `<strong>${date.getDate()}</strong><span>${date.getMonth() + 1}월</span>`;
   const list = $("#agendaList");
   if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>위 입력창에 이름만 적으면 바로 추가할 수 있어요.</span></div>`; return; }
-  list.innerHTML = events.map((event) => `<article class="agenda-item" data-id="${event.id}"><i class="bar ${event.member}"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="time">${event.time || "종일"}</span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
+  list.innerHTML = events.map((event) => `<article class="agenda-item" data-id="${event.id}"><i class="bar ${event.member}"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
   list.querySelectorAll(".agenda-item").forEach((item) => {
     const event = state.events.find((entry) => entry.id === item.dataset.id);
     item.querySelector(".agenda-main").addEventListener("click", () => openEventDialog(event));
@@ -222,7 +238,7 @@ async function quickAddEvent(event) {
   if (state.supabase && !state.household) return toast("먼저 가족 공간을 만들어주세요");
   const title = $("#quickEventTitle").value.trim();
   if (!title) return;
-  const item = { id: uid(), title, date: state.selectedDate, time: $("#quickEventTime").value, member: state.quickMember, note: "" };
+  const item = { id: uid(), title, date: state.selectedDate, endDate: state.selectedDate, time: $("#quickEventTime").value, member: state.quickMember, note: "" };
   if (!await storeEvent(item)) return;
   state.events.push(item);
   persistLocal();
@@ -291,14 +307,18 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
   const event = state.events.find((item) => item.id === id);
   if (!event || event.date === targetDate) return toast("같은 날짜의 일정이에요");
   const previousDate = event.date;
+  const previousEndDate = event.endDate || event.date;
+  const duration = dayDistance(previousDate, previousEndDate);
   event.date = targetDate;
+  event.endDate = addDays(targetDate, duration);
   state.selectedDate = targetDate;
   state.viewDate = startOfMonth(parseDate(targetDate));
   render();
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").update({ event_date: targetDate, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) {
       event.date = previousDate;
+      event.endDate = previousEndDate;
       state.selectedDate = previousDate;
       state.viewDate = startOfMonth(parseDate(previousDate));
       render();
@@ -308,13 +328,16 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
     persistLocal();
   }
   const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(targetDate));
-  toast(`${formatted}로 이동했어요`, offerUndo ? { label: "되돌리기", run: () => moveEventToDate(id, previousDate, false) } : null);
+  toast(`${formatted}로${duration ? ` ${duration + 1}일 기간을` : ""} 이동했어요`, offerUndo ? { label: "되돌리기", run: () => moveEventToDate(id, previousDate, false) } : null);
 }
 
 async function storeEvent(item) {
   if (state.supabase && state.session) {
     const { error } = await state.supabase.from("events").upsert(toRemote(item));
-    if (error) { toast("저장하지 못했어요"); return false; }
+    if (error) {
+      toast(error.message?.includes("event_end_date") ? "Supabase 날짜 범위 업데이트가 필요해요" : "저장하지 못했어요");
+      return false;
+    }
   }
   return true;
 }
@@ -325,11 +348,14 @@ function openEventDialog(event = null) {
   $("#eventId").value = event?.id || "";
   $("#eventTitle").value = event?.title || "";
   $("#eventDate").value = event?.date || state.selectedDate;
+  $("#eventEndDate").value = event?.endDate || event?.date || state.selectedDate;
+  $("#eventHasRange").checked = Boolean(event && event.endDate && event.endDate !== event.date);
   $("#eventTime").value = event?.time || "";
   $("#eventAllDay").checked = !event?.time;
   selectEventMember(event?.member || MEMBERS[0]);
   $("#eventNote").value = event?.note || "";
   syncAllDayControl();
+  syncRangeControl();
   syncDateShortcutSelection();
   $("#deleteEventButton").classList.toggle("visible", Boolean(event)); $("#eventDialog").showModal(); setTimeout(() => $("#eventTitle").focus(), 100);
 }
@@ -345,11 +371,31 @@ function syncAllDayControl() {
   if (allDay) $("#eventTime").value = "";
 }
 
+function syncRangeControl() {
+  const hasRange = $("#eventHasRange").checked;
+  $("#eventEndDateField").hidden = !hasRange;
+  $("#eventEndDateField").parentElement.classList.toggle("has-range", hasRange);
+  if (!hasRange || !$("#eventEndDate").value) $("#eventEndDate").value = $("#eventDate").value;
+  syncRangeDates();
+}
+
+function syncRangeDates() {
+  const start = $("#eventDate").value;
+  const end = $("#eventEndDate").value;
+  $("#eventEndDate").min = start;
+  if (start && (!end || end < start)) $("#eventEndDate").value = start;
+  syncDateShortcutSelection();
+}
+
 function applyDateShortcut(shortcut) {
   const date = shortcut === "selected" ? parseDate(state.selectedDate) : new Date();
   if (shortcut === "tomorrow") date.setDate(date.getDate() + 1);
+  const currentStart = $("#eventDate").value;
+  const currentEnd = $("#eventEndDate").value || currentStart;
+  const duration = $("#eventHasRange").checked && currentStart ? Math.max(0, dayDistance(currentStart, currentEnd)) : 0;
   $("#eventDate").value = dateKey(date);
-  syncDateShortcutSelection();
+  $("#eventEndDate").value = addDays(dateKey(date), duration);
+  syncRangeDates();
 }
 
 function syncDateShortcutSelection() {
@@ -363,7 +409,10 @@ function syncDateShortcutSelection() {
 async function saveEvent(event) {
   event.preventDefault();
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
-  const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: $("#eventDate").value, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
+  const startDate = $("#eventDate").value;
+  const endDate = $("#eventHasRange").checked ? $("#eventEndDate").value : startDate;
+  if (endDate < startDate) return toast("종료일은 시작일 이후로 선택해 주세요");
+  const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: startDate, endDate, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
   if (!await storeEvent(item)) return;
   const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
   persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
