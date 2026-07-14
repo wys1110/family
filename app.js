@@ -78,6 +78,7 @@ function toast(message, action = null) {
 }
 
 async function init() {
+  lockMobileZoom();
   bindUi();
   renderDailyVerse();
   setInterval(renderDailyVerse, 60 * 1000);
@@ -93,6 +94,13 @@ async function init() {
   }
   state.authReady = true;
   await bootstrapData();
+}
+
+function lockMobileZoom() {
+  const preventGestureZoom = (event) => event.preventDefault();
+  ["gesturestart", "gesturechange", "gestureend"].forEach((type) => {
+    document.addEventListener(type, preventGestureZoom, { passive: false });
+  });
 }
 
 function renderDailyVerse() {
