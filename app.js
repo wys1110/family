@@ -216,7 +216,13 @@ function renderCalendar() {
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개`);
     const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
     button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.member} ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
-    button.addEventListener("click", () => { state.selectedDate = key; if (day.getMonth() !== month) state.viewDate = startOfMonth(day); renderCalendar(); renderAgenda(); });
+    button.addEventListener("click", () => {
+      state.selectedDate = key;
+      if (day.getMonth() !== month) state.viewDate = startOfMonth(day);
+      renderCalendar();
+      renderAgenda();
+      focusQuickEventInput();
+    });
     grid.appendChild(button);
   }
   grid.querySelectorAll(".day-event-preview").forEach((preview) => {
@@ -226,6 +232,12 @@ function renderCalendar() {
       if (item) openEventDialog(item);
     });
   });
+}
+
+function focusQuickEventInput() {
+  const input = $("#quickEventTitle");
+  input.focus({ preventScroll: true });
+  $("#quickEventForm").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function renderAgenda() {
