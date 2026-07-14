@@ -8,12 +8,13 @@
     <title>우리 가족</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Manrope:wght@500;600;700;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
       <div class="auth-panel">
+        <span class="album-kicker">FAMILY ARCHIVE · 2026</span>
         <div class="auth-illustration" aria-hidden="true">
           <span class="auth-face dad-face">아빠</span>
           <span class="auth-face baby-face">도윤</span>
@@ -29,6 +30,7 @@
           <button type="submit">로그인 링크 받기</button>
         </form>
         <p class="auth-note">비밀번호 없이 안전한 로그인 링크를 보내드려요.</p>
+        <span class="handwritten-note">우리의 평범해서 특별한 날들</span>
       </div>
     </section>
 
@@ -36,7 +38,7 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">우리 가족의 하루</p>
-          <h1>함께라서 좋은 날들</h1>
+          <h1>함께라서 좋은 날들 <span class="title-mark">♥</span></h1>
         </div>
         <button class="avatar-button" id="accountButton" aria-label="계정 및 저장 상태">
           <span>우</span><i id="syncDot"></i>
@@ -51,6 +53,7 @@
 
         <div id="calendarView">
         <section class="hero-card">
+          <span class="album-stamp">VOL. 01</span>
           <div>
             <p id="todayLabel"></p>
             <h2 id="todaySummary">오늘도 우리답게</h2>
