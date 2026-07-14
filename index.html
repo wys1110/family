@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f2f2f7" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-growth-records" />
+    <link rel="stylesheet" href="styles.css?v=20260715-date-ranges" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -150,7 +150,14 @@
           <button type="button" data-date-shortcut="today">오늘</button>
           <button type="button" data-date-shortcut="tomorrow">내일</button>
         </div>
-        <label>날짜<input id="eventDate" type="date" required /></label>
+        <div class="range-toggle-row">
+          <span><strong>여러 날 일정</strong><small>여행이나 휴가처럼 기간으로 표시</small></span>
+          <label class="ios-switch"><input id="eventHasRange" type="checkbox" /><span></span></label>
+        </div>
+        <div class="event-date-fields">
+          <label>시작일<input id="eventDate" type="date" required /></label>
+          <label id="eventEndDateField" hidden>종료일<input id="eventEndDate" type="date" required /></label>
+        </div>
         <div class="all-day-row">
           <span><strong>종일 일정</strong><small>시간 없이 하루 일정으로 표시</small></span>
           <label class="ios-switch"><input id="eventAllDay" type="checkbox" checked /><span></span></label>
@@ -235,8 +242,8 @@
 
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
-    <script src="config.js?v=20260715-growth-records"></script>
+    <script src="config.js?v=20260715-date-ranges"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-growth-records"></script>
+    <script src="app.js?v=20260715-date-ranges"></script>
   </body>
 </html>
