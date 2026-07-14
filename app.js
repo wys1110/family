@@ -11,6 +11,7 @@ const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
 const BABY_STORAGE_KEY = "family-babies-v1";
 const ACTIVE_BABY_KEY = "family-active-baby-v1";
 const ACTIVE_VIEW_KEY = "family-active-view-v1";
+const GROWTH_SUMMARY_PERIOD_KEY = "family-growth-summary-period-v1";
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -27,7 +28,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -65,6 +66,12 @@ function storedActiveView() {
     const saved = localStorage.getItem(ACTIVE_VIEW_KEY);
     return saved === "growth" ? "growth" : "calendar";
   } catch { return "calendar"; }
+}
+function storedGrowthSummaryPeriod() {
+  try {
+    const saved = localStorage.getItem(GROWTH_SUMMARY_PERIOD_KEY);
+    return ["day", "week", "month"].includes(saved) ? saved : "day";
+  } catch { return "day"; }
 }
 function localMembers() {
   try {
@@ -233,6 +240,7 @@ function bindUi() {
   $("#babyForm").addEventListener("submit", saveBaby);
   $("#babySelector").addEventListener("click", selectBabyFromEvent);
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
+  $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
@@ -590,6 +598,7 @@ function renderGrowth() {
   renderBabyProfile(baby);
   const allEntries = activeBabyEntries();
   renderTodayCareSummary(allEntries);
+  renderGrowthSummary(allEntries);
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
@@ -647,6 +656,52 @@ function renderTodayCareSummary(entries) {
     ["오늘", `${items.length}개`, "전체 기록"],
   ];
   $("#todayCareSummary").innerHTML = cards.map(([label, value, note]) => `<article><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+}
+
+function renderGrowthSummary(entries) {
+  const periodDays = { day: 1, week: 7, month: 30 }[state.growthSummaryPeriod] || 1;
+  const end = dateKey(new Date());
+  const start = addDays(end, 1 - periodDays);
+  const items = entries.filter((entry) => entry.date >= start && entry.date <= end);
+  const feeding = items.filter((entry) => entry.category === "수유·이유식");
+  const sleep = items.filter((entry) => entry.category === "수면");
+  const diapers = items.filter((entry) => entry.category === "기저귀");
+  const feedingMl = feeding.reduce((sum, entry) => sum + (entry.feedingMl || 0), 0);
+  const feedingMinutes = feeding.reduce((sum, entry) => sum + (entry.feedingMinutes || 0), 0);
+  const sleepMinutes = sleep.reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0);
+  const wetDiapers = diapers.filter((entry) => entry.diaperKind?.includes("소변")).length;
+  const dirtyDiapers = diapers.filter((entry) => entry.diaperKind?.includes("대변")).length;
+  const photoCount = items.reduce((sum, entry) => sum + (entry.photoPaths?.length || 0), 0);
+  const growthCount = items.filter((entry) => entry.category === "성장").length;
+  const healthCount = items.filter((entry) => entry.category === "건강·병원").length;
+  const momentCount = items.filter((entry) => entry.category === "첫 순간").length;
+  const feedingNotes = [];
+  if (feedingMl) feedingNotes.push(`젖병 ${feedingMl}ml`);
+  if (feedingMinutes) feedingNotes.push(`모유 ${formatDuration(feedingMinutes)}`);
+  const averageNote = periodDays > 1 ? `하루 평균 ${formatDuration(Math.round(sleepMinutes / periodDays))}` : `${sleep.length}회 기록`;
+  const cards = [
+    ["수유", `${feeding.length}회`, feedingNotes.join(" · ") || (feeding.length ? "수유량·시간 미입력" : "기록 없음"), "feed"],
+    ["수면", formatDuration(sleepMinutes), sleepMinutes ? averageNote : "기록 없음", "sleep"],
+    ["기저귀", `${diapers.length}회`, diapers.length ? `소변 ${wetDiapers} · 대변 ${dirtyDiapers}` : "기록 없음", "diaper"],
+    ["전체 기록", `${items.length}개`, photoCount ? `사진 ${photoCount}장` : "사진 기록 없음", "all"],
+  ];
+  const formatRangeDay = (key) => { const date = parseDate(key); return `${date.getMonth() + 1}.${date.getDate()}`; };
+  $("#growthSummaryRange").textContent = periodDays === 1 ? `오늘 · ${formatRangeDay(end)}` : `최근 ${periodDays}일 · ${formatRangeDay(start)}–${formatRangeDay(end)}`;
+  $("#growthSummaryGrid").innerHTML = cards.map(([label, value, note, type]) => `<article class="summary-card ${type}"><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+  $("#growthSummaryFooter").textContent = items.length ? `성장 ${growthCount}회 · 건강 ${healthCount}회 · 첫 순간 ${momentCount}회` : "이 기간에는 아직 기록이 없어요.";
+  $("#growthSummaryPeriod").querySelectorAll("[data-summary-period]").forEach((button) => {
+    const active = button.dataset.summaryPeriod === state.growthSummaryPeriod;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function changeGrowthSummaryPeriod(event) {
+  const button = event.target.closest("[data-summary-period]");
+  if (!button) return;
+  state.growthSummaryPeriod = button.dataset.summaryPeriod;
+  try { localStorage.setItem(GROWTH_SUMMARY_PERIOD_KEY, state.growthSummaryPeriod); } catch { /* 현재 화면에는 그대로 적용 */ }
+  renderGrowthSummary(activeBabyEntries());
 }
 
 function renderGrowthInsights(entries) {
