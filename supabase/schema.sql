@@ -30,6 +30,18 @@ create table public.babies (
   updated_at timestamptz not null default now()
 );
 
+create table public.calendar_members (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 20),
+  color text not null check (color ~ '^#[0-9A-Fa-f]{6}$'),
+  sort_order integer not null default 0,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (household_id, name)
+);
+
 create table public.events (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
@@ -37,7 +49,7 @@ create table public.events (
   event_date date not null,
   event_end_date date not null check (event_end_date >= event_date),
   event_time time,
-  member text not null default '가족' check (member in ('가족', '아빠', '엄마', '도윤')),
+  member text not null default '가족' check (char_length(member) between 1 and 20),
   note text check (char_length(note) <= 300),
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -71,11 +83,13 @@ create table public.growth_entries (
 
 create index events_household_date_idx on public.events(household_id, event_date);
 create index babies_household_birth_idx on public.babies(household_id, birth_date);
+create index calendar_members_household_sort_idx on public.calendar_members(household_id, sort_order);
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.events enable row level security;
 alter table public.babies enable row level security;
+alter table public.calendar_members enable row level security;
 alter table public.growth_entries enable row level security;
 
 create or replace function public.is_household_member(target_household uuid)
@@ -92,6 +106,10 @@ create policy "members can view babies" on public.babies for select to authentic
 create policy "members can create babies" on public.babies for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update babies" on public.babies for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete babies" on public.babies for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can view calendar members" on public.calendar_members for select to authenticated using (public.is_household_member(household_id));
+create policy "members can create calendar members" on public.calendar_members for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
+create policy "members can update calendar members" on public.calendar_members for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
+create policy "members can delete calendar members" on public.calendar_members for delete to authenticated using (public.is_household_member(household_id));
 create policy "members can view growth entries" on public.growth_entries for select to authenticated using (public.is_household_member(household_id));
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
@@ -120,6 +138,11 @@ begin
   if exists(select 1 from household_members where user_id = auth.uid()) then raise exception 'already in a household'; end if;
   insert into households(name, owner_id) values (household_name, auth.uid()) returning id into new_id;
   insert into household_members(household_id, user_id, role) values (new_id, auth.uid(), 'owner');
+  insert into calendar_members(household_id, name, color, sort_order, created_by) values
+    (new_id, '가족', '#5F8069', 0, auth.uid()),
+    (new_id, '아빠', '#B57D4B', 1, auth.uid()),
+    (new_id, '엄마', '#A56D78', 2, auth.uid()),
+    (new_id, '도윤', '#4B91A8', 3, auth.uid());
   return new_id;
 end $$;
 

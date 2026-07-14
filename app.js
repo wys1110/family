@@ -1,5 +1,12 @@
-const MEMBERS = ["가족", "아빠", "엄마", "도윤"];
+const DEFAULT_FAMILY_MEMBERS = [
+  { name: "가족", color: "#5F8069" },
+  { name: "아빠", color: "#B57D4B" },
+  { name: "엄마", color: "#A56D78" },
+  { name: "도윤", color: "#4B91A8" },
+];
+const MEMBER_COLORS = ["#5F8069", "#B57D4B", "#A56D78", "#4B91A8", "#76699A", "#A58A45", "#B5554E", "#4C857D"];
 const STORAGE_KEY = "family-calendar-events-v1";
+const MEMBER_STORAGE_KEY = "family-calendar-members-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
 const BABY_STORAGE_KEY = "family-babies-v1";
 const ACTIVE_BABY_KEY = "family-active-baby-v1";
@@ -7,7 +14,7 @@ const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_GROWTH_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: "calendar", quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -37,6 +44,15 @@ function formatEventRange(event) {
 function startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function escapeHtml(value = "") { return value.replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]); }
+function validColor(color) { return /^#[0-9a-f]{6}$/i.test(color || "") ? color.toUpperCase() : MEMBER_COLORS[0]; }
+function memberColor(name) { return validColor(state.familyMembers.find((member) => member.name === name)?.color || DEFAULT_FAMILY_MEMBERS.find((member) => member.name === name)?.color); }
+function memberStyle(name) { return `--member-color:${memberColor(name)}`; }
+function localMembers() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(MEMBER_STORAGE_KEY) || "[]");
+    return saved.length ? saved.map((member) => ({ ...member, color: validColor(member.color) })) : [...DEFAULT_FAMILY_MEMBERS];
+  } catch { return [...DEFAULT_FAMILY_MEMBERS]; }
+}
 function toast(message, action = null) {
   const el = $("#toast");
   $("#toastMessage").textContent = message;
@@ -69,9 +85,10 @@ async function bootstrapData() {
   if (state.supabase && state.session) {
     const { data: memberships } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
     state.household = memberships?.[0]?.households || null;
-    if (state.household) await loadRemoteData(); else { state.babies = []; state.events = []; state.growthEntries = []; }
+    if (state.household) await loadRemoteData(); else { state.babies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
   } else {
     state.household = null;
+    state.familyMembers = localMembers();
     state.babies = JSON.parse(localStorage.getItem(BABY_STORAGE_KEY) || "[]");
     state.events = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeEvent);
     state.growthEntries = JSON.parse(localStorage.getItem(GROWTH_STORAGE_KEY) || "[]");
@@ -86,10 +103,11 @@ async function bootstrapData() {
 }
 
 async function loadRemoteData() {
-  const [babiesResult, eventsResult, growthResult] = await Promise.all([
+  const [babiesResult, eventsResult, growthResult, membersResult] = await Promise.all([
     state.supabase.from("babies").select("*").eq("household_id", state.household.id).order("birth_date"),
     state.supabase.from("events").select("*").eq("household_id", state.household.id).order("event_date"),
     state.supabase.from("growth_entries").select("*").eq("household_id", state.household.id).order("entry_date", { ascending: false }),
+    state.supabase.from("calendar_members").select("*").eq("household_id", state.household.id).order("sort_order"),
   ]);
   if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요"); else state.babies = babiesResult.data.map(fromBabyRemote);
   if (eventsResult.error) toast("일정을 불러오지 못했어요"); else state.events = eventsResult.data.map(fromRemote);
@@ -98,6 +116,10 @@ async function loadRemoteData() {
     state.growthEntries = growthResult.data.map(fromGrowthRemote);
     await hydrateGrowthPhotoUrls(state.growthEntries);
   }
+  state.familyMembers = membersResult.error || !membersResult.data?.length
+    ? [...DEFAULT_FAMILY_MEMBERS]
+    : membersResult.data.map((row) => ({ id: row.id, name: row.name, color: validColor(row.color) }));
+  if (!state.familyMembers.some((member) => member.name === state.quickMember)) state.quickMember = state.familyMembers[0]?.name || "가족";
 }
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
@@ -151,14 +173,16 @@ function bindUi() {
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
   $("#quickEventForm").addEventListener("submit", quickAddEvent);
   $("#quickTimeButton").addEventListener("click", toggleQuickTime);
-  document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.addEventListener("click", () => selectQuickMember(button.dataset.member)));
+  $("#quickMemberChips").addEventListener("click", handleMemberControlClick);
   $("#eventForm").addEventListener("submit", saveEvent);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
   $("#eventAllDay").addEventListener("change", syncAllDayControl);
   $("#eventHasRange").addEventListener("change", syncRangeControl);
   $("#eventDate").addEventListener("change", syncRangeDates);
   $("#eventEndDate").addEventListener("change", syncRangeDates);
-  document.querySelectorAll("#eventMemberSelector [data-member]").forEach((button) => button.addEventListener("click", () => selectEventMember(button.dataset.member)));
+  $("#eventMemberSelector").addEventListener("click", handleMemberControlClick);
+  $("#memberForm").addEventListener("submit", saveFamilyMember);
+  $("#memberColorPalette").addEventListener("click", selectMemberColor);
   document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.addEventListener("click", () => applyDateShortcut(button.dataset.dateShortcut)));
   $("#growthForm").addEventListener("submit", saveGrowthEntry);
   $("#deleteGrowthButton").addEventListener("click", deleteGrowthEntry);
@@ -178,7 +202,22 @@ function bindUi() {
 }
 
 function changeMonth(delta) { state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1); renderCalendar(); }
-function render() { renderHeader(); renderCalendar(); renderAgenda(); renderGrowth(); updateSyncBadge(); }
+function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); updateSyncBadge(); }
+function renderMemberControls() {
+  const quick = $("#quickMemberChips");
+  const selector = $("#eventMemberSelector");
+  quick.innerHTML = state.familyMembers.map((member) => `<button class="member-chip${member.name === state.quickMember ? " selected" : ""}" style="${memberStyle(member.name)}" type="button" data-member="${escapeHtml(member.name)}"><i></i>${escapeHtml(member.name)}</button>`).join("") + `<button class="member-add-chip" type="button" data-add-member aria-label="가족 구성원 추가">＋ 추가</button>`;
+  const selected = $("#eventMember").value || state.familyMembers[0]?.name || "가족";
+  selector.innerHTML = state.familyMembers.map((member) => `<button class="${member.name === selected ? "selected" : ""}" style="${memberStyle(member.name)}" type="button" data-member="${escapeHtml(member.name)}"><i></i>${escapeHtml(member.name)}</button>`).join("") + `<button class="member-selector-add" type="button" data-add-member><i>＋</i>구성원 추가</button>`;
+}
+function handleMemberControlClick(event) {
+  const addButton = event.target.closest("[data-add-member]");
+  if (addButton) return openMemberDialog();
+  const button = event.target.closest("[data-member]");
+  if (!button) return;
+  if (event.currentTarget.id === "quickMemberChips") selectQuickMember(button.dataset.member);
+  else selectEventMember(button.dataset.member);
+}
 function renderHeader() {
   const today = new Date();
   $("#todayLabel").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "long" }).format(today);
@@ -215,7 +254,7 @@ function renderCalendar() {
     button.dataset.date = key;
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개`);
     const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
-    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.member} ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
+    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" style="${memberStyle(firstEvent.member)}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
     button.addEventListener("click", () => {
       state.selectedDate = key;
       if (day.getMonth() !== month) state.viewDate = startOfMonth(day);
@@ -247,7 +286,7 @@ function renderAgenda() {
   $("#quickDateBadge").innerHTML = `<strong>${date.getDate()}</strong><span>${date.getMonth() + 1}월</span>`;
   const list = $("#agendaList");
   if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>위 입력창에 이름만 적으면 바로 추가할 수 있어요.</span></div>`; return; }
-  list.innerHTML = events.map((event) => `<article class="agenda-item" data-id="${event.id}"><i class="bar ${event.member}"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
+  list.innerHTML = events.map((event) => `<article class="agenda-item" style="${memberStyle(event.member)}" data-id="${event.id}"><i class="bar"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small><i class="member-dot"></i>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
   list.querySelectorAll(".agenda-item").forEach((item) => {
     const event = state.events.find((entry) => entry.id === item.dataset.id);
     item.querySelector(".agenda-main").addEventListener("click", () => openEventDialog(event));
@@ -259,6 +298,45 @@ function renderAgenda() {
 function selectQuickMember(member) {
   state.quickMember = member;
   document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.classList.toggle("selected", button.dataset.member === member));
+}
+
+function openMemberDialog() {
+  $("#memberForm").reset();
+  $("#memberColor").value = MEMBER_COLORS[state.familyMembers.length % MEMBER_COLORS.length];
+  renderMemberPalette();
+  $("#memberDialog").showModal();
+  setTimeout(() => $("#memberName").focus(), 100);
+}
+function renderMemberPalette() {
+  const selected = validColor($("#memberColor").value);
+  $("#memberColorPalette").innerHTML = MEMBER_COLORS.map((color) => `<button type="button" class="color-choice${color === selected ? " selected" : ""}" style="--choice-color:${color}" data-color="${color}" aria-label="${color} 색상"><i></i></button>`).join("");
+}
+function selectMemberColor(event) {
+  const button = event.target.closest("[data-color]");
+  if (!button) return;
+  $("#memberColor").value = validColor(button.dataset.color);
+  renderMemberPalette();
+}
+async function saveFamilyMember(event) {
+  event.preventDefault();
+  const name = $("#memberName").value.trim();
+  const color = validColor($("#memberColor").value);
+  if (!name) return;
+  if (state.familyMembers.some((member) => member.name.toLocaleLowerCase() === name.toLocaleLowerCase())) return toast("이미 등록된 이름이에요");
+  const member = { id: uid(), name, color };
+  if (state.supabase && state.session) {
+    if (!state.household) return toast("먼저 가족 공간을 만들어주세요");
+    const { data, error } = await state.supabase.from("calendar_members").insert({ id: member.id, household_id: state.household.id, name, color, sort_order: state.familyMembers.length, created_by: state.session.user.id }).select().single();
+    if (error) return toast(error.message?.includes("calendar_members") ? "Supabase 가족 구성원 업데이트가 필요해요" : "가족 구성원을 추가하지 못했어요");
+    member.id = data.id;
+  }
+  state.familyMembers.push(member);
+  if (!state.supabase) localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(state.familyMembers));
+  state.quickMember = member.name;
+  $("#eventMember").value = member.name;
+  renderMemberControls(); renderCalendar(); renderAgenda();
+  $("#memberDialog").close();
+  toast(`${name} 구성원을 추가했어요`);
 }
 
 function toggleQuickTime() {
@@ -299,7 +377,8 @@ function beginEventDrag(pointerEvent, event, source) {
   const ghost = $("#dragGhost");
   dragState = { pointerId: pointerEvent.pointerId, event, source, targetDate: null };
   source.setPointerCapture?.(pointerEvent.pointerId);
-  ghost.innerHTML = `<i class="bar ${event.member}"></i><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)} · 날짜 이동</small></span>`;
+  ghost.style.setProperty("--member-color", memberColor(event.member));
+  ghost.innerHTML = `<i class="bar"></i><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)} · 날짜 이동</small></span>`;
   ghost.classList.add("show");
   document.body.classList.add("dragging-event");
   moveDragGhost(pointerEvent.clientX, pointerEvent.clientY);
@@ -390,7 +469,7 @@ function openEventDialog(event = null) {
   $("#eventHasRange").checked = Boolean(event && event.endDate && event.endDate !== event.date);
   $("#eventTime").value = event?.time || "";
   $("#eventAllDay").checked = !event?.time;
-  selectEventMember(event?.member || MEMBERS[0]);
+  selectEventMember(event?.member || state.familyMembers[0]?.name || "가족");
   $("#eventNote").value = event?.note || "";
   syncAllDayControl();
   syncRangeControl();
