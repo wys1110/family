@@ -53,9 +53,14 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - 도윤이 성장일기(첫 순간, 성장, 수유, 수면, 기저귀, 건강·병원, 놀이)
 - 시간과 유형별 수치 기록(키, 몸무게, 머리둘레, 수유량, 수면시간, 체온)
 - 기록당 사진 최대 4장 업로드(비공개 Supabase Storage, 가족 구성원 전용)
+- 여러 아기 프로필과 태어난 날 기준 D-day·생후 일수
+- 수유·수면·기저귀 원터치 기록과 오늘 요약
+- 최근 성장 측정 및 비공개 사진 타임라인
 
 이미 초기 스키마를 적용한 프로젝트에서 성장일기를 추가하려면 SQL Editor에서 [`supabase/migrations/20260714_growth_diary.sql`](supabase/migrations/20260714_growth_diary.sql)을 한 번 실행합니다.
 
 기존 성장일기에 상세 기록과 사진 업로드를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_growth_records_and_photos.sql`](supabase/migrations/20260715_growth_records_and_photos.sql)을 한 번 실행합니다. 이 마이그레이션은 비공개 `growth-photos` 버킷과 가족 단위 Storage RLS 정책도 함께 만듭니다.
+
+아기 프로필, 생후 일수, 원터치 수유 기록을 추가하려면 [`supabase/migrations/20260715_baby_profiles_and_quick_logs.sql`](supabase/migrations/20260715_baby_profiles_and_quick_logs.sql)을 SQL Editor에서 한 번 실행합니다.
 
 기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.

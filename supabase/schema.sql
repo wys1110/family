@@ -16,6 +16,20 @@ create table public.household_members (
   primary key (household_id, user_id)
 );
 
+create table public.babies (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 30),
+  birth_date date not null,
+  birth_time time,
+  sex text check (sex in ('남아', '여아')),
+  birth_weight_kg numeric(4,2) check (birth_weight_kg between 0.3 and 10),
+  birth_height_cm numeric(4,1) check (birth_height_cm between 20 and 80),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table public.events (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
@@ -33,6 +47,7 @@ create table public.events (
 create table public.growth_entries (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
+  baby_id uuid references public.babies(id) on delete cascade,
   title text not null check (char_length(title) between 1 and 60),
   entry_date date not null,
   entry_time time,
@@ -41,6 +56,9 @@ create table public.growth_entries (
   weight_kg numeric(5,2) check (weight_kg > 0 and weight_kg <= 200),
   head_cm numeric(4,1) check (head_cm > 0 and head_cm <= 100),
   feeding_ml integer check (feeding_ml > 0 and feeding_ml <= 3000),
+  feeding_type text check (feeding_type in ('모유', '젖병', '이유식')),
+  feeding_side text check (feeding_side in ('왼쪽', '오른쪽', '양쪽')),
+  feeding_minutes integer check (feeding_minutes > 0 and feeding_minutes <= 240),
   sleep_minutes integer check (sleep_minutes > 0 and sleep_minutes <= 1440),
   temperature_c numeric(3,1) check (temperature_c between 30 and 45),
   diaper_kind text check (diaper_kind in ('소변', '대변', '소변·대변')),
@@ -52,10 +70,12 @@ create table public.growth_entries (
 );
 
 create index events_household_date_idx on public.events(household_id, event_date);
+create index babies_household_birth_idx on public.babies(household_id, birth_date);
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.events enable row level security;
+alter table public.babies enable row level security;
 alter table public.growth_entries enable row level security;
 
 create or replace function public.is_household_member(target_household uuid)
@@ -68,6 +88,10 @@ create policy "members can view events" on public.events for select to authentic
 create policy "members can create events" on public.events for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update events" on public.events for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete events" on public.events for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can view babies" on public.babies for select to authenticated using (public.is_household_member(household_id));
+create policy "members can create babies" on public.babies for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
+create policy "members can update babies" on public.babies for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
+create policy "members can delete babies" on public.babies for delete to authenticated using (public.is_household_member(household_id));
 create policy "members can view growth entries" on public.growth_entries for select to authenticated using (public.is_household_member(household_id));
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
