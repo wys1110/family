@@ -50,6 +50,10 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - Supabase 이메일 로그인 및 가족 초대 코드
 - Google 소셜 로그인
 - 가족 단위 RLS 데이터 보호
-- 도윤이 성장일기(날짜, 분류, 키, 몸무게, 메모)
+- 도윤이 성장일기(첫 순간, 성장, 수유, 수면, 기저귀, 건강·병원, 놀이)
+- 시간과 유형별 수치 기록(키, 몸무게, 머리둘레, 수유량, 수면시간, 체온)
+- 기록당 사진 최대 4장 업로드(비공개 Supabase Storage, 가족 구성원 전용)
 
 이미 초기 스키마를 적용한 프로젝트에서 성장일기를 추가하려면 SQL Editor에서 [`supabase/migrations/20260714_growth_diary.sql`](supabase/migrations/20260714_growth_diary.sql)을 한 번 실행합니다.
+
+기존 성장일기에 상세 기록과 사진 업로드를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_growth_records_and_photos.sql`](supabase/migrations/20260715_growth_records_and_photos.sql)을 한 번 실행합니다. 이 마이그레이션은 비공개 `growth-photos` 버킷과 가족 단위 Storage RLS 정책도 함께 만듭니다.

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f2f2f7" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-calendar-ux" />
+    <link rel="stylesheet" href="styles.css?v=20260715-growth-records" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -115,6 +115,17 @@
             <div><p class="eyebrow">도윤이의 반짝이는 순간</p><h2>하루하루 자라는 중</h2><p id="growthSummary">첫 기록을 남겨보세요</p></div>
             <span class="growth-sprout" aria-hidden="true">🌱</span>
           </section>
+          <section class="growth-quick-section" aria-labelledby="growthQuickTitle">
+            <div class="section-heading"><div><p class="eyebrow">한 번에 남기기</p><h2 id="growthQuickTitle">빠른 기록</h2></div></div>
+            <div class="growth-quick-grid">
+              <button type="button" data-growth-quick="수유·이유식"><span>🍼</span>수유</button>
+              <button type="button" data-growth-quick="수면"><span>🌙</span>수면</button>
+              <button type="button" data-growth-quick="기저귀"><span>🧷</span>기저귀</button>
+              <button type="button" data-growth-quick="건강·병원"><span>🩺</span>건강</button>
+              <button type="button" data-growth-quick="성장"><span>📏</span>성장</button>
+              <button type="button" data-growth-quick="첫 순간"><span>✨</span>첫 순간</button>
+            </div>
+          </section>
           <section class="growth-section" aria-labelledby="growthTitle">
             <div class="section-heading"><div><p class="eyebrow">성장 타임라인</p><h2 id="growthTitle">소중한 기록</h2></div><span id="growthCount" class="count-badge"></span></div>
             <div id="growthList" class="growth-list"></div>
@@ -182,16 +193,39 @@
           <button type="button" class="close-button" data-close="growthDialog" aria-label="닫기">×</button>
         </div>
         <input type="hidden" id="growthId" />
-        <label>기록 제목<input id="growthEntryTitle" maxlength="60" placeholder="예: 처음으로 뒤집었어요" required /></label>
+        <label>기록 제목 <small class="field-optional">비워두면 분류에 맞게 자동 입력</small><input id="growthEntryTitle" maxlength="60" placeholder="예: 처음으로 뒤집었어요" /></label>
         <div class="form-row">
           <label>날짜<input id="growthDate" type="date" required /></label>
-          <label>분류<select id="growthCategory"><option>첫 순간</option><option>건강</option><option>수유·이유식</option><option>수면</option><option>놀이</option><option>기타</option></select></label>
+          <label>시간<input id="growthTime" type="time" /></label>
         </div>
-        <div class="form-row">
+        <label>기록 종류<select id="growthCategory"><option>첫 순간</option><option>성장</option><option>수유·이유식</option><option>수면</option><option>기저귀</option><option>건강·병원</option><option>놀이</option><option>기타</option></select></label>
+        <div class="growth-detail-group" data-growth-fields="성장">
+          <p class="field-group-title">성장 측정</p>
+          <div class="form-row three-columns">
           <label>키 (cm)<input id="growthHeight" type="number" min="0" max="250" step="0.1" inputmode="decimal" placeholder="선택" /></label>
           <label>몸무게 (kg)<input id="growthWeight" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="선택" /></label>
+            <label>머리둘레 (cm)<input id="growthHead" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="선택" /></label>
+          </div>
+        </div>
+        <div class="growth-detail-group" data-growth-fields="수유·이유식" hidden>
+          <label>먹은 양 (ml)<input id="growthFeedingMl" type="number" min="0" max="3000" step="1" inputmode="numeric" placeholder="예: 120" /></label>
+        </div>
+        <div class="growth-detail-group" data-growth-fields="수면" hidden>
+          <label>잔 시간 (분)<input id="growthSleepMinutes" type="number" min="0" max="1440" step="1" inputmode="numeric" placeholder="예: 90" /></label>
+        </div>
+        <div class="growth-detail-group" data-growth-fields="건강·병원" hidden>
+          <label>체온 (°C)<input id="growthTemperature" type="number" min="30" max="45" step="0.1" inputmode="decimal" placeholder="예: 36.7" /></label>
+        </div>
+        <div class="growth-detail-group" data-growth-fields="기저귀" hidden>
+          <label>기저귀 상태<select id="growthDiaperKind"><option value="">선택</option><option>소변</option><option>대변</option><option>소변·대변</option></select></label>
         </div>
         <label>오늘의 이야기<textarea id="growthNote" maxlength="1000" rows="5" placeholder="표정, 새로 한 행동, 마음에 남은 순간을 적어주세요"></textarea></label>
+        <fieldset class="photo-fieldset">
+          <legend>사진 <small>최대 4장 · 장당 10MB</small></legend>
+          <div class="growth-photo-grid" id="growthPhotoPreview"></div>
+          <label class="photo-add-button" id="growthPhotoAddButton">📷 사진 추가<input id="growthPhotos" type="file" accept="image/*" multiple /></label>
+          <p class="photo-help">사진은 비공개로 저장되며 같은 가족 공간 구성원만 볼 수 있어요.</p>
+        </fieldset>
         <div class="dialog-actions">
           <button type="button" class="danger-button" id="deleteGrowthButton">삭제</button>
           <button type="submit" class="primary-button">기록하기</button>
@@ -201,8 +235,8 @@
 
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
-    <script src="config.js?v=20260715-calendar-ux"></script>
+    <script src="config.js?v=20260715-growth-records"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-calendar-ux"></script>
+    <script src="app.js?v=20260715-growth-records"></script>
   </body>
 </html>
