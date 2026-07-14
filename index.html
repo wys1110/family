@@ -6,15 +6,12 @@
     <meta name="theme-color" content="#f8f6f1" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260714-editorial" />
+    <link rel="stylesheet" href="styles.css?v=20260714-ios" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
       <div class="auth-panel">
-        <span class="album-kicker">FAMILY ARCHIVE / 2026</span>
+        <span class="album-kicker">우리 가족</span>
         <div class="auth-illustration" aria-hidden="true">
           <span class="auth-face dad-face">아빠</span>
           <span class="auth-face baby-face">도윤</span>
@@ -30,7 +27,7 @@
           <button type="submit">로그인 링크 받기</button>
         </form>
         <p class="auth-note">비밀번호 없이 안전한 로그인 링크를 보내드려요.</p>
-        <span class="archive-note">Ordinary days, kept with care.</span>
+        <span class="archive-note">가족 일정과 성장 기록을 한곳에</span>
       </div>
     </section>
 
@@ -53,7 +50,7 @@
 
         <div id="calendarView">
         <section class="hero-card">
-          <span class="album-stamp">FAMILY / VOL. 01</span>
+          <span class="album-stamp">FAMILY</span>
           <div>
             <p id="todayLabel"></p>
             <h2 id="todaySummary">오늘도 우리답게</h2>
@@ -168,8 +165,8 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="config.js?v=20260714-editorial"></script>
+    <script src="config.js?v=20260714-ios"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260714-editorial"></script>
+    <script src="app.js?v=20260714-ios"></script>
   </body>
 </html>
