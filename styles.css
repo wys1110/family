@@ -320,15 +320,16 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .photo-share-button:disabled { opacity:.68; }
 @media (max-width:520px) { .photo-viewer-dialog { width:100%; max-height:100dvh; padding:12px 10px max(12px,env(safe-area-inset-bottom)); }.photo-viewer-panel { max-height:calc(100dvh - 24px); }.photo-viewer-panel img { max-height:calc(100dvh - 168px); border-radius:20px; }.photo-viewer-panel figcaption { align-items:start; flex-direction:column; gap:4px; padding:0 6px; }.photo-viewer-close { top:21px; right:19px; }.photo-share-button { width:calc(100% - 12px); } }
 
-/* Connected date ranges and horizontal month swipe */
+/* TimeTree-style spanning event bars and horizontal month swipe */
 .calendar-card { overflow:hidden; }
-.calendar-grid { touch-action:pan-y; will-change:transform,opacity; }
-.day-event-preview.connected-range { width:calc(100% + 8px); margin-right:-4px; margin-left:-4px; padding-right:5px; padding-left:5px; border-radius:0; text-align:left; }
-.day-event-preview.connected-range::before { content:none; }
-.day-event-preview.connected-range.segment-start { width:calc(100% + 4px); margin-left:0; border-radius:6px 0 0 6px; }
-.day-event-preview.connected-range.segment-end { width:calc(100% + 4px); margin-right:0; border-radius:0 6px 6px 0; }
-.day-event-preview.connected-range.segment-start.segment-end { width:100%; margin-right:0; margin-left:0; border-radius:6px; }
-.connected-range .event-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-grid { grid-auto-rows:minmax(70px,auto); touch-action:pan-y; will-change:transform,opacity; }
+.calendar-day { align-self:stretch; justify-self:stretch; height:100%; }
+.calendar-event-bar { z-index:3; align-self:start; min-width:0; height:16px; margin:var(--event-top) 2px 4px; padding:0 6px; overflow:hidden; border:0; border-radius:5px; color:white; background:var(--member-color,var(--green)); font-size:8px; font-weight:760; line-height:16px; text-align:center; white-space:nowrap; cursor:pointer; box-shadow:inset 0 0 0 .5px rgba(255,255,255,.24); }
+.calendar-event-bar span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-event-bar.range-event { box-shadow:inset 0 0 0 .5px rgba(255,255,255,.28),0 2px 5px color-mix(in srgb,var(--member-color) 18%,transparent); }
+.calendar-overflow-badge { z-index:3; align-self:start; justify-self:end; min-width:20px; height:14px; margin:var(--event-top) 3px 4px; padding:0 4px; border-radius:5px; color:var(--secondary); background:var(--surface-2); font-size:7px; font-weight:800; line-height:14px; text-align:center; pointer-events:none; }
+.dragging-event .calendar-event-bar { pointer-events:none; }
+@media (min-width:700px) { .calendar-event-bar { height:18px; font-size:9px; line-height:18px; } }
 
 /* Growth diary album */
 .recent-photo-section { margin:30px 2px 8px; padding-top:24px; border-top:1px solid rgba(91,107,98,.11); }
