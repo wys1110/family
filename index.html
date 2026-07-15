@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f3ef" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-care-flow-spanning-fix" />
+    <link rel="stylesheet" href="styles.css?v=20260715-care-patterns" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -163,6 +163,14 @@
             </div>
           </section>
 
+          <section class="recent-photo-section recent-photo-featured" id="recentPhotoSection" hidden>
+            <div class="section-heading">
+              <div><p class="eyebrow">PRIVATE ALBUM</p><h2>최근 사진</h2></div>
+              <div class="recent-photo-actions"><span id="recentPhotoCount" class="count-badge"></span><button id="openPhotoAlbumButton" type="button">전체보기 <i aria-hidden="true">›</i></button></div>
+            </div>
+            <div class="recent-photo-grid" id="recentPhotoGrid"></div>
+          </section>
+
           <section class="care-timer-card" id="careTimerCard" aria-labelledby="careTimerTitle">
             <div class="care-timer-heading">
               <div><p class="eyebrow">LIVE CARE</p><h2 id="careTimerTitle">진행 중 기록</h2><small>시작하고 멈추기만 하면 시간까지 자동 저장돼요</small></div>
@@ -195,12 +203,25 @@
             </div>
           </section>
 
-          <section class="care-rhythm-section" aria-labelledby="careRhythmTitle">
-            <div class="care-rhythm-heading">
-              <div><p class="eyebrow">CARE RHYTHM</p><h2 id="careRhythmTitle">최근 7일 돌봄 리듬</h2><small>수유·수면·기저귀 흐름을 날짜별로 비교해요</small></div>
+          <section class="care-pattern-section" aria-labelledby="carePatternTitle">
+            <div class="care-pattern-heading">
+              <div><p class="eyebrow">CARE PATTERN</p><h2 id="carePatternTitle">돌봄 패턴</h2><small>시간대와 반복 간격을 한눈에 확인해요</small></div>
               <div class="care-rhythm-legend" aria-label="그래프 범례"><span class="feed">수유</span><span class="sleep">수면</span><span class="diaper">기저귀</span></div>
             </div>
-            <div class="care-rhythm-chart" id="careRhythmChart"></div>
+            <div class="care-pattern-tabs" id="carePatternTabs" role="tablist" aria-label="돌봄 패턴 보기">
+              <button type="button" class="active" data-care-pattern="day" role="tab">하루 패턴</button>
+              <button type="button" data-care-pattern="week" role="tab">주간 패턴</button>
+              <button type="button" data-care-pattern="interval" role="tab">기록 간격</button>
+            </div>
+            <div class="care-pattern-categories" id="carePatternCategories" aria-label="표시할 기록 선택">
+              <button type="button" class="feed active" data-pattern-category="feed"><i>F</i>수유</button>
+              <button type="button" class="sleep active" data-pattern-category="sleep"><i>Zz</i>수면</button>
+              <button type="button" class="diaper active" data-pattern-category="diaper"><i>D</i>기저귀</button>
+            </div>
+            <div class="care-pattern-date" id="carePatternDateNav">
+              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
+            </div>
+            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>
           </section>
 
           <section class="growth-insight-row" id="growthInsightRow"></section>
@@ -217,13 +238,6 @@
             <div id="growthList" class="growth-list"></div>
           </section>
 
-          <section class="recent-photo-section" id="recentPhotoSection" hidden>
-            <div class="section-heading">
-              <div><p class="eyebrow">PRIVATE ALBUM</p><h2>최근 사진</h2></div>
-              <div class="recent-photo-actions"><span id="recentPhotoCount" class="count-badge"></span><button id="openPhotoAlbumButton" type="button">전체보기 <i aria-hidden="true">›</i></button></div>
-            </div>
-            <div class="recent-photo-grid" id="recentPhotoGrid"></div>
-          </section>
           </div>
 
           <section class="photo-album-view" id="photoAlbumView" hidden aria-labelledby="photoAlbumTitle">
@@ -453,6 +467,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
     <script src="config.js?v=20260715-spanning-bars"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-care-flow"></script>
+    <script src="app.js?v=20260715-care-patterns"></script>
   </body>
 </html>
