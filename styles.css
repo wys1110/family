@@ -319,3 +319,13 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .photo-share-button span { margin-right:5px; font-size:18px; }
 .photo-share-button:disabled { opacity:.68; }
 @media (max-width:520px) { .photo-viewer-dialog { width:100%; max-height:100dvh; padding:12px 10px max(12px,env(safe-area-inset-bottom)); }.photo-viewer-panel { max-height:calc(100dvh - 24px); }.photo-viewer-panel img { max-height:calc(100dvh - 168px); border-radius:20px; }.photo-viewer-panel figcaption { align-items:start; flex-direction:column; gap:4px; padding:0 6px; }.photo-viewer-close { top:21px; right:19px; }.photo-share-button { width:calc(100% - 12px); } }
+
+/* Connected date ranges and horizontal month swipe */
+.calendar-card { overflow:hidden; }
+.calendar-grid { touch-action:pan-y; will-change:transform,opacity; }
+.day-event-preview.connected-range { width:calc(100% + 8px); margin-right:-4px; margin-left:-4px; padding-right:5px; padding-left:5px; border-radius:0; text-align:left; }
+.day-event-preview.connected-range::before { content:none; }
+.day-event-preview.connected-range.segment-start { width:calc(100% + 4px); margin-left:0; border-radius:6px 0 0 6px; }
+.day-event-preview.connected-range.segment-end { width:calc(100% + 4px); margin-right:0; border-radius:0 6px 6px 0; }
+.day-event-preview.connected-range.segment-start.segment-end { width:100%; margin-right:0; margin-left:0; border-radius:6px; }
+.connected-range .event-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
