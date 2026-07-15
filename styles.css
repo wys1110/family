@@ -239,3 +239,38 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .growth-filter-bar button.active { border-color:#6d8a7b; background:#6d8a7b; box-shadow:0 6px 14px rgba(92,125,108,.16); }
 @media (max-width:520px) { .baby-care-card .baby-profile-main { padding:21px 18px 0; }.baby-care-card .baby-edit-button { margin-left:80px; }.baby-care-card .today-care-grid { grid-template-columns:repeat(2,1fr); margin-left:14px; margin-right:14px; }.baby-care-card .today-care-grid article { min-height:62px; }.integrated-care-summary { margin:12px 10px 10px; padding:13px; }.integrated-care-summary .growth-summary-header { align-items:center; flex-direction:row; }.integrated-care-summary .growth-summary-grid { grid-template-columns:repeat(2,1fr); }.growth-quick-section { padding:17px 14px; }.growth-quick-section .growth-quick-grid { gap:7px; }.growth-quick-section .growth-quick-grid button { min-height:82px; }.quick-now-badge { padding:5px 7px; } }
 @media (max-width:360px) { .growth-quick-section .growth-quick-grid { grid-template-columns:repeat(2,1fr); }.integrated-care-summary .growth-summary-header h2 { font-size:14px; } }
+
+/* Stable mobile sheets and properly bounded native fields */
+.sheet-dialog,.sheet-dialog form,.sheet-panel,.form-row,.form-row > label { min-width:0; }
+.form-row { grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); }
+.form-row input,.form-row select { min-width:0; max-width:100%; }
+#growthDialog .growth-when-row { grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); }
+#growthDialog input[type="date"],#growthDialog input[type="time"] { display:block; width:100%; min-width:0; max-width:100%; height:54px; padding:0 12px; color-scheme:light; overflow:hidden; font-variant-numeric:tabular-nums; }
+#growthDialog input[type="date"]::-webkit-date-and-time-value,#growthDialog input[type="time"]::-webkit-date-and-time-value { min-width:0; margin:0; text-align:left; }
+#growthDialog .growth-photo-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+#growthDialog .growth-photo-item { min-width:0; }
+@media (max-width:620px) {
+  html:has(.sheet-dialog[open]),body:has(.sheet-dialog[open]) { overflow:hidden; overscroll-behavior:none; }
+  .sheet-dialog { position:fixed; inset:auto 0 max(4px,env(safe-area-inset-bottom)); width:min(calc(100% - 10px),520px); max-height:calc(100dvh - max(10px,env(safe-area-inset-top))); margin:0 auto; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; border-radius:30px 30px 26px 26px; }
+  .sheet-dialog form,.sheet-panel { width:100%; overflow-x:clip; padding-right:16px; padding-left:16px; }
+  #growthDialog .dialog-header { margin-bottom:18px; }
+  #growthDialog .growth-when-row { gap:10px; }
+  #growthDialog .growth-when-row > label { width:100%; min-width:0; }
+  #growthDialog .growth-when-row input { font-size:16px!important; }
+  #growthDialog .photo-fieldset { margin-bottom:4px; }
+  #growthDialog .growth-photo-grid { gap:7px; }
+  #growthDialog .dialog-actions { z-index:8; bottom:0; margin:18px -16px -25px; padding:12px 16px max(12px,env(safe-area-inset-bottom)); border-top:1px solid rgba(91,107,98,.1); background:rgba(247,247,250,.96); box-shadow:0 -10px 28px rgba(70,67,63,.08); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+  #growthDialog .dialog-actions button { min-height:54px; }
+}
+@media (max-width:350px) { #growthDialog .growth-when-row { grid-template-columns:1fr; gap:0; } }
+
+/* Save confirmation and duplicate-submit guard */
+#growthSubmitButton:disabled { opacity:.72; cursor:wait; }
+.completion-dialog { width:min(calc(100% - 34px),360px); margin:auto; padding:0; overflow:hidden; border:0; border-radius:28px; color:var(--label); background:transparent; box-shadow:0 26px 80px rgba(48,54,50,.28); }
+.completion-dialog::backdrop { background:rgba(43,47,44,.38); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.completion-panel { padding:30px 24px 22px; background:linear-gradient(155deg,#fffefa,#f8e8e0); text-align:center; }
+.completion-check { display:grid; place-items:center; width:62px; height:62px; margin:0 auto 17px; border-radius:22px; color:white; background:linear-gradient(145deg,#638473,#86a087); font-size:29px; font-weight:800; box-shadow:0 12px 28px rgba(91,127,108,.24); animation:soft-rise .3s ease both; }
+.completion-panel .eyebrow { margin-bottom:5px; color:#a16f67; font-size:8px; }
+.completion-panel h2 { margin-bottom:8px; font-size:25px; letter-spacing:-.045em; }
+.completion-panel > p:not(.eyebrow) { color:var(--secondary); font-size:11px; line-height:1.55; }
+.completion-panel button { width:100%; min-height:50px; margin-top:21px; border:0; border-radius:16px; color:white; background:linear-gradient(135deg,#648875,#86a286); font-size:14px; font-weight:760; box-shadow:0 9px 22px rgba(86,121,106,.18); }
