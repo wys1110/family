@@ -28,7 +28,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -241,6 +241,7 @@ function bindUi() {
   $("#babySelector").addEventListener("click", selectBabyFromEvent);
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
+  $("#growthSummaryToggle").addEventListener("click", toggleGrowthSummary);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
@@ -694,6 +695,7 @@ function renderGrowthSummary(entries) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+  syncGrowthSummaryDisclosure();
 }
 
 function changeGrowthSummaryPeriod(event) {
@@ -702,6 +704,17 @@ function changeGrowthSummaryPeriod(event) {
   state.growthSummaryPeriod = button.dataset.summaryPeriod;
   try { localStorage.setItem(GROWTH_SUMMARY_PERIOD_KEY, state.growthSummaryPeriod); } catch { /* 현재 화면에는 그대로 적용 */ }
   renderGrowthSummary(activeBabyEntries());
+}
+
+function toggleGrowthSummary() {
+  state.growthSummaryExpanded = !state.growthSummaryExpanded;
+  syncGrowthSummaryDisclosure();
+}
+
+function syncGrowthSummaryDisclosure() {
+  $("#growthSummaryBody").hidden = !state.growthSummaryExpanded;
+  $("#growthSummaryToggle").setAttribute("aria-expanded", String(state.growthSummaryExpanded));
+  $("#growthSummaryToggleText").textContent = state.growthSummaryExpanded ? "접기" : "펼쳐보기";
 }
 
 function renderGrowthInsights(entries) {
