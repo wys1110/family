@@ -245,7 +245,6 @@ function bindUi() {
   $("#eventForm").addEventListener("submit", saveEvent);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
   $("#eventAllDay").addEventListener("change", syncAllDayControl);
-  $("#eventHasRange").addEventListener("change", syncRangeControl);
   $("#eventDate").addEventListener("change", syncRangeDates);
   $("#eventEndDate").addEventListener("change", syncRangeDates);
   $("#eventMemberSelector").addEventListener("click", handleMemberControlClick);
@@ -587,13 +586,12 @@ function openEventDialog(event = null) {
   $("#eventTitle").value = event?.title || "";
   $("#eventDate").value = event?.date || state.selectedDate;
   $("#eventEndDate").value = event?.endDate || event?.date || state.selectedDate;
-  $("#eventHasRange").checked = Boolean(event && event.endDate && event.endDate !== event.date);
   $("#eventTime").value = event?.time || "";
   $("#eventAllDay").checked = !event?.time;
   selectEventMember(event?.member || state.familyMembers[0]?.name || "가족");
   $("#eventNote").value = event?.note || "";
   syncAllDayControl();
-  syncRangeControl();
+  syncRangeDates();
   syncDateShortcutSelection();
   $("#deleteEventButton").classList.toggle("visible", Boolean(event)); $("#eventDialog").showModal(); focusOnDesktop("#eventTitle");
 }
@@ -609,14 +607,6 @@ function syncAllDayControl() {
   if (allDay) $("#eventTime").value = "";
 }
 
-function syncRangeControl() {
-  const hasRange = $("#eventHasRange").checked;
-  $("#eventEndDateField").hidden = !hasRange;
-  $("#eventEndDateField").parentElement.classList.toggle("has-range", hasRange);
-  if (!hasRange || !$("#eventEndDate").value) $("#eventEndDate").value = $("#eventDate").value;
-  syncRangeDates();
-}
-
 function syncRangeDates() {
   const start = $("#eventDate").value;
   const end = $("#eventEndDate").value;
@@ -630,7 +620,7 @@ function applyDateShortcut(shortcut) {
   if (shortcut === "tomorrow") date.setDate(date.getDate() + 1);
   const currentStart = $("#eventDate").value;
   const currentEnd = $("#eventEndDate").value || currentStart;
-  const duration = $("#eventHasRange").checked && currentStart ? Math.max(0, dayDistance(currentStart, currentEnd)) : 0;
+  const duration = currentStart ? Math.max(0, dayDistance(currentStart, currentEnd)) : 0;
   $("#eventDate").value = dateKey(date);
   $("#eventEndDate").value = addDays(dateKey(date), duration);
   syncRangeDates();
@@ -648,7 +638,7 @@ async function saveEvent(event) {
   event.preventDefault();
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const startDate = $("#eventDate").value;
-  const endDate = $("#eventHasRange").checked ? $("#eventEndDate").value : startDate;
+  const endDate = $("#eventEndDate").value || startDate;
   if (endDate < startDate) return toast("종료일은 시작일 이후로 선택해 주세요");
   const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: startDate, endDate, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
   if (!await storeEvent(item)) return;
