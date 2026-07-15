@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f3ef" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-photo-album" />
+    <link rel="stylesheet" href="styles.css?v=20260715-care-flow" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -163,6 +163,26 @@
             </div>
           </section>
 
+          <section class="care-timer-card" id="careTimerCard" aria-labelledby="careTimerTitle">
+            <div class="care-timer-heading">
+              <div><p class="eyebrow">LIVE CARE</p><h2 id="careTimerTitle">진행 중 기록</h2><small>시작하고 멈추기만 하면 시간까지 자동 저장돼요</small></div>
+              <span class="care-live-badge"><i aria-hidden="true"></i> 타이머</span>
+            </div>
+            <div class="care-timer-running" id="careTimerRunning" hidden>
+              <div class="care-timer-status"><span id="careTimerIcon" aria-hidden="true">◷</span><div><small id="careTimerBaby"></small><strong id="careTimerLabel"></strong><time id="careTimerClock">00:00:00</time><em id="careTimerStarted"></em></div></div>
+              <div class="care-timer-actions">
+                <button class="care-timer-switch" id="careTimerSwitchSide" type="button" hidden>반대쪽으로 전환</button>
+                <button class="care-timer-stop" id="careTimerStop" type="button"><span aria-hidden="true">■</span> 멈추고 저장</button>
+                <button class="care-timer-cancel" id="careTimerCancel" type="button">기록 취소</button>
+              </div>
+            </div>
+            <div class="care-timer-starts" id="careTimerStarts">
+              <button type="button" data-care-timer="feeding-left"><span class="timer-start-icon feed">L</span><strong>왼쪽 수유</strong><small>시간 자동 측정</small></button>
+              <button type="button" data-care-timer="feeding-right"><span class="timer-start-icon feed">R</span><strong>오른쪽 수유</strong><small>시간 자동 측정</small></button>
+              <button type="button" data-care-timer="sleep"><span class="timer-start-icon sleep">Zz</span><strong>수면 시작</strong><small>깨면 멈추기</small></button>
+            </div>
+          </section>
+
           <section class="growth-quick-section" id="growthQuickSection" aria-labelledby="growthQuickTitle">
             <div class="section-heading"><div><p class="eyebrow">ONE TAP LOG</p><h2 id="growthQuickTitle">지금 바로 기록</h2><small>자주 쓰는 값은 한 번만 눌러 남겨요</small></div><span class="quick-now-badge">빠른 기록</span></div>
             <div class="growth-quick-grid">
@@ -173,6 +193,14 @@
               <button type="button" data-growth-quick="성장"><span class="quick-symbol measure">cm</span>성장</button>
               <button type="button" data-growth-quick="첫 순간"><span class="quick-symbol moment">★</span>첫 순간</button>
             </div>
+          </section>
+
+          <section class="care-rhythm-section" aria-labelledby="careRhythmTitle">
+            <div class="care-rhythm-heading">
+              <div><p class="eyebrow">CARE RHYTHM</p><h2 id="careRhythmTitle">최근 7일 돌봄 리듬</h2><small>수유·수면·기저귀 흐름을 날짜별로 비교해요</small></div>
+              <div class="care-rhythm-legend" aria-label="그래프 범례"><span class="feed">수유</span><span class="sleep">수면</span><span class="diaper">기저귀</span></div>
+            </div>
+            <div class="care-rhythm-chart" id="careRhythmChart"></div>
           </section>
 
           <section class="growth-insight-row" id="growthInsightRow"></section>
@@ -425,6 +453,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
     <script src="config.js?v=20260715-spanning-bars"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-spanning-bars"></script>
+    <script src="app.js?v=20260715-care-flow"></script>
   </body>
 </html>
