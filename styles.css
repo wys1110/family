@@ -190,3 +190,52 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 
 /* Keep mobile forms from triggering Safari's focus zoom. */
 @media (max-width:820px) { input,select,textarea { font-size:16px !important; } }
+
+/* Refined unified growth diary */
+.baby-care-card { margin-bottom:14px; padding:0; color:#fffaf4; background:linear-gradient(145deg,#4f7061 0%,#728b78 48%,#d39f95 100%); box-shadow:0 20px 48px rgba(69,91,80,.2); }
+.baby-care-card::before { top:20px; right:18px; bottom:auto; }
+.baby-care-card .baby-profile-main { padding:23px 22px 0; }
+.baby-care-card .baby-edit-button { margin:12px 0 0 94px; }
+.care-snapshot-heading { position:relative; z-index:1; display:flex; align-items:end; justify-content:space-between; margin:17px 20px 0; padding-top:16px; border-top:1px solid rgba(255,255,255,.14); }
+.care-snapshot-heading div,.care-snapshot-heading span,.care-snapshot-heading small { display:block; }
+.care-snapshot-heading span { color:white; font-size:11px; font-weight:780; }
+.care-snapshot-heading small { margin-top:3px; color:rgba(255,255,255,.52); font-size:8px; }
+.care-snapshot-heading i { padding:4px 7px; border:1px solid rgba(255,255,255,.16); border-radius:999px; color:#ffe7c7; background:rgba(255,255,255,.08); font-size:7px; font-style:normal; font-weight:800; letter-spacing:.08em; }
+.baby-care-card .today-care-grid { gap:7px; margin:9px 15px 0; padding:0; border:0; }
+.baby-care-card .today-care-grid article { min-height:68px; padding:11px 9px; border:1px solid rgba(255,255,255,.11); border-radius:15px; background:rgba(255,255,255,.09); backdrop-filter:blur(8px); }
+.baby-care-card .today-care-grid span { color:rgba(255,255,255,.58); }
+.baby-care-card .today-care-grid strong { margin-top:7px; color:white; font-size:16px; }
+.baby-care-card .today-care-grid small { color:rgba(255,255,255,.5); }
+.integrated-care-summary { position:relative; z-index:2; margin:14px 12px 12px; padding:14px 15px; border:1px solid rgba(255,255,255,.68); border-radius:21px; color:var(--label); background:linear-gradient(145deg,rgba(255,253,248,.97),rgba(248,235,229,.94)); box-shadow:0 10px 28px rgba(53,70,62,.13); }
+.integrated-care-summary .growth-summary-header { align-items:center; }
+.integrated-care-summary .growth-summary-header h2 { color:var(--label); font-size:15px; letter-spacing:-.025em; }
+.integrated-care-summary .growth-summary-header .eyebrow { margin-bottom:3px; color:#a06f66; font-size:7px; }
+.integrated-care-summary .growth-summary-header > div:first-child > span { margin-top:3px; color:var(--secondary); font-size:8px; }
+.integrated-care-summary .growth-summary-toggle { min-height:34px; border:0; color:#6d8579; background:rgba(102,136,119,.1); box-shadow:inset 0 0 0 1px rgba(102,136,119,.08); }
+.integrated-care-summary .growth-summary-body { margin-top:13px; padding-top:12px; }
+.integrated-care-summary .summary-period-tabs { margin:0 0 0 auto; background:rgba(112,126,118,.1); }
+.integrated-care-summary .growth-summary-grid { gap:7px; margin-top:12px; }
+.integrated-care-summary .summary-card { min-height:82px; padding:12px 10px; border:0; border-top:3px solid transparent; border-radius:15px; background:rgba(255,255,255,.8); box-shadow:0 5px 15px rgba(93,74,65,.06); }
+.integrated-care-summary .summary-card strong { font-size:17px; }
+.integrated-care-summary .growth-summary-footer { margin-top:10px; }
+.growth-quick-section { margin:14px 0 24px; padding:19px; border:1px solid rgba(194,139,128,.12); border-radius:27px; background:linear-gradient(145deg,rgba(255,254,251,.98),rgba(249,233,225,.83)); box-shadow:0 14px 38px rgba(123,87,73,.085); }
+.growth-quick-section .section-heading { align-items:start; margin-bottom:14px; }
+.growth-quick-section .section-heading h2 { margin-top:2px; font-size:21px; letter-spacing:-.04em; }
+.growth-quick-section .section-heading small { display:block; margin-top:5px; color:var(--secondary); font-size:9px; }
+.quick-now-badge { padding:6px 9px; border-radius:999px; color:#9c6860; background:#f8dfd7; font-size:8px; font-weight:780; white-space:nowrap; }
+.growth-quick-section .growth-quick-grid { grid-template-columns:repeat(3,1fr); gap:9px; }
+.growth-quick-section .growth-quick-grid button { min-height:86px; border:1px solid rgba(113,98,88,.07); border-radius:20px; background:rgba(255,255,255,.8); box-shadow:0 8px 20px rgba(109,81,69,.055); transition:transform .18s ease,box-shadow .18s ease,background .18s ease; }
+.growth-quick-section .growth-quick-grid button:nth-child(1) { background:linear-gradient(145deg,#fff9ef,#f8e9d2); }
+.growth-quick-section .growth-quick-grid button:nth-child(2) { background:linear-gradient(145deg,#fbf9ff,#eae6f2); }
+.growth-quick-section .growth-quick-grid button:nth-child(3) { background:linear-gradient(145deg,#fffaf2,#eee4d5); }
+.growth-quick-section .growth-quick-grid button:active { transform:scale(.96); box-shadow:0 3px 10px rgba(109,81,69,.06); }
+.growth-quick-section .growth-quick-grid .quick-symbol { width:38px; height:38px; box-shadow:0 5px 12px rgba(92,72,61,.08); }
+.growth-insight-row { margin:0 0 25px; }
+.growth-section { padding-top:2px; }
+.growth-section > .section-heading { margin-bottom:12px; }
+.growth-section > .section-heading h2,.recent-photo-section .section-heading h2 { font-size:21px; letter-spacing:-.035em; }
+.growth-filter-bar { padding-bottom:2px; }
+.growth-filter-bar button { min-height:34px; padding:0 13px; background:rgba(255,255,255,.56); }
+.growth-filter-bar button.active { border-color:#6d8a7b; background:#6d8a7b; box-shadow:0 6px 14px rgba(92,125,108,.16); }
+@media (max-width:520px) { .baby-care-card .baby-profile-main { padding:21px 18px 0; }.baby-care-card .baby-edit-button { margin-left:80px; }.baby-care-card .today-care-grid { grid-template-columns:repeat(2,1fr); margin-left:14px; margin-right:14px; }.baby-care-card .today-care-grid article { min-height:62px; }.integrated-care-summary { margin:12px 10px 10px; padding:13px; }.integrated-care-summary .growth-summary-header { align-items:center; flex-direction:row; }.integrated-care-summary .growth-summary-grid { grid-template-columns:repeat(2,1fr); }.growth-quick-section { padding:17px 14px; }.growth-quick-section .growth-quick-grid { gap:7px; }.growth-quick-section .growth-quick-grid button { min-height:82px; }.quick-now-badge { padding:5px 7px; } }
+@media (max-width:360px) { .growth-quick-section .growth-quick-grid { grid-template-columns:repeat(2,1fr); }.integrated-care-summary .growth-summary-header h2 { font-size:14px; } }
