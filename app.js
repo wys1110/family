@@ -216,6 +216,11 @@ function bindUi() {
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
   $("#quickEventForm").addEventListener("submit", quickAddEvent);
+  $("#bulkAddButton").addEventListener("click", openBulkEventDialog);
+  $("#bulkEventForm").addEventListener("submit", saveBulkEvents);
+  $("#bulkEventText").addEventListener("input", renderBulkEventPreview);
+  $("#bulkDefaultDate").addEventListener("change", renderBulkEventPreview);
+  $("#bulkDefaultMember").addEventListener("change", renderBulkEventPreview);
   $("#quickTimeButton").addEventListener("click", toggleQuickTime);
   $("#quickMemberChips").addEventListener("click", handleMemberControlClick);
   $("#eventForm").addEventListener("submit", saveEvent);
@@ -346,6 +351,91 @@ function renderAgenda() {
 function selectQuickMember(member) {
   state.quickMember = member;
   document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.classList.toggle("selected", button.dataset.member === member));
+}
+
+function openBulkEventDialog() {
+  $("#bulkDefaultDate").value = state.selectedDate;
+  $("#bulkDefaultMember").innerHTML = state.familyMembers.map((member) => `<option value="${escapeHtml(member.name)}"${member.name === state.quickMember ? " selected" : ""}>${escapeHtml(member.name)}</option>`).join("");
+  $("#bulkEventText").value = "";
+  renderBulkEventPreview();
+  $("#bulkEventDialog").showModal();
+  setTimeout(() => $("#bulkEventText").focus(), 100);
+}
+
+function checkedDateKey(year, month, day) {
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return dateKey(date);
+}
+
+function parseBulkEvents() {
+  const defaultDate = $("#bulkDefaultDate").value || state.selectedDate;
+  const defaultMember = $("#bulkDefaultMember").value || state.quickMember;
+  const baseYear = parseDate(defaultDate).getFullYear();
+  const lines = $("#bulkEventText").value.split(/\r?\n/).map((text, index) => ({ text: text.trim(), line: index + 1 })).filter((line) => line.text);
+  const items = []; const errors = [];
+  if (lines.length > 50) errors.push({ line: 0, message: "한 번에 최대 50개까지 추가할 수 있어요" });
+  lines.slice(0, 50).forEach(({ text, line }) => {
+    let rest = text; let startDate = defaultDate; let endDate = defaultDate;
+    const full = rest.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s*~\s*(?:(\d{4})-)?(\d{1,2})-(\d{1,2}))?(?:\s+|$)/);
+    const short = full ? null : rest.match(/^(\d{1,2})[/.](\d{1,2})(?:\s*~\s*(?:(\d{1,2})[/.])?(\d{1,2}))?(?:\s+|$)/);
+    if (full) {
+      startDate = checkedDateKey(Number(full[1]), Number(full[2]), Number(full[3]));
+      const endYear = Number(full[4] || full[1]);
+      endDate = full[5] ? checkedDateKey(endYear, Number(full[5]), Number(full[6])) : startDate;
+      rest = rest.slice(full[0].length).trim();
+    } else if (short) {
+      const startMonth = Number(short[1]); const startDay = Number(short[2]);
+      startDate = checkedDateKey(baseYear, startMonth, startDay);
+      if (short[4]) {
+        const endMonth = Number(short[3] || startMonth); const endDay = Number(short[4]);
+        const endYear = endMonth < startMonth ? baseYear + 1 : baseYear;
+        endDate = checkedDateKey(endYear, endMonth, endDay);
+      } else endDate = startDate;
+      rest = rest.slice(short[0].length).trim();
+    }
+    if (!startDate || !endDate || endDate < startDate) return errors.push({ line, message: "날짜를 확인해 주세요" });
+    let time = "";
+    const timeMatch = rest.match(/^([01]?\d|2[0-3]):([0-5]\d)(?:\s+|$)/);
+    if (timeMatch) { time = `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}`; rest = rest.slice(timeMatch[0].length).trim(); }
+    const parts = rest.split("|");
+    let member = defaultMember;
+    if (parts.length > 1) member = parts.pop().trim();
+    const title = parts.join("|").trim();
+    if (!title) return errors.push({ line, message: "일정 이름이 비어 있어요" });
+    if (title.length > 60) return errors.push({ line, message: "일정 이름은 60자까지 가능해요" });
+    if (!state.familyMembers.some((item) => item.name === member)) return errors.push({ line, message: `등록되지 않은 구성원: ${member}` });
+    items.push({ id: uid(), title, date: startDate, endDate, time, member, note: "" });
+  });
+  return { items, errors, lineCount: lines.length };
+}
+
+function renderBulkEventPreview() {
+  const root = $("#bulkEventPreview");
+  const { items, errors, lineCount } = parseBulkEvents();
+  const submit = $("#bulkEventSubmit");
+  submit.textContent = items.length ? `${items.length}개 일정 추가` : "일정 추가";
+  submit.disabled = !items.length || Boolean(errors.length);
+  if (!lineCount) { root.innerHTML = `<p class="bulk-preview-empty">입력하면 저장될 일정이 여기에 표시돼요.</p>`; return; }
+  const errorHtml = errors.length ? `<div class="bulk-errors">${errors.slice(0, 5).map((error) => `<p>${error.line ? `${error.line}번째 줄 · ` : ""}${escapeHtml(error.message)}</p>`).join("")}</div>` : "";
+  const itemHtml = items.length ? `<div class="bulk-preview-list">${items.slice(0, 5).map((item) => `<article style="${memberStyle(item.member)}"><i></i><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(formatEventRange(item) || new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric" }).format(parseDate(item.date)))} · ${escapeHtml(item.member)}${item.time ? ` · ${item.time}` : ""}</small></span></article>`).join("")}${items.length > 5 ? `<p>외 ${items.length - 5}개</p>` : ""}</div>` : "";
+  root.innerHTML = errorHtml + itemHtml;
+}
+
+async function saveBulkEvents(event) {
+  event.preventDefault();
+  if (state.supabase && !state.household) return toast("먼저 가족 공간을 만들어주세요");
+  const { items, errors } = parseBulkEvents();
+  if (errors.length || !items.length) return renderBulkEventPreview();
+  const submit = $("#bulkEventSubmit"); submit.disabled = true; submit.textContent = "저장 중…";
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("events").insert(items.map(toRemote));
+    if (error) { submit.disabled = false; renderBulkEventPreview(); return toast("일정을 한꺼번에 저장하지 못했어요"); }
+  }
+  state.events.push(...items); persistLocal();
+  state.selectedDate = items[0].date; state.viewDate = startOfMonth(parseDate(items[0].date));
+  $("#bulkEventDialog").close(); render();
+  toast(`${items.length}개 일정을 추가했어요`);
 }
 
 function openMemberDialog() {
