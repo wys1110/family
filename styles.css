@@ -123,5 +123,14 @@ h2 { margin-bottom:0; font-size:22px; font-weight:720; letter-spacing:-.035em; }
 .family-chip.mom { background:rgba(165,109,120,.76); }
 .family-chip.baby { background:rgba(75,145,168,.78); }
 
+/* Collapsible care summary */
+.growth-summary-header { align-items:center; }
+.growth-summary-toggle { display:flex; align-items:center; gap:7px; min-height:36px; padding:0 11px; border:1px solid rgba(53,94,77,.12); border-radius:12px; color:var(--blue); background:rgba(255,254,250,.72); font-size:9px; font-weight:750; cursor:pointer; }
+.growth-summary-toggle i { font-size:15px; font-style:normal; line-height:1; transition:transform .2s; }
+.growth-summary-toggle[aria-expanded="true"] i { transform:rotate(180deg); }
+.growth-summary-body { margin-top:16px; padding-top:14px; border-top:1px solid rgba(53,94,77,.09); }
+.growth-summary-body .summary-period-tabs { width:min(100%,240px); margin-left:auto; }
+@media (max-width:520px) { .growth-summary-header { align-items:center; flex-direction:row; }.growth-summary-toggle { flex:0 0 auto; }.growth-summary-body .summary-period-tabs { width:100%; min-width:0; } }
+
 /* Keep mobile forms from triggering Safari's focus zoom. */
 @media (max-width:820px) { input,select,textarea { font-size:16px !important; } }
