@@ -12,6 +12,7 @@ const BABY_STORAGE_KEY = "family-babies-v1";
 const ACTIVE_BABY_KEY = "family-active-baby-v1";
 const ACTIVE_VIEW_KEY = "family-active-view-v1";
 const GROWTH_SUMMARY_PERIOD_KEY = "family-growth-summary-period-v1";
+const CARE_TIMER_KEY = "family-care-timer-v1";
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -36,6 +37,8 @@ let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], 
 let activeQuickCategory = null;
 let activeQuickPresets = [];
 let growthSaveInProgress = false;
+let careTimer = storedCareTimer();
+let careTimerSaveInProgress = false;
 let lastCalendarTap = { date: null, at: 0 };
 let recentPhotoItems = [];
 let allPhotoItems = [];
@@ -103,6 +106,18 @@ function storedGrowthSummaryPeriod() {
     return ["day", "week", "month"].includes(saved) ? saved : "day";
   } catch { return "day"; }
 }
+function storedCareTimer() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CARE_TIMER_KEY) || "null");
+    return saved?.babyId && saved?.type && Number(saved?.startedAt) ? saved : null;
+  } catch { return null; }
+}
+function persistCareTimer() {
+  try {
+    if (careTimer) localStorage.setItem(CARE_TIMER_KEY, JSON.stringify(careTimer));
+    else localStorage.removeItem(CARE_TIMER_KEY);
+  } catch { /* 현재 화면의 타이머는 계속 작동 */ }
+}
 function localMembers() {
   try {
     const saved = JSON.parse(localStorage.getItem(MEMBER_STORAGE_KEY) || "[]");
@@ -126,6 +141,7 @@ async function init() {
   bindUi();
   renderDailyVerse();
   setInterval(renderDailyVerse, 60 * 1000);
+  setInterval(updateCareTimerClock, 1000);
   if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
     state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
     const { data } = await state.supabase.auth.getSession();
@@ -273,6 +289,10 @@ function bindUi() {
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
   $("#growthSummaryToggle").addEventListener("click", toggleGrowthSummary);
+  $("#careTimerStarts").addEventListener("click", startCareTimerFromEvent);
+  $("#careTimerStop").addEventListener("click", stopCareTimer);
+  $("#careTimerSwitchSide").addEventListener("click", switchCareTimerSide);
+  $("#careTimerCancel").addEventListener("click", cancelCareTimer);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   $("#openPhotoAlbumButton").addEventListener("click", openPhotoAlbum);
@@ -776,7 +796,9 @@ function renderGrowth() {
   renderBabyProfile(baby);
   const allEntries = activeBabyEntries();
   renderTodayCareSummary(allEntries);
+  renderCareTimer();
   renderGrowthSummary(allEntries);
+  renderCareRhythm(allEntries);
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
@@ -827,13 +849,169 @@ function renderTodayCareSummary(entries) {
   const diapers = items.filter((entry) => entry.category === "기저귀");
   const feedingMl = feeding.reduce((sum, entry) => sum + (entry.feedingMl || 0), 0);
   const sleepMinutes = sleep.reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0);
+  const latest = (list) => [...list].sort((a, b) => `${b.date}T${b.time || "00:00"}`.localeCompare(`${a.date}T${a.time || "00:00"}`))[0];
+  const feedLast = latest(feeding); const sleepLast = latest(sleep); const diaperLast = latest(diapers);
+  const timerForBaby = careTimer?.babyId === state.activeBabyId ? careTimer : null;
   const cards = [
-    ["수유", feedingMl ? `${feedingMl}ml` : `${feeding.length}회`, `${feeding.length}회 기록`],
-    ["수면", sleepMinutes ? formatDuration(sleepMinutes) : `${sleep.length}회`, `${sleep.length}회 기록`],
-    ["기저귀", `${diapers.length}회`, diapers.length ? "오늘 교체" : "기록 없음"],
-    ["오늘", `${items.length}개`, "전체 기록"],
+    ["수유", timerForBaby?.type === "feeding" ? "수유 중" : elapsedFromEntry(feedLast), feedingMl ? `${feeding.length}회 · ${feedingMl}ml` : `${feeding.length}회 기록`, "feed"],
+    ["수면", timerForBaby?.type === "sleep" ? "자는 중" : elapsedFromEntry(sleepLast), sleepMinutes ? `${sleep.length}회 · ${formatDuration(sleepMinutes)}` : `${sleep.length}회 기록`, "sleep"],
+    ["기저귀", elapsedFromEntry(diaperLast), diapers.length ? `오늘 ${diapers.length}회` : "기록 없음", "diaper"],
+    ["오늘", `${items.length}개`, "전체 기록", "all"],
   ];
-  $("#todayCareSummary").innerHTML = cards.map(([label, value, note]) => `<article><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+  $("#todayCareSummary").innerHTML = cards.map(([label, value, note, type]) => `<article class="${type}"><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+}
+
+function entryDateTime(entry) {
+  if (!entry) return null;
+  const [year, month, day] = entry.date.split("-").map(Number);
+  const [hour, minute] = (entry.time || "00:00").split(":").map(Number);
+  return new Date(year, month - 1, day, hour || 0, minute || 0);
+}
+
+function elapsedFromEntry(entry) {
+  const time = entryDateTime(entry);
+  if (!time) return "—";
+  const minutes = Math.max(0, Math.floor((Date.now() - time.getTime()) / 60000));
+  if (minutes < 1) return "방금";
+  if (minutes < 60) return `${minutes}분 전`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)}시간 전`;
+  return `${Math.floor(minutes / 1440)}일 전`;
+}
+
+function careTimerDefinition(value) {
+  return ({
+    "feeding-left": { type: "feeding", side: "왼쪽", label: "왼쪽 모유 수유", icon: "L" },
+    "feeding-right": { type: "feeding", side: "오른쪽", label: "오른쪽 모유 수유", icon: "R" },
+    sleep: { type: "sleep", side: "", label: "수면", icon: "Zz" },
+  })[value] || null;
+}
+
+function startCareTimerFromEvent(event) {
+  const button = event.target.closest("[data-care-timer]");
+  if (!button) return;
+  if (!activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
+  if (careTimer) { toast("진행 중인 기록을 먼저 멈춰주세요"); return; }
+  const definition = careTimerDefinition(button.dataset.careTimer);
+  if (!definition) return;
+  careTimer = { ...definition, babyId: state.activeBabyId, startedAt: Date.now() };
+  persistCareTimer();
+  renderCareTimer();
+  renderTodayCareSummary(activeBabyEntries());
+  toast(`${definition.label} 타이머를 시작했어요`);
+}
+
+function renderCareTimer() {
+  const running = $("#careTimerRunning");
+  const starts = $("#careTimerStarts");
+  if (!careTimer) {
+    running.hidden = true;
+    starts.hidden = false;
+    $("#careTimerCard").classList.remove("is-running");
+    return;
+  }
+  const timerBaby = state.babies.find((baby) => baby.id === careTimer.babyId);
+  starts.hidden = true;
+  running.hidden = false;
+  $("#careTimerCard").classList.add("is-running");
+  $("#careTimerIcon").textContent = careTimer.icon || "◷";
+  $("#careTimerBaby").textContent = `${timerBaby?.name || "아기"} · 진행 중`;
+  $("#careTimerLabel").textContent = careTimer.label;
+  $("#careTimerStarted").textContent = `${new Date(careTimer.startedAt).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" })} 시작`;
+  $("#careTimerSwitchSide").hidden = careTimer.type !== "feeding";
+  $("#careTimerStop").disabled = careTimerSaveInProgress;
+  $("#careTimerSwitchSide").disabled = careTimerSaveInProgress;
+  $("#careTimerCancel").disabled = careTimerSaveInProgress;
+  $("#careTimerStop").innerHTML = careTimerSaveInProgress ? "저장 중…" : '<span aria-hidden="true">■</span> 멈추고 저장';
+  updateCareTimerClock();
+}
+
+function updateCareTimerClock() {
+  if (!careTimer || !$("#careTimerClock")) return;
+  const seconds = Math.max(0, Math.floor((Date.now() - careTimer.startedAt) / 1000));
+  const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+  const rest = String(seconds % 60).padStart(2, "0");
+  $("#careTimerClock").textContent = `${hours}:${minutes}:${rest}`;
+}
+
+function switchCareTimerSide() {
+  if (!careTimer || careTimer.type !== "feeding" || careTimerSaveInProgress) return;
+  const nextSide = careTimer.side === "왼쪽" ? "오른쪽" : "왼쪽";
+  careTimer.side = nextSide;
+  careTimer.label = `${nextSide} 모유 수유`;
+  careTimer.icon = nextSide === "왼쪽" ? "L" : "R";
+  careTimer.switched = true;
+  persistCareTimer();
+  renderCareTimer();
+  toast(`${nextSide}으로 이어서 측정해요`);
+}
+
+function cancelCareTimer() {
+  if (!careTimer || careTimerSaveInProgress) return;
+  if (!window.confirm("진행 중인 타이머를 저장하지 않고 취소할까요?")) return;
+  careTimer = null;
+  persistCareTimer();
+  renderCareTimer();
+  renderTodayCareSummary(activeBabyEntries());
+  toast("진행 중 기록을 취소했어요");
+}
+
+async function stopCareTimer() {
+  if (!careTimer || careTimerSaveInProgress) return;
+  careTimerSaveInProgress = true;
+  renderCareTimer();
+  const finishedTimer = { ...careTimer };
+  const started = new Date(finishedTimer.startedAt);
+  const minutes = Math.max(1, Math.round((Date.now() - finishedTimer.startedAt) / 60000));
+  const isFeeding = finishedTimer.type === "feeding";
+  const entry = {
+    id: uid(), babyId: finishedTimer.babyId, title: isFeeding ? "모유 수유" : "수면 기록", date: dateKey(started), time: started.toTimeString().slice(0, 5), category: isFeeding ? "수유·이유식" : "수면",
+    height: null, weight: null, head: null, feedingMl: null, feedingType: isFeeding ? "모유" : "", feedingSide: isFeeding ? (finishedTimer.switched ? "양쪽" : finishedTimer.side) : "", feedingMinutes: isFeeding ? minutes : null,
+    sleepMinutes: isFeeding ? null : minutes, temperature: null, diaperKind: "", note: finishedTimer.switched ? `타이머로 자동 기록 · ${finishedTimer.side}에서 마침` : "타이머로 자동 기록", photoPaths: [], photoUrls: [],
+  };
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+    if (error) {
+      careTimerSaveInProgress = false;
+      renderCareTimer();
+      toast("저장하지 못했어요. 타이머는 그대로 유지했어요");
+      return;
+    }
+  }
+  state.growthEntries.push(entry);
+  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+  careTimer = null;
+  careTimerSaveInProgress = false;
+  persistCareTimer();
+  renderGrowth();
+  showGrowthComplete(`${finishedTimer.label} ${formatDuration(minutes)} 기록을 저장했어요.`);
+}
+
+function renderCareRhythm(entries) {
+  const end = dateKey(new Date());
+  const days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
+  const data = days.map((day) => {
+    const items = entries.filter((entry) => entry.date === day);
+    return {
+      day,
+      feed: items.filter((entry) => entry.category === "수유·이유식").length,
+      sleep: items.filter((entry) => entry.category === "수면").reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0),
+      diaper: items.filter((entry) => entry.category === "기저귀").length,
+    };
+  });
+  const maxFeed = Math.max(1, ...data.map((item) => item.feed));
+  const maxSleep = Math.max(1, ...data.map((item) => item.sleep));
+  const maxDiaper = Math.max(1, ...data.map((item) => item.diaper));
+  const hasData = data.some((item) => item.feed || item.sleep || item.diaper);
+  if (!hasData) {
+    $("#careRhythmChart").innerHTML = '<div class="care-rhythm-empty"><strong>기록이 쌓이면 리듬이 보여요</strong><span>위의 빠른 기록이나 타이머로 오늘부터 시작해 보세요.</span></div>';
+    return;
+  }
+  $("#careRhythmChart").innerHTML = data.map((item) => {
+    const date = parseDate(item.day); const isToday = item.day === end;
+    const height = (value, max) => value ? Math.max(12, Math.round((value / max) * 100)) : 4;
+    return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 수유 ${item.feed}회, 수면 ${formatDuration(item.sleep)}, 기저귀 ${item.diaper}회"><div class="care-rhythm-bars"><i class="feed" style="--bar:${height(item.feed, maxFeed)}%" title="수유 ${item.feed}회"></i><i class="sleep" style="--bar:${height(item.sleep, maxSleep)}%" title="수면 ${formatDuration(item.sleep)}"></i><i class="diaper" style="--bar:${height(item.diaper, maxDiaper)}%" title="기저귀 ${item.diaper}회"></i></div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
+  }).join("");
 }
 
 function renderGrowthSummary(entries) {
@@ -1044,6 +1222,7 @@ function quickPresets(category) {
   ];
   if (category === "수면") return [30, 60, 90, 120, 180, 480].map((minutes) => ({ label: formatDuration(minutes), note: minutes >= 180 ? "긴 잠" : "수면", title: "수면 기록", sleepMinutes: minutes }));
   if (category === "기저귀") return ["소변", "대변", "소변·대변"].map((kind) => ({ label: kind, note: "기저귀", title: "기저귀 교체", diaperKind: kind }));
+  if (category === "건강·병원") return [36.5, 37, 37.5, 38, 38.5, 39].map((temperature) => ({ label: `${temperature.toFixed(1)}℃`, note: temperature >= 38 ? "발열" : "체온", title: "체온 기록", temperature }));
   return [];
 }
 
@@ -1052,7 +1231,7 @@ function openGrowthQuick(category) {
   const presets = quickPresets(category);
   if (!presets.length) { openGrowthDialog(null, category); return; }
   activeQuickCategory = category; activeQuickPresets = presets;
-  const title = category === "수유·이유식" ? "수유를 바로 기록해요" : category === "수면" ? "얼마나 잤나요?" : "기저귀 상태를 골라요";
+  const title = category === "수유·이유식" ? "수유를 바로 기록해요" : category === "수면" ? "얼마나 잤나요?" : category === "기저귀" ? "기저귀 상태를 골라요" : "체온을 바로 기록해요";
   $("#quickLogTitle").textContent = title;
   $("#quickLogCopy").textContent = "가장 가까운 값을 누르면 현재 시간으로 즉시 저장됩니다.";
   $("#quickPresetGrid").innerHTML = presets.map((preset, index) => `<button type="button" data-preset-index="${index}"><span>${escapeHtml(preset.label)}</span><small>${escapeHtml(preset.note)}</small></button>`).join("");
@@ -1067,7 +1246,7 @@ async function saveGrowthPresetFromEvent(event) {
   const entry = {
     id: uid(), babyId: state.activeBabyId, title: preset.title, date: dateKey(now), time: now.toTimeString().slice(0, 5), category: activeQuickCategory,
     height: null, weight: null, head: null, feedingMl: preset.feedingMl || null, feedingType: preset.feedingType || "", feedingSide: preset.feedingSide || "", feedingMinutes: preset.feedingMinutes || null,
-    sleepMinutes: preset.sleepMinutes || null, temperature: null, diaperKind: preset.diaperKind || "", note: "", photoPaths: [], photoUrls: [],
+    sleepMinutes: preset.sleepMinutes || null, temperature: preset.temperature || null, diaperKind: preset.diaperKind || "", note: "", photoPaths: [], photoUrls: [],
   };
   if (state.supabase && state.session) {
     const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
