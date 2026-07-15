@@ -38,6 +38,8 @@ let activeQuickPresets = [];
 let growthSaveInProgress = false;
 let lastCalendarTap = { date: null, at: 0 };
 let recentPhotoItems = [];
+let allPhotoItems = [];
+let activePhotoViewerItems = [];
 let activeRecentPhotoIndex = -1;
 let calendarSwipeState = null;
 let suppressCalendarClickUntil = 0;
@@ -272,6 +274,8 @@ function bindUi() {
   $("#growthSummaryToggle").addEventListener("click", toggleGrowthSummary);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
+  $("#openPhotoAlbumButton").addEventListener("click", openPhotoAlbum);
+  $("#photoAlbumBackButton").addEventListener("click", closePhotoAlbum);
   $("#photoShareButton").addEventListener("click", shareRecentPhoto);
   $("#photoViewerDialog").addEventListener("click", (event) => { if (event.target === event.currentTarget) event.currentTarget.close(); });
   $("#calendarGrid").addEventListener("pointerdown", beginCalendarSwipe);
@@ -354,6 +358,7 @@ function updateAuthGate() {
 }
 function switchView(view) {
   const nextView = view === "growth" ? "growth" : "calendar";
+  if (nextView !== "growth" && $("#growthView").classList.contains("album-open")) closePhotoAlbum(false);
   state.activeView = nextView;
   try { localStorage.setItem(ACTIVE_VIEW_KEY, nextView); } catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
   $("#calendarView").hidden = nextView !== "calendar";
@@ -726,8 +731,10 @@ function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY,
 
 function renderGrowth() {
   const baby = activeBaby();
+  const albumOpen = $("#growthView").classList.contains("album-open");
   $("#babyEmptyState").hidden = Boolean(baby);
-  $("#babyJournalContent").hidden = !baby;
+  $("#babyJournalContent").hidden = !baby || albumOpen;
+  $("#photoAlbumView").hidden = !baby || !albumOpen;
   if (!baby) return;
 
   renderBabyProfile(baby);
@@ -864,17 +871,55 @@ function renderGrowthInsights(entries) {
 }
 
 function renderRecentPhotos(entries) {
-  recentPhotoItems = [...entries].sort((a, b) => b.date.localeCompare(a.date)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry, filePromise: null }))).filter((item) => item.url).slice(0, 6);
+  allPhotoItems = [...entries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry, filePromise: null }))).filter((item) => item.url);
+  recentPhotoItems = allPhotoItems.slice(0, 4);
   $("#recentPhotoSection").hidden = !recentPhotoItems.length;
   if (!recentPhotoItems.length) return;
-  $("#recentPhotoCount").textContent = `${recentPhotoItems.length}장`;
+  $("#recentPhotoCount").textContent = `최신 ${recentPhotoItems.length}장`;
   $("#recentPhotoGrid").innerHTML = recentPhotoItems.map(({ url, entry }, index) => `<button type="button" data-photo-index="${index}" aria-label="${escapeHtml(entry.title)} 사진 크게 보기"><img src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
-  $("#recentPhotoGrid").querySelectorAll("[data-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.photoIndex))));
+  $("#recentPhotoGrid").querySelectorAll("[data-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.photoIndex), recentPhotoItems)));
+  renderPhotoAlbum();
 }
 
-function openRecentPhoto(index) {
-  const photo = recentPhotoItems[index];
+function renderPhotoAlbum() {
+  const baby = activeBaby();
+  $("#photoAlbumTitle").textContent = `${baby?.name || "아기"} 사진첩`;
+  $("#photoAlbumCount").textContent = `${allPhotoItems.length}장`;
+  if (!allPhotoItems.length) { $("#photoAlbumContent").innerHTML = '<div class="photo-album-empty">아직 사진이 없어요.</div>'; return; }
+  const groups = new Map();
+  allPhotoItems.forEach((photo, index) => {
+    const month = photo.entry.date.slice(0, 7);
+    if (!groups.has(month)) groups.set(month, []);
+    groups.get(month).push({ photo, index });
+  });
+  $("#photoAlbumContent").innerHTML = [...groups.entries()].map(([month, items]) => {
+    const [year, monthNumber] = month.split("-").map(Number);
+    return `<section class="photo-album-group"><div class="photo-album-month"><h3>${year}년 ${monthNumber}월</h3><span>${items.length}장</span></div><div class="photo-album-grid">${items.map(({ photo, index }) => `<button type="button" data-album-photo-index="${index}" aria-label="${escapeHtml(photo.entry.title)} 사진 크게 보기"><img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.entry.title)}" loading="lazy" /><span><strong>${photo.entry.date.slice(8)}일</strong>${escapeHtml(photo.entry.title)}</span></button>`).join("")}</div></section>`;
+  }).join("");
+  $("#photoAlbumContent").querySelectorAll("[data-album-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.albumPhotoIndex), allPhotoItems)));
+}
+
+function openPhotoAlbum() {
+  renderPhotoAlbum();
+  $("#growthView").classList.add("album-open");
+  $("#babyJournalContent").hidden = true;
+  $("#photoAlbumView").hidden = false;
+  $("#addEventButton").hidden = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function closePhotoAlbum(restoreScroll = true) {
+  $("#growthView").classList.remove("album-open");
+  $("#photoAlbumView").hidden = true;
+  $("#babyJournalContent").hidden = !activeBaby();
+  $("#addEventButton").hidden = false;
+  if (restoreScroll) $("#recentPhotoSection").scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
+function openRecentPhoto(index, items = recentPhotoItems) {
+  const photo = items[index];
   if (!photo) return;
+  activePhotoViewerItems = items;
   activeRecentPhotoIndex = index;
   $("#photoViewerImage").src = photo.url;
   $("#photoViewerImage").alt = `${photo.entry.title} 사진`;
@@ -885,7 +930,7 @@ function openRecentPhoto(index) {
 }
 
 async function shareRecentPhoto() {
-  const photo = recentPhotoItems[activeRecentPhotoIndex];
+  const photo = activePhotoViewerItems[activeRecentPhotoIndex];
   if (!photo) return;
   const button = $("#photoShareButton");
   button.disabled = true;
