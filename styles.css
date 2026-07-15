@@ -172,6 +172,11 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .baby-profile-card { background:linear-gradient(140deg,#587567 0%,#7f9581 58%,#d09e94 100%); }
 .baby-profile-card::before { content:"✦  ♡"; position:absolute; z-index:1; right:21px; bottom:18px; color:rgba(255,255,255,.28); font-size:14px; letter-spacing:8px; animation:sparkle 3.6s ease-in-out infinite; }
 .baby-monogram { background:linear-gradient(145deg,#fff5e6,#f3d9d2); animation:mascot-float 6s ease-in-out infinite; }
+.growth-title-with-mascot { display:flex; align-items:center; gap:12px; min-width:0; }
+.growth-diary-mascot { position:relative; display:block; width:92px; height:62px; flex:0 0 92px; border:1px solid rgba(217,157,146,.2); border-radius:22px 22px 22px 9px; background:linear-gradient(145deg,rgba(255,247,232,.95),rgba(247,222,218,.88)); box-shadow:0 9px 24px rgba(151,105,95,.12); animation:mascot-float 5.2s ease-in-out infinite; }
+.growth-diary-mascot::after { content:""; position:absolute; left:10px; bottom:-7px; width:15px; height:15px; border-radius:2px; background:#f8e5dd; transform:rotate(45deg); }
+.growth-diary-mascot img { position:absolute; z-index:1; inset:-15px -4px 2px; width:100px; height:76px; object-fit:contain; filter:drop-shadow(0 6px 8px rgba(104,75,65,.1)); }
+.growth-diary-mascot i { position:absolute; z-index:2; right:5px; top:5px; padding:3px 5px; border-radius:999px; color:#a46e66; background:rgba(255,255,255,.82); font-size:7px; font-style:normal; font-weight:800; letter-spacing:-.03em; animation:sparkle 3.2s ease-in-out infinite; }
 .growth-summary-section { background:linear-gradient(145deg,rgba(255,253,248,.97),rgba(246,230,220,.88),rgba(235,235,246,.78)); }
 .growth-quick-grid button,.summary-card,.growth-insight-row > article,.insight-title { transition:transform .2s ease,box-shadow .2s ease,background .2s ease; }
 .growth-quick-grid .quick-symbol { border-radius:50%; box-shadow:0 5px 12px rgba(112,91,78,.08); transition:transform .22s ease; }
@@ -180,6 +185,7 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .fab { border:2px solid rgba(255,255,255,.68); border-radius:999px; background:linear-gradient(135deg,#628472,#d28f8a); box-shadow:0 12px 30px rgba(170,107,103,.28); animation:fab-float 3.8s ease-in-out infinite; }
 @media (hover:hover) { .calendar-day:hover { transform:translateY(-2px) scale(1.03); background:rgba(247,229,221,.7); }.growth-quick-grid button:hover,.summary-card:hover,.growth-insight-row > article:hover,.agenda-item:hover,.growth-entry:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(130,94,80,.12); }.growth-quick-grid button:hover .quick-symbol { transform:rotate(-6deg) scale(1.08); } }
 @media (max-width:390px) { .hero-card .family-stack { display:none; }.family-mascot { right:-10px; width:158px; opacity:.96; }.hero-card > div:first-of-type { max-width:58%; }.hero-card h2 { font-size:23px; } }
+@media (max-width:420px) { .growth-page-header { align-items:center; }.growth-title-with-mascot { gap:7px; }.growth-diary-mascot { width:72px; height:55px; flex-basis:72px; border-radius:19px 19px 19px 8px; }.growth-diary-mascot img { inset:-12px -8px 0; width:86px; height:66px; }.growth-diary-mascot i { display:none; }.add-baby-button { padding:0 10px; }.growth-page-header h2 { font-size:27px; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; } }
 
 /* Keep mobile forms from triggering Safari's focus zoom. */
