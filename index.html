@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f3ef" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-unified-growth-card" />
+    <link rel="stylesheet" href="styles.css?v=20260715-mobile-sheet-fix" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -320,7 +320,7 @@
         </div>
         <input type="hidden" id="growthId" />
         <label>기록 제목 <small class="field-optional">비워두면 분류에 맞게 자동 입력</small><input id="growthEntryTitle" maxlength="60" placeholder="예: 처음으로 뒤집었어요" /></label>
-        <div class="form-row">
+        <div class="form-row growth-when-row">
           <label>날짜<input id="growthDate" type="date" required /></label>
           <label>시간<input id="growthTime" type="time" /></label>
         </div>
@@ -361,7 +361,7 @@
         </fieldset>
         <div class="dialog-actions">
           <button type="button" class="danger-button" id="deleteGrowthButton">삭제</button>
-          <button type="submit" class="primary-button">기록하기</button>
+          <button type="submit" class="primary-button" id="growthSubmitButton">기록하기</button>
         </div>
       </form>
     </dialog>
@@ -402,10 +402,20 @@
       </div>
     </dialog>
 
+    <dialog id="growthCompleteDialog" class="completion-dialog" aria-labelledby="growthCompleteTitle">
+      <div class="completion-panel">
+        <span class="completion-check" aria-hidden="true">✓</span>
+        <p class="eyebrow">GROWTH LOG SAVED</p>
+        <h2 id="growthCompleteTitle">기록 완료</h2>
+        <p id="growthCompleteMessage">도윤이의 성장 기록을 안전하게 저장했어요.</p>
+        <button type="button" data-close="growthCompleteDialog">확인</button>
+      </div>
+    </dialog>
+
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
     <script src="config.js?v=20260715-date-dialog"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-date-dialog"></script>
+    <script src="app.js?v=20260715-mobile-sheet-fix"></script>
   </body>
 </html>
