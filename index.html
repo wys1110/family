@@ -107,6 +107,7 @@
             <div class="quick-options">
               <div class="member-chips" id="quickMemberChips" role="group" aria-label="가족 구성원 선택">
               </div>
+              <button class="bulk-add-button" id="bulkAddButton" type="button">여러 개</button>
               <button class="quick-time-button" id="quickTimeButton" type="button" aria-expanded="false">＋ 시간</button>
               <input class="quick-time-input" id="quickEventTime" type="time" aria-label="일정 시간" hidden />
             </div>
@@ -253,6 +254,34 @@
       </form>
     </dialog>
 
+    <dialog id="bulkEventDialog" class="sheet-dialog bulk-event-dialog">
+      <form id="bulkEventForm" method="dialog">
+        <div class="sheet-handle"></div>
+        <div class="dialog-header">
+          <div><p class="eyebrow">한 번에 등록</p><h2>여러 일정 추가</h2></div>
+          <button type="button" class="close-button" data-close="bulkEventDialog" aria-label="닫기">×</button>
+        </div>
+        <p class="bulk-dialog-copy">한 줄이 일정 하나예요. 날짜를 생략하면 아래 기본 날짜로 등록됩니다.</p>
+        <div class="bulk-defaults">
+          <label>기본 날짜<input id="bulkDefaultDate" type="date" required /></label>
+          <label>기본 구성원<select id="bulkDefaultMember"></select></label>
+        </div>
+        <label class="bulk-text-label">일정 목록
+          <textarea id="bulkEventText" rows="9" placeholder="장보기&#10;7/18 13:30 예방접종 | 도윤&#10;7/20~7/22 가족여행 | 가족" required></textarea>
+        </label>
+        <div class="bulk-format-help">
+          <strong>입력 예시</strong>
+          <span><code>7/18 일정명</code> · <code>7/18 14:00 일정명</code></span>
+          <span><code>7/20~7/22 여행 | 가족</code></span>
+        </div>
+        <div class="bulk-preview" id="bulkEventPreview" aria-live="polite"></div>
+        <div class="dialog-actions bulk-dialog-actions">
+          <button type="button" class="bulk-cancel-button" data-close="bulkEventDialog">취소</button>
+          <button type="submit" class="primary-button" id="bulkEventSubmit">일정 추가</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="memberDialog" class="sheet-dialog compact">
       <form id="memberForm" method="dialog">
         <div class="sheet-handle"></div>
@@ -375,8 +404,8 @@
 
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
-    <script src="config.js?v=20260715-collapsed-summary"></script>
+    <script src="config.js?v=20260715-bulk-events"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260715-collapsed-summary"></script>
+    <script src="app.js?v=20260715-bulk-events"></script>
   </body>
 </html>
