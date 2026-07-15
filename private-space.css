@@ -1,3 +1,4 @@
+.view-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .private-view-tab span { font-size: .82rem; margin-right: .16rem; }
 #privateView { padding-bottom: 7rem; }
 .private-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem .15rem 1.1rem; }
