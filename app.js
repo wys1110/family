@@ -39,6 +39,9 @@ let growthSaveInProgress = false;
 let lastCalendarTap = { date: null, at: 0 };
 let recentPhotoItems = [];
 let activeRecentPhotoIndex = -1;
+let calendarSwipeState = null;
+let suppressCalendarClickUntil = 0;
+let monthSwipeAnimating = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 
 function focusOnDesktop(selector) {
@@ -231,8 +234,8 @@ async function hydrateGrowthPhotoUrls(entries) {
 }
 
 function bindUi() {
-  $("#prevMonth").addEventListener("click", () => changeMonth(-1));
-  $("#nextMonth").addEventListener("click", () => changeMonth(1));
+  $("#prevMonth").addEventListener("click", () => slideMonth(-1));
+  $("#nextMonth").addEventListener("click", () => slideMonth(1));
   $("#todayButton").addEventListener("click", () => { state.viewDate = startOfMonth(new Date()); state.selectedDate = dateKey(new Date()); render(); });
   $("#addEventButton").addEventListener("click", () => state.activeView === "calendar" ? openEventDialog() : openGrowthDialog());
   document.querySelectorAll(".view-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
@@ -271,10 +274,58 @@ function bindUi() {
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   $("#photoShareButton").addEventListener("click", shareRecentPhoto);
   $("#photoViewerDialog").addEventListener("click", (event) => { if (event.target === event.currentTarget) event.currentTarget.close(); });
+  $("#calendarGrid").addEventListener("pointerdown", beginCalendarSwipe);
+  $("#calendarGrid").addEventListener("pointerup", finishCalendarSwipe);
+  $("#calendarGrid").addEventListener("pointercancel", cancelCalendarSwipe);
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
 }
 
 function changeMonth(delta) { state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1); renderCalendar(); }
+async function slideMonth(delta) {
+  if (monthSwipeAnimating) return;
+  monthSwipeAnimating = true;
+  lastCalendarTap = { date: null, at: 0 };
+  const grid = $("#calendarGrid");
+  const distance = Math.min(Math.max(grid.clientWidth * .24, 56), 130);
+  let monthChanged = false;
+  try {
+    if (typeof grid.animate === "function") {
+      const outgoing = grid.animate(
+        [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-delta * distance}px)`, opacity: .12 }],
+        { duration: 140, easing: "ease-in", fill: "forwards" },
+      );
+      await outgoing.finished;
+      outgoing.cancel();
+    }
+    changeMonth(delta);
+    monthChanged = true;
+    if (typeof grid.animate === "function") {
+      const incoming = grid.animate(
+        [{ transform: `translateX(${delta * distance}px)`, opacity: .12 }, { transform: "translateX(0)", opacity: 1 }],
+        { duration: 190, easing: "cubic-bezier(.22,.75,.25,1)", fill: "forwards" },
+      );
+      await incoming.finished;
+      incoming.cancel();
+    }
+  } catch { if (!monthChanged) changeMonth(delta); }
+  finally { monthSwipeAnimating = false; }
+}
+function beginCalendarSwipe(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  calendarSwipeState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, at: Date.now() };
+  event.currentTarget.setPointerCapture?.(event.pointerId);
+}
+function finishCalendarSwipe(event) {
+  if (!calendarSwipeState || event.pointerId !== calendarSwipeState.pointerId) return;
+  const dx = event.clientX - calendarSwipeState.x;
+  const dy = event.clientY - calendarSwipeState.y;
+  const elapsed = Date.now() - calendarSwipeState.at;
+  calendarSwipeState = null;
+  if (elapsed > 1200 || Math.abs(dx) < 52 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+  suppressCalendarClickUntil = Date.now() + 450;
+  slideMonth(dx < 0 ? 1 : -1);
+}
+function cancelCalendarSwipe() { calendarSwipeState = null; }
 function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
   const selector = $("#eventMemberSelector");
@@ -325,9 +376,24 @@ function renderCalendar() {
     if (key === dateKey(new Date())) button.classList.add("today");
     button.dataset.date = key;
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개. 한 번 누르면 일정 확인, 두 번 누르면 새 일정`);
-    const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
-    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" style="${memberStyle(firstEvent.member)}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
+    const firstEvent = dayEvents.sort((a, b) => {
+      const aRange = Number((a.endDate || a.date) > a.date); const bRange = Number((b.endDate || b.date) > b.date);
+      if (aRange !== bRange) return bRange - aRange;
+      if (aRange && a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.time || "99:99").localeCompare(b.time || "99:99") || a.title.localeCompare(b.title);
+    })[0];
+    let previewHtml = `<span class="event-dots"></span>`;
+    if (firstEvent) {
+      const isRange = (firstEvent.endDate || firstEvent.date) > firstEvent.date;
+      const startsSegment = isRange && (key === firstEvent.date || day.getDay() === 0);
+      const endsSegment = isRange && (key === firstEvent.endDate || day.getDay() === 6);
+      const rangeClasses = isRange ? `spans-range connected-range${startsSegment ? " segment-start" : ""}${endsSegment ? " segment-end" : ""}` : "";
+      const showTitle = !isRange || startsSegment;
+      previewHtml = `<span class="day-event-preview ${rangeClasses}" style="${memberStyle(firstEvent.member)}" data-event-id="${firstEvent.id}" aria-label="${escapeHtml(firstEvent.title)}"><span class="event-label">${showTitle ? escapeHtml(firstEvent.title) : "&nbsp;"}</span></span>`;
+    }
+    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${previewHtml}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
     button.addEventListener("click", () => {
+      if (Date.now() < suppressCalendarClickUntil) return;
       const now = Date.now();
       const isDoubleTap = lastCalendarTap.date === key && now - lastCalendarTap.at <= DOUBLE_TAP_WINDOW_MS;
       lastCalendarTap = isDoubleTap ? { date: null, at: 0 } : { date: key, at: now };
@@ -342,6 +408,7 @@ function renderCalendar() {
   grid.querySelectorAll(".day-event-preview").forEach((preview) => {
     preview.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (Date.now() < suppressCalendarClickUntil) return;
       lastCalendarTap = { date: null, at: 0 };
       const item = state.events.find((entry) => entry.id === preview.dataset.eventId);
       if (item) openEventDialog(item);
