@@ -299,3 +299,8 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .completion-panel h2 { margin-bottom:8px; font-size:25px; letter-spacing:-.045em; }
 .completion-panel > p:not(.eyebrow) { color:var(--secondary); font-size:11px; line-height:1.55; }
 .completion-panel button { width:100%; min-height:50px; margin-top:21px; border:0; border-radius:16px; color:white; background:linear-gradient(135deg,#648875,#86a286); font-size:14px; font-weight:760; box-shadow:0 9px 22px rgba(86,121,106,.18); }
+
+/* Calendar tap interaction */
+.calendar-day { touch-action:manipulation; }
+.agenda-heading-actions { display:flex; align-items:center; gap:7px; }
+.agenda-heading-actions .bulk-add-button { min-height:30px; padding:0 10px; border:1px solid rgba(118,105,154,.12); }
