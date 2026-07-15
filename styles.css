@@ -319,3 +319,29 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .photo-share-button span { margin-right:5px; font-size:18px; }
 .photo-share-button:disabled { opacity:.68; }
 @media (max-width:520px) { .photo-viewer-dialog { width:100%; max-height:100dvh; padding:12px 10px max(12px,env(safe-area-inset-bottom)); }.photo-viewer-panel { max-height:calc(100dvh - 24px); }.photo-viewer-panel img { max-height:calc(100dvh - 168px); border-radius:20px; }.photo-viewer-panel figcaption { align-items:start; flex-direction:column; gap:4px; padding:0 6px; }.photo-viewer-close { top:21px; right:19px; }.photo-share-button { width:calc(100% - 12px); } }
+
+/* Growth diary album */
+.recent-photo-section { margin:30px 2px 8px; padding-top:24px; border-top:1px solid rgba(91,107,98,.11); }
+.recent-photo-actions { display:flex; align-items:center; gap:7px; }
+.recent-photo-actions button { display:flex; align-items:center; gap:4px; min-height:32px; padding:0 10px; border:1px solid rgba(86,121,106,.12); border-radius:999px; color:var(--blue); background:rgba(255,255,255,.72); font-size:9px; font-weight:760; }
+.recent-photo-actions button i { font-size:16px; font-style:normal; line-height:1; }
+.recent-photo-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.photo-album-view { min-height:70vh; animation:soft-rise .28s ease both; }
+.album-open > .growth-page-header { display:none; }
+.photo-album-header { display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:13px; align-items:center; margin:2px 0 24px; padding:18px; border:1px solid rgba(194,139,128,.12); border-radius:27px; background:linear-gradient(145deg,#fffdf8,#f6e5df); box-shadow:0 14px 38px rgba(123,87,73,.08); }
+.photo-album-back { display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid rgba(86,121,106,.12); border-radius:15px; color:var(--blue); background:rgba(255,255,255,.8); font-size:29px; line-height:1; }
+.photo-album-header h2 { margin:2px 0 4px; font-size:25px; letter-spacing:-.045em; }
+.photo-album-header > div > span { color:var(--secondary); font-size:9px; }
+.photo-album-header > strong { padding:6px 9px; border-radius:999px; color:#9a6962; background:#f8ddd5; font-size:9px; }
+.photo-album-content { display:grid; gap:28px; }
+.photo-album-month { display:flex; justify-content:space-between; align-items:center; margin:0 3px 10px; }
+.photo-album-month h3 { font-size:16px; letter-spacing:-.035em; }
+.photo-album-month span { color:var(--secondary); font-size:9px; }
+.photo-album-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.photo-album-grid button { position:relative; min-width:0; aspect-ratio:1; padding:0; overflow:hidden; border:0; border-radius:18px; background:var(--surface-2); box-shadow:0 8px 24px rgba(77,63,55,.08); }
+.photo-album-grid img { width:100%; height:100%; object-fit:cover; transition:transform .22s ease; }
+.photo-album-grid button:active img { transform:scale(.97); }
+.photo-album-grid button > span { position:absolute; right:0; bottom:0; left:0; padding:18px 8px 7px; overflow:hidden; color:white; background:linear-gradient(transparent,rgba(22,25,23,.62)); font-size:7px; text-align:left; text-overflow:ellipsis; white-space:nowrap; }
+.photo-album-grid button > span strong { margin-right:4px; font-size:8px; }
+.photo-album-empty { padding:50px 20px; border:1px dashed var(--separator); border-radius:24px; color:var(--secondary); text-align:center; }
+@media (max-width:520px) { .recent-photo-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }.recent-photo-grid button { border-radius:14px; }.photo-album-header { grid-template-columns:42px minmax(0,1fr) auto; padding:15px 13px; }.photo-album-header h2 { font-size:22px; }.photo-album-header > div > span { display:none; }.photo-album-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }.photo-album-grid button { border-radius:14px; } }
