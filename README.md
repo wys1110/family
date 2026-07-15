@@ -56,6 +56,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - 여러 아기 프로필과 태어난 날 기준 D-day·생후 일수
 - 수유·수면·기저귀 원터치 기록과 오늘 요약
 - 최근 성장 측정 및 비공개 사진 타임라인
+- 로그인 계정 본인만 접근할 수 있는 `나만의 공간`(일기·기도·생각·메모)
 
 이미 초기 스키마를 적용한 프로젝트에서 성장일기를 추가하려면 SQL Editor에서 [`supabase/migrations/20260714_growth_diary.sql`](supabase/migrations/20260714_growth_diary.sql)을 한 번 실행합니다.
 
@@ -66,3 +67,5 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.
 
 가족 구성원 추가와 구성원별 일정 색상을 사용하려면 SQL Editor에서 [`supabase/migrations/20260715_family_calendar_members.sql`](supabase/migrations/20260715_family_calendar_members.sql)을 한 번 실행합니다. 기존 가족 공간에는 가족·아빠·엄마·도윤이 자동 등록되며, 이후 추가한 구성원은 가족 모두에게 공유됩니다.
+
+개인 전용 `나만의 공간`을 사용하려면 SQL Editor에서 [`supabase/migrations/20260716_private_space.sql`](supabase/migrations/20260716_private_space.sql)을 한 번 실행합니다. 이 테이블은 `auth.uid() = owner_id` RLS 정책으로 로그인한 본인에게만 읽기·쓰기·수정·삭제를 허용합니다.
