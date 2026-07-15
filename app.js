@@ -45,6 +45,7 @@ let calendarSwipeState = null;
 let suppressCalendarClickUntil = 0;
 let monthSwipeAnimating = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
+const MAX_CALENDAR_EVENT_LANES = 4;
 
 function focusOnDesktop(selector) {
   if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -367,36 +368,56 @@ function switchView(view) {
   $("#addEventButton").innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
 }
 
+function calendarWeekSegments(gridStart) {
+  return Array.from({ length: 6 }, (_, weekIndex) => {
+    const weekStart = new Date(gridStart); weekStart.setDate(gridStart.getDate() + weekIndex * 7);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+    const weekStartKey = dateKey(weekStart); const weekEndKey = dateKey(weekEnd);
+    const segments = state.events
+      .filter((event) => event.date <= weekEndKey && (event.endDate || event.date) >= weekStartKey)
+      .map((event) => {
+        const startKey = event.date < weekStartKey ? weekStartKey : event.date;
+        const endKey = (event.endDate || event.date) > weekEndKey ? weekEndKey : (event.endDate || event.date);
+        return {
+          event, startColumn: parseDate(startKey).getDay() + 1, endColumn: parseDate(endKey).getDay() + 2,
+          continuesBefore: event.date < weekStartKey, continuesAfter: (event.endDate || event.date) > weekEndKey, lane: 0,
+        };
+      })
+      .sort((a, b) => a.startColumn - b.startColumn || b.endColumn - a.endColumn || a.event.date.localeCompare(b.event.date) || (a.event.time || "").localeCompare(b.event.time || "") || a.event.title.localeCompare(b.event.title));
+    const occupiedUntil = [];
+    segments.forEach((segment) => {
+      let lane = occupiedUntil.findIndex((column) => column < segment.startColumn);
+      if (lane < 0) lane = occupiedUntil.length;
+      segment.lane = lane; occupiedUntil[lane] = segment.endColumn - 1;
+    });
+    return segments;
+  });
+}
+
 function renderCalendar() {
   const year = state.viewDate.getFullYear(); const month = state.viewDate.getMonth();
   $("#monthLabel").textContent = `${year}년 ${month + 1}월`;
   const first = new Date(year, month, 1); const start = new Date(year, month, 1 - first.getDay());
   const grid = $("#calendarGrid"); grid.innerHTML = "";
+  const weekSegments = calendarWeekSegments(start);
+  const hiddenByDate = new Map();
+  weekSegments.forEach((segments, weekIndex) => segments.filter((segment) => segment.lane >= MAX_CALENDAR_EVENT_LANES).forEach((segment) => {
+    for (let column = segment.startColumn; column < segment.endColumn; column++) {
+      const day = new Date(start); day.setDate(start.getDate() + weekIndex * 7 + column - 1);
+      const key = dateKey(day); hiddenByDate.set(key, (hiddenByDate.get(key) || 0) + 1);
+    }
+  }));
   for (let i = 0; i < 42; i++) {
     const day = new Date(start); day.setDate(start.getDate() + i); const key = dateKey(day);
     const dayEvents = state.events.filter((event) => eventOccursOn(event, key));
     const button = document.createElement("button"); button.className = "calendar-day";
+    button.style.gridColumn = String((i % 7) + 1); button.style.gridRow = String(Math.floor(i / 7) + 1);
     if (day.getMonth() !== month) button.classList.add("outside");
     if (key === state.selectedDate) button.classList.add("selected");
     if (key === dateKey(new Date())) button.classList.add("today");
     button.dataset.date = key;
     button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개. 한 번 누르면 일정 확인, 두 번 누르면 새 일정`);
-    const firstEvent = dayEvents.sort((a, b) => {
-      const aRange = Number((a.endDate || a.date) > a.date); const bRange = Number((b.endDate || b.date) > b.date);
-      if (aRange !== bRange) return bRange - aRange;
-      if (aRange && a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.time || "99:99").localeCompare(b.time || "99:99") || a.title.localeCompare(b.title);
-    })[0];
-    let previewHtml = `<span class="event-dots"></span>`;
-    if (firstEvent) {
-      const isRange = (firstEvent.endDate || firstEvent.date) > firstEvent.date;
-      const startsSegment = isRange && (key === firstEvent.date || day.getDay() === 0);
-      const endsSegment = isRange && (key === firstEvent.endDate || day.getDay() === 6);
-      const rangeClasses = isRange ? `spans-range connected-range${startsSegment ? " segment-start" : ""}${endsSegment ? " segment-end" : ""}` : "";
-      const showTitle = !isRange || startsSegment;
-      previewHtml = `<span class="day-event-preview ${rangeClasses}" style="${memberStyle(firstEvent.member)}" data-event-id="${firstEvent.id}" aria-label="${escapeHtml(firstEvent.title)}"><span class="event-label">${showTitle ? escapeHtml(firstEvent.title) : "&nbsp;"}</span></span>`;
-    }
-    button.innerHTML = `<span class="day-number">${day.getDate()}</span>${previewHtml}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
+    button.innerHTML = `<span class="day-number">${day.getDate()}</span>`;
     button.addEventListener("click", () => {
       if (Date.now() < suppressCalendarClickUntil) return;
       const now = Date.now();
@@ -404,21 +425,36 @@ function renderCalendar() {
       lastCalendarTap = isDoubleTap ? { date: null, at: 0 } : { date: key, at: now };
       state.selectedDate = key;
       if (day.getMonth() !== month) state.viewDate = startOfMonth(day);
-      renderCalendar();
-      renderAgenda();
+      renderCalendar(); renderAgenda();
       if (isDoubleTap) openEventDialog();
     });
     grid.appendChild(button);
   }
-  grid.querySelectorAll(".day-event-preview").forEach((preview) => {
-    preview.addEventListener("click", (event) => {
+  hiddenByDate.forEach((count, key) => {
+    const offset = dayDistance(dateKey(start), key);
+    if (offset < 0 || offset >= 42) return;
+    const badge = document.createElement("span"); badge.className = "calendar-overflow-badge";
+    badge.style.cssText = `grid-column:${(offset % 7) + 1};grid-row:${Math.floor(offset / 7) + 1};--event-top:${34 + MAX_CALENDAR_EVENT_LANES * 18}px`;
+    badge.textContent = `+${count}`; grid.appendChild(badge);
+  });
+  weekSegments.forEach((segments, weekIndex) => segments.filter((segment) => segment.lane < MAX_CALENDAR_EVENT_LANES).forEach((segment) => {
+    const bar = document.createElement("button");
+    const isRange = (segment.event.endDate || segment.event.date) > segment.event.date;
+    bar.type = "button";
+    bar.className = `calendar-event-bar${isRange ? " range-event" : ""}${segment.continuesBefore ? " continues-before" : ""}${segment.continuesAfter ? " continues-after" : ""}`;
+    bar.style.cssText = `grid-column:${segment.startColumn}/${segment.endColumn};grid-row:${weekIndex + 1};--event-top:${34 + segment.lane * 18}px;${memberStyle(segment.event.member)}`;
+    bar.dataset.eventId = segment.event.id;
+    bar.setAttribute("aria-label", `${segment.event.title}, ${formatEventRange(segment.event) || segment.event.date}`);
+    const timePrefix = !isRange && segment.event.time ? `${segment.event.time} ` : "";
+    bar.innerHTML = `<span>${escapeHtml(timePrefix + segment.event.title)}</span>`;
+    bar.addEventListener("click", (event) => {
       event.stopPropagation();
       if (Date.now() < suppressCalendarClickUntil) return;
       lastCalendarTap = { date: null, at: 0 };
-      const item = state.events.find((entry) => entry.id === preview.dataset.eventId);
-      if (item) openEventDialog(item);
+      openEventDialog(segment.event);
     });
-  });
+    grid.appendChild(bar);
+  }));
 }
 
 function renderAgenda() {
