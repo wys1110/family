@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f3ef" />
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
-    <link rel="stylesheet" href="styles.css?v=20260715-growth-mascot" />
+    <link rel="stylesheet" href="styles.css?v=20260715-unified-growth-card" />
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -137,7 +137,7 @@
 
           <div id="babyJournalContent" hidden>
           <div class="baby-selector" id="babySelector" aria-label="아기 선택"></div>
-          <section class="baby-profile-card">
+          <section class="baby-profile-card baby-care-card" aria-labelledby="activeBabyName">
             <div class="baby-profile-main">
               <span class="baby-monogram" id="babyMonogram" aria-hidden="true">B</span>
               <div class="baby-profile-copy">
@@ -148,40 +148,36 @@
               <div class="baby-dday" id="babyDday"></div>
             </div>
             <button class="baby-edit-button" id="editBabyButton" type="button">프로필 수정</button>
+            <div class="care-snapshot-heading">
+              <div><span>오늘의 돌봄</span><small>마지막 기록 기준</small></div>
+              <i aria-hidden="true">LIVE</i>
+            </div>
             <div class="today-care-grid" id="todayCareSummary"></div>
-          </section>
-
-          <section class="growth-summary-section" aria-labelledby="growthSummaryTitle">
-            <div class="growth-summary-header">
+            <div class="integrated-care-summary" aria-labelledby="growthSummaryTitle">
+              <div class="growth-summary-header">
               <div>
-                <p class="eyebrow">CARE SUMMARY</p>
-                <h2 id="growthSummaryTitle">돌봄 요약</h2>
+                  <p class="eyebrow">CARE HISTORY</p>
+                  <h2 id="growthSummaryTitle">기간별 돌봄 요약</h2>
                 <span id="growthSummaryRange"></span>
               </div>
               <button class="growth-summary-toggle" id="growthSummaryToggle" type="button" aria-expanded="false" aria-controls="growthSummaryBody">
                 <span id="growthSummaryToggleText">펼쳐보기</span><i aria-hidden="true">⌄</i>
               </button>
-            </div>
-            <div class="growth-summary-body" id="growthSummaryBody" hidden>
-              <div class="summary-period-tabs" id="growthSummaryPeriod" role="group" aria-label="요약 기간 선택">
-                <button type="button" class="active" data-summary-period="day">하루</button>
-                <button type="button" data-summary-period="week">한 주</button>
-                <button type="button" data-summary-period="month">한 달</button>
               </div>
-              <div class="growth-summary-grid" id="growthSummaryGrid" aria-live="polite"></div>
-              <p class="growth-summary-footer" id="growthSummaryFooter"></p>
+              <div class="growth-summary-body" id="growthSummaryBody" hidden>
+                <div class="summary-period-tabs" id="growthSummaryPeriod" role="group" aria-label="요약 기간 선택">
+                  <button type="button" class="active" data-summary-period="day">하루</button>
+                  <button type="button" data-summary-period="week">한 주</button>
+                  <button type="button" data-summary-period="month">한 달</button>
+                </div>
+                <div class="growth-summary-grid" id="growthSummaryGrid" aria-live="polite"></div>
+                <p class="growth-summary-footer" id="growthSummaryFooter"></p>
+              </div>
             </div>
-          </section>
-
-          <section class="growth-insight-row" id="growthInsightRow"></section>
-
-          <section class="recent-photo-section" id="recentPhotoSection" hidden>
-            <div class="section-heading"><div><p class="eyebrow">PRIVATE ALBUM</p><h2>최근 사진</h2></div><span id="recentPhotoCount" class="count-badge"></span></div>
-            <div class="recent-photo-grid" id="recentPhotoGrid"></div>
           </section>
 
           <section class="growth-quick-section" id="growthQuickSection" aria-labelledby="growthQuickTitle">
-            <div class="section-heading"><div><p class="eyebrow">한 번에 남기기</p><h2 id="growthQuickTitle">빠른 기록</h2></div></div>
+            <div class="section-heading"><div><p class="eyebrow">ONE TAP LOG</p><h2 id="growthQuickTitle">지금 바로 기록</h2><small>자주 쓰는 값은 한 번만 눌러 남겨요</small></div><span class="quick-now-badge">빠른 기록</span></div>
             <div class="growth-quick-grid">
               <button type="button" data-growth-quick="수유·이유식"><span class="quick-symbol milk">ml</span>수유</button>
               <button type="button" data-growth-quick="수면"><span class="quick-symbol sleep">Zz</span>수면</button>
@@ -190,6 +186,13 @@
               <button type="button" data-growth-quick="성장"><span class="quick-symbol measure">cm</span>성장</button>
               <button type="button" data-growth-quick="첫 순간"><span class="quick-symbol moment">★</span>첫 순간</button>
             </div>
+          </section>
+
+          <section class="growth-insight-row" id="growthInsightRow"></section>
+
+          <section class="recent-photo-section" id="recentPhotoSection" hidden>
+            <div class="section-heading"><div><p class="eyebrow">PRIVATE ALBUM</p><h2>최근 사진</h2></div><span id="recentPhotoCount" class="count-badge"></span></div>
+            <div class="recent-photo-grid" id="recentPhotoGrid"></div>
           </section>
           <section class="growth-section" aria-labelledby="growthTitle">
             <div class="section-heading"><div><p class="eyebrow">성장 타임라인</p><h2 id="growthTitle">소중한 기록</h2></div><span id="growthCount" class="count-badge"></span></div>
