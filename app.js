@@ -313,7 +313,7 @@ function renderCalendar() {
       if (day.getMonth() !== month) state.viewDate = startOfMonth(day);
       renderCalendar();
       renderAgenda();
-      focusQuickEventInput();
+      openEventDialog();
     });
     grid.appendChild(button);
   }
@@ -324,12 +324,6 @@ function renderCalendar() {
       if (item) openEventDialog(item);
     });
   });
-}
-
-function focusQuickEventInput() {
-  const input = $("#quickEventTitle");
-  input.focus({ preventScroll: true });
-  $("#quickEventForm").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function renderAgenda() {
