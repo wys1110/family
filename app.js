@@ -1047,7 +1047,7 @@ function renderCarePattern(entries) {
 
 function clockPoint(angle, radius) {
   const radians = (angle - 90) * Math.PI / 180;
-  return { x: 160 + radius * Math.cos(radians), y: 160 + radius * Math.sin(radians) };
+  return { x: 180 + radius * Math.cos(radians), y: 180 + radius * Math.sin(radians) };
 }
 
 function renderDailyCareClock(entries) {
@@ -1055,10 +1055,15 @@ function renderDailyCareClock(entries) {
   const today = dateKey(new Date());
   const items = entries.filter((entry) => entry.date === carePatternDate && carePatternCategories.has(growthCareType(entry)));
   const clockItems = items.filter((entry) => entry.time);
-  const circumference = 2 * Math.PI * 105;
-  const hours = Array.from({ length: 8 }, (_, index) => index * 3).map((hour) => {
-    const point = clockPoint(hour * 15, 142);
-    return `<text x="${point.x.toFixed(1)}" y="${(point.y + 3).toFixed(1)}" text-anchor="middle">${hour}</text>`;
+  const clockRadius = 112;
+  const circumference = 2 * Math.PI * clockRadius;
+  const hours = Array.from({ length: 12 }, (_, index) => index * 2).map((hour) => {
+    const point = clockPoint(hour * 15, 151);
+    return `<text class="care-clock-hour" x="${point.x.toFixed(1)}" y="${(point.y + 3.5).toFixed(1)}" text-anchor="middle">${hour}</text>`;
+  }).join("");
+  const ticks = Array.from({ length: 24 }, (_, hour) => {
+    const major = hour % 2 === 0; const inner = clockPoint(hour * 15, major ? 132 : 136); const outer = clockPoint(hour * 15, 141);
+    return `<line class="care-clock-tick ${major ? "major" : ""}" x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}"></line>`;
   }).join("");
   const marks = clockItems.map((entry) => {
     const [hour, minute] = entry.time.split(":").map(Number);
@@ -1066,10 +1071,10 @@ function renderDailyCareClock(entries) {
     const type = growthCareType(entry);
     if (type === "sleep" && entry.sleepMinutes) {
       const length = Math.max(3, Math.min(circumference, entry.sleepMinutes / 1440 * circumference));
-      return `<circle class="care-clock-sleep" cx="160" cy="160" r="105" pathLength="${circumference}" stroke-dasharray="${length} ${circumference - length}" transform="rotate(${angle - 90} 160 160)"><title>${entry.time} 수면 ${formatDuration(entry.sleepMinutes)}</title></circle>`;
+      return `<circle class="care-clock-sleep" cx="180" cy="180" r="${clockRadius}" pathLength="${circumference}" stroke-dasharray="${length} ${circumference - length}" transform="rotate(${angle - 90} 180 180)"><title>${entry.time} 수면 ${formatDuration(entry.sleepMinutes)}</title></circle>`;
     }
-    const inner = clockPoint(angle, 103); const outer = clockPoint(angle, 125);
-    return `<line class="care-clock-mark ${type}" x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}"><title>${entry.time} ${entry.title}</title></line>`;
+    const inner = clockPoint(angle, 99); const outer = clockPoint(angle, 126);
+    return `<line class="care-clock-mark ${type}" x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}"><title>${entry.time} ${entry.title}</title></line><circle class="care-clock-dot ${type}" cx="${outer.x.toFixed(1)}" cy="${outer.y.toFixed(1)}" r="3.5"></circle>`;
   }).join("");
   const dayNumber = activeBaby()?.birthDate ? daysFromBirthAt(activeBaby().birthDate, carePatternDate) : null;
   const dayLabel = carePatternDate === today ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()] + "요일";
@@ -1077,7 +1082,12 @@ function renderDailyCareClock(entries) {
   $("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
   const counts = { feed: 0, sleep: 0, diaper: 0 };
   items.forEach((entry) => { const type = growthCareType(entry); if (type) counts[type] += 1; });
-  $("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 320 320" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴"><circle class="care-clock-face" cx="160" cy="160" r="105"></circle>${hours}${marks}<circle class="care-clock-center" cx="160" cy="160" r="62"></circle><text class="care-clock-center-kicker" x="160" y="148" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="160" y="177" text-anchor="middle">${dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`}</text></svg></div><div class="care-clock-summary"><article class="feed"><span>수유</span><strong>${counts.feed}회</strong></article><article class="sleep"><span>수면</span><strong>${counts.sleep}회</strong></article><article class="diaper"><span>기저귀</span><strong>${counts.diaper}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
+  const sleepTotal = items.filter((entry) => growthCareType(entry) === "sleep").reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0);
+  const now = new Date(); const nowAngle = (now.getHours() * 60 + now.getMinutes()) / 1440 * 360;
+  const nowStart = clockPoint(nowAngle, 72); const nowEnd = clockPoint(nowAngle, 133);
+  const nowMark = carePatternDate === today ? `<line class="care-clock-now" x1="${nowStart.x.toFixed(1)}" y1="${nowStart.y.toFixed(1)}" x2="${nowEnd.x.toFixed(1)}" y2="${nowEnd.y.toFixed(1)}"></line><circle class="care-clock-now-dot" cx="${nowEnd.x.toFixed(1)}" cy="${nowEnd.y.toFixed(1)}" r="3"></circle>` : "";
+  const ageText = dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`;
+  $("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴"><defs><filter id="clockCenterShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#5f655f" flood-opacity=".10" /></filter></defs><circle class="care-clock-outer" cx="180" cy="180" r="129"></circle><circle class="care-clock-face" cx="180" cy="180" r="${clockRadius}"></circle><circle class="care-clock-night" cx="180" cy="180" r="${clockRadius}" pathLength="100" stroke-dasharray="50 50" transform="rotate(180 180 180)"></circle>${ticks}${hours}${marks}${nowMark}<circle class="care-clock-center" cx="180" cy="180" r="69"></circle><text class="care-clock-center-kicker" x="180" y="163" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="180" y="195" text-anchor="middle">${ageText}</text><text class="care-clock-center-caption" x="180" y="214" text-anchor="middle">24시간 돌봄</text></svg><div class="care-clock-periods" aria-hidden="true"><span>밤</span><span>낮</span></div></div><div class="care-clock-summary"><article class="feed"><i></i><span>수유</span><strong>${counts.feed}회</strong></article><article class="sleep"><i></i><span>수면</span><strong>${sleepTotal ? formatDuration(sleepTotal) : "0분"}</strong></article><article class="diaper"><i></i><span>기저귀</span><strong>${counts.diaper}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
 }
 
 function daysFromBirthAt(birthDate, targetDate) {
