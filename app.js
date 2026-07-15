@@ -36,6 +36,8 @@ let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], 
 let activeQuickCategory = null;
 let activeQuickPresets = [];
 let growthSaveInProgress = false;
+let lastCalendarTap = { date: null, at: 0 };
+const DOUBLE_TAP_WINDOW_MS = 420;
 
 function focusOnDesktop(selector) {
   if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -235,14 +237,11 @@ function bindUi() {
   $("#accountButton").addEventListener("click", openAccountDialog);
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
-  $("#quickEventForm").addEventListener("submit", quickAddEvent);
   $("#bulkAddButton").addEventListener("click", openBulkEventDialog);
   $("#bulkEventForm").addEventListener("submit", saveBulkEvents);
   $("#bulkEventText").addEventListener("input", renderBulkEventPreview);
   $("#bulkDefaultDate").addEventListener("change", renderBulkEventPreview);
   $("#bulkDefaultMember").addEventListener("change", renderBulkEventPreview);
-  $("#quickTimeButton").addEventListener("click", toggleQuickTime);
-  $("#quickMemberChips").addEventListener("click", handleMemberControlClick);
   $("#eventForm").addEventListener("submit", saveEvent);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
   $("#eventAllDay").addEventListener("change", syncAllDayControl);
@@ -275,9 +274,7 @@ function bindUi() {
 function changeMonth(delta) { state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1); renderCalendar(); }
 function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
-  const quick = $("#quickMemberChips");
   const selector = $("#eventMemberSelector");
-  quick.innerHTML = state.familyMembers.map((member) => `<button class="member-chip${member.name === state.quickMember ? " selected" : ""}" style="${memberStyle(member.name)}" type="button" data-member="${escapeHtml(member.name)}"><i></i>${escapeHtml(member.name)}</button>`).join("") + `<button class="member-add-chip" type="button" data-add-member aria-label="가족 구성원 추가">＋ 추가</button>`;
   const selected = $("#eventMember").value || state.familyMembers[0]?.name || "가족";
   selector.innerHTML = state.familyMembers.map((member) => `<button class="${member.name === selected ? "selected" : ""}" style="${memberStyle(member.name)}" type="button" data-member="${escapeHtml(member.name)}"><i></i>${escapeHtml(member.name)}</button>`).join("") + `<button class="member-selector-add" type="button" data-add-member><i>＋</i>구성원 추가</button>`;
 }
@@ -286,8 +283,7 @@ function handleMemberControlClick(event) {
   if (addButton) return openMemberDialog();
   const button = event.target.closest("[data-member]");
   if (!button) return;
-  if (event.currentTarget.id === "quickMemberChips") selectQuickMember(button.dataset.member);
-  else selectEventMember(button.dataset.member);
+  selectEventMember(button.dataset.member);
 }
 function renderHeader() {
   const today = new Date();
@@ -325,21 +321,25 @@ function renderCalendar() {
     if (key === state.selectedDate) button.classList.add("selected");
     if (key === dateKey(new Date())) button.classList.add("today");
     button.dataset.date = key;
-    button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개`);
+    button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개. 한 번 누르면 일정 확인, 두 번 누르면 새 일정`);
     const firstEvent = dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))[0];
     button.innerHTML = `<span class="day-number">${day.getDate()}</span>${firstEvent ? `<span class="day-event-preview ${firstEvent.endDate !== firstEvent.date ? "spans-range" : ""}" style="${memberStyle(firstEvent.member)}" data-event-id="${firstEvent.id}">${escapeHtml(firstEvent.title)}</span>` : `<span class="event-dots"></span>`}${dayEvents.length > 1 ? `<span class="more-events">+${dayEvents.length - 1}</span>` : ""}`;
     button.addEventListener("click", () => {
+      const now = Date.now();
+      const isDoubleTap = lastCalendarTap.date === key && now - lastCalendarTap.at <= DOUBLE_TAP_WINDOW_MS;
+      lastCalendarTap = isDoubleTap ? { date: null, at: 0 } : { date: key, at: now };
       state.selectedDate = key;
       if (day.getMonth() !== month) state.viewDate = startOfMonth(day);
       renderCalendar();
       renderAgenda();
-      openEventDialog();
+      if (isDoubleTap) openEventDialog();
     });
     grid.appendChild(button);
   }
   grid.querySelectorAll(".day-event-preview").forEach((preview) => {
     preview.addEventListener("click", (event) => {
       event.stopPropagation();
+      lastCalendarTap = { date: null, at: 0 };
       const item = state.events.find((entry) => entry.id === preview.dataset.eventId);
       if (item) openEventDialog(item);
     });
@@ -350,9 +350,8 @@ function renderAgenda() {
   const date = parseDate(state.selectedDate); const events = state.events.filter((event) => eventOccursOn(event, state.selectedDate)).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
   $("#agendaTitle").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(date);
   $("#agendaCount").textContent = `${events.length}개 일정`;
-  $("#quickDateBadge").innerHTML = `<strong>${date.getDate()}</strong><span>${date.getMonth() + 1}월</span>`;
   const list = $("#agendaList");
-  if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>위 입력창에 이름만 적으면 바로 추가할 수 있어요.</span></div>`; return; }
+  if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>같은 날짜를 두 번 탭하면 새 일정을 추가할 수 있어요.</span></div>`; return; }
   list.innerHTML = events.map((event) => `<article class="agenda-item" style="${memberStyle(event.member)}" data-id="${event.id}"><i class="bar"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small><i class="member-dot"></i>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
   list.querySelectorAll(".agenda-item").forEach((item) => {
     const event = state.events.find((entry) => entry.id === item.dataset.id);
@@ -360,11 +359,6 @@ function renderAgenda() {
     item.querySelector(".edit-event-button").addEventListener("click", () => openEventDialog(event));
     bindDragHandle(item.querySelector(".drag-handle"), event);
   });
-}
-
-function selectQuickMember(member) {
-  state.quickMember = member;
-  document.querySelectorAll("#quickMemberChips [data-member]").forEach((button) => button.classList.toggle("selected", button.dataset.member === member));
 }
 
 function openBulkEventDialog() {
@@ -489,31 +483,6 @@ async function saveFamilyMember(event) {
   renderMemberControls(); renderCalendar(); renderAgenda();
   $("#memberDialog").close();
   toast(`${name} 구성원을 추가했어요`);
-}
-
-function toggleQuickTime() {
-  const input = $("#quickEventTime");
-  const show = input.hidden;
-  input.hidden = !show;
-  $("#quickTimeButton").classList.toggle("active", show);
-  $("#quickTimeButton").setAttribute("aria-expanded", String(show));
-  $("#quickTimeButton").textContent = show ? "시간 제거" : "＋ 시간";
-  if (show) input.focus(); else input.value = "";
-}
-
-async function quickAddEvent(event) {
-  event.preventDefault();
-  if (state.supabase && !state.household) return toast("먼저 가족 공간을 만들어주세요");
-  const title = $("#quickEventTitle").value.trim();
-  if (!title) return;
-  const item = { id: uid(), title, date: state.selectedDate, endDate: state.selectedDate, time: $("#quickEventTime").value, member: state.quickMember, note: "" };
-  if (!await storeEvent(item)) return;
-  state.events.push(item);
-  persistLocal();
-  $("#quickEventTitle").value = "";
-  render();
-  $("#quickEventTitle").focus();
-  toast("일정을 바로 추가했어요", { label: "수정", run: () => openEventDialog(item) });
 }
 
 function bindDragHandle(handle, event) {
