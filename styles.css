@@ -304,3 +304,18 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
 .calendar-day { touch-action:manipulation; }
 .agenda-heading-actions { display:flex; align-items:center; gap:7px; }
 .agenda-heading-actions .bulk-add-button { min-height:30px; padding:0 10px; border:1px solid rgba(118,105,154,.12); }
+
+/* Full-screen recent photo viewer */
+.photo-viewer-dialog { width:min(calc(100% - 24px),760px); max-width:none; max-height:calc(100dvh - 24px); margin:auto; padding:0; overflow:visible; border:0; color:white; background:transparent; }
+.photo-viewer-dialog::backdrop { background:rgba(22,24,23,.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.photo-viewer-panel { position:relative; display:grid; gap:13px; width:100%; max-height:calc(100dvh - 24px); }
+.photo-viewer-panel figure { display:grid; gap:11px; min-width:0; margin:0; }
+.photo-viewer-panel img { display:block; width:100%; max-height:calc(100dvh - 150px); border-radius:24px; background:#1e211f; box-shadow:0 24px 70px rgba(0,0,0,.34); object-fit:contain; touch-action:pinch-zoom; }
+.photo-viewer-panel figcaption { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:0 4px; }
+.photo-viewer-panel figcaption strong { overflow:hidden; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.photo-viewer-panel figcaption span { flex:0 0 auto; color:rgba(255,255,255,.58); font-size:9px; }
+.photo-viewer-close { position:absolute; z-index:2; top:10px; right:10px; display:grid; place-items:center; width:42px; height:42px; padding:0; border:1px solid rgba(255,255,255,.2); border-radius:50%; color:white; background:rgba(26,29,27,.62); font-size:26px; line-height:1; backdrop-filter:blur(10px); }
+.photo-share-button { justify-self:center; min-width:160px; min-height:48px; padding:0 22px; border:1px solid rgba(255,255,255,.16); border-radius:999px; color:#263a31; background:#f9f4eb; font-size:13px; font-weight:780; box-shadow:0 10px 28px rgba(0,0,0,.24); }
+.photo-share-button span { margin-right:5px; font-size:18px; }
+.photo-share-button:disabled { opacity:.68; }
+@media (max-width:520px) { .photo-viewer-dialog { width:100%; max-height:100dvh; padding:12px 10px max(12px,env(safe-area-inset-bottom)); }.photo-viewer-panel { max-height:calc(100dvh - 24px); }.photo-viewer-panel img { max-height:calc(100dvh - 168px); border-radius:20px; }.photo-viewer-panel figcaption { align-items:start; flex-direction:column; gap:4px; padding:0 6px; }.photo-viewer-close { top:21px; right:19px; }.photo-share-button { width:calc(100% - 12px); } }

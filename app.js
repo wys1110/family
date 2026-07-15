@@ -37,6 +37,8 @@ let activeQuickCategory = null;
 let activeQuickPresets = [];
 let growthSaveInProgress = false;
 let lastCalendarTap = { date: null, at: 0 };
+let recentPhotoItems = [];
+let activeRecentPhotoIndex = -1;
 const DOUBLE_TAP_WINDOW_MS = 420;
 
 function focusOnDesktop(selector) {
@@ -268,6 +270,8 @@ function bindUi() {
   $("#growthSummaryToggle").addEventListener("click", toggleGrowthSummary);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
+  $("#photoShareButton").addEventListener("click", shareRecentPhoto);
+  $("#photoViewerDialog").addEventListener("click", (event) => { if (event.target === event.currentTarget) event.currentTarget.close(); });
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
 }
 
@@ -803,12 +807,51 @@ function renderGrowthInsights(entries) {
 }
 
 function renderRecentPhotos(entries) {
-  const photos = [...entries].sort((a, b) => b.date.localeCompare(a.date)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry }))).filter((item) => item.url).slice(0, 6);
-  $("#recentPhotoSection").hidden = !photos.length;
-  if (!photos.length) return;
-  $("#recentPhotoCount").textContent = `${photos.length}장`;
-  $("#recentPhotoGrid").innerHTML = photos.map(({ url, entry }) => `<button type="button" data-entry-id="${entry.id}"><img src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
-  $("#recentPhotoGrid").querySelectorAll("[data-entry-id]").forEach((button) => button.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === button.dataset.entryId))));
+  recentPhotoItems = [...entries].sort((a, b) => b.date.localeCompare(a.date)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry, filePromise: null }))).filter((item) => item.url).slice(0, 6);
+  $("#recentPhotoSection").hidden = !recentPhotoItems.length;
+  if (!recentPhotoItems.length) return;
+  $("#recentPhotoCount").textContent = `${recentPhotoItems.length}장`;
+  $("#recentPhotoGrid").innerHTML = recentPhotoItems.map(({ url, entry }, index) => `<button type="button" data-photo-index="${index}" aria-label="${escapeHtml(entry.title)} 사진 크게 보기"><img src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
+  $("#recentPhotoGrid").querySelectorAll("[data-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.photoIndex))));
+}
+
+function openRecentPhoto(index) {
+  const photo = recentPhotoItems[index];
+  if (!photo) return;
+  activeRecentPhotoIndex = index;
+  $("#photoViewerImage").src = photo.url;
+  $("#photoViewerImage").alt = `${photo.entry.title} 사진`;
+  $("#photoViewerTitle").textContent = photo.entry.title;
+  $("#photoViewerMeta").textContent = `${photo.entry.date.replaceAll("-", ".")} · ${activeBaby()?.name || "아기"} 성장일기`;
+  photo.filePromise ||= fetch(photo.url).then((response) => { if (!response.ok) throw new Error("photo fetch failed"); return response.blob(); }).catch(() => null);
+  $("#photoViewerDialog").showModal();
+}
+
+async function shareRecentPhoto() {
+  const photo = recentPhotoItems[activeRecentPhotoIndex];
+  if (!photo) return;
+  const button = $("#photoShareButton");
+  button.disabled = true;
+  button.innerHTML = '<span aria-hidden="true">↗</span> 준비 중…';
+  const title = `${activeBaby()?.name || "아기"} 성장일기`;
+  try {
+    if (navigator.share && navigator.canShare) {
+      const blob = await photo.filePromise;
+      if (blob) {
+        const extension = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
+        const file = new File([blob], `${activeBaby()?.name || "baby"}-${photo.entry.date}.${extension}`, { type: blob.type || "image/jpeg" });
+        if (navigator.canShare({ files: [file] })) { await navigator.share({ title, text: photo.entry.title, files: [file] }); return; }
+      }
+    }
+    if (navigator.share) { await navigator.share({ title, text: photo.entry.title, url: photo.url }); return; }
+    await navigator.clipboard.writeText(photo.url);
+    toast("사진 링크를 복사했어요");
+  } catch (error) {
+    if (error?.name !== "AbortError") toast("사진을 공유하지 못했어요. 다시 시도해 주세요");
+  } finally {
+    button.disabled = false;
+    button.innerHTML = '<span aria-hidden="true">↗</span> 공유하기';
+  }
 }
 
 function filterGrowthEntries(entries) {
