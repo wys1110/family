@@ -1,0 +1,43 @@
+.private-view-tab span { font-size: .82rem; margin-right: .16rem; }
+#privateView { padding-bottom: 7rem; }
+.private-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem .15rem 1.1rem; }
+.private-page-header h2 { margin: .2rem 0 .25rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.85rem, 8vw, 2.7rem); letter-spacing: -.04em; }
+.private-page-header > div > span { color: var(--muted, #766f67); font-size: .9rem; }
+.private-lock-mark { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; border-radius: 50%; background: #e9e4f1; box-shadow: inset 0 0 0 1px rgba(89, 70, 116, .12); font-size: 1.35rem; }
+.private-security-card { display: flex; align-items: center; gap: .85rem; padding: 1rem 1.05rem; margin-bottom: .9rem; border: 1px solid rgba(80, 66, 99, .12); border-radius: 1.15rem; background: linear-gradient(135deg, #f4f0f8, #fbfafc); }
+.private-security-icon { width: 2.1rem; height: 2.1rem; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #6f5c86; color: white; font-weight: 800; }
+.private-security-card strong { display: block; margin-bottom: .2rem; }
+.private-security-card p { margin: 0; color: #756c7e; font-size: .83rem; }
+.private-compose-card { margin-bottom: 1.2rem; }
+.private-compose-card > button { width: 100%; display: flex; align-items: center; gap: .85rem; padding: 1rem; border: 0; border-radius: 1.2rem; background: #665276; color: white; box-shadow: 0 .55rem 1.5rem rgba(66, 47, 82, .2); text-align: left; }
+.private-compose-card > button > span { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.16); font-size: 1.35rem; }
+.private-compose-card strong, .private-compose-card small { display: block; }
+.private-compose-card small { margin-top: .18rem; color: rgba(255,255,255,.72); }
+.private-compose-card i { margin-left: auto; font-size: 1.6rem; font-style: normal; }
+.private-filter-bar { display: flex; gap: .45rem; overflow-x: auto; scrollbar-width: none; margin: .7rem 0 1rem; padding-bottom: .12rem; }
+.private-filter-bar::-webkit-scrollbar { display: none; }
+.private-filter-bar button { flex: 0 0 auto; padding: .55rem .82rem; border: 1px solid rgba(82, 67, 95, .13); border-radius: 999px; background: #fff; color: #766c7d; font-weight: 700; }
+.private-filter-bar button.active { background: #6a567b; color: #fff; border-color: #6a567b; }
+.private-entry-list { display: grid; gap: .75rem; }
+.private-entry-card { overflow: hidden; border: 1px solid rgba(82, 67, 95, .11); border-radius: 1.15rem; background: #fff; box-shadow: 0 .35rem 1.1rem rgba(48, 37, 56, .06); }
+.private-entry-open { width: 100%; padding: 1rem 1.05rem; border: 0; background: transparent; text-align: left; }
+.private-entry-meta { display: flex; align-items: center; gap: .45rem; color: #8a808f; font-size: .77rem; }
+.private-entry-meta span { padding: .22rem .5rem; border-radius: 999px; background: #f0ebf4; color: #654f77; font-weight: 800; }
+.private-entry-meta i { margin-left: auto; font-style: normal; font-size: .78rem; }
+.private-entry-card h3 { margin: .72rem 0 .38rem; font-size: 1.05rem; }
+.private-entry-card p { margin: 0; color: #6f686f; line-height: 1.6; font-size: .9rem; }
+.private-empty-state, .private-loading { padding: 2.5rem 1.25rem; border: 1px dashed rgba(89, 70, 105, .2); border-radius: 1.2rem; background: rgba(249,247,250,.8); text-align: center; }
+.private-empty-state > span { display: block; margin-bottom: .65rem; font-size: 1.8rem; }
+.private-empty-state h3 { margin: 0 0 .45rem; }
+.private-empty-state p { margin: 0 auto .9rem; max-width: 24rem; color: #7b737d; line-height: 1.55; }
+.private-empty-state button { padding: .62rem .9rem; border: 0; border-radius: 999px; background: #6a567b; color: #fff; font-weight: 800; }
+.private-empty-state small { display: block; margin-top: .65rem; color: #9a919b; word-break: break-word; }
+.private-empty-state code { padding: .08rem .3rem; border-radius: .3rem; background: #eee8f1; }
+.private-loading { color: #7c7182; }
+.private-form-note { display: flex; align-items: center; gap: .35rem; }
+.private-entry-dialog textarea { min-height: 12rem; resize: vertical; }
+@media (min-width: 720px) {
+  #privateView { max-width: 760px; margin: 0 auto; }
+  .private-entry-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .private-empty-state, .private-loading { grid-column: 1 / -1; }
+}
