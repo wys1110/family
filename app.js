@@ -39,6 +39,9 @@ let activeQuickPresets = [];
 let growthSaveInProgress = false;
 let careTimer = storedCareTimer();
 let careTimerSaveInProgress = false;
+let carePatternView = "day";
+let carePatternDate = dateKey(new Date());
+const carePatternCategories = new Set(["feed", "sleep", "diaper"]);
 let lastCalendarTap = { date: null, at: 0 };
 let recentPhotoItems = [];
 let allPhotoItems = [];
@@ -293,6 +296,9 @@ function bindUi() {
   $("#careTimerStop").addEventListener("click", stopCareTimer);
   $("#careTimerSwitchSide").addEventListener("click", switchCareTimerSide);
   $("#careTimerCancel").addEventListener("click", cancelCareTimer);
+  $("#carePatternTabs").addEventListener("click", changeCarePatternView);
+  $("#carePatternCategories").addEventListener("click", toggleCarePatternCategory);
+  $("#carePatternDateNav").addEventListener("click", changeCarePatternDate);
   $("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent);
   $("#quickDetailButton").addEventListener("click", () => { $("#quickLogDialog").close(); openGrowthDialog(null, activeQuickCategory); });
   $("#openPhotoAlbumButton").addEventListener("click", openPhotoAlbum);
@@ -798,7 +804,7 @@ function renderGrowth() {
   renderTodayCareSummary(allEntries);
   renderCareTimer();
   renderGrowthSummary(allEntries);
-  renderCareRhythm(allEntries);
+  renderCarePattern(allEntries);
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
@@ -987,7 +993,99 @@ async function stopCareTimer() {
   showGrowthComplete(`${finishedTimer.label} ${formatDuration(minutes)} 기록을 저장했어요.`);
 }
 
-function renderCareRhythm(entries) {
+function growthCareType(entry) {
+  if (entry.category === "수유·이유식") return "feed";
+  if (entry.category === "수면") return "sleep";
+  if (entry.category === "기저귀") return "diaper";
+  return "";
+}
+
+function changeCarePatternView(event) {
+  const button = event.target.closest("[data-care-pattern]");
+  if (!button) return;
+  carePatternView = button.dataset.carePattern;
+  renderCarePattern(activeBabyEntries());
+}
+
+function toggleCarePatternCategory(event) {
+  const button = event.target.closest("[data-pattern-category]");
+  if (!button) return;
+  const category = button.dataset.patternCategory;
+  if (carePatternCategories.has(category)) {
+    if (carePatternCategories.size === 1) { toast("한 가지 이상 선택해 주세요"); return; }
+    carePatternCategories.delete(category);
+  } else carePatternCategories.add(category);
+  renderCarePattern(activeBabyEntries());
+}
+
+function changeCarePatternDate(event) {
+  const button = event.target.closest("[data-pattern-day]");
+  if (!button || carePatternView !== "day") return;
+  const next = addDays(carePatternDate, Number(button.dataset.patternDay));
+  if (next > dateKey(new Date())) return;
+  carePatternDate = next;
+  renderCarePattern(activeBabyEntries());
+}
+
+function renderCarePattern(entries) {
+  $("#carePatternTabs").querySelectorAll("[data-care-pattern]").forEach((button) => {
+    const active = button.dataset.carePattern === carePatternView;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  $("#carePatternCategories").querySelectorAll("[data-pattern-category]").forEach((button) => {
+    const active = carePatternCategories.has(button.dataset.patternCategory);
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  const dateNav = $("#carePatternDateNav");
+  dateNav.hidden = carePatternView !== "day";
+  if (carePatternView === "day") renderDailyCareClock(entries);
+  else if (carePatternView === "week") renderWeeklyCarePattern(entries);
+  else renderCareIntervals(entries);
+}
+
+function clockPoint(angle, radius) {
+  const radians = (angle - 90) * Math.PI / 180;
+  return { x: 160 + radius * Math.cos(radians), y: 160 + radius * Math.sin(radians) };
+}
+
+function renderDailyCareClock(entries) {
+  const date = parseDate(carePatternDate);
+  const today = dateKey(new Date());
+  const items = entries.filter((entry) => entry.date === carePatternDate && carePatternCategories.has(growthCareType(entry)));
+  const clockItems = items.filter((entry) => entry.time);
+  const circumference = 2 * Math.PI * 105;
+  const hours = Array.from({ length: 8 }, (_, index) => index * 3).map((hour) => {
+    const point = clockPoint(hour * 15, 142);
+    return `<text x="${point.x.toFixed(1)}" y="${(point.y + 3).toFixed(1)}" text-anchor="middle">${hour}</text>`;
+  }).join("");
+  const marks = clockItems.map((entry) => {
+    const [hour, minute] = entry.time.split(":").map(Number);
+    const minutes = hour * 60 + minute; const angle = minutes / 1440 * 360;
+    const type = growthCareType(entry);
+    if (type === "sleep" && entry.sleepMinutes) {
+      const length = Math.max(3, Math.min(circumference, entry.sleepMinutes / 1440 * circumference));
+      return `<circle class="care-clock-sleep" cx="160" cy="160" r="105" pathLength="${circumference}" stroke-dasharray="${length} ${circumference - length}" transform="rotate(${angle - 90} 160 160)"><title>${entry.time} 수면 ${formatDuration(entry.sleepMinutes)}</title></circle>`;
+    }
+    const inner = clockPoint(angle, 103); const outer = clockPoint(angle, 125);
+    return `<line class="care-clock-mark ${type}" x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}"><title>${entry.time} ${entry.title}</title></line>`;
+  }).join("");
+  const dayNumber = activeBaby()?.birthDate ? daysFromBirthAt(activeBaby().birthDate, carePatternDate) : null;
+  const dayLabel = carePatternDate === today ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()] + "요일";
+  $("#carePatternDateLabel").textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 · ${dayLabel}`;
+  $("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
+  const counts = { feed: 0, sleep: 0, diaper: 0 };
+  items.forEach((entry) => { const type = growthCareType(entry); if (type) counts[type] += 1; });
+  $("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 320 320" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴"><circle class="care-clock-face" cx="160" cy="160" r="105"></circle>${hours}${marks}<circle class="care-clock-center" cx="160" cy="160" r="62"></circle><text class="care-clock-center-kicker" x="160" y="148" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="160" y="177" text-anchor="middle">${dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`}</text></svg></div><div class="care-clock-summary"><article class="feed"><span>수유</span><strong>${counts.feed}회</strong></article><article class="sleep"><span>수면</span><strong>${counts.sleep}회</strong></article><article class="diaper"><span>기저귀</span><strong>${counts.diaper}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
+}
+
+function daysFromBirthAt(birthDate, targetDate) {
+  const [by, bm, bd] = birthDate.split("-").map(Number); const [ty, tm, td] = targetDate.split("-").map(Number);
+  return Math.floor((Date.UTC(ty, tm - 1, td) - Date.UTC(by, bm - 1, bd)) / 86400000);
+}
+
+function renderWeeklyCarePattern(entries) {
   const end = dateKey(new Date());
   const days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
   const data = days.map((day) => {
@@ -1002,16 +1100,32 @@ function renderCareRhythm(entries) {
   const maxFeed = Math.max(1, ...data.map((item) => item.feed));
   const maxSleep = Math.max(1, ...data.map((item) => item.sleep));
   const maxDiaper = Math.max(1, ...data.map((item) => item.diaper));
-  const hasData = data.some((item) => item.feed || item.sleep || item.diaper);
+  const hasData = data.some((item) => ["feed", "sleep", "diaper"].some((type) => carePatternCategories.has(type) && item[type]));
   if (!hasData) {
-    $("#careRhythmChart").innerHTML = '<div class="care-rhythm-empty"><strong>기록이 쌓이면 리듬이 보여요</strong><span>위의 빠른 기록이나 타이머로 오늘부터 시작해 보세요.</span></div>';
+    $("#carePatternContent").innerHTML = '<div class="care-rhythm-empty"><strong>기록이 쌓이면 리듬이 보여요</strong><span>위의 빠른 기록이나 타이머로 오늘부터 시작해 보세요.</span></div>';
     return;
   }
-  $("#careRhythmChart").innerHTML = data.map((item) => {
+  $("#carePatternContent").innerHTML = `<div class="care-rhythm-chart">${data.map((item) => {
     const date = parseDate(item.day); const isToday = item.day === end;
     const height = (value, max) => value ? Math.max(12, Math.round((value / max) * 100)) : 4;
-    return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 수유 ${item.feed}회, 수면 ${formatDuration(item.sleep)}, 기저귀 ${item.diaper}회"><div class="care-rhythm-bars"><i class="feed" style="--bar:${height(item.feed, maxFeed)}%" title="수유 ${item.feed}회"></i><i class="sleep" style="--bar:${height(item.sleep, maxSleep)}%" title="수면 ${formatDuration(item.sleep)}"></i><i class="diaper" style="--bar:${height(item.diaper, maxDiaper)}%" title="기저귀 ${item.diaper}회"></i></div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
-  }).join("");
+    const bar = (type, value, max, title) => carePatternCategories.has(type) ? `<i class="${type}" style="--bar:${height(value, max)}%" title="${title}"></i>` : "";
+    return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 수유 ${item.feed}회, 수면 ${formatDuration(item.sleep)}, 기저귀 ${item.diaper}회"><div class="care-rhythm-bars">${bar("feed", item.feed, maxFeed, `수유 ${item.feed}회`)}${bar("sleep", item.sleep, maxSleep, `수면 ${formatDuration(item.sleep)}`)}${bar("diaper", item.diaper, maxDiaper, `기저귀 ${item.diaper}회`)}</div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
+  }).join("")}</div>`;
+}
+
+function renderCareIntervals(entries) {
+  const start = addDays(dateKey(new Date()), -6);
+  const categoryInfo = {
+    feed: { label: "수유", className: "feed" }, sleep: { label: "수면", className: "sleep" }, diaper: { label: "기저귀", className: "diaper" },
+  };
+  const cards = [...carePatternCategories].map((type) => {
+    const times = entries.filter((entry) => entry.date >= start && growthCareType(entry) === type && entry.time).map(entryDateTime).filter(Boolean).sort((a, b) => a - b);
+    const gaps = times.slice(1).map((time, index) => Math.round((time - times[index]) / 60000)).filter((gap) => gap > 0 && gap < 1440);
+    const average = gaps.length ? Math.round(gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length) : 0;
+    const recent = gaps.at(-1) || 0; const info = categoryInfo[type];
+    return `<article class="care-interval-card ${info.className}"><span>${info.label} 평균 간격</span><strong>${average ? formatDuration(average) : "—"}</strong><small>${recent ? `최근 간격 ${formatDuration(recent)}` : "간격 계산을 위한 기록이 더 필요해요"}</small><div><i style="--progress:${average ? Math.min(100, average / 360 * 100) : 0}%"></i></div></article>`;
+  });
+  $("#carePatternContent").innerHTML = `<div class="care-interval-grid">${cards.join("")}</div><p class="care-pattern-note">최근 7일의 기록 시작 시간을 기준으로 계산했어요.</p>`;
 }
 
 function renderGrowthSummary(entries) {
