@@ -43,6 +43,7 @@ button,a { touch-action:manipulation; }
 /* App */
 .app-shell { width:min(100%,820px); margin:0 auto; padding:max(22px,env(safe-area-inset-top)) 16px 120px; }
 .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding:0 4px; }
+.topbar h1 { max-width:calc(100vw - 100px); font-size:clamp(25px,5.3vw,32px); line-height:1.16; }
 .eyebrow { margin:0 0 4px; color:var(--secondary); font-size:11px; font-weight:600; }
 h1,h2,p { margin-top:0; }
 h1 { margin-bottom:0; font-size:clamp(28px,6vw,36px); font-weight:750; letter-spacing:-.045em; }
