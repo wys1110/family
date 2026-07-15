@@ -5,6 +5,31 @@ const DEFAULT_FAMILY_MEMBERS = [
   { name: "도윤", color: "#4B91A8" },
 ];
 const MEMBER_COLORS = ["#5F8069", "#B57D4B", "#A56D78", "#4B91A8", "#76699A", "#A58A45", "#B5554E", "#4C857D"];
+const KOREAN_PUBLIC_HOLIDAYS_2026 = Object.freeze({
+  "2026-01-01": "신정",
+  "2026-02-16": "설날 연휴",
+  "2026-02-17": "설날",
+  "2026-02-18": "설날 연휴",
+  "2026-03-01": "삼일절",
+  "2026-03-02": "삼일절 대체공휴일",
+  "2026-05-01": "노동절",
+  "2026-05-05": "어린이날",
+  "2026-05-24": "부처님오신날",
+  "2026-05-25": "부처님오신날 대체공휴일",
+  "2026-06-03": "지방선거일",
+  "2026-06-06": "현충일",
+  "2026-07-17": "제헌절",
+  "2026-08-15": "광복절",
+  "2026-08-17": "광복절 대체공휴일",
+  "2026-09-24": "추석 연휴",
+  "2026-09-25": "추석",
+  "2026-09-26": "추석 연휴",
+  "2026-10-03": "개천절",
+  "2026-10-05": "개천절 대체공휴일",
+  "2026-10-09": "한글날",
+  "2026-12-25": "성탄절",
+});
+const KOREAN_NATIONAL_OBSERVANCES_2026 = new Set(["2026-07-17"]);
 const STORAGE_KEY = "family-calendar-events-v1";
 const MEMBER_STORAGE_KEY = "family-calendar-members-v1";
 const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
@@ -394,12 +419,21 @@ function switchView(view) {
   $("#addEventButton").innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
 }
 
+function publicHolidayEvent(key) {
+  const title = KOREAN_PUBLIC_HOLIDAYS_2026[key];
+  return title ? { id: `public-holiday-${key}`, title, date: key, endDate: key, time: "", member: "공휴일", isPublicHoliday: true, isDayOff: !KOREAN_NATIONAL_OBSERVANCES_2026.has(key) } : null;
+}
+
+function publicHolidayEvents() {
+  return Object.keys(KOREAN_PUBLIC_HOLIDAYS_2026).map(publicHolidayEvent);
+}
+
 function calendarWeekSegments(gridStart) {
   return Array.from({ length: 6 }, (_, weekIndex) => {
     const weekStart = new Date(gridStart); weekStart.setDate(gridStart.getDate() + weekIndex * 7);
     const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
     const weekStartKey = dateKey(weekStart); const weekEndKey = dateKey(weekEnd);
-    const segments = state.events
+    const segments = [...state.events, ...publicHolidayEvents()]
       .filter((event) => event.date <= weekEndKey && (event.endDate || event.date) >= weekStartKey)
       .map((event) => {
         const startKey = event.date < weekStartKey ? weekStartKey : event.date;
@@ -436,13 +470,15 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const day = new Date(start); day.setDate(start.getDate() + i); const key = dateKey(day);
     const dayEvents = state.events.filter((event) => eventOccursOn(event, key));
+    const holiday = publicHolidayEvent(key);
     const button = document.createElement("button"); button.className = "calendar-day";
     button.style.gridColumn = String((i % 7) + 1); button.style.gridRow = String(Math.floor(i / 7) + 1);
     if (day.getMonth() !== month) button.classList.add("outside");
     if (key === state.selectedDate) button.classList.add("selected");
     if (key === dateKey(new Date())) button.classList.add("today");
+    if (holiday) button.classList.add("public-holiday-day");
     button.dataset.date = key;
-    button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일, 일정 ${dayEvents.length}개. 한 번 누르면 일정 확인, 두 번 누르면 새 일정`);
+    button.setAttribute("aria-label", `${day.getMonth() + 1}월 ${day.getDate()}일${holiday ? `, ${holiday.title}` : ""}, 일정 ${dayEvents.length}개. 한 번 누르면 일정 확인, 두 번 누르면 새 일정`);
     button.innerHTML = `<span class="day-number">${day.getDate()}</span>`;
     button.addEventListener("click", () => {
       if (Date.now() < suppressCalendarClickUntil) return;
@@ -464,16 +500,16 @@ function renderCalendar() {
     badge.textContent = `+${count}`; grid.appendChild(badge);
   });
   weekSegments.forEach((segments, weekIndex) => segments.filter((segment) => segment.lane < MAX_CALENDAR_EVENT_LANES).forEach((segment) => {
-    const bar = document.createElement("button");
+    const bar = document.createElement(segment.event.isPublicHoliday ? "span" : "button");
     const isRange = (segment.event.endDate || segment.event.date) > segment.event.date;
-    bar.type = "button";
-    bar.className = `calendar-event-bar${isRange ? " range-event" : ""}${segment.continuesBefore ? " continues-before" : ""}${segment.continuesAfter ? " continues-after" : ""}`;
-    bar.style.cssText = `grid-column:${segment.startColumn}/${segment.endColumn};grid-row:${weekIndex + 1};--event-top:${34 + segment.lane * 18}px;${memberStyle(segment.event.member)}`;
+    if (!segment.event.isPublicHoliday) bar.type = "button";
+    bar.className = `calendar-event-bar${segment.event.isPublicHoliday ? " public-holiday-event" : ""}${isRange ? " range-event" : ""}${segment.continuesBefore ? " continues-before" : ""}${segment.continuesAfter ? " continues-after" : ""}`;
+    bar.style.cssText = `grid-column:${segment.startColumn}/${segment.endColumn};grid-row:${weekIndex + 1};--event-top:${34 + segment.lane * 18}px;${segment.event.isPublicHoliday ? "--member-color:#D94C5C" : memberStyle(segment.event.member)}`;
     bar.dataset.eventId = segment.event.id;
     bar.setAttribute("aria-label", `${segment.event.title}, ${formatEventRange(segment.event) || segment.event.date}`);
     const timePrefix = !isRange && segment.event.time ? `${segment.event.time} ` : "";
     bar.innerHTML = `<span>${escapeHtml(timePrefix + segment.event.title)}</span>`;
-    bar.addEventListener("click", (event) => {
+    if (!segment.event.isPublicHoliday) bar.addEventListener("click", (event) => {
       event.stopPropagation();
       if (Date.now() < suppressCalendarClickUntil) return;
       lastCalendarTap = { date: null, at: 0 };
@@ -485,12 +521,14 @@ function renderCalendar() {
 
 function renderAgenda() {
   const date = parseDate(state.selectedDate); const events = state.events.filter((event) => eventOccursOn(event, state.selectedDate)).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+  const holiday = publicHolidayEvent(state.selectedDate);
   $("#agendaTitle").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(date);
-  $("#agendaCount").textContent = `${events.length}개 일정`;
+  $("#agendaCount").textContent = `${events.length + Number(Boolean(holiday))}개 일정`;
   const list = $("#agendaList");
-  if (!events.length) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>같은 날짜를 두 번 탭하면 새 일정을 추가할 수 있어요.</span></div>`; return; }
-  list.innerHTML = events.map((event) => `<article class="agenda-item" style="${memberStyle(event.member)}" data-id="${event.id}"><i class="bar"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small><i class="member-dot"></i>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
-  list.querySelectorAll(".agenda-item").forEach((item) => {
+  if (!events.length && !holiday) { list.innerHTML = `<div class="empty-state"><strong>아직 일정이 없어요</strong><span>같은 날짜를 두 번 탭하면 새 일정을 추가할 수 있어요.</span></div>`; return; }
+  const holidayHtml = holiday ? `<article class="agenda-item holiday-agenda-item"><i class="bar"></i><div class="agenda-main"><span><strong>${escapeHtml(holiday.title)}</strong><small><i class="member-dot"></i>${holiday.isDayOff ? "대한민국 공휴일" : "대한민국 국경일"}</small></span><span class="event-when"><small>종일</small></span></div></article>` : "";
+  list.innerHTML = holidayHtml + events.map((event) => `<article class="agenda-item" style="${memberStyle(event.member)}" data-id="${event.id}"><i class="bar"></i><button class="agenda-main" type="button"><span><strong>${escapeHtml(event.title)}</strong><small><i class="member-dot"></i>${escapeHtml(event.member)}${event.note ? ` · ${escapeHtml(event.note)}` : ""}</small></span><span class="event-when">${formatEventRange(event) ? `<b>${escapeHtml(formatEventRange(event))}</b>` : ""}<small>${event.time || "종일"}</small></span></button><button class="edit-event-button" type="button" aria-label="${escapeHtml(event.title)} 수정">편집</button><button class="drag-handle" type="button" aria-label="${escapeHtml(event.title)} 날짜 이동" title="날짜로 끌어 이동"><span aria-hidden="true">⠿</span></button></article>`).join("");
+  list.querySelectorAll(".agenda-item[data-id]").forEach((item) => {
     const event = state.events.find((entry) => entry.id === item.dataset.id);
     item.querySelector(".agenda-main").addEventListener("click", () => openEventDialog(event));
     item.querySelector(".edit-event-button").addEventListener("click", () => openEventDialog(event));
