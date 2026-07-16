@@ -31,6 +31,7 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
+    { name: "tab-emojis", version: "20260716-tab-emojis-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
