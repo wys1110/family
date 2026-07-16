@@ -5,7 +5,7 @@ window.FAMILY_CONFIG = {
 
 (() => {
   const modules = [
-    { name: "private-space", version: "20260716-private-space" },
+    { name: "private-space", version: "20260716-private-editor-v2" },
     { name: "english-stories", version: "20260716-baby-stories" },
   ];
 
