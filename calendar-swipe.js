@@ -5,8 +5,8 @@
   const SWIPE_RATIO = 0.18;
   const MIN_DISTANCE = 44;
   const FLING_VELOCITY = 0.45;
-  const SNAP_DURATION = 210;
-  const MONTH_DURATION = 270;
+  const SNAP_DURATION = 140;
+  const MONTH_DURATION = 190;
   const EASING = "cubic-bezier(.22,.72,.16,1)";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -88,7 +88,7 @@
     const { stage, outgoing, width } = createOutgoingStage(grid, startX);
     const outgoingTarget = -delta * width;
     const incomingStart = delta * width;
-    const remaining = Math.max(0.35, 1 - Math.min(1, Math.abs(startX) / Math.max(width, 1)));
+    const remaining = Math.max(0.28, 1 - Math.min(1, Math.abs(startX) / Math.max(width, 1)));
     const duration = Math.round(MONTH_DURATION * remaining);
 
     try {
