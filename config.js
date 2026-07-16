@@ -5,6 +5,7 @@ window.FAMILY_CONFIG = {
 
 (() => {
   const modules = [
+    { name: "calendar-swipe", version: "20260716-smooth-drag" },
     { name: "private-space", version: "20260716-private-editor-v2" },
     { name: "english-stories", version: "20260716-baby-stories" },
   ];
