@@ -4,23 +4,34 @@ window.FAMILY_CONFIG = {
 };
 
 (() => {
-  const version = "20260716-private-space";
-  if (!document.querySelector('link[data-private-space]')) {
+  const modules = [
+    { name: "private-space", version: "20260716-private-space" },
+    { name: "english-stories", version: "20260716-baby-stories" },
+  ];
+
+  modules.forEach(({ name, version }) => {
+    if (document.querySelector(`link[data-module="${name}"]`)) return;
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = `private-space.css?v=${version}`;
-    stylesheet.dataset.privateSpace = "true";
+    stylesheet.href = `${name}.css?v=${version}`;
+    stylesheet.dataset.module = name;
     document.head.appendChild(stylesheet);
-  }
+  });
 
-  const loadPrivateSpace = () => {
-    if (document.querySelector('script[data-private-space]')) return;
+  const loadScript = ({ name, version }) => new Promise((resolve) => {
+    if (document.querySelector(`script[data-module="${name}"]`)) return resolve();
     const script = document.createElement("script");
-    script.src = `private-space.js?v=${version}`;
-    script.dataset.privateSpace = "true";
+    script.src = `${name}.js?v=${version}`;
+    script.dataset.module = name;
+    script.onload = resolve;
+    script.onerror = resolve;
     document.body.appendChild(script);
+  });
+
+  const loadModules = async () => {
+    for (const module of modules) await loadScript(module);
   };
 
-  if (document.readyState === "complete") loadPrivateSpace();
-  else window.addEventListener("load", loadPrivateSpace, { once: true });
+  if (document.readyState === "complete") loadModules();
+  else window.addEventListener("load", loadModules, { once: true });
 })();
