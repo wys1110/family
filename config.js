@@ -6,7 +6,6 @@ window.FAMILY_CONFIG = {
 (() => {
   const modules = [
     { name: "calendar-swipe", version: "20260716-fast-swipe" },
-    { name: "private-space", version: "20260716-private-editor-v2" },
     { name: "english-stories", version: "20260716-baby-stories" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
   ];
@@ -20,6 +19,16 @@ window.FAMILY_CONFIG = {
     document.head.appendChild(stylesheet);
   });
 
+  if (!document.querySelector('style[data-module="navigation-layout"]')) {
+    const navigationStyle = document.createElement("style");
+    navigationStyle.dataset.module = "navigation-layout";
+    navigationStyle.textContent = `
+      .view-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .view-tab { padding-inline: .45rem; font-size: 12px; }
+    `;
+    document.head.appendChild(navigationStyle);
+  }
+
   const loadScript = ({ name, version }) => new Promise((resolve) => {
     if (document.querySelector(`script[data-module="${name}"]`)) return resolve();
     const script = document.createElement("script");
@@ -32,9 +41,6 @@ window.FAMILY_CONFIG = {
 
   const loadModules = async () => {
     for (const module of modules) await loadScript(module);
-    if (typeof switchView === "function" && switchView.__englishStoriesInstalled) {
-      switchView.__privateSpaceInstalled = true;
-    }
   };
 
   if (document.readyState === "complete") loadModules();
