@@ -45,6 +45,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 
 - 월간 달력 및 오늘 일정
 - 일정 추가·수정·삭제, 시작일–종료일 범위 지정 및 최대 50개 일괄 입력
+- 캘린더 안 가족 할 일(오늘·예정·완료, 담당자, 마감일, 반복, 날짜별 표시)
 - 아빠·엄마·도윤 구성원별 표시
 - 브라우저 로컬 저장
 - Supabase 이메일 로그인 및 가족 초대 코드
@@ -76,3 +77,5 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 개인 전용 `나만의 공간`을 사용하려면 SQL Editor에서 [`supabase/migrations/20260716_private_space.sql`](supabase/migrations/20260716_private_space.sql)을 한 번 실행합니다. 이 테이블은 `auth.uid() = owner_id` RLS 정책으로 로그인한 본인에게만 읽기·쓰기·수정·삭제를 허용합니다.
 
 기능 요청을 Supabase DB에 저장하고 가족 관리자만 조회·상태 변경하도록 하려면 [`supabase/migrations/20260716_feature_requests.sql`](supabase/migrations/20260716_feature_requests.sql)을 SQL Editor에서 한 번 실행합니다. 일반 가족 구성원은 요청 등록만 가능하며 목록 조회 권한은 없습니다.
+
+가족 할 일을 모든 가족 기기에서 공유하려면 [`supabase/migrations/20260716_family_todos.sql`](supabase/migrations/20260716_family_todos.sql)을 SQL Editor에서 한 번 실행합니다. 적용 전에도 기능은 동작하지만 현재 기기의 로컬 저장소에만 임시 저장됩니다.
