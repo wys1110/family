@@ -9,7 +9,7 @@ window.FAMILY_CONFIG = {
     { name: "english-stories", version: "20260716-baby-stories" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
-    { name: "feature-request", version: "20260716-feature-request-v1" },
+    { name: "feature-request", version: "20260716-feature-request-tab-v2" },
   ];
 
   modules.forEach(({ name, version }) => {
@@ -25,8 +25,8 @@ window.FAMILY_CONFIG = {
     const navigationStyle = document.createElement("style");
     navigationStyle.dataset.module = "navigation-layout";
     navigationStyle.textContent = `
-      .view-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .view-tab { padding-inline: .45rem; font-size: 12px; }
+      .view-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .view-tab { padding-inline: .28rem; font-size: 11px; }
     `;
     document.head.appendChild(navigationStyle);
   }
