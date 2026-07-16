@@ -1,0 +1,574 @@
+/* Tablet and desktop readability enhancements.
+   Mobile styles remain unchanged below 768px. */
+
+@media (min-width: 768px) {
+  .app-shell {
+    width: min(calc(100% - 48px), 1080px);
+    padding: 36px 24px 144px;
+  }
+
+  .topbar {
+    margin-bottom: 24px;
+    padding-inline: 6px;
+  }
+
+  .topbar h1 {
+    max-width: none;
+    font-size: clamp(32px, 3.4vw, 42px);
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-size: 27px;
+  }
+
+  .eyebrow {
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .avatar-button {
+    width: 54px;
+    height: 54px;
+    font-size: 18px;
+  }
+
+  .avatar-button i {
+    width: 14px;
+    height: 14px;
+  }
+
+  .daily-verse-card {
+    min-height: 126px;
+    margin-bottom: 20px;
+    padding: 21px 26px 19px;
+    border-radius: 30px;
+  }
+
+  .daily-verse-heading {
+    gap: 10px;
+  }
+
+  .daily-verse-heading .verse-cross {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    font-size: 12px;
+  }
+
+  .daily-verse-heading p {
+    font-size: 12px;
+  }
+
+  .daily-verse-heading > span:last-child {
+    font-size: 11px;
+  }
+
+  .daily-verse-card blockquote {
+    max-width: 760px;
+    margin: 14px 0 7px;
+    font-size: clamp(20px, 2.2vw, 27px);
+    line-height: 1.4;
+  }
+
+  .daily-verse-card cite {
+    font-size: 12px;
+  }
+
+  .view-tabs {
+    gap: 4px;
+    margin-bottom: 24px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .view-tab {
+    min-height: 46px;
+    padding-inline: 10px !important;
+    border-radius: 11px;
+    font-size: 14px !important;
+  }
+
+  .hero-card,
+  .growth-hero {
+    min-height: 210px;
+    padding: 34px;
+    border-radius: 32px;
+  }
+
+  .hero-card p,
+  .growth-hero p {
+    font-size: 15px;
+  }
+
+  .hero-card h2,
+  .growth-hero h2 {
+    font-size: clamp(31px, 3vw, 40px);
+  }
+
+  .album-stamp,
+  .growth-hero::before {
+    font-size: 11px;
+  }
+
+  .family-chip {
+    padding: 7px 13px;
+    font-size: 13px;
+  }
+
+  .calendar-card {
+    padding: 28px 22px 20px;
+    border-radius: 29px;
+  }
+
+  .calendar-toolbar {
+    padding: 0 6px 18px;
+  }
+
+  .month-nav {
+    gap: 10px;
+  }
+
+  .month-nav h2 {
+    min-width: 168px;
+    font-size: 27px;
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+    font-size: 34px;
+  }
+
+  .today-button {
+    padding: 10px 15px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .weekdays span {
+    padding: 10px 0 12px;
+    font-size: 13px;
+  }
+
+  .calendar-grid {
+    grid-auto-rows: minmax(94px, auto);
+  }
+
+  .calendar-day {
+    min-height: 92px;
+    padding: 5px 3px 6px;
+    border-radius: 16px;
+  }
+
+  .day-number {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+
+  .day-event-preview {
+    margin-top: 4px;
+    padding: 5px 6px;
+    border-radius: 7px;
+    font-size: 11px;
+  }
+
+  .calendar-event-bar {
+    height: 22px;
+    padding-inline: 8px;
+    border-radius: 7px;
+    font-size: 11px;
+    line-height: 22px;
+  }
+
+  .calendar-overflow-badge {
+    min-width: 27px;
+    height: 19px;
+    padding-inline: 6px;
+    font-size: 10px;
+    line-height: 19px;
+  }
+
+  .more-events {
+    right: 5px;
+    bottom: 4px;
+    font-size: 10px;
+  }
+
+  .calendar-help {
+    gap: 7px;
+    margin-top: 12px;
+    padding-top: 13px;
+    font-size: 12px;
+  }
+
+  .calendar-help span {
+    font-size: 17px;
+  }
+
+  .agenda-section,
+  .growth-section {
+    padding-top: 34px;
+  }
+
+  .section-heading {
+    margin-bottom: 17px;
+  }
+
+  .section-heading h2 {
+    font-size: 28px;
+  }
+
+  .count-badge,
+  .bulk-add-button {
+    font-size: 13px;
+  }
+
+  .bulk-add-button {
+    min-height: 36px;
+    padding-inline: 13px;
+    border-radius: 11px;
+  }
+
+  .quick-add-card {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .quick-add-heading {
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+
+  .quick-date-badge {
+    width: 54px;
+    height: 58px;
+    border-radius: 15px;
+  }
+
+  .quick-date-badge strong {
+    font-size: 23px;
+  }
+
+  .quick-date-badge span,
+  .quick-add-heading label > span {
+    font-size: 11px;
+  }
+
+  .quick-add-heading input {
+    height: 38px;
+    font-size: 19px;
+  }
+
+  .quick-add-submit {
+    min-width: 74px;
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .member-chip,
+  .quick-time-button {
+    min-height: 36px;
+    padding-inline: 13px;
+    font-size: 13px;
+  }
+
+  .agenda-list,
+  .growth-list {
+    gap: 12px;
+  }
+
+  .agenda-item {
+    grid-template-columns: 5px minmax(0, 1fr) auto 52px;
+    min-height: 88px;
+    padding: 10px 8px 10px 16px;
+    border-radius: 22px;
+  }
+
+  .agenda-main {
+    min-height: 66px;
+    padding: 8px 14px;
+  }
+
+  .agenda-main strong,
+  .growth-body strong {
+    font-size: 17px;
+  }
+
+  .agenda-main small,
+  .growth-body small,
+  .agenda-main .time {
+    font-size: 13px;
+  }
+
+  .edit-event-button {
+    min-height: 40px;
+    padding-inline: 13px;
+    font-size: 13px;
+  }
+
+  .drag-handle {
+    width: 52px;
+    font-size: 26px;
+  }
+
+  .empty-state {
+    padding: 32px 24px;
+    border-radius: 22px;
+    font-size: 14px;
+  }
+
+  .empty-state strong {
+    font-size: 17px;
+  }
+
+  .growth-page-header {
+    margin-bottom: 22px;
+  }
+
+  .growth-page-header h2 {
+    font-size: 38px;
+  }
+
+  .growth-page-header .eyebrow {
+    font-size: 12px;
+  }
+
+  .add-baby-button {
+    min-height: 46px;
+    padding-inline: 17px;
+    font-size: 14px;
+  }
+
+  .baby-profile-card {
+    padding: 32px;
+    border-radius: 34px;
+  }
+
+  .baby-profile-main {
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    gap: 18px;
+  }
+
+  .baby-monogram {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    font-size: 31px;
+  }
+
+  .baby-profile-copy p,
+  .baby-profile-copy > span {
+    font-size: 13px;
+  }
+
+  .baby-profile-copy h2 {
+    font-size: 34px;
+  }
+
+  .baby-dday small {
+    font-size: 11px;
+  }
+
+  .baby-dday strong {
+    font-size: 30px;
+  }
+
+  .growth-entry {
+    grid-template-columns: 58px minmax(0, 1fr) 18px;
+    gap: 17px;
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .growth-date {
+    font-size: 12px;
+  }
+
+  .growth-date strong {
+    font-size: 23px;
+  }
+
+  .growth-body i {
+    font-size: 12px;
+  }
+
+  .growth-quick-grid {
+    gap: 12px;
+  }
+
+  .growth-quick-grid button {
+    min-height: 96px;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+
+  .growth-quick-grid span {
+    font-size: 28px;
+  }
+
+  .settings-view {
+    padding-bottom: 136px;
+  }
+
+  .settings-card {
+    margin-top: 24px;
+    padding: 30px;
+    border-radius: 30px;
+  }
+
+  .settings-heading {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .settings-mark {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    font-size: 26px;
+  }
+
+  .settings-heading h2 {
+    font-size: 29px;
+  }
+
+  .settings-heading > div > span {
+    margin-top: 7px;
+    font-size: 15px;
+  }
+
+  .settings-current-theme {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .theme-option-grid {
+    gap: 15px;
+  }
+
+  .theme-option {
+    grid-template-columns: 104px minmax(0, 1fr) 30px;
+    gap: 17px;
+    min-height: 116px;
+    padding: 14px 16px 14px 14px;
+    border-radius: 23px;
+  }
+
+  .theme-preview {
+    width: 104px;
+    height: 82px;
+    border-radius: 18px;
+  }
+
+  .theme-preview-header {
+    left: 11px;
+    right: 11px;
+    top: 11px;
+    height: 9px;
+  }
+
+  .theme-preview-card {
+    left: 11px;
+    right: 11px;
+    top: 28px;
+    bottom: 11px;
+    border-radius: 12px;
+  }
+
+  .theme-preview-accent,
+  .theme-preview-highlight {
+    bottom: 19px;
+    height: 20px;
+    border-radius: 8px;
+  }
+
+  .theme-preview-accent {
+    left: 19px;
+    width: 42px;
+  }
+
+  .theme-preview-highlight {
+    right: 19px;
+    width: 15px;
+  }
+
+  .theme-option-copy strong {
+    font-size: 18px;
+  }
+
+  .theme-option-copy small {
+    margin-top: 7px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .theme-check {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .theme-save-note {
+    gap: 13px;
+    margin-top: 18px;
+    padding: 17px 18px;
+    border-radius: 20px;
+  }
+
+  .theme-save-note > span {
+    width: 31px;
+    height: 31px;
+    font-size: 14px;
+  }
+
+  .theme-save-note strong {
+    font-size: 14px;
+  }
+
+  .theme-save-note small {
+    font-size: 12px;
+  }
+
+  .sheet-dialog {
+    width: min(calc(100% - 48px), 720px);
+  }
+
+  .sheet-dialog label,
+  .sheet-dialog input,
+  .sheet-dialog select,
+  .sheet-dialog textarea,
+  .sheet-dialog button {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .app-shell {
+    width: min(calc(100% - 72px), 1180px);
+    padding-inline: 32px;
+  }
+
+  .topbar h1 {
+    font-size: 44px;
+  }
+
+  .daily-verse-card {
+    padding-inline: 30px;
+  }
+
+  .calendar-grid {
+    grid-auto-rows: minmax(104px, auto);
+  }
+
+  .calendar-day {
+    min-height: 102px;
+  }
+
+  .theme-option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
