@@ -1,3 +1,16 @@
+.feature-request-view {
+  min-height: 58vh;
+  padding-bottom: 112px;
+}
+
+.feature-request-view[hidden] {
+  display: none !important;
+}
+
+.feature-request-view .feature-request-card {
+  margin-top: 18px;
+}
+
 .feature-request-card {
   position: relative;
   margin-top: 28px;
