@@ -11,6 +11,7 @@ window.FAMILY_CONFIG = {
     rose: "#fff5f7",
     ocean: "#f3f9fb",
     night: "#151a20",
+    storybook: "#edf4e6",
   };
   let initialTheme = "forest";
   try {
@@ -32,6 +33,7 @@ window.FAMILY_CONFIG = {
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
     { name: "tab-emojis", version: "20260716-tab-emojis-v1" },
+    { name: "storybook-theme", version: "20260716-storybook-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
