@@ -1,0 +1,81 @@
+name: Compact verse card
+
+on:
+  push:
+    paths:
+      - ".github/workflows/compact-verse-card.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  compact-verse-card:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reduce verse card height to two-thirds
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("styles.css")
+          text = path.read_text(encoding="utf-8")
+
+          replacements = [
+              (
+                  '.daily-verse-card { position:relative; min-height:138px; margin:0 0 14px; padding:21px 23px 19px; overflow:hidden; border:1px solid rgba(92,73,45,.09); border-radius:24px; color:#3b352c; background:linear-gradient(145deg,#fffdf7 0%,#f0eadc 100%); box-shadow:0 13px 36px rgba(65,53,35,.075); }',
+                  '.daily-verse-card { position:relative; min-height:92px; margin:0 0 14px; padding:14px 18px 13px; overflow:hidden; border:1px solid rgba(92,73,45,.09); border-radius:24px; color:#3b352c; background:linear-gradient(145deg,#fffdf7 0%,#f0eadc 100%); box-shadow:0 13px 36px rgba(65,53,35,.075); }',
+              ),
+              (
+                  '.daily-verse-card::before { content:"“"; position:absolute; right:16px; bottom:-38px; color:rgba(77,91,72,.08); font-family:Georgia,serif; font-size:142px; line-height:1; }',
+                  '.daily-verse-card::before { content:"“"; position:absolute; right:12px; bottom:-34px; color:rgba(77,91,72,.08); font-family:Georgia,serif; font-size:108px; line-height:1; }',
+              ),
+              (
+                  '.daily-verse-heading .verse-cross { display:grid; place-items:center; width:22px; height:22px; border-radius:8px; color:#f6f0df; background:#52665a; font-size:10px; }',
+                  '.daily-verse-heading .verse-cross { display:grid; place-items:center; width:20px; height:20px; border-radius:7px; color:#f6f0df; background:#52665a; font-size:9px; }',
+              ),
+              (
+                  '.daily-verse-heading p { margin:0; color:#59645c; font-size:10px; font-weight:750; letter-spacing:.03em; }',
+                  '.daily-verse-heading p { margin:0; color:#59645c; font-size:9px; font-weight:750; letter-spacing:.03em; }',
+              ),
+              (
+                  '.daily-verse-heading > span:last-child { margin-left:auto; color:#9a9284; font-size:8px; }',
+                  '.daily-verse-heading > span:last-child { margin-left:auto; color:#9a9284; font-size:7px; }',
+              ),
+              (
+                  '.daily-verse-card blockquote { position:relative; z-index:1; max-width:590px; margin:16px 0 8px; color:#2f352f; font-family:Georgia,"Apple Myungjo","Nanum Myeongjo",serif; font-size:clamp(16px,3.8vw,20px); font-weight:600; line-height:1.55; letter-spacing:-.035em; word-break:keep-all; }',
+                  '.daily-verse-card blockquote { position:relative; z-index:1; max-width:590px; margin:9px 0 3px; color:#2f352f; font-family:Georgia,"Apple Myungjo","Nanum Myeongjo",serif; font-size:clamp(14px,3.4vw,18px); font-weight:600; line-height:1.35; letter-spacing:-.035em; word-break:keep-all; }',
+              ),
+              (
+                  '.daily-verse-card cite { position:relative; z-index:1; color:#7d766a; font-size:9px; font-style:normal; font-weight:650; }',
+                  '.daily-verse-card cite { position:relative; z-index:1; color:#7d766a; font-size:8px; font-style:normal; font-weight:650; }',
+              ),
+              (
+                  '.daily-verse-card::after { content:"✦"; position:absolute; right:48px; top:19px; color:rgba(201,130,145,.52); font-size:16px; animation:sparkle 2.4s ease-in-out infinite; }',
+                  '.daily-verse-card::after { content:"✦"; position:absolute; right:38px; top:13px; color:rgba(201,130,145,.52); font-size:13px; animation:sparkle 2.4s ease-in-out infinite; }',
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f"Expected CSS block not found: {old[:80]}")
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit compact verse card
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles.css
+          if git diff --cached --quiet; then
+            echo "No CSS changes detected."
+            exit 0
+          fi
+          git commit -m "style: reduce verse card height"
+          git push
