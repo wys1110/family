@@ -1,0 +1,414 @@
+/* Desktop sizing for feature modules that ship their own compact mobile CSS. */
+
+@media (min-width: 768px) {
+  /* English storybook */
+  #englishView {
+    max-width: none;
+    padding-bottom: 9rem;
+  }
+
+  .english-page-header {
+    padding: .8rem .3rem 1.4rem;
+  }
+
+  .english-page-header h2 {
+    font-size: clamp(2.5rem, 4vw, 3.4rem);
+  }
+
+  .english-page-header > div > span {
+    font-size: 1rem;
+  }
+
+  .english-book-mark {
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 1.35rem;
+    font-size: 1.85rem;
+  }
+
+  .english-today-card {
+    margin-bottom: 1.2rem;
+    padding: 1.35rem 1.5rem;
+    border-radius: 1.45rem;
+  }
+
+  .english-today-label {
+    font-size: .82rem;
+  }
+
+  .english-today-card h3 {
+    font-size: 1.4rem;
+  }
+
+  .english-today-card p {
+    font-size: .95rem;
+  }
+
+  .english-today-card button {
+    padding: .85rem 1rem;
+    font-size: .9rem;
+  }
+
+  .english-story-player {
+    padding: 1.45rem;
+    border-radius: 1.7rem;
+  }
+
+  .english-story-cover {
+    min-height: 11rem;
+    padding: 1.6rem;
+    border-radius: 1.35rem;
+  }
+
+  .english-cover-emoji {
+    width: 5.6rem;
+    height: 5.6rem;
+    font-size: 3rem;
+  }
+
+  .english-story-cover p {
+    font-size: .86rem;
+  }
+
+  .english-story-cover h2 {
+    font-size: clamp(1.8rem, 3vw, 2.35rem);
+  }
+
+  .english-story-cover div > span,
+  .english-story-summary {
+    font-size: 1rem;
+  }
+
+  .english-player-actions {
+    gap: .65rem;
+    margin-bottom: 1rem;
+  }
+
+  .english-player-actions button {
+    min-height: 4rem;
+    font-size: .92rem;
+  }
+
+  .english-player-actions button span {
+    font-size: 1.1rem;
+  }
+
+  .english-sentence-list {
+    gap: .75rem;
+  }
+
+  .english-sentence {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: .9rem;
+    padding: 1rem;
+    border-radius: 1.1rem;
+  }
+
+  .english-sentence > button {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .english-sentence > button span,
+  .english-sentence > button i {
+    font-size: .88rem;
+  }
+
+  .english-sentence p {
+    font-size: 1.15rem;
+  }
+
+  .english-sentence small {
+    font-size: .92rem;
+  }
+
+  .english-story-footer {
+    grid-template-columns: 3.5rem 1fr 3.5rem;
+    margin-top: 1rem;
+  }
+
+  .english-story-footer button {
+    min-height: 3.5rem;
+  }
+
+  .english-story-footer #englishMarkRead {
+    font-size: 1rem;
+  }
+
+  .english-library {
+    gap: .8rem;
+  }
+
+  .english-library-card {
+    grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border-radius: 1.2rem;
+  }
+
+  .english-library-card > span {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.7rem;
+  }
+
+  .english-library-card small {
+    font-size: .8rem;
+  }
+
+  .english-library-card strong {
+    font-size: 1.08rem;
+  }
+
+  .english-library-card em {
+    font-size: .88rem;
+  }
+
+  /* Feature request */
+  .feature-request-view {
+    padding-bottom: 136px;
+  }
+
+  .feature-request-card,
+  .feature-request-admin {
+    padding: 30px;
+    border-radius: 30px;
+  }
+
+  .feature-request-heading {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 18px;
+    margin-bottom: 23px;
+  }
+
+  .feature-request-mark {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    font-size: 22px;
+  }
+
+  .feature-request-heading h2,
+  .feature-request-admin-heading h2 {
+    font-size: 29px;
+  }
+
+  .feature-request-heading > div > span,
+  .feature-request-admin-heading > div > span {
+    margin-top: 7px;
+    font-size: 15px;
+  }
+
+  .feature-request-form label {
+    font-size: 14px;
+  }
+
+  .feature-request-form textarea {
+    min-height: 126px;
+    padding: 18px;
+    border-radius: 20px;
+    font-size: 16px;
+  }
+
+  .feature-request-actions span {
+    font-size: 12px;
+  }
+
+  .feature-request-actions button,
+  .feature-request-admin-heading button {
+    min-height: 52px;
+    padding-inline: 22px;
+    border-radius: 16px;
+    font-size: 15px;
+  }
+
+  .feature-request-note,
+  .feature-request-message {
+    font-size: 12px;
+  }
+
+  .feature-request-list {
+    gap: 13px;
+  }
+
+  .feature-request-item {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .feature-request-item-meta {
+    font-size: 12px;
+  }
+
+  .feature-request-item p {
+    font-size: 15px;
+  }
+
+  .feature-request-item label,
+  .feature-request-item select {
+    font-size: 13px;
+  }
+
+  .feature-request-item select {
+    min-height: 40px;
+  }
+
+  .feature-request-empty strong {
+    font-size: 15px;
+  }
+
+  .feature-request-empty span {
+    font-size: 13px;
+  }
+
+  /* Shared family todo */
+  .calendar-subtabs {
+    gap: 4px;
+    margin-bottom: 20px;
+    padding: 4px;
+    border-radius: 17px;
+  }
+
+  .calendar-subtabs button {
+    min-height: 48px;
+    border-radius: 13px;
+    font-size: 14px;
+  }
+
+  .family-todo-view {
+    padding-bottom: 136px;
+  }
+
+  .todo-overview-card {
+    padding: 30px;
+    border-radius: 31px;
+  }
+
+  .todo-overview-heading h2 {
+    font-size: 30px;
+  }
+
+  .todo-overview-heading > div > span {
+    font-size: 15px;
+  }
+
+  .todo-refresh-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    font-size: 25px;
+  }
+
+  .todo-stats {
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .todo-stats div {
+    min-height: 88px;
+    border-radius: 20px;
+  }
+
+  .todo-stats strong {
+    font-size: 30px;
+  }
+
+  .todo-stats span,
+  .todo-storage-note {
+    font-size: 12px;
+  }
+
+  .todo-quick-form {
+    margin-top: 19px;
+    padding: 20px;
+    border-radius: 25px;
+  }
+
+  .todo-quick-form > label {
+    font-size: 13px;
+  }
+
+  .todo-quick-form input,
+  .todo-quick-form button {
+    min-height: 54px;
+    border-radius: 16px;
+    font-size: 15px;
+  }
+
+  .todo-quick-form small {
+    font-size: 11px;
+  }
+
+  .todo-filter-tabs {
+    gap: 10px;
+    margin: 24px 0 15px;
+  }
+
+  .todo-filter-tabs button {
+    min-height: 46px;
+    border-radius: 15px;
+    font-size: 14px;
+  }
+
+  .family-todo-list {
+    gap: 12px;
+  }
+
+  .family-todo-item {
+    grid-template-columns: 42px minmax(0, 1fr) 38px;
+    gap: 14px;
+    min-height: 96px;
+    padding: 17px 15px 17px 17px;
+    border-radius: 22px;
+  }
+
+  .todo-check-button {
+    width: 39px;
+    height: 39px;
+    border-radius: 13px;
+  }
+
+  .todo-check-button span {
+    font-size: 20px;
+  }
+
+  .todo-item-main > strong {
+    font-size: 17px;
+  }
+
+  .todo-item-main > small {
+    font-size: 13px;
+  }
+
+  .todo-item-meta i {
+    min-height: 27px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .todo-more-button {
+    width: 38px;
+    height: 42px;
+    font-size: 17px;
+  }
+
+  .todo-empty-state {
+    padding: 48px 24px;
+    border-radius: 24px;
+  }
+
+  .todo-empty-state > span {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    font-size: 23px;
+  }
+
+  .todo-empty-state strong {
+    font-size: 17px;
+  }
+
+  .todo-empty-state small {
+    font-size: 13px;
+  }
+}
