@@ -1,6 +1,23 @@
 (() => {
   if (document.querySelector('[data-storybook-theme-module]')) return;
 
+  const loadGhibliTheme = () => {
+    if (!document.querySelector('link[data-module="ghibli-theme"]')) {
+      const stylesheet = document.createElement('link');
+      stylesheet.rel = 'stylesheet';
+      stylesheet.href = 'ghibli-theme.css?v=20260716-ghibli-v1';
+      stylesheet.dataset.module = 'ghibli-theme';
+      document.head.appendChild(stylesheet);
+    }
+    if (!document.querySelector('script[data-module="ghibli-theme"]')) {
+      const script = document.createElement('script');
+      script.src = 'ghibli-theme.js?v=20260716-ghibli-v1';
+      script.dataset.module = 'ghibli-theme';
+      document.body.appendChild(script);
+    }
+  };
+  loadGhibliTheme();
+
   const THEME_ID = 'storybook';
   const THEME_STORAGE_KEY = 'family-theme-v1';
   const THEME = {
