@@ -1,0 +1,177 @@
+html[data-family-theme="ghibli"] {
+  --bg: #eaf3df;
+  --surface: #fffdf1;
+  --surface-2: #e3edd7;
+  --label: #304238;
+  --secondary: #68786c;
+  --tertiary: #98a596;
+  --separator: rgba(67, 92, 71, .14);
+  --blue: #6b94a2;
+  --green: #739760;
+  --orange: #d5a05b;
+  --red: #c97767;
+  --pink: #d79088;
+  --indigo: #7d829e;
+  --shadow: 0 18px 50px rgba(71, 96, 68, .11);
+  --theme-accent-rgb: 115, 151, 96;
+  --theme-hero-start: #4f7457;
+  --theme-hero-end: #a2bd78;
+  --theme-verse-start: #fffdf1;
+  --theme-verse-end: #e8f0d8;
+  --theme-tab-bg: rgba(224, 235, 214, .96);
+  --theme-tab-active: #fffdf1;
+}
+
+html[data-family-theme="ghibli"],
+html[data-family-theme="ghibli"] body {
+  background:
+    radial-gradient(circle at 82% 5%, rgba(255, 225, 139, .31), transparent 21rem),
+    radial-gradient(ellipse at 18% 26%, rgba(255, 255, 255, .46), transparent 20rem),
+    linear-gradient(180deg, #dceef4 0, #f5f0dc 34rem, #eaf3df 62rem);
+  background-attachment: fixed;
+}
+
+html[data-family-theme="ghibli"] body::before {
+  content: "";
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+  opacity: .38;
+  background-image:
+    radial-gradient(circle at 20% 22%, rgba(255,255,255,.85) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 74% 46%, rgba(255,255,255,.72) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 43% 76%, rgba(255,255,255,.68) 0 1px, transparent 1.3px);
+  background-size: 77px 71px, 109px 97px, 131px 113px;
+}
+
+html[data-family-theme="ghibli"] .hero-card {
+  background:
+    radial-gradient(circle at 82% 17%, rgba(255, 230, 151, .86) 0 8%, transparent 8.6%),
+    radial-gradient(ellipse at 87% 122%, rgba(47, 87, 51, .58) 0 36%, transparent 37%),
+    radial-gradient(ellipse at 34% 130%, rgba(79, 119, 66, .42) 0 42%, transparent 43%),
+    linear-gradient(145deg, #4f755a 0%, #82a96d 57%, #b1c982 100%);
+  box-shadow: 0 21px 50px rgba(57, 91, 61, .25);
+}
+
+html[data-family-theme="ghibli"] .hero-card::after {
+  width: 220px;
+  height: 112px;
+  right: -25px;
+  top: -37px;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 23% 67%, rgba(255,255,255,.31) 0 18%, transparent 19%),
+    radial-gradient(ellipse at 52% 51%, rgba(255,255,255,.27) 0 24%, transparent 25%),
+    radial-gradient(ellipse at 79% 66%, rgba(255,255,255,.22) 0 18%, transparent 19%);
+}
+
+html[data-family-theme="ghibli"] .daily-verse-card {
+  border-color: rgba(80, 108, 68, .12);
+  background:
+    radial-gradient(ellipse at 88% 17%, rgba(255,255,255,.8) 0 9%, transparent 10%),
+    linear-gradient(145deg, #fffdf1 0%, #e8f0d8 100%);
+  box-shadow: 0 14px 38px rgba(76, 97, 61, .1);
+}
+
+html[data-family-theme="ghibli"] .daily-verse-card::after {
+  content: "🍃";
+  position: absolute;
+  right: 25px;
+  top: 19px;
+  font-size: 15px;
+  opacity: .42;
+  transform: rotate(18deg);
+}
+
+html[data-family-theme="ghibli"] .calendar-card,
+html[data-family-theme="ghibli"] .settings-card,
+html[data-family-theme="ghibli"] .feature-request-card,
+html[data-family-theme="ghibli"] .feature-request-admin,
+html[data-family-theme="ghibli"] .quick-add-card {
+  background: rgba(255, 253, 241, .92);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+}
+
+html[data-family-theme="ghibli"] .view-tabs {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.58), 0 7px 22px rgba(73, 98, 70, .06);
+}
+
+html[data-family-theme="ghibli"] .view-tab.active {
+  box-shadow: 0 3px 10px rgba(67, 92, 71, .11);
+}
+
+.ghibli-theme-option .theme-option-copy strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghibli-theme-option .theme-option-copy strong em {
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #58775a;
+  background: #e4efd8;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+.ghibli-theme-preview {
+  background: linear-gradient(180deg, #dceef4 0 47%, #f2e7c6 48% 61%, #dfead1 62% 100%);
+}
+
+.ghibli-theme-preview .theme-preview-header {
+  z-index: 4;
+  background: #3e5346;
+}
+
+.ghibli-theme-preview .theme-preview-card {
+  z-index: 3;
+  background: rgba(255, 253, 241, .94);
+}
+
+.ghibli-theme-preview .theme-preview-accent,
+.ghibli-theme-preview .theme-preview-highlight {
+  z-index: 5;
+}
+
+.ghibli-preview-sun {
+  position: absolute;
+  z-index: 1;
+  right: 9px;
+  top: 18px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #f2c96e;
+  box-shadow: 0 0 0 4px rgba(242, 201, 110, .16);
+}
+
+.ghibli-preview-cloud {
+  position: absolute;
+  z-index: 2;
+  left: 7px;
+  top: 21px;
+  width: 24px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 8px 2px 0 -1px rgba(255,255,255,.7), -5px 2px 0 -2px rgba(255,255,255,.64);
+}
+
+.ghibli-preview-hill {
+  position: absolute;
+  z-index: 2;
+  right: -9px;
+  bottom: -10px;
+  width: 66px;
+  height: 34px;
+  border-radius: 52% 48% 0 0;
+  background: #8ead73;
+  transform: rotate(-7deg);
+}
