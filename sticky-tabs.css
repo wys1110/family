@@ -1,0 +1,11 @@
+.view-tabs {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  z-index: 30;
+  background: rgba(235, 232, 227, .96);
+  box-shadow: 0 8px 20px rgba(69, 61, 55, .12);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+  transform: translateZ(0);
+}
