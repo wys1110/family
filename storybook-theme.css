@@ -1,0 +1,129 @@
+html[data-family-theme="storybook"] {
+  --bg: #edf4e6;
+  --surface: #fffdf2;
+  --surface-2: #e1ecd8;
+  --label: #304238;
+  --secondary: #68776c;
+  --tertiary: #96a295;
+  --separator: rgba(64, 91, 70, .14);
+  --blue: #5b8794;
+  --green: #6f9368;
+  --orange: #d49b58;
+  --red: #c96f63;
+  --pink: #d58b86;
+  --indigo: #7c7e9d;
+  --shadow: 0 18px 50px rgba(68, 91, 65, .11);
+  --theme-accent-rgb: 111, 147, 104;
+  --theme-hero-start: #456a52;
+  --theme-hero-end: #89aa72;
+  --theme-verse-start: #fffdf2;
+  --theme-verse-end: #e6efd7;
+  --theme-tab-bg: rgba(222, 234, 215, .96);
+  --theme-tab-active: #fffdf2;
+}
+
+html[data-family-theme="storybook"],
+html[data-family-theme="storybook"] body {
+  background:
+    radial-gradient(circle at 85% 4%, rgba(255, 225, 147, .28), transparent 22rem),
+    linear-gradient(180deg, #dfeef0 0, #f5f0dd 34rem, #edf4e6 58rem);
+}
+
+html[data-family-theme="storybook"] .hero-card {
+  background:
+    radial-gradient(circle at 82% 16%, rgba(255, 229, 153, .72) 0 8%, transparent 8.5%),
+    radial-gradient(ellipse at 80% 112%, rgba(44, 87, 55, .5) 0 34%, transparent 35%),
+    linear-gradient(145deg, #4a7358 0%, #7ea66c 58%, #a9bd7c 100%);
+  box-shadow: 0 20px 48px rgba(57, 91, 61, .24);
+}
+
+html[data-family-theme="storybook"] .hero-card::after {
+  width: 210px;
+  height: 110px;
+  right: -26px;
+  top: -38px;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 24% 66%, rgba(255,255,255,.28) 0 18%, transparent 19%),
+    radial-gradient(ellipse at 53% 52%, rgba(255,255,255,.22) 0 23%, transparent 24%),
+    radial-gradient(ellipse at 78% 66%, rgba(255,255,255,.18) 0 18%, transparent 19%);
+}
+
+html[data-family-theme="storybook"] .daily-verse-card {
+  border-color: rgba(81, 109, 69, .12);
+  background:
+    radial-gradient(ellipse at 88% 18%, rgba(255,255,255,.78) 0 9%, transparent 10%),
+    linear-gradient(145deg, #fffdf2 0%, #e7efd9 100%);
+  box-shadow: 0 14px 38px rgba(76, 96, 62, .1);
+}
+
+html[data-family-theme="storybook"] .calendar-card,
+html[data-family-theme="storybook"] .settings-card,
+html[data-family-theme="storybook"] .feature-request-card,
+html[data-family-theme="storybook"] .feature-request-admin {
+  background: rgba(255, 253, 242, .92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.storybook-theme-option .theme-option-copy strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.storybook-theme-option .theme-option-copy strong em {
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #58765a;
+  background: #e4efd9;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+.storybook-theme-preview {
+  background: linear-gradient(180deg, #dfeef0 0 48%, #e6efd9 49% 100%);
+}
+
+.storybook-theme-preview .theme-preview-header {
+  z-index: 3;
+  background: #405447;
+}
+
+.storybook-theme-preview .theme-preview-card {
+  z-index: 2;
+  background: rgba(255, 253, 242, .92);
+}
+
+.storybook-theme-preview .theme-preview-accent,
+.storybook-theme-preview .theme-preview-highlight {
+  z-index: 4;
+}
+
+.storybook-cloud {
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  right: 8px;
+  width: 22px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: -8px 2px 0 -1px rgba(255,255,255,.62), 7px 2px 0 -2px rgba(255,255,255,.58);
+}
+
+.storybook-hill {
+  position: absolute;
+  z-index: 1;
+  right: -8px;
+  bottom: -10px;
+  width: 62px;
+  height: 34px;
+  border-radius: 50% 50% 0 0;
+  background: #89aa72;
+  transform: rotate(-8deg);
+}
