@@ -11,7 +11,8 @@
   margin-top: 18px;
 }
 
-.feature-request-card {
+.feature-request-card,
+.feature-request-admin {
   position: relative;
   margin-top: 28px;
   padding: 20px;
@@ -59,11 +60,13 @@
   font-size: 15px;
 }
 
-.feature-request-heading h2 {
+.feature-request-heading h2,
+.feature-request-admin-heading h2 {
   font-size: 20px;
 }
 
-.feature-request-heading > div > span {
+.feature-request-heading > div > span,
+.feature-request-admin-heading > div > span {
   display: block;
   margin-top: 5px;
   color: var(--secondary);
@@ -125,7 +128,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.feature-request-actions button {
+.feature-request-actions button,
+.feature-request-admin-heading button {
   min-height: 42px;
   padding: 0 18px;
   border: 0;
@@ -138,7 +142,14 @@
   cursor: pointer;
 }
 
-.feature-request-actions button:active {
+.feature-request-actions button:disabled,
+.feature-request-admin-heading button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.feature-request-actions button:active,
+.feature-request-admin-heading button:active {
   transform: scale(.97);
   opacity: .84;
 }
@@ -150,8 +161,134 @@
   line-height: 1.45;
 }
 
+.feature-request-message {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #426353;
+  background: rgba(86, 121, 106, .1);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.feature-request-message.error {
+  color: #a0444f;
+  background: rgba(201, 83, 97, .1);
+}
+
+.feature-request-admin {
+  margin-top: 16px;
+  background: rgba(255, 253, 248, .92);
+}
+
+.feature-request-admin[hidden] {
+  display: none !important;
+}
+
+.feature-request-admin-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.feature-request-admin-heading button {
+  min-height: 36px;
+  padding: 0 13px;
+  color: var(--green);
+  background: rgba(86, 121, 106, .1);
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.feature-request-list {
+  display: grid;
+  gap: 10px;
+}
+
+.feature-request-item {
+  padding: 14px;
+  border: 1px solid rgba(91, 107, 98, .1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.feature-request-item-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tertiary);
+  font-size: 9px;
+}
+
+.feature-request-item-meta span {
+  font-weight: 750;
+}
+
+.feature-request-item p {
+  margin: 9px 0 12px;
+  color: var(--label);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.feature-request-item label {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.feature-request-item select {
+  min-height: 34px;
+  padding: 0 30px 0 11px;
+  border: 1px solid rgba(91, 107, 98, .14);
+  border-radius: 10px;
+  color: var(--label);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.feature-request-item[data-status="new"] { border-left: 4px solid #c07a55; }
+.feature-request-item[data-status="reviewing"] { border-left: 4px solid #697aa1; }
+.feature-request-item[data-status="planned"] { border-left: 4px solid #8a78a2; }
+.feature-request-item[data-status="done"] { border-left: 4px solid #5f8069; }
+.feature-request-item[data-status="dismissed"] { border-left: 4px solid #a29c92; }
+
+.feature-request-empty {
+  display: grid;
+  gap: 4px;
+  padding: 24px 14px;
+  border: 1px dashed rgba(91, 107, 98, .18);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.feature-request-empty strong {
+  color: var(--label);
+  font-size: 12px;
+}
+
+.feature-request-empty span {
+  color: var(--secondary);
+  font-size: 10px;
+}
+
+.feature-request-empty.error strong {
+  color: #a0444f;
+}
+
 @media (min-width: 640px) {
-  .feature-request-card {
+  .feature-request-card,
+  .feature-request-admin {
     padding: 24px;
   }
 
@@ -185,7 +322,8 @@
     min-height: 48px;
   }
 
-  .feature-request-note {
+  .feature-request-note,
+  .feature-request-message {
     grid-column: 1 / -1;
     margin-top: 0;
   }
