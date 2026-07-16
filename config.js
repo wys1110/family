@@ -10,6 +10,7 @@ window.FAMILY_CONFIG = {
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
     { name: "feature-request", version: "20260716-feature-request-tab-v2" },
+    { name: "refresh-button", version: "20260716-refresh-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
