@@ -1,44 +1,85 @@
 .view-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.private-view-tab span { font-size: .82rem; margin-right: .16rem; }
+.private-view-tab span { margin-right: .16rem; font-size: .82rem; }
 #privateView { padding-bottom: 7rem; }
 .private-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem .15rem 1.1rem; }
 .private-page-header h2 { margin: .2rem 0 .25rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.85rem, 8vw, 2.7rem); letter-spacing: -.04em; }
 .private-page-header > div > span { color: var(--muted, #766f67); font-size: .9rem; }
-.private-lock-mark { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; border-radius: 50%; background: #e9e4f1; box-shadow: inset 0 0 0 1px rgba(89, 70, 116, .12); font-size: 1.35rem; }
+.private-lock-mark { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: #e9e4f1; box-shadow: inset 0 0 0 1px rgba(89, 70, 116, .12); font-size: 1.35rem; }
 .private-security-card { display: flex; align-items: center; gap: .85rem; padding: 1rem 1.05rem; margin-bottom: .9rem; border: 1px solid rgba(80, 66, 99, .12); border-radius: 1.15rem; background: linear-gradient(135deg, #f4f0f8, #fbfafc); }
-.private-security-icon { width: 2.1rem; height: 2.1rem; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #6f5c86; color: white; font-weight: 800; }
+.private-security-icon { display: grid; place-items: center; flex: 0 0 auto; width: 2.1rem; height: 2.1rem; border-radius: 50%; color: white; background: #6f5c86; font-weight: 800; }
 .private-security-card strong { display: block; margin-bottom: .2rem; }
 .private-security-card p { margin: 0; color: #756c7e; font-size: .83rem; }
 .private-compose-card { margin-bottom: 1.2rem; }
-.private-compose-card > button { width: 100%; display: flex; align-items: center; gap: .85rem; padding: 1rem; border: 0; border-radius: 1.2rem; background: #665276; color: white; box-shadow: 0 .55rem 1.5rem rgba(66, 47, 82, .2); text-align: left; }
-.private-compose-card > button > span { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.16); font-size: 1.35rem; }
+.private-compose-card > button { display: flex; align-items: center; gap: .85rem; width: 100%; padding: 1rem; border: 0; border-radius: 1.2rem; color: white; background: #665276; box-shadow: 0 .55rem 1.5rem rgba(66, 47, 82, .2); text-align: left; }
+.private-compose-card > button > span { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: rgba(255, 255, 255, .16); font-size: 1.35rem; }
 .private-compose-card strong, .private-compose-card small { display: block; }
-.private-compose-card small { margin-top: .18rem; color: rgba(255,255,255,.72); }
+.private-compose-card small { margin-top: .18rem; color: rgba(255, 255, 255, .72); }
 .private-compose-card i { margin-left: auto; font-size: 1.6rem; font-style: normal; }
-.private-filter-bar { display: flex; gap: .45rem; overflow-x: auto; scrollbar-width: none; margin: .7rem 0 1rem; padding-bottom: .12rem; }
+.private-filter-bar { display: flex; gap: .45rem; margin: .7rem 0 1rem; padding-bottom: .12rem; overflow-x: auto; scrollbar-width: none; }
 .private-filter-bar::-webkit-scrollbar { display: none; }
-.private-filter-bar button { flex: 0 0 auto; padding: .55rem .82rem; border: 1px solid rgba(82, 67, 95, .13); border-radius: 999px; background: #fff; color: #766c7d; font-weight: 700; }
-.private-filter-bar button.active { background: #6a567b; color: #fff; border-color: #6a567b; }
+.private-filter-bar button { flex: 0 0 auto; padding: .55rem .82rem; border: 1px solid rgba(82, 67, 95, .13); border-radius: 999px; color: #766c7d; background: #fff; font-weight: 700; }
+.private-filter-bar button.active { color: #fff; border-color: #6a567b; background: #6a567b; }
 .private-entry-list { display: grid; gap: .75rem; }
 .private-entry-card { overflow: hidden; border: 1px solid rgba(82, 67, 95, .11); border-radius: 1.15rem; background: #fff; box-shadow: 0 .35rem 1.1rem rgba(48, 37, 56, .06); }
 .private-entry-open { width: 100%; padding: 1rem 1.05rem; border: 0; background: transparent; text-align: left; }
 .private-entry-meta { display: flex; align-items: center; gap: .45rem; color: #8a808f; font-size: .77rem; }
-.private-entry-meta span { padding: .22rem .5rem; border-radius: 999px; background: #f0ebf4; color: #654f77; font-weight: 800; }
-.private-entry-meta i { margin-left: auto; font-style: normal; font-size: .78rem; }
+.private-entry-meta span { padding: .22rem .5rem; border-radius: 999px; color: #654f77; background: #f0ebf4; font-weight: 800; }
+.private-entry-meta i { margin-left: auto; font-size: .78rem; font-style: normal; }
 .private-entry-card h3 { margin: .72rem 0 .38rem; font-size: 1.05rem; }
-.private-entry-card p { margin: 0; color: #6f686f; line-height: 1.6; font-size: .9rem; }
-.private-empty-state, .private-loading { padding: 2.5rem 1.25rem; border: 1px dashed rgba(89, 70, 105, .2); border-radius: 1.2rem; background: rgba(249,247,250,.8); text-align: center; }
+.private-entry-card p { margin: 0; color: #6f686f; font-size: .9rem; line-height: 1.6; }
+.private-empty-state, .private-loading { padding: 2.5rem 1.25rem; border: 1px dashed rgba(89, 70, 105, .2); border-radius: 1.2rem; background: rgba(249, 247, 250, .8); text-align: center; }
 .private-empty-state > span { display: block; margin-bottom: .65rem; font-size: 1.8rem; }
 .private-empty-state h3 { margin: 0 0 .45rem; }
-.private-empty-state p { margin: 0 auto .9rem; max-width: 24rem; color: #7b737d; line-height: 1.55; }
-.private-empty-state button { padding: .62rem .9rem; border: 0; border-radius: 999px; background: #6a567b; color: #fff; font-weight: 800; }
+.private-empty-state p { max-width: 24rem; margin: 0 auto .9rem; color: #7b737d; line-height: 1.55; }
+.private-empty-state button { padding: .62rem .9rem; border: 0; border-radius: 999px; color: #fff; background: #6a567b; font-weight: 800; }
 .private-empty-state small { display: block; margin-top: .65rem; color: #9a919b; word-break: break-word; }
 .private-empty-state code { padding: .08rem .3rem; border-radius: .3rem; background: #eee8f1; }
 .private-loading { color: #7c7182; }
-.private-form-note { display: flex; align-items: center; gap: .35rem; }
-.private-entry-dialog textarea { min-height: 12rem; resize: vertical; }
+
+.private-entry-dialog { width: min(calc(100% - 12px), 600px); height: min(760px, calc(100dvh - 12px)); max-height: calc(100dvh - 12px); margin: auto auto 6px; overflow: hidden; border-radius: 30px; background: linear-gradient(155deg, #edf3ed 0, #fbf0e9 19%, #fbfaf7 39%); box-shadow: 0 28px 90px rgba(36, 31, 27, .28); }
+.private-entry-dialog::backdrop { background: rgba(39, 36, 33, .43); backdrop-filter: blur(10px) saturate(110%); -webkit-backdrop-filter: blur(10px) saturate(110%); }
+.private-entry-dialog form { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 10px 18px max(14px, env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.private-entry-dialog form::-webkit-scrollbar { display: none; }
+.private-entry-dialog .sheet-handle { position: relative; z-index: 2; top: auto; flex: 0 0 auto; width: 36px; height: 5px; margin: 0 auto 15px; background: rgba(74, 82, 77, .22); }
+.private-entry-dialog .dialog-header { align-items: center; flex: 0 0 auto; margin: 0 0 18px; padding: 0 1px; }
+.private-entry-dialog .dialog-header > div { min-width: 0; }
+.private-entry-dialog .dialog-header .eyebrow { display: inline-flex; align-items: center; min-height: 22px; margin: 0 0 5px; padding: 0 8px; border-radius: 999px; color: #61766a; background: rgba(255, 255, 255, .66); box-shadow: inset 0 0 0 1px rgba(86, 121, 106, .09); font-size: 9px; font-weight: 800; letter-spacing: .11em; }
+.private-entry-dialog .dialog-header h2 { margin: 0; font-size: 27px; font-weight: 790; line-height: 1.08; letter-spacing: -.055em; }
+.private-entry-dialog .close-button { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; color: #66716b; background: rgba(255, 255, 255, .72); box-shadow: 0 5px 14px rgba(77, 65, 56, .08), inset 0 0 0 1px rgba(80, 91, 85, .08); font-size: 23px; }
+.private-entry-dialog .form-row { flex: 0 0 auto; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; margin-bottom: 13px; }
+.private-entry-dialog label { margin: 0; color: #7c817d; font-size: 10px; font-weight: 720; letter-spacing: -.01em; }
+.private-entry-dialog .form-row label { padding: 10px 11px 9px; border-radius: 16px; background: rgba(255, 255, 255, .78); box-shadow: inset 0 0 0 1px rgba(88, 101, 94, .09), 0 5px 14px rgba(82, 68, 57, .035); }
+.private-entry-dialog input, .private-entry-dialog select, .private-entry-dialog textarea { margin-top: 5px; border: 0; outline: 0; color: #34433c; background: transparent; box-shadow: none; }
+.private-entry-dialog .form-row input, .private-entry-dialog .form-row select { height: 28px; min-height: 28px; padding: 0; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.private-entry-dialog input[type="date"]::-webkit-date-and-time-value { min-width: 0; margin: 0; text-align: left; }
+.private-entry-dialog select { padding-right: 20px; }
+.private-entry-dialog .title-field { flex: 0 0 auto; margin: 0 0 12px; padding: 0 2px 11px; border-bottom: 1px solid rgba(82, 99, 90, .12); }
+.private-entry-dialog .title-field input { min-height: 48px; margin: 1px 0 0; padding: 3px 0; font-size: 22px; font-weight: 760; letter-spacing: -.045em; }
+.private-entry-dialog .title-field input::placeholder { color: #b4b5b1; font-weight: 650; }
+.private-entry-dialog #privateEntryForm > label:not(.title-field) { display: flex; flex: 1; flex-direction: column; min-height: 150px; margin: 0; }
+.private-entry-dialog textarea { flex: 1; min-height: 150px; margin-top: 7px; padding: 15px 15px 18px; border-radius: 18px; background: rgba(255, 255, 255, .86); box-shadow: inset 0 0 0 1px rgba(84, 102, 92, .09), 0 7px 20px rgba(83, 68, 56, .04); font-size: 16px; line-height: 1.65; resize: none; }
+.private-entry-dialog input:focus, .private-entry-dialog select:focus { box-shadow: none; }
+.private-entry-dialog textarea:focus { box-shadow: inset 0 0 0 1.5px rgba(86, 121, 106, .48), 0 8px 22px rgba(86, 121, 106, .07); }
+.private-entry-dialog .private-form-note { display: flex; align-items: center; flex: 0 0 auto; gap: 6px; margin: 9px 2px 0; color: #92958f; font-size: 9px; font-weight: 560; }
+.private-entry-dialog .private-form-note span { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: #eef2ed; font-size: 9px; }
+.private-entry-dialog .dialog-actions { position: sticky; bottom: 0; flex: 0 0 auto; gap: 8px; margin: 2px 0 0; padding: 10px 0 0; background: linear-gradient(transparent, #fbfaf7 24%); }
+.private-entry-dialog .dialog-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; border: 0; border-radius: 16px; font-size: 14px; font-weight: 760; }
+.private-entry-dialog .primary-button { color: #fff; background: linear-gradient(135deg, #526f60, #829d84); box-shadow: 0 9px 22px rgba(86, 121, 106, .2); }
+.private-entry-dialog .primary-button:active { transform: scale(.985); opacity: .88; }
+.private-entry-dialog .danger-button:not([hidden]) { display: inline-flex; flex: 0 0 70px; color: #b66562; background: #f7e9e7; }
+
 @media (min-width: 720px) {
   #privateView { max-width: 760px; margin: 0 auto; }
   .private-entry-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .private-empty-state, .private-loading { grid-column: 1 / -1; }
+  .private-entry-dialog { margin: auto; }
+}
+
+@media (max-width: 390px) {
+  .private-entry-dialog { width: calc(100% - 8px); height: calc(100dvh - 8px); max-height: calc(100dvh - 8px); margin-bottom: 4px; border-radius: 28px; }
+  .private-entry-dialog form { padding-right: 16px; padding-left: 16px; }
+  .private-entry-dialog .dialog-header { margin-bottom: 15px; }
+  .private-entry-dialog .dialog-header h2 { font-size: 25px; }
+  .private-entry-dialog .form-row { grid-template-columns: minmax(0, 1fr) 105px; }
+  .private-entry-dialog #privateEntryForm > label:not(.title-field), .private-entry-dialog textarea { min-height: 130px; }
 }
