@@ -37,6 +37,7 @@ window.FAMILY_CONFIG = {
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260716-family-todo-v1" },
+    { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
   ];
 
   modules.forEach(({ name, version }) => {
@@ -54,6 +55,9 @@ window.FAMILY_CONFIG = {
     navigationStyle.textContent = `
       .view-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
       .view-tab { padding-inline: .18rem; font-size: 10px; white-space: nowrap; }
+      @media (min-width: 768px) {
+        .view-tab { min-height: 46px; padding-inline: 10px; font-size: 14px; }
+      }
     `;
     document.head.appendChild(navigationStyle);
   }
@@ -81,7 +85,10 @@ window.FAMILY_CONFIG = {
   });
 
   const loadModules = async () => {
-    for (const module of modules) await loadScript(module);
+    for (const module of modules) {
+      if (module.script === false) continue;
+      await loadScript(module);
+    }
   };
 
   if (document.readyState === "complete") loadModules();
