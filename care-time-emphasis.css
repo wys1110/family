@@ -1,0 +1,105 @@
+.care-clock-hour {
+  fill:rgba(42,49,45,.82) !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+  font-variant-numeric:tabular-nums;
+}
+
+.care-time-list {
+  margin-top:16px;
+  padding:15px;
+  border:1px solid rgba(53,94,77,.09);
+  border-radius:22px;
+  background:rgba(255,254,250,.82);
+  box-shadow:0 10px 30px rgba(34,43,38,.05);
+}
+
+.care-time-list-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:9px;
+  padding:0 2px;
+}
+
+.care-time-list-heading strong {
+  font-size:13px;
+  letter-spacing:-.02em;
+}
+
+.care-time-list-heading span {
+  color:var(--secondary);
+  font-size:10px;
+  font-weight:700;
+}
+
+.care-time-list-items {
+  display:grid;
+  gap:7px;
+}
+
+.care-time-row {
+  --care-time-color:#6f7f70;
+  display:grid;
+  grid-template-columns:76px 10px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  min-height:58px;
+  padding:8px 11px;
+  border-radius:16px;
+  background:color-mix(in srgb,var(--care-time-color) 8%,white);
+}
+
+.care-time-row.formula { --care-time-color:#d98f49; }
+.care-time-row.breast { --care-time-color:#b96f84; }
+.care-time-row.sleep { --care-time-color:#7772a3; }
+.care-time-row.diaper { --care-time-color:#98744d; }
+
+.care-time-row time {
+  color:var(--care-time-color);
+  font-size:24px;
+  font-weight:820;
+  letter-spacing:-.055em;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+
+.care-time-row > i {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--care-time-color);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--care-time-color) 16%,transparent);
+}
+
+.care-time-row > span {
+  min-width:0;
+}
+
+.care-time-row > span strong,
+.care-time-row > span small {
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.care-time-row > span strong {
+  margin-bottom:3px;
+  font-size:12px;
+}
+
+.care-time-row > span small {
+  color:var(--secondary);
+  font-size:10px;
+}
+
+@media (min-width:768px) {
+  .care-clock-hour { font-size:15px !important; }
+  .care-time-list { padding:20px; }
+  .care-time-list-items { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .care-time-row { min-height:70px; grid-template-columns:92px 11px minmax(0,1fr); padding:10px 14px; }
+  .care-time-row time { font-size:30px; }
+  .care-time-row > span strong { font-size:14px; }
+  .care-time-row > span small { font-size:12px; }
+}
