@@ -36,6 +36,7 @@ window.FAMILY_CONFIG = {
     { name: "tab-emojis", version: "20260716-tab-emojis-v1" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v1" },
+    { name: "family-todo", version: "20260716-family-todo-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
