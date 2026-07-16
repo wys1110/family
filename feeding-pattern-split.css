@@ -1,0 +1,24 @@
+.care-rhythm-legend .formula { --legend:#d7a66b; }
+.care-rhythm-legend .breast { --legend:#c98797; }
+.care-pattern-categories button.formula { --category-color:#d7a66b; }
+.care-pattern-categories button.breast { --category-color:#c98797; }
+.care-clock-mark.formula { stroke:#e3a05f; }
+.care-clock-mark.breast { stroke:#c98797; }
+.care-clock-dot.formula { fill:#e3a05f; }
+.care-clock-dot.breast { fill:#c98797; }
+.care-clock-summary.split-feeding { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.care-clock-summary .formula { --summary-color:#e3a05f; }
+.care-clock-summary .breast { --summary-color:#c98797; }
+.care-rhythm-bars .formula { --bar-color:#d7a66b; }
+.care-rhythm-bars .breast { --bar-color:#c98797; }
+.care-rhythm-chart.split-feeding .care-rhythm-bars i { width:min(7px,22%); }
+.care-interval-card.formula { --interval-color:#d09a5a; }
+.care-interval-card.breast { --interval-color:#b87589; }
+
+@media (max-width:520px) {
+  .care-clock-summary.split-feeding { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .care-clock-summary.split-feeding article:nth-child(3) { border-left:0; }
+  .care-clock-summary.split-feeding article:nth-child(n+3) { border-top:1px solid rgba(90,96,115,.07); }
+  .care-rhythm-chart.split-feeding .care-rhythm-bars { gap:1px; }
+  .care-rhythm-chart.split-feeding .care-rhythm-bars i { width:min(6px,22%); }
+}
