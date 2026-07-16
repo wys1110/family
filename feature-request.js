@@ -82,7 +82,10 @@
       '가족 웹의 기능 요청 칸에서 작성됨',
     ].join('\n');
     const url = `${ISSUE_URL}?title=${encodeURIComponent(`[기능 요청] ${summary}`)}&body=${encodeURIComponent(body)}`;
-    const opened = window.open(url, '_blank', 'noopener,noreferrer');
-    if (!opened) window.location.href = url;
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.click();
   });
 })();
