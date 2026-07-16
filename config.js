@@ -9,6 +9,7 @@ window.FAMILY_CONFIG = {
     { name: "english-stories", version: "20260716-baby-stories" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
+    { name: "feature-request", version: "20260716-feature-request-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
