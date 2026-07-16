@@ -1,0 +1,89 @@
+.photo-viewer-stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo-viewer-stage > #photoViewerImage {
+  transition: transform 190ms cubic-bezier(.22,.72,.16,1), opacity 160ms ease;
+  will-change: transform, opacity;
+}
+
+.photo-viewer-stage.is-dragging > #photoViewerImage {
+  transition: none;
+}
+
+.photo-viewer-nav {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(24,27,25,.56);
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateY(-50%);
+  transition: opacity .18s ease, transform .18s ease, background .18s ease;
+}
+
+.photo-viewer-nav span {
+  display: block;
+  margin-top: -3px;
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.photo-viewer-prev { left: 12px; }
+.photo-viewer-next { right: 12px; }
+.photo-viewer-nav:active:not(:disabled) { background: rgba(24,27,25,.82); transform: translateY(-50%) scale(.92); }
+.photo-viewer-nav:disabled { opacity: .2; }
+.photo-viewer-nav[hidden] { display: none; }
+
+.photo-viewer-position {
+  position: absolute;
+  z-index: 3;
+  right: 50%;
+  bottom: 12px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  color: rgba(255,255,255,.92);
+  background: rgba(24,27,25,.54);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .04em;
+  line-height: 1;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transform: translateX(50%);
+}
+
+@media (max-width: 520px) {
+  .photo-viewer-stage { border-radius: 20px; }
+  .photo-viewer-stage > #photoViewerImage { border-radius: 20px; }
+  .photo-viewer-nav { width: 42px; height: 42px; }
+  .photo-viewer-prev { left: 9px; }
+  .photo-viewer-next { right: 9px; }
+  .photo-viewer-position { bottom: 10px; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .photo-viewer-nav:hover:not(:disabled) { background: rgba(24,27,25,.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-viewer-stage > #photoViewerImage,
+  .photo-viewer-nav { transition: none; }
+}
