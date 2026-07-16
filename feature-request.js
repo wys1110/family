@@ -4,8 +4,14 @@
   const VIEW_NAME = 'feature-request';
   const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
   const DRAFT_KEY = 'family-feature-request-draft-v1';
-  const ISSUE_URL = 'https://github.com/wys1110/family/issues/new';
   const MAX_LENGTH = 500;
+  const STATUS_OPTIONS = [
+    ['new', '신규'],
+    ['reviewing', '검토 중'],
+    ['planned', '반영 예정'],
+    ['done', '완료'],
+    ['dismissed', '보류'],
+  ];
 
   const main = document.querySelector('.app-shell main');
   const navigation = document.querySelector('.view-tabs');
@@ -43,8 +49,20 @@
           <span id="featureRequestCount" aria-live="polite">0/${MAX_LENGTH}</span>
           <button type="submit">요청 등록</button>
         </div>
-        <p class="feature-request-note">등록을 누르면 내용이 입력된 GitHub 요청 페이지가 새 탭으로 열려요.</p>
+        <p class="feature-request-note">등록한 내용은 가족 DB에 저장되며 관리자만 확인할 수 있어요.</p>
+        <p class="feature-request-message" id="featureRequestMessage" role="status" aria-live="polite" hidden></p>
       </form>
+    </section>
+    <section class="feature-request-admin" id="featureRequestAdmin" aria-labelledby="featureRequestAdminTitle" hidden>
+      <div class="feature-request-admin-heading">
+        <div>
+          <p class="eyebrow">ADMIN ONLY</p>
+          <h2 id="featureRequestAdminTitle">요청 관리</h2>
+          <span id="featureRequestAdminCount">등록된 요청을 불러오는 중이에요.</span>
+        </div>
+        <button type="button" id="featureRequestRefresh">새로고침</button>
+      </div>
+      <div class="feature-request-list" id="featureRequestList"></div>
     </section>
   `;
   main.appendChild(view);
@@ -52,6 +70,15 @@
   const form = view.querySelector('#featureRequestForm');
   const textarea = view.querySelector('#featureRequestText');
   const count = view.querySelector('#featureRequestCount');
+  const submitButton = form.querySelector('button[type="submit"]');
+  const message = view.querySelector('#featureRequestMessage');
+  const admin = view.querySelector('#featureRequestAdmin');
+  const adminCount = view.querySelector('#featureRequestAdminCount');
+  const requestList = view.querySelector('#featureRequestList');
+  const refreshButton = view.querySelector('#featureRequestRefresh');
+  let isOwner = false;
+  let adminInitialized = false;
+  let messageTimer = null;
 
   const readDraft = () => {
     try { return localStorage.getItem(DRAFT_KEY) || ''; }
@@ -67,6 +94,122 @@
 
   const updateCount = () => {
     count.textContent = `${textarea.value.length}/${MAX_LENGTH}`;
+  };
+
+  const showMessage = (text, kind = 'success') => {
+    clearTimeout(messageTimer);
+    message.textContent = text;
+    message.className = `feature-request-message ${kind}`;
+    message.hidden = false;
+    messageTimer = setTimeout(() => { message.hidden = true; }, 4200);
+  };
+
+  const setSaving = (saving) => {
+    submitButton.disabled = saving;
+    submitButton.setAttribute('aria-busy', String(saving));
+    submitButton.textContent = saving ? '저장 중…' : '요청 등록';
+  };
+
+  const getFamilyContext = () => {
+    if (typeof state === 'undefined') return null;
+    if (!state.supabase || !state.session || !state.household?.id) return null;
+    return { supabase: state.supabase, session: state.session, household: state.household };
+  };
+
+  const waitForFamilyContext = async () => {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const context = getFamilyContext();
+      if (context) return context;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return null;
+  };
+
+  const requesterName = (session) => {
+    const metadata = session.user.user_metadata || {};
+    return String(metadata.full_name || metadata.name || metadata.user_name || '').trim().slice(0, 80) || null;
+  };
+
+  const formatCreatedAt = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('ko-KR', {
+      month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    }).format(date);
+  };
+
+  const statusLabel = (status) => STATUS_OPTIONS.find(([value]) => value === status)?.[1] || '신규';
+
+  const renderRequests = (requests) => {
+    adminCount.textContent = `${requests.length}개의 요청`;
+    if (!requests.length) {
+      requestList.innerHTML = '<div class="feature-request-empty"><strong>아직 등록된 요청이 없어요</strong><span>가족이 요청을 남기면 여기에 표시돼요.</span></div>';
+      return;
+    }
+
+    requestList.innerHTML = requests.map((request) => `
+      <article class="feature-request-item" data-request-id="${request.id}" data-status="${request.status}">
+        <div class="feature-request-item-meta">
+          <span>${escapeHtml(request.requester_name || '가족 구성원')}</span>
+          <time datetime="${escapeHtml(request.created_at || '')}">${escapeHtml(formatCreatedAt(request.created_at))}</time>
+        </div>
+        <p>${escapeHtml(request.content)}</p>
+        <label>
+          <span>상태</span>
+          <select data-request-status aria-label="기능 요청 상태 변경">
+            ${STATUS_OPTIONS.map(([value, label]) => `<option value="${value}"${request.status === value ? ' selected' : ''}>${label}</option>`).join('')}
+          </select>
+        </label>
+      </article>
+    `).join('');
+  };
+
+  const loadRequests = async () => {
+    if (!isOwner) return;
+    const context = await waitForFamilyContext();
+    if (!context) {
+      adminCount.textContent = '가족 공간 연결 후 요청을 확인할 수 있어요.';
+      return;
+    }
+
+    refreshButton.disabled = true;
+    refreshButton.textContent = '불러오는 중…';
+    const { data, error } = await context.supabase
+      .from('feature_requests')
+      .select('id, content, status, requester_name, created_at, updated_at')
+      .eq('household_id', context.household.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    refreshButton.disabled = false;
+    refreshButton.textContent = '새로고침';
+
+    if (error) {
+      adminCount.textContent = '요청을 불러오지 못했어요.';
+      requestList.innerHTML = '<div class="feature-request-empty error"><strong>DB 업데이트가 필요해요</strong><span>Supabase에 기능 요청 마이그레이션이 적용됐는지 확인해 주세요.</span></div>';
+      return;
+    }
+    renderRequests(data || []);
+  };
+
+  const initializeAdmin = async () => {
+    if (adminInitialized) {
+      if (isOwner) loadRequests();
+      return;
+    }
+    const context = await waitForFamilyContext();
+    if (!context) return;
+
+    const { data, error } = await context.supabase
+      .from('household_members')
+      .select('role')
+      .eq('household_id', context.household.id)
+      .eq('user_id', context.session.user.id)
+      .maybeSingle();
+
+    adminInitialized = true;
+    isOwner = !error && data?.role === 'owner';
+    admin.hidden = !isOwner;
+    if (isOwner) loadRequests();
   };
 
   const installFeatureRequestView = () => {
@@ -96,6 +239,7 @@
         button.classList.toggle('active', button.dataset.view === VIEW_NAME);
       });
       if (addButton) addButton.hidden = true;
+      initializeAdmin();
     };
 
     enhancedSwitchView.__featureRequestInstalled = true;
@@ -126,7 +270,36 @@
     if (typeof switchView === 'function') switchView(VIEW_NAME);
   });
 
-  form.addEventListener('submit', (event) => {
+  refreshButton.addEventListener('click', loadRequests);
+
+  requestList.addEventListener('change', async (event) => {
+    const select = event.target.closest('[data-request-status]');
+    if (!select || !isOwner) return;
+    const item = select.closest('[data-request-id]');
+    const previousStatus = item.dataset.status;
+    const nextStatus = select.value;
+    if (previousStatus === nextStatus) return;
+
+    const context = await waitForFamilyContext();
+    if (!context) return;
+    select.disabled = true;
+    const { error } = await context.supabase
+      .from('feature_requests')
+      .update({ status: nextStatus, updated_at: new Date().toISOString() })
+      .eq('id', item.dataset.requestId)
+      .eq('household_id', context.household.id);
+    select.disabled = false;
+
+    if (error) {
+      select.value = previousStatus;
+      showMessage('요청 상태를 변경하지 못했어요.', 'error');
+      return;
+    }
+    item.dataset.status = nextStatus;
+    showMessage(`요청 상태를 ‘${statusLabel(nextStatus)}’로 변경했어요.`);
+  });
+
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const request = textarea.value.trim();
     if (!request) {
@@ -134,23 +307,33 @@
       return;
     }
 
-    const summary = request.replace(/\s+/g, ' ').slice(0, 44);
-    const body = [
-      '## 요청 내용',
-      request,
-      '',
-      '## 요청 위치',
-      '기능 요청 탭',
-      '',
-      '---',
-      '가족 웹의 기능 요청 탭에서 작성됨',
-    ].join('\n');
-    const url = `${ISSUE_URL}?title=${encodeURIComponent(`[기능 요청] ${summary}`)}&body=${encodeURIComponent(body)}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.click();
+    const context = await waitForFamilyContext();
+    if (!context) {
+      showMessage('로그인하고 가족 공간에 연결한 뒤 등록해 주세요.', 'error');
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await context.supabase.from('feature_requests').insert({
+      household_id: context.household.id,
+      content: request,
+      status: 'new',
+      requester_name: requesterName(context.session),
+      created_by: context.session.user.id,
+    });
+    setSaving(false);
+
+    if (error) {
+      const migrationMissing = error.code === '42P01' || /feature_requests/i.test(error.message || '');
+      showMessage(migrationMissing ? '기능 요청 DB가 아직 준비되지 않았어요.' : '요청을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');
+      return;
+    }
+
+    textarea.value = '';
+    saveDraft('');
+    updateCount();
+    showMessage('요청을 등록했어요. 관리자가 확인할게요.');
+    if (isOwner) loadRequests();
   });
 
   restoreFeatureRequestView();

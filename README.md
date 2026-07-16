@@ -59,6 +59,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - 로그인 계정 본인만 접근할 수 있는 `나만의 공간`(일기·기도·생각·메모)
 - 아기에게 들려주는 창작 영어동화 7편과 한글 뜻
 - 영어동화 전체·문장별 음성 재생, 느린 속도, 오늘의 동화 완료 표시
+- 가족 구성원 기능 요청 DB 저장과 가족 관리자 전용 조회·상태 관리
 
 영어동화는 브라우저의 영어 음성 읽기 기능을 사용하며 별도 DB 설정 없이 바로 동작합니다. 완료 표시는 현재 기기의 로그인 계정별 로컬 저장소에 보관됩니다.
 
@@ -70,6 +71,8 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 
 기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.
 
-가족 구성원 추가와 구성원별 일정 색상을 사용하려면 SQL Editor에서 [`supabase/migrations/20260715_family_calendar_members.sql`](supabase/migrations/20260715_family_calendar_members.sql)을 한 번 실행합니다. 기존 가족 공간에는 가족·아빠·엄마·도윤이 자동 등록되며, 이후 추가한 구성원은 가족 모두에게 공유됩니다.
+가족 구성원 추가와 구성원별 일정 색상을 사용하려면 [`supabase/migrations/20260715_family_calendar_members.sql`](supabase/migrations/20260715_family_calendar_members.sql)을 SQL Editor에서 한 번 실행합니다. 기존 가족 공간에는 가족·아빠·엄마·도윤이 자동 등록되며, 이후 추가한 구성원은 가족 모두에게 공유됩니다.
 
 개인 전용 `나만의 공간`을 사용하려면 SQL Editor에서 [`supabase/migrations/20260716_private_space.sql`](supabase/migrations/20260716_private_space.sql)을 한 번 실행합니다. 이 테이블은 `auth.uid() = owner_id` RLS 정책으로 로그인한 본인에게만 읽기·쓰기·수정·삭제를 허용합니다.
+
+기능 요청을 Supabase DB에 저장하고 가족 관리자만 조회·상태 변경하도록 하려면 [`supabase/migrations/20260716_feature_requests.sql`](supabase/migrations/20260716_feature_requests.sql)을 SQL Editor에서 한 번 실행합니다. 일반 가족 구성원은 요청 등록만 가능하며 목록 조회 권한은 없습니다.

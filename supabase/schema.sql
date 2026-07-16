@@ -81,20 +81,37 @@ create table public.growth_entries (
   updated_at timestamptz not null default now()
 );
 
+create table public.feature_requests (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  content text not null check (char_length(content) between 1 and 500),
+  status text not null default 'new' check (status in ('new', 'reviewing', 'planned', 'done', 'dismissed')),
+  requester_name text check (requester_name is null or char_length(requester_name) <= 80),
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index events_household_date_idx on public.events(household_id, event_date);
 create index babies_household_birth_idx on public.babies(household_id, birth_date);
 create index calendar_members_household_sort_idx on public.calendar_members(household_id, sort_order);
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
+create index feature_requests_household_created_idx on public.feature_requests(household_id, created_at desc);
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.events enable row level security;
 alter table public.babies enable row level security;
 alter table public.calendar_members enable row level security;
 alter table public.growth_entries enable row level security;
+alter table public.feature_requests enable row level security;
 
 create or replace function public.is_household_member(target_household uuid)
 returns boolean language sql stable security definer set search_path = public
 as $$ select exists(select 1 from public.household_members where household_id = target_household and user_id = auth.uid()) $$;
+
+create or replace function public.is_household_owner(target_household uuid)
+returns boolean language sql stable security definer set search_path = public
+as $$ select exists(select 1 from public.households where id = target_household and owner_id = auth.uid()) $$;
 
 create policy "members can view household" on public.households for select to authenticated using (public.is_household_member(id));
 create policy "members can view membership" on public.household_members for select to authenticated using (public.is_household_member(household_id));
@@ -114,6 +131,9 @@ create policy "members can view growth entries" on public.growth_entries for sel
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete growth entries" on public.growth_entries for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can submit feature requests" on public.feature_requests for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid() and status = 'new');
+create policy "owner can view feature requests" on public.feature_requests for select to authenticated using (public.is_household_owner(household_id));
+create policy "owner can update feature requests" on public.feature_requests for update to authenticated using (public.is_household_owner(household_id)) with check (public.is_household_owner(household_id));
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('growth-photos', 'growth-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
@@ -161,5 +181,7 @@ end $$;
 
 revoke all on function public.create_household(text) from public;
 revoke all on function public.join_household(text) from public;
+revoke all on function public.is_household_owner(uuid) from public;
 grant execute on function public.create_household(text) to authenticated;
 grant execute on function public.join_household(text) to authenticated;
+grant execute on function public.is_household_owner(uuid) to authenticated;
