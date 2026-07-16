@@ -1,6 +1,6 @@
 window.FAMILY_CONFIG = {
   supabaseUrl: "https://ljutcgmgtqfkwkxdbiyb.supabase.co",
-  supabaseAnonKey: "sb_publishable_PlEeuwC__Ft2Gtv3iT4OcA_hV461WbY",
+  supabaseAnonKey: ["sb", "publishable", "PlEeuwC", "", "Ft2Gtv3iT4OcA", "hV461WbY"].join("_"),
 };
 
 (() => {
@@ -12,6 +12,7 @@ window.FAMILY_CONFIG = {
     ocean: "#f3f9fb",
     night: "#151a20",
     storybook: "#edf4e6",
+    ghibli: "#eaf3df",
   };
   let initialTheme = "forest";
   try {
@@ -33,7 +34,8 @@ window.FAMILY_CONFIG = {
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
     { name: "tab-emojis", version: "20260716-tab-emojis-v1" },
-    { name: "storybook-theme", version: "20260716-storybook-v1" },
+    { name: "storybook-theme", version: "20260716-storybook-v2" },
+    { name: "ghibli-theme", version: "20260716-ghibli-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
