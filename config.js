@@ -4,6 +4,24 @@ window.FAMILY_CONFIG = {
 };
 
 (() => {
+  const themeStorageKey = "family-theme-v1";
+  const themeColors = {
+    forest: "#fff8f3",
+    sunshine: "#fffaf0",
+    rose: "#fff5f7",
+    ocean: "#f3f9fb",
+    night: "#151a20",
+  };
+  let initialTheme = "forest";
+  try {
+    const storedTheme = localStorage.getItem(themeStorageKey);
+    if (themeColors[storedTheme]) initialTheme = storedTheme;
+  } catch { /* 기본 테마 사용 */ }
+  document.documentElement.dataset.familyTheme = initialTheme;
+  document.documentElement.style.colorScheme = initialTheme === "night" ? "dark" : "light";
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.content = themeColors[initialTheme];
+
   const modules = [
     { name: "calendar-swipe", version: "20260716-fast-swipe" },
     { name: "english-stories", version: "20260716-baby-stories" },
@@ -12,6 +30,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260716-feature-request-tab-v2" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
+    { name: "settings", version: "20260716-theme-settings-v1" },
   ];
 
   modules.forEach(({ name, version }) => {
@@ -27,8 +46,8 @@ window.FAMILY_CONFIG = {
     const navigationStyle = document.createElement("style");
     navigationStyle.dataset.module = "navigation-layout";
     navigationStyle.textContent = `
-      .view-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .view-tab { padding-inline: .28rem; font-size: 11px; }
+      .view-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .view-tab { padding-inline: .18rem; font-size: 10px; white-space: nowrap; }
     `;
     document.head.appendChild(navigationStyle);
   }
