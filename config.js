@@ -33,6 +33,18 @@ window.FAMILY_CONFIG = {
     document.head.appendChild(navigationStyle);
   }
 
+  if (!document.querySelector('style[data-module="calendar-date-selection"]')) {
+    const calendarDateSelectionStyle = document.createElement("style");
+    calendarDateSelectionStyle.dataset.module = "calendar-date-selection";
+    calendarDateSelectionStyle.textContent = `
+      .calendar-event-bar {
+        pointer-events: none;
+        cursor: default;
+      }
+    `;
+    document.head.appendChild(calendarDateSelectionStyle);
+  }
+
   const loadScript = ({ name, version }) => new Promise((resolve) => {
     if (document.querySelector(`script[data-module="${name}"]`)) return resolve();
     const script = document.createElement("script");
