@@ -30,6 +30,9 @@ window.FAMILY_CONFIG = {
 
   const loadModules = async () => {
     for (const module of modules) await loadScript(module);
+    if (typeof switchView === "function" && switchView.__englishStoriesInstalled) {
+      switchView.__privateSpaceInstalled = true;
+    }
   };
 
   if (document.readyState === "complete") loadModules();
