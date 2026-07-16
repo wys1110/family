@@ -92,11 +92,30 @@ create table public.feature_requests (
   updated_at timestamptz not null default now()
 );
 
+create table public.family_todos (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 80),
+  due_date date,
+  assignee text not null default '가족' check (char_length(assignee) between 1 and 20),
+  note text check (note is null or char_length(note) <= 500),
+  recurrence text not null default 'none' check (recurrence in ('none', 'daily', 'weekly', 'monthly')),
+  completed boolean not null default false,
+  completed_at timestamptz,
+  recurrence_parent_id uuid references public.family_todos(id) on delete set null,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check ((completed = false and completed_at is null) or completed = true)
+);
+
 create index events_household_date_idx on public.events(household_id, event_date);
 create index babies_household_birth_idx on public.babies(household_id, birth_date);
 create index calendar_members_household_sort_idx on public.calendar_members(household_id, sort_order);
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 create index feature_requests_household_created_idx on public.feature_requests(household_id, created_at desc);
+create index family_todos_household_due_idx on public.family_todos(household_id, completed, due_date, created_at desc);
+create unique index family_todos_recurrence_parent_unique_idx on public.family_todos(recurrence_parent_id) where recurrence_parent_id is not null;
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.events enable row level security;
@@ -104,6 +123,7 @@ alter table public.babies enable row level security;
 alter table public.calendar_members enable row level security;
 alter table public.growth_entries enable row level security;
 alter table public.feature_requests enable row level security;
+alter table public.family_todos enable row level security;
 
 create or replace function public.is_household_member(target_household uuid)
 returns boolean language sql stable security definer set search_path = public
@@ -134,6 +154,10 @@ create policy "members can delete growth entries" on public.growth_entries for d
 create policy "members can submit feature requests" on public.feature_requests for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid() and status = 'new');
 create policy "owner can view feature requests" on public.feature_requests for select to authenticated using (public.is_household_owner(household_id));
 create policy "owner can update feature requests" on public.feature_requests for update to authenticated using (public.is_household_owner(household_id)) with check (public.is_household_owner(household_id));
+create policy "members can view family todos" on public.family_todos for select to authenticated using (public.is_household_member(household_id));
+create policy "members can create family todos" on public.family_todos for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
+create policy "members can update family todos" on public.family_todos for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
+create policy "members can delete family todos" on public.family_todos for delete to authenticated using (public.is_household_member(household_id));
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('growth-photos', 'growth-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
