@@ -4,8 +4,8 @@
   const THEME_ID = 'ghibli';
   const THEME_STORAGE_KEY = 'family-theme-v1';
   const THEME = {
-    name: '초원의 바람 🍃',
-    description: '푸른 하늘과 연초록 언덕이 어우러진 따뜻한 애니메이션 감성',
+    name: '지브리 감성 🌿',
+    description: '푸른 하늘과 연초록 언덕이 어우러진 따뜻한 지브리풍 애니메이션 테마',
     themeColor: '#eaf3df',
     preview: ['#dceef4', '#fffdf1', '#739760', '#d5a05b', '#304238'],
   };
