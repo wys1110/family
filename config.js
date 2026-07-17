@@ -50,6 +50,7 @@ window.FAMILY_CONFIG = {
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
     { name: "growth-layout", version: "20260717-baby-archive-v1", script: false },
+    { name: "growth-dialog-simple", version: "20260717-simple-v1" },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
