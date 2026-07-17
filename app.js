@@ -54,7 +54,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -229,11 +229,13 @@ async function bootstrapData() {
       if (error) throw error;
       state.household = memberships?.[0]?.households || null;
       if (state.household) loaded = await loadRemoteData();
-      else { state.babies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
+      else { state.babies = []; state.archivedBabies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
     } else {
       state.household = null;
       state.familyMembers = localMembers();
-      state.babies = readLocalJson(BABY_STORAGE_KEY, []);
+      const babies = readLocalJson(BABY_STORAGE_KEY, []);
+      state.babies = babies.filter((baby) => !baby.archivedAt);
+      state.archivedBabies = babies.filter((baby) => baby.archivedAt);
       state.events = readLocalJson(STORAGE_KEY, []).map(normalizeEvent);
       state.growthEntries = readLocalJson(GROWTH_STORAGE_KEY, []);
     }
@@ -268,7 +270,12 @@ async function loadRemoteData() {
     state.supabase.from("growth_entries").select("*").eq("household_id", state.household.id).order("entry_date", { ascending: false }),
     state.supabase.from("calendar_members").select("*").eq("household_id", state.household.id).order("sort_order"),
   ]);
-  if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요"); else state.babies = babiesResult.data.map(fromBabyRemote);
+  if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요");
+  else {
+    const babies = babiesResult.data.map(fromBabyRemote);
+    state.babies = babies.filter((baby) => !baby.archivedAt);
+    state.archivedBabies = babies.filter((baby) => baby.archivedAt);
+  }
   if (eventsResult.error) toast("일정을 불러오지 못했어요"); else state.events = eventsResult.data.map(fromRemote);
   if (growthResult.error) toast("성장일기를 불러오지 못했어요");
   else {
@@ -288,7 +295,7 @@ async function loadRemoteData() {
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
 function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_end_date: event.endDate || event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
-function fromBabyRemote(row) { return { id: row.id, name: row.name, birthDate: row.birth_date, birthTime: row.birth_time?.slice(0, 5) || "", sex: row.sex || "", birthWeight: row.birth_weight_kg, birthHeight: row.birth_height_cm }; }
+function fromBabyRemote(row) { return { id: row.id, name: row.name, birthDate: row.birth_date, birthTime: row.birth_time?.slice(0, 5) || "", sex: row.sex || "", birthWeight: row.birth_weight_kg, birthHeight: row.birth_height_cm, archivedAt: row.archived_at || null }; }
 function toBabyRemote(baby) { return { id: baby.id, household_id: state.household.id, name: baby.name, birth_date: baby.birthDate, birth_time: baby.birthTime || null, sex: baby.sex || null, birth_weight_kg: baby.birthWeight || null, birth_height_cm: baby.birthHeight || null, created_by: state.session.user.id }; }
 function fromGrowthRemote(row) {
   return {
@@ -356,9 +363,12 @@ function bindUi() {
   $("#growthPhotoPreview").addEventListener("click", removeGrowthPhoto);
   document.querySelectorAll("[data-growth-quick]").forEach((button) => button.addEventListener("click", () => openGrowthQuick(button.dataset.growthQuick)));
   $("#addBabyButton").addEventListener("click", () => openBabyDialog());
+  $("#openBabyArchiveButton").addEventListener("click", openBabyArchive);
+  $("#babyArchiveList").addEventListener("click", restoreBabyFromEvent);
   $("#babyEmptyState").addEventListener("click", (event) => { if (event.target.closest("[data-open-baby]")) openBabyDialog(); });
   $("#editBabyButton").addEventListener("click", () => openBabyDialog(activeBaby()));
   $("#babyForm").addEventListener("submit", saveBaby);
+  $("#archiveBabyButton").addEventListener("click", archiveBabyProfile);
   $("#babySelector").addEventListener("click", selectBabyFromEvent);
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
@@ -877,6 +887,7 @@ function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY,
 
 function renderGrowth() {
   const baby = activeBaby();
+  renderBabyArchiveCount();
   const albumOpen = $("#growthView").classList.contains("album-open");
   $("#babyEmptyState").hidden = Boolean(baby);
   $("#babyJournalContent").hidden = !baby || albumOpen;
@@ -1507,6 +1518,7 @@ function openBabyDialog(baby = null) {
   $("#babyId").value = baby?.id || ""; $("#babyName").value = baby?.name || "";
   $("#babyBirthDate").value = baby?.birthDate || ""; $("#babyBirthTime").value = baby?.birthTime || "";
   $("#babySex").value = baby?.sex || ""; $("#babyBirthWeight").value = baby?.birthWeight || ""; $("#babyBirthHeight").value = baby?.birthHeight || "";
+  $("#archiveBabyButton").classList.toggle("visible", Boolean(baby));
   $("#babyDialog").showModal(); focusOnDesktop("#babyName");
 }
 
@@ -1514,7 +1526,8 @@ async function saveBaby(event) {
   event.preventDefault();
   if (state.supabase && !state.household) { $("#babyDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const isNew = !$("#babyId").value;
-  const baby = { id: $("#babyId").value || uid(), name: $("#babyName").value.trim(), birthDate: $("#babyBirthDate").value, birthTime: $("#babyBirthTime").value, sex: $("#babySex").value, birthWeight: numberOrNull($("#babyBirthWeight").value), birthHeight: numberOrNull($("#babyBirthHeight").value) };
+  const previous = state.babies.find((item) => item.id === $("#babyId").value);
+  const baby = { id: $("#babyId").value || uid(), name: $("#babyName").value.trim(), birthDate: $("#babyBirthDate").value, birthTime: $("#babyBirthTime").value, sex: $("#babySex").value, birthWeight: numberOrNull($("#babyBirthWeight").value), birthHeight: numberOrNull($("#babyBirthHeight").value), archivedAt: previous?.archivedAt || null };
   if (state.supabase && state.session) {
     const { error } = await state.supabase.from("babies").upsert(toBabyRemote(baby));
     if (error) return toast("아기 프로필을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
@@ -1523,8 +1536,70 @@ async function saveBaby(event) {
   const index = state.babies.findIndex((item) => item.id === baby.id); if (index >= 0) state.babies[index] = baby; else state.babies.push(baby);
   if (isNew && state.babies.length === 1) state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = baby.id; });
   state.activeBabyId = baby.id; localStorage.setItem(ACTIVE_BABY_KEY, baby.id);
-  if (!state.supabase) { localStorage.setItem(BABY_STORAGE_KEY, JSON.stringify(state.babies)); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
+  if (!state.supabase) { persistLocalBabies(); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
   $("#babyDialog").close(); renderGrowth(); toast(isNew ? `${baby.name}의 성장일기를 시작했어요` : "아기 프로필을 수정했어요");
+}
+
+function persistLocalBabies() {
+  localStorage.setItem(BABY_STORAGE_KEY, JSON.stringify([...state.babies, ...state.archivedBabies]));
+}
+
+function renderBabyArchiveCount() {
+  const button = $("#openBabyArchiveButton");
+  if (!button) return;
+  button.querySelector("span").textContent = String(state.archivedBabies.length);
+  button.classList.toggle("has-items", state.archivedBabies.length > 0);
+}
+
+function openBabyArchive() {
+  const list = $("#babyArchiveList");
+  list.innerHTML = state.archivedBabies.length
+    ? state.archivedBabies
+      .sort((a, b) => (b.archivedAt || "").localeCompare(a.archivedAt || ""))
+      .map((baby) => `<article class="baby-archive-item"><span>${escapeHtml(baby.name.charAt(0))}</span><div><strong>${escapeHtml(baby.name)}</strong><small>${baby.birthDate.replaceAll("-", ".")} · 성장 기록 보존 중</small></div><button type="button" data-restore-baby="${escapeHtml(String(baby.id))}">복원</button></article>`).join("")
+    : '<div class="baby-archive-empty"><strong>보관된 프로필이 없어요</strong><span>아카이브한 아기는 기록과 사진을 유지한 채 여기에 표시돼요.</span></div>';
+  $("#babyArchiveDialog").showModal();
+}
+
+async function archiveBabyProfile() {
+  const id = $("#babyId").value;
+  const baby = state.babies.find((item) => item.id === id);
+  if (!baby) return;
+  if (careTimer?.babyId === id) return toast("진행 중인 돌봄 타이머를 먼저 멈춰주세요");
+  if (!confirm(`${baby.name} 프로필을 아카이브할까요?\n성장 기록과 사진은 삭제되지 않으며 언제든 복원할 수 있어요.`)) return;
+  const archivedAt = new Date().toISOString();
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("babies").update({ archived_at: archivedAt, updated_at: archivedAt }).eq("id", id).eq("household_id", state.household.id);
+    if (error) return toast("아카이브하지 못했어요. DB 업데이트를 확인해 주세요");
+  }
+  state.babies = state.babies.filter((item) => item.id !== id);
+  state.archivedBabies.push({ ...baby, archivedAt });
+  if (!state.supabase) persistLocalBabies();
+  $("#babyDialog").close();
+  selectInitialBaby();
+  renderGrowth();
+  toast(`${baby.name} 프로필을 아카이브했어요`);
+}
+
+async function restoreBabyFromEvent(event) {
+  const button = event.target.closest("[data-restore-baby]");
+  if (!button) return;
+  const id = button.dataset.restoreBaby;
+  const baby = state.archivedBabies.find((item) => String(item.id) === id);
+  if (!baby) return;
+  button.disabled = true;
+  if (state.supabase && state.session) {
+    const { error } = await state.supabase.from("babies").update({ archived_at: null, updated_at: new Date().toISOString() }).eq("id", baby.id).eq("household_id", state.household.id);
+    if (error) { button.disabled = false; return toast("프로필을 복원하지 못했어요"); }
+  }
+  state.archivedBabies = state.archivedBabies.filter((item) => item.id !== baby.id);
+  state.babies.push({ ...baby, archivedAt: null });
+  if (!state.supabase) persistLocalBabies();
+  state.activeBabyId = baby.id;
+  localStorage.setItem(ACTIVE_BABY_KEY, baby.id);
+  $("#babyArchiveDialog").close();
+  renderGrowth();
+  toast(`${baby.name} 프로필을 복원했어요`);
 }
 
 function resetGrowthPhotoDraft() {

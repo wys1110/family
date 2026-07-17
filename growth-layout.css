@@ -22,6 +22,10 @@
 .growth-page-header h2 { font-size: clamp(28px, 5vw, 36px); line-height: 1.05; }
 .growth-diary-mascot { width: 72px; height: 48px; }
 .add-baby-button { min-height: 44px; border-radius: 14px; background: var(--growth-card); box-shadow: none; }
+.baby-header-actions { display: flex; align-items: center; gap: 7px; }
+.baby-archive-button { min-height: 44px; padding: 0 11px; border: 1px solid var(--growth-border); border-radius: 14px; color: var(--secondary); background: var(--growth-card); font-size: 10px; font-weight: 700; }
+.baby-archive-button span { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 3px; padding: 0 5px; border-radius: 999px; background: var(--growth-card-soft); font-size: 9px; }
+.baby-archive-button.has-items { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 22%, transparent); }
 .baby-selector { margin: 0; padding: 1px 0; scrollbar-width: none; }
 .baby-selector::-webkit-scrollbar { display: none; }
 
@@ -162,6 +166,7 @@
   #growthView { --growth-gap: 14px; --growth-radius: 22px; }
   .growth-page-header { min-height: 56px; }
   .growth-diary-mascot { display: none; }
+  .baby-archive-button { min-height: 42px; padding: 0 9px; font-size: 9px; }
   .baby-care-card .baby-profile-main { padding: 19px 17px 0; }
   .baby-care-card .baby-edit-button { margin-left: 79px; }
   .care-timer-card,
@@ -179,7 +184,23 @@
 }
 
 @media (max-width: 360px) {
+  .baby-archive-button { width: 42px; padding: 0; overflow: hidden; color: transparent; }
+  .baby-archive-button span { margin: 0; color: var(--blue); }
   .add-baby-button { padding: 0 10px; font-size: 10px; }
   .care-pattern-heading { display: block; }
   .care-rhythm-legend { justify-content: flex-start; margin-top: 8px; }
 }
+
+.baby-archive-copy { margin: -8px 2px 16px; color: var(--secondary); font-size: 11px; line-height: 1.55; }
+.baby-archive-list { display: grid; gap: 9px; }
+.baby-archive-item { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 12px; border: 1px solid var(--growth-border); border-radius: 17px; background: var(--surface); }
+.baby-archive-item > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; color: white; background: var(--blue); font-family: Georgia, serif; font-size: 18px; }
+.baby-archive-item div { min-width: 0; }
+.baby-archive-item strong,.baby-archive-item small { display: block; }
+.baby-archive-item strong { font-size: 13px; }
+.baby-archive-item small { margin-top: 4px; overflow: hidden; color: var(--secondary); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.baby-archive-item button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 11px; color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, transparent); font-size: 10px; font-weight: 750; }
+.baby-archive-item button:disabled { opacity: .5; }
+.baby-archive-empty { display: grid; gap: 5px; padding: 30px 18px; border: 1px dashed var(--growth-border); border-radius: 18px; color: var(--secondary); text-align: center; }
+.baby-archive-empty strong { color: var(--label); font-size: 13px; }
+.baby-archive-empty span { font-size: 10px; line-height: 1.5; }

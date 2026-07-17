@@ -25,6 +25,7 @@ create table public.babies (
   sex text check (sex in ('남아', '여아')),
   birth_weight_kg numeric(4,2) check (birth_weight_kg between 0.3 and 10),
   birth_height_cm numeric(4,1) check (birth_height_cm between 20 and 80),
+  archived_at timestamptz,
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -111,6 +112,7 @@ create table public.family_todos (
 
 create index events_household_date_idx on public.events(household_id, event_date);
 create index babies_household_birth_idx on public.babies(household_id, birth_date);
+create index babies_active_household_birth_idx on public.babies(household_id, birth_date) where archived_at is null;
 create index calendar_members_household_sort_idx on public.calendar_members(household_id, sort_order);
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 create index feature_requests_household_created_idx on public.feature_requests(household_id, created_at desc);

@@ -48,7 +48,7 @@ window.FAMILY_CONFIG = {
     { name: "feeding-db-compat", version: "20260717-db-check-fix-v1", style: false },
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
-    { name: "growth-layout", version: "20260717-unified-v1", script: false },
+    { name: "growth-layout", version: "20260717-baby-archive-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {

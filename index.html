@@ -111,7 +111,10 @@
                 <i>쑥쑥 ♡</i>
               </span>
             </div>
-            <button class="add-baby-button" id="addBabyButton" type="button"><span>＋</span> 아기 추가</button>
+            <div class="baby-header-actions">
+              <button class="baby-archive-button" id="openBabyArchiveButton" type="button">아카이브 <span>0</span></button>
+              <button class="add-baby-button" id="addBabyButton" type="button"><span>＋</span> 아기 추가</button>
+            </div>
           </header>
 
           <section class="baby-empty-card" id="babyEmptyState" hidden>
@@ -422,8 +425,20 @@
           <label>출생 키 (cm)<input id="babyBirthHeight" type="number" min="20" max="80" step="0.1" inputmode="decimal" placeholder="예: 50.2" /></label>
         </div>
         <p class="form-privacy-note">아기 정보는 가족 공간 구성원에게만 보여요.</p>
-        <div class="dialog-actions"><button type="submit" class="primary-button" id="babySubmitButton">프로필 저장</button></div>
+        <div class="dialog-actions"><button type="button" class="danger-button" id="archiveBabyButton">아카이브</button><button type="submit" class="primary-button" id="babySubmitButton">프로필 저장</button></div>
       </form>
+    </dialog>
+
+    <dialog id="babyArchiveDialog" class="sheet-dialog baby-archive-dialog" aria-labelledby="babyArchiveTitle">
+      <div class="sheet-panel">
+        <div class="sheet-handle"></div>
+        <div class="dialog-header">
+          <div><p class="eyebrow">SAFE ARCHIVE</p><h2 id="babyArchiveTitle">아기 프로필 아카이브</h2></div>
+          <button type="button" class="close-button" data-close="babyArchiveDialog" aria-label="닫기">×</button>
+        </div>
+        <p class="baby-archive-copy">프로필만 숨겨지며 성장 기록과 사진은 그대로 보존돼요.</p>
+        <div class="baby-archive-list" id="babyArchiveList"></div>
+      </div>
     </dialog>
 
     <dialog id="quickLogDialog" class="sheet-dialog compact quick-log-dialog">
@@ -465,8 +480,8 @@
 
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
-    <script src="config.js?v=20260717-parallel-modules-v1"></script>
+    <script src="config.js?v=20260717-baby-archive-v1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260717-fast-refresh-v1"></script>
+    <script src="app.js?v=20260717-baby-archive-v1"></script>
   </body>
 </html>
