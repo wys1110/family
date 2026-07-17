@@ -21,11 +21,27 @@
 
   const labelOf = (type) => (type === "formula" ? "분유" : type === "breast" ? "모유" : "기저귀");
 
-  const entryCard = (entry, type) => `
-    <article class="care-split-entry ${type}">
-      <span><i aria-hidden="true"></i><strong>${labelOf(type)}</strong></span>
-      <small>${escapeHtml(detailOf(entry, type))}</small>
-    </article>`;
+  const entryCard = (entry, type) => {
+    const label = labelOf(type);
+    const detail = detailOf(entry, type);
+    return `
+      <button type="button" class="care-split-entry ${type}" data-care-entry-id="${escapeHtml(String(entry.id || ""))}" aria-label="${escapeHtml(`${label} ${detail} 기록 수정`)}" aria-haspopup="dialog">
+        <span><i aria-hidden="true"></i><strong>${label}</strong></span>
+        <small>${escapeHtml(detail)}</small>
+        <span class="care-split-edit" aria-hidden="true">✎</span>
+      </button>`;
+  };
+
+  const openCareEntryEditor = (event) => {
+    const card = event.target.closest("[data-care-entry-id]");
+    if (!card) return;
+    const entry = state.growthEntries.find((item) => String(item.id) === card.dataset.careEntryId);
+    if (!entry) {
+      toast("수정할 기록을 찾지 못했어요");
+      return;
+    }
+    openGrowthDialog(entry);
+  };
 
   const removeSleepControls = () => {
     carePatternCategories.delete("sleep");
@@ -39,6 +55,11 @@
   };
 
   removeSleepControls();
+  const carePatternContent = document.querySelector("#carePatternContent");
+  if (carePatternContent && !carePatternContent.dataset.entryEditBound) {
+    carePatternContent.dataset.entryEditBound = "true";
+    carePatternContent.addEventListener("click", openCareEntryEditor);
+  }
 
   renderDailyCareClock = function renderSplitCareTimeline(entries) {
     removeSleepControls();
