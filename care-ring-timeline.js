@@ -29,7 +29,8 @@
   const marker = (entry, type) => {
     const label = type === "formula" ? "분유" : type === "breast" ? "모유" : "기저귀";
     const detail = detailOf(entry, type);
-    return `<span class="care-linear-marker ${type}" style="--position:${positionOf(entry)}%" role="img" aria-label="${escapeHtml(`${entry.time} ${label} ${detail}`)}"><i></i><b>${escapeHtml(entry.time)}</b><title>${escapeHtml(`${entry.time} ${label} ${detail}`)}</title></span>`;
+    const tooltip = escapeHtml(`${entry.time} ${label} ${detail}`);
+    return `<span class="care-linear-marker ${type}" style="--position:${positionOf(entry)}%" role="img" aria-label="${tooltip}" title="${tooltip}"><i></i><b>${escapeHtml(entry.time)}</b></span>`;
   };
 
   const removeSleepControls = () => {
