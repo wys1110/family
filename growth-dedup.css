@@ -1,0 +1,112 @@
+#growthSummaryPeriod [data-summary-period="day"],
+#growthFilterBar [data-growth-filter="photo"],
+#carePatternContent .care-clock-summary {
+  display: none !important;
+}
+
+.care-quick-block {
+  position: relative;
+  z-index: 1;
+  margin-top: 17px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(86, 111, 98, .12);
+}
+
+.care-quick-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.care-quick-heading strong,
+.care-quick-heading small {
+  display: block;
+}
+
+.care-quick-heading strong {
+  font-size: 13px;
+  letter-spacing: -.025em;
+}
+
+.care-quick-heading small {
+  margin-top: 3px;
+  color: var(--secondary);
+  font-size: 8px;
+}
+
+.care-quick-heading > span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #9c6860;
+  background: #f8dfd7;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.care-timer-card .care-quick-block .growth-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.care-timer-card .care-quick-block .growth-quick-grid button {
+  min-width: 0;
+  min-height: 80px;
+  padding: 11px 6px;
+  border: 1px solid rgba(91, 105, 97, .08);
+  border-radius: 18px;
+  color: var(--label);
+  background: rgba(255, 255, 255, .78);
+  box-shadow: 0 7px 18px rgba(70, 91, 80, .055);
+}
+
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(1) { background: linear-gradient(145deg, #fff9ef, #f8e9d2); }
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(2) { background: linear-gradient(145deg, #fbf9ff, #eae6f2); }
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(3) { background: linear-gradient(145deg, #fffaf2, #eee4d5); }
+.care-timer-card .care-quick-block .growth-quick-grid button:active { transform: scale(.96); }
+
+.care-timer-card .care-quick-block .quick-symbol {
+  width: 36px;
+  height: 36px;
+}
+
+.integrated-care-summary.standalone-growth-summary {
+  margin: 0 0 23px;
+  padding: 17px 18px;
+  border-color: rgba(134, 106, 96, .12);
+  background: linear-gradient(145deg, rgba(255, 253, 248, .98), rgba(248, 235, 229, .92));
+  box-shadow: 0 14px 36px rgba(93, 74, 65, .08);
+}
+
+.integrated-care-summary.standalone-growth-summary .growth-summary-header h2 {
+  font-size: 19px;
+}
+
+.integrated-care-summary.standalone-growth-summary .growth-summary-header .eyebrow {
+  font-size: 8px;
+}
+
+@media (max-width: 520px) {
+  .care-timer-card .care-quick-block .growth-quick-grid {
+    gap: 7px;
+  }
+
+  .care-timer-card .care-quick-block .growth-quick-grid button {
+    min-height: 76px;
+    border-radius: 16px;
+  }
+
+  .integrated-care-summary.standalone-growth-summary {
+    margin: 0 0 20px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .care-timer-card .care-quick-block .growth-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
