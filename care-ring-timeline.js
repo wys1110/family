@@ -1,103 +1,103 @@
 (() => {
   const typeOf = (entry) => {
     if (entry.category === "수유·이유식") {
-      const feedingType = String(entry.feedingType || "");
+      const feedingType = String(entry.feedingType || "").trim();
       const title = String(entry.title || "");
       if (feedingType === "모유" || title.includes("모유")) return "breast";
       return "formula";
     }
-    if (entry.category === "수면") return "sleep";
     if (entry.category === "기저귀") return "diaper";
     return "";
   };
 
-  const minutesOf = (entry) => {
+  const minuteOf = (entry) => {
     const [hour, minute] = String(entry.time || "00:00").split(":").map(Number);
     return Math.max(0, Math.min(1439, (hour || 0) * 60 + (minute || 0)));
   };
 
-  const polar = (angle, radius) => {
-    const radians = (angle - 90) * Math.PI / 180;
-    return { x: 180 + radius * Math.cos(radians), y: 180 + radius * Math.sin(radians) };
+  const positionOf = (entry) => (minuteOf(entry) / 1440 * 100).toFixed(3);
+
+  const detailOf = (entry, type) => {
+    if (type === "formula") return Number(entry.feedingMl) > 0 ? `${Number(entry.feedingMl)}mL` : "분유";
+    if (type === "breast") {
+      const details = [entry.feedingSide, Number(entry.feedingMinutes) > 0 ? formatDuration(Number(entry.feedingMinutes)) : ""].filter(Boolean);
+      return details.join(" · ") || "모유";
+    }
+    return entry.diaperKind || "교체";
   };
 
-  const arc = (startMinute, duration, radius) => {
-    const safeDuration = Math.max(3, Math.min(1439, Number(duration) || 0));
-    const startAngle = startMinute / 1440 * 360;
-    const endAngle = (startMinute + safeDuration) / 1440 * 360;
-    const start = polar(startAngle, radius);
-    const end = polar(endAngle, radius);
-    const largeArc = safeDuration > 720 ? 1 : 0;
-    return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+  const marker = (entry, type) => {
+    const label = type === "formula" ? "분유" : type === "breast" ? "모유" : "기저귀";
+    const detail = detailOf(entry, type);
+    return `<span class="care-linear-marker ${type}" style="--position:${positionOf(entry)}%" role="img" aria-label="${escapeHtml(`${entry.time} ${label} ${detail}`)}"><i></i><b>${escapeHtml(entry.time)}</b><title>${escapeHtml(`${entry.time} ${label} ${detail}`)}</title></span>`;
   };
 
-  const marker = (entry, radius) => {
-    const type = typeOf(entry);
-    const point = polar(minutesOf(entry) / 1440 * 360, radius);
-    const label = type === "formula" ? `${entry.feedingMl || 0}mL` : type === "breast" ? formatDuration(Number(entry.feedingMinutes) || 0) : entry.diaperKind || "기저귀";
-    return `<g class="care-ring-marker ${type}"><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="7"></circle><circle class="core" cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="3"></circle><title>${entry.time} ${label}</title></g>`;
+  const removeSleepControls = () => {
+    carePatternCategories.delete("sleep");
+    document.querySelector('[data-pattern-category="sleep"]')?.remove();
+    document.querySelector(".care-rhythm-legend .sleep")?.remove();
   };
 
-  renderDailyCareClock = function renderCareRingTimeline(entries) {
+  removeSleepControls();
+
+  renderDailyCareClock = function renderLinearCareTimeline(entries) {
+    removeSleepControls();
+
     const date = parseDate(carePatternDate);
     const today = dateKey(new Date());
     const dayEntries = entries.filter((entry) => entry.date === carePatternDate && typeOf(entry));
-    const visible = dayEntries.filter((entry) => carePatternCategories.has(typeOf(entry)));
-    const sleepEntries = visible.filter((entry) => typeOf(entry) === "sleep" && entry.time && Number(entry.sleepMinutes) > 0);
-    const pointEntries = visible.filter((entry) => ["formula", "breast", "diaper"].includes(typeOf(entry)) && entry.time);
+    const visible = dayEntries.filter((entry) => carePatternCategories.has(typeOf(entry)) && entry.time);
+    const feedingEntries = visible.filter((entry) => ["formula", "breast"].includes(typeOf(entry)));
+    const diaperEntries = visible.filter((entry) => typeOf(entry) === "diaper");
 
     const formulaMl = dayEntries.filter((entry) => typeOf(entry) === "formula").reduce((sum, entry) => sum + (Number(entry.feedingMl) || 0), 0);
+    const formulaCount = dayEntries.filter((entry) => typeOf(entry) === "formula").length;
     const breastMinutes = dayEntries.filter((entry) => typeOf(entry) === "breast").reduce((sum, entry) => sum + (Number(entry.feedingMinutes) || 0), 0);
-    const sleepMinutes = dayEntries.filter((entry) => typeOf(entry) === "sleep").reduce((sum, entry) => sum + (Number(entry.sleepMinutes) || 0), 0);
+    const breastCount = dayEntries.filter((entry) => typeOf(entry) === "breast").length;
     const diaperCount = dayEntries.filter((entry) => typeOf(entry) === "diaper").length;
 
     const dayNumber = activeBaby()?.birthDate ? daysFromBirthAt(activeBaby().birthDate, carePatternDate) : null;
     const dayLabel = carePatternDate === today ? "오늘" : `${["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}요일`;
-    document.querySelector("#carePatternDateLabel").textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 · ${dayLabel}`;
+    const ageText = dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`;
+    document.querySelector("#carePatternDateLabel").textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 · ${dayLabel}${ageText ? ` · ${ageText}` : ""}`;
     document.querySelector("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
 
-    const hourLabels = [0, 3, 6, 9, 12, 15, 18, 21].map((hour) => {
-      const point = polar(hour / 24 * 360, 151);
-      return `<text x="${point.x.toFixed(1)}" y="${(point.y + 4).toFixed(1)}" text-anchor="middle">${hour}</text>`;
-    }).join("");
+    const now = new Date();
+    const nowPosition = ((now.getHours() * 60 + now.getMinutes()) / 1440 * 100).toFixed(3);
+    const nowLine = carePatternDate === today ? `<i class="care-linear-now" style="--position:${nowPosition}%" aria-hidden="true"></i>` : "";
+    const axes = [0, 6, 12, 18, 24].map((hour) => `<span style="--position:${hour / 24 * 100}%">${String(hour).padStart(2, "0")}</span>`).join("");
 
-    const sleepArcs = sleepEntries.map((entry) => `<path class="sleep-segment" d="${arc(minutesOf(entry), entry.sleepMinutes, 119)}"><title>${entry.time} 수면 ${formatDuration(Number(entry.sleepMinutes))}</title></path>`).join("");
-    const formulaMarkers = pointEntries.filter((entry) => typeOf(entry) === "formula").map((entry) => marker(entry, 102)).join("");
-    const breastMarkers = pointEntries.filter((entry) => typeOf(entry) === "breast").map((entry) => marker(entry, 84)).join("");
-    const diaperMarkers = pointEntries.filter((entry) => typeOf(entry) === "diaper").map((entry) => marker(entry, 66)).join("");
+    const row = (label, className, rowEntries, description) => `
+      <section class="care-linear-row ${className}" aria-label="${label} 시간대">
+        <header><strong>${label}</strong><small>${description}</small></header>
+        <div class="care-linear-track">
+          <div class="care-linear-axis" aria-hidden="true">${axes}</div>
+          <div class="care-linear-line"></div>
+          ${nowLine}
+          ${rowEntries.map((entry) => marker(entry, typeOf(entry))).join("")}
+        </div>
+      </section>`;
 
     const sorted = [...dayEntries].filter((entry) => entry.time).sort((a, b) => b.time.localeCompare(a.time));
-    const timeline = sorted.length ? sorted.map((entry) => {
+    const logs = sorted.length ? sorted.map((entry) => {
       const type = typeOf(entry);
-      const detail = type === "formula" ? `${entry.feedingMl || 0}mL` : type === "breast" ? formatDuration(Number(entry.feedingMinutes) || 0) : type === "sleep" ? formatDuration(Number(entry.sleepMinutes) || 0) : entry.diaperKind || "교체";
-      const label = { formula: "분유", breast: "모유", sleep: "수면", diaper: "기저귀" }[type];
-      return `<article class="care-ring-log ${type}"><time>${entry.time}</time><i></i><span><strong>${label}</strong><small>${detail}</small></span></article>`;
-    }).join("") : '<p class="care-ring-empty">이 날짜에는 아직 시간 기록이 없어요.</p>';
+      const label = type === "formula" ? "분유" : type === "breast" ? "모유" : "기저귀";
+      return `<article class="care-linear-log ${type}"><time>${escapeHtml(entry.time)}</time><i></i><span><strong>${label}</strong><small>${escapeHtml(detailOf(entry, type))}</small></span></article>`;
+    }).join("") : '<p class="care-linear-empty">이 날짜에는 수유·기저귀 시간 기록이 없어요.</p>';
 
-    const ageText = dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`;
     document.querySelector("#carePatternContent").innerHTML = `
-      <section class="care-ring-card">
-        <div class="care-ring-visual">
-          <svg viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 타임라인">
-            <circle class="ring-base sleep" cx="180" cy="180" r="119"></circle>
-            <circle class="ring-base formula" cx="180" cy="180" r="102"></circle>
-            <circle class="ring-base breast" cx="180" cy="180" r="84"></circle>
-            <circle class="ring-base diaper" cx="180" cy="180" r="66"></circle>
-            ${hourLabels}${sleepArcs}${formulaMarkers}${breastMarkers}${diaperMarkers}
-            <circle class="care-ring-center" cx="180" cy="180" r="48"></circle>
-            <text class="care-ring-kicker" x="180" y="165" text-anchor="middle">${dayLabel}</text>
-            <text class="care-ring-age" x="180" y="192" text-anchor="middle">${ageText}</text>
-            <text class="care-ring-caption" x="180" y="211" text-anchor="middle">24시간 기록</text>
-          </svg>
-          <div class="care-ring-legend"><span class="sleep">수면</span><span class="formula">분유</span><span class="breast">모유</span><span class="diaper">기저귀</span></div>
+      <section class="care-linear-card">
+        <div class="care-linear-summary">
+          <article class="formula"><span>분유</span><strong>${formulaMl}mL</strong><small>${formulaCount}회</small></article>
+          <article class="breast"><span>모유</span><strong>${formatDuration(breastMinutes)}</strong><small>${breastCount}회</small></article>
+          <article class="diaper"><span>기저귀</span><strong>${diaperCount}회</strong><small>오늘 기록</small></article>
         </div>
-        <div class="care-ring-summary">
-          <article class="formula"><span>분유</span><strong>${formulaMl}mL</strong></article>
-          <article class="breast"><span>모유</span><strong>${formatDuration(breastMinutes)}</strong></article>
-          <article class="sleep"><span>수면</span><strong>${formatDuration(sleepMinutes)}</strong></article>
-          <article class="diaper"><span>기저귀</span><strong>${diaperCount}회</strong></article>
+        <div class="care-linear-legend" aria-label="수유 색상 구분"><span class="formula">분유</span><span class="breast">모유</span><span class="diaper">기저귀</span></div>
+        <div class="care-linear-chart">
+          ${row("수유", "feeding", feedingEntries, `${formulaCount + breastCount}회`)}
+          ${row("기저귀", "diaper", diaperEntries, `${diaperCount}회`)}
         </div>
-        <div class="care-ring-log-list">${timeline}</div>
+        <div class="care-linear-log-list">${logs}</div>
       </section>`;
   };
 
