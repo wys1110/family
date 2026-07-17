@@ -1,3 +1,12 @@
+.baby-care-card .care-snapshot-heading,
+.baby-care-card #todayCareSummary {
+  display: none !important;
+}
+
+.baby-care-card {
+  padding-bottom: 16px;
+}
+
 #growthSummaryPeriod [data-summary-period="day"],
 #growthFilterBar [data-growth-filter="photo"],
 #carePatternContent .care-clock-summary {
@@ -90,6 +99,10 @@
 }
 
 @media (max-width: 520px) {
+  .baby-care-card {
+    padding-bottom: 14px;
+  }
+
   .care-timer-card .care-quick-block .growth-quick-grid {
     gap: 7px;
   }
