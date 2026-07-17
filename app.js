@@ -75,6 +75,7 @@ let activeRecentPhotoIndex = -1;
 let calendarSwipeState = null;
 let suppressCalendarClickUntil = 0;
 let monthSwipeAnimating = false;
+let lastAuthSessionKey = null;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
 
@@ -170,18 +171,39 @@ async function init() {
   renderDailyVerse();
   setInterval(renderDailyVerse, 60 * 1000);
   setInterval(updateCareTimerClock, 1000);
-  if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
-    state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-    const { data } = await state.supabase.auth.getSession();
-    state.session = data.session;
-    state.supabase.auth.onAuthStateChange((_event, session) => {
-      state.session = session;
-      if (!session) state.onboardingPrompted = false;
-      bootstrapData();
-    });
+  try {
+    if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
+      state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+      const { data, error } = await state.supabase.auth.getSession();
+      if (error) throw error;
+      state.session = data.session;
+      lastAuthSessionKey = authSessionKey(state.session);
+      state.supabase.auth.onAuthStateChange((_event, session) => {
+        const nextKey = authSessionKey(session);
+        if (nextKey === lastAuthSessionKey) return;
+        lastAuthSessionKey = nextKey;
+        state.session = session;
+        if (!session) state.onboardingPrompted = false;
+        bootstrapData();
+      });
+    }
+  } catch (error) {
+    console.error("로그인 상태 확인 실패", error);
   }
   state.authReady = true;
+  window.__familyCoreReady = true;
+  window.dispatchEvent(new CustomEvent("family:core-ready"));
+  if (window.FAMILY_MODULES_READY) {
+    await Promise.race([
+      window.FAMILY_MODULES_READY,
+      new Promise((resolve) => setTimeout(resolve, 1800)),
+    ]);
+  }
   await bootstrapData();
+}
+
+function authSessionKey(session) {
+  return session?.user?.id || "signed-out";
 }
 
 function lockMobileZoom() {
@@ -200,16 +222,25 @@ function renderDailyVerse() {
 }
 
 async function bootstrapData() {
-  if (state.supabase && state.session) {
-    const { data: memberships } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
-    state.household = memberships?.[0]?.households || null;
-    if (state.household) await loadRemoteData(); else { state.babies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
-  } else {
-    state.household = null;
-    state.familyMembers = localMembers();
-    state.babies = JSON.parse(localStorage.getItem(BABY_STORAGE_KEY) || "[]");
-    state.events = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeEvent);
-    state.growthEntries = JSON.parse(localStorage.getItem(GROWTH_STORAGE_KEY) || "[]");
+  let loaded = true;
+  try {
+    if (state.supabase && state.session) {
+      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
+      if (error) throw error;
+      state.household = memberships?.[0]?.households || null;
+      if (state.household) loaded = await loadRemoteData();
+      else { state.babies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
+    } else {
+      state.household = null;
+      state.familyMembers = localMembers();
+      state.babies = readLocalJson(BABY_STORAGE_KEY, []);
+      state.events = readLocalJson(STORAGE_KEY, []).map(normalizeEvent);
+      state.growthEntries = readLocalJson(GROWTH_STORAGE_KEY, []);
+    }
+  } catch (error) {
+    loaded = false;
+    console.error("가족 기록 불러오기 실패", error);
+    toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
   selectInitialBaby();
   render();
@@ -217,6 +248,16 @@ async function bootstrapData() {
   if (state.session && !state.household && !state.onboardingPrompted) {
     state.onboardingPrompted = true;
     setTimeout(openAccountDialog, 250);
+  }
+  return loaded;
+}
+
+function readLocalJson(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "null");
+    return Array.isArray(value) ? value : fallback;
+  } catch {
+    return fallback;
   }
 }
 
@@ -232,12 +273,17 @@ async function loadRemoteData() {
   if (growthResult.error) toast("성장일기를 불러오지 못했어요");
   else {
     state.growthEntries = growthResult.data.map(fromGrowthRemote);
-    await hydrateGrowthPhotoUrls(state.growthEntries);
+    const entries = state.growthEntries;
+    const householdId = state.household.id;
+    hydrateGrowthPhotoUrls(entries).then(() => {
+      if (state.household?.id === householdId && state.growthEntries === entries) renderGrowth();
+    }).catch((error) => console.warn("성장 사진 주소 불러오기 실패", error));
   }
   state.familyMembers = membersResult.error || !membersResult.data?.length
     ? [...DEFAULT_FAMILY_MEMBERS]
     : membersResult.data.map((row) => ({ id: row.id, name: row.name, color: validColor(row.color) }));
   if (!state.familyMembers.some((member) => member.name === state.quickMember)) state.quickMember = state.familyMembers[0]?.name || "가족";
+  return ![babiesResult, eventsResult, growthResult, membersResult].some((result) => result.error);
 }
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
@@ -949,12 +995,12 @@ function renderCareTimer() {
   const starts = $("#careTimerStarts");
   if (!careTimer) {
     running.hidden = true;
-    starts.hidden = false;
+    if (starts) starts.hidden = false;
     $("#careTimerCard").classList.remove("is-running");
     return;
   }
   const timerBaby = state.babies.find((baby) => baby.id === careTimer.babyId);
-  starts.hidden = true;
+  if (starts) starts.hidden = true;
   running.hidden = false;
   $("#careTimerCard").classList.add("is-running");
   $("#careTimerIcon").textContent = careTimer.icon || "◷";
@@ -1632,4 +1678,9 @@ async function sendMagicLink(event) { event.preventDefault(); const email = even
 async function createHousehold(event) { event.preventDefault(); const { error } = await state.supabase.rpc("create_household", { household_name: $("#householdName").value.trim() }); if (error) return toast("가족 공간을 만들지 못했어요"); await bootstrapData(); renderAccount(); toast("가족 공간을 만들었어요"); }
 async function joinHousehold(event) { event.preventDefault(); const { error } = await state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() }); if (error) return toast("초대 코드를 확인해 주세요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
 
-init();
+init().catch((error) => {
+  console.error("가족 앱 시작 실패", error);
+  state.authReady = true;
+  updateAuthGate();
+  toast("화면을 불러오지 못했어요. 다시 시도해 주세요");
+});

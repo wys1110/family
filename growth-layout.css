@@ -1,0 +1,185 @@
+/* Unified visual system for the complete growth diary. */
+#growthView {
+  --growth-card: color-mix(in srgb, var(--surface) 94%, transparent);
+  --growth-card-soft: color-mix(in srgb, var(--surface-2) 62%, var(--surface));
+  --growth-border: color-mix(in srgb, var(--label) 9%, transparent);
+  --growth-shadow: 0 12px 34px rgba(57, 67, 61, .07);
+  --growth-radius: 24px;
+  --growth-gap: 16px;
+}
+
+#growthView button { -webkit-tap-highlight-color: transparent; }
+#babyJournalContent { display: grid; gap: var(--growth-gap); }
+#babyJournalContent[hidden] { display: none; }
+
+.growth-page-header {
+  align-items: center;
+  min-height: 64px;
+  margin: 0 2px 16px;
+}
+
+.growth-title-with-mascot { display: flex; align-items: center; gap: 12px; }
+.growth-page-header h2 { font-size: clamp(28px, 5vw, 36px); line-height: 1.05; }
+.growth-diary-mascot { width: 72px; height: 48px; }
+.add-baby-button { min-height: 44px; border-radius: 14px; background: var(--growth-card); box-shadow: none; }
+.baby-selector { margin: 0; padding: 1px 0; scrollbar-width: none; }
+.baby-selector::-webkit-scrollbar { display: none; }
+
+.baby-care-card {
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #426655 0%, #638071 60%, #9b8b7d 100%);
+  box-shadow: 0 18px 44px rgba(52, 81, 67, .18);
+}
+
+.baby-care-card .baby-profile-main { padding: 22px 22px 0; }
+.baby-care-card .baby-edit-button { min-height: 32px; margin: 10px 0 0 94px; padding: 0 10px; }
+
+.care-timer-card,
+.care-pattern-section,
+.integrated-care-summary.standalone-growth-summary,
+.recent-photo-featured,
+.growth-insight-row > article,
+.growth-insight-row > .insight-title {
+  margin: 0;
+  border: 1px solid var(--growth-border);
+  border-radius: var(--growth-radius);
+  background: var(--growth-card);
+  box-shadow: var(--growth-shadow);
+}
+
+.care-timer-card,
+.care-pattern-section,
+.integrated-care-summary.standalone-growth-summary,
+.recent-photo-featured { padding: 18px; }
+
+.care-timer-card::after { opacity: .42; }
+.care-timer-heading h2,
+.care-pattern-heading h2,
+.integrated-care-summary.standalone-growth-summary .growth-summary-header h2,
+.recent-photo-section .section-heading h2,
+.growth-section > .section-heading h2 {
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -.035em;
+}
+
+.care-timer-heading small,
+.care-pattern-heading small,
+.growth-quick-section .section-heading small { margin-top: 4px; font-size: 10px; line-height: 1.45; }
+
+.care-quick-block { margin-top: 15px; padding-top: 15px; }
+.care-quick-heading strong { font-size: 14px; }
+.care-quick-heading small { font-size: 9px; }
+.care-timer-card .care-quick-block .growth-quick-grid { gap: 9px; margin-top: 12px; }
+.care-timer-card .care-quick-block .growth-quick-grid button {
+  min-height: 82px;
+  border-color: var(--growth-border);
+  border-radius: 17px;
+  box-shadow: none;
+  font-size: 11px;
+}
+
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(1) { background: color-mix(in srgb, #f5dfba 48%, var(--surface)); }
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(2) { background: color-mix(in srgb, #ded8eb 48%, var(--surface)); }
+.care-timer-card .care-quick-block .growth-quick-grid button:nth-child(3) { background: color-mix(in srgb, #e8dcc9 52%, var(--surface)); }
+
+.care-pattern-tabs { margin-top: 14px; padding: 3px; border-radius: 13px; }
+.care-pattern-tabs button { min-height: 40px; border-radius: 10px; font-size: 10px; }
+.care-pattern-categories { gap: 6px; margin-top: 10px; }
+.care-pattern-categories button { min-height: 40px; font-size: 9px; }
+.care-pattern-content { min-height: 120px; margin-top: 10px; }
+.care-linear-card { padding: 15px; border: 0; border-radius: 18px; background: var(--growth-card-soft); box-shadow: none; }
+.care-linear-summary { border-color: var(--growth-border); background: var(--growth-card); }
+.care-pattern-date { margin-top: 10px; border-color: var(--growth-border); background: var(--growth-card-soft); }
+
+.integrated-care-summary.standalone-growth-summary { padding: 17px 18px; }
+.growth-summary-toggle { min-height: 40px; padding: 0 12px; border-radius: 12px; }
+.integrated-care-summary .growth-summary-body { border-top-color: var(--growth-border); }
+.summary-period-tabs { min-width: 150px; }
+.summary-period-tabs button { min-height: 36px; font-size: 10px; }
+.integrated-care-summary .summary-card { min-height: 88px; background: var(--growth-card); box-shadow: none; }
+
+.growth-insight-row { gap: 9px; margin: 0; }
+.growth-insight-row > article,
+.growth-insight-row > .insight-title { min-height: 88px; box-shadow: none; }
+.growth-insight-empty { grid-column: 1 / -1; }
+
+.recent-photo-featured { padding: 17px; }
+.recent-photo-grid { gap: 7px; }
+.recent-photo-grid button { border-radius: 15px; box-shadow: none; }
+.recent-photo-actions button { min-height: 36px; background: var(--growth-card-soft); }
+
+.growth-section { padding: 4px 0 0; }
+.growth-section > .section-heading { margin-bottom: 10px; }
+.growth-filter-bar { gap: 7px; margin-bottom: 10px; }
+.growth-filter-bar button { min-height: 40px; padding: 0 14px; border-color: var(--growth-border); background: var(--growth-card); font-size: 10px; }
+.growth-filter-bar button.active { border-color: var(--blue); background: var(--blue); box-shadow: none; }
+.growth-list { gap: 8px; }
+.growth-entry {
+  min-height: 78px;
+  padding: 12px 14px;
+  border: 1px solid var(--growth-border);
+  border-radius: 18px;
+  background: var(--growth-card);
+  box-shadow: none;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.growth-entry:active { transform: scale(.985); background: var(--growth-card-soft); }
+.growth-date { color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, transparent); }
+.growth-body i { color: var(--blue); }
+.growth-thumbnail { border-radius: 13px; }
+.photo-count { background: var(--growth-card-soft); }
+
+@media (hover: hover) and (pointer: fine) {
+  .growth-entry:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--blue) 28%, transparent); }
+}
+
+@media (min-width: 768px) {
+  #growthView { --growth-gap: 20px; --growth-radius: 28px; }
+  .growth-page-header { min-height: 76px; margin-bottom: 20px; }
+  .growth-diary-mascot { width: 92px; height: 58px; }
+  .care-timer-card,
+  .care-pattern-section,
+  .integrated-care-summary.standalone-growth-summary,
+  .recent-photo-featured { padding: 24px; }
+  .care-timer-heading h2,
+  .care-pattern-heading h2,
+  .integrated-care-summary.standalone-growth-summary .growth-summary-header h2,
+  .recent-photo-section .section-heading h2,
+  .growth-section > .section-heading h2 { font-size: 25px; }
+  .care-timer-heading small,
+  .care-pattern-heading small { font-size: 13px; }
+  .care-timer-card .care-quick-block .growth-quick-grid button { min-height: 104px; font-size: 14px; }
+  .care-pattern-tabs button { min-height: 46px; font-size: 13px; }
+  .care-pattern-categories button { min-height: 44px; font-size: 12px; }
+  .growth-entry { min-height: 92px; padding: 15px 18px; border-radius: 21px; }
+  .growth-filter-bar button { min-height: 44px; font-size: 13px; }
+}
+
+@media (max-width: 520px) {
+  #growthView { --growth-gap: 14px; --growth-radius: 22px; }
+  .growth-page-header { min-height: 56px; }
+  .growth-diary-mascot { display: none; }
+  .baby-care-card .baby-profile-main { padding: 19px 17px 0; }
+  .baby-care-card .baby-edit-button { margin-left: 79px; }
+  .care-timer-card,
+  .care-pattern-section,
+  .integrated-care-summary.standalone-growth-summary,
+  .recent-photo-featured { padding: 15px; }
+  .care-pattern-heading { display: flex; }
+  .care-rhythm-legend { justify-content: flex-end; margin-top: 0; }
+  .care-linear-card { padding: 12px; }
+  .growth-insight-row { grid-template-columns: repeat(3, 1fr); }
+  .growth-insight-row > .insight-title { grid-column: 1 / -1; min-height: 72px; }
+  .growth-entry { grid-template-columns: 44px minmax(0, 1fr) 16px; gap: 10px; }
+  .growth-entry.has-photo { grid-template-columns: 54px minmax(0, 1fr) auto; }
+  .growth-thumbnail { width: 54px; height: 54px; }
+}
+
+@media (max-width: 360px) {
+  .add-baby-button { padding: 0 10px; font-size: 10px; }
+  .care-pattern-heading { display: block; }
+  .care-rhythm-legend { justify-content: flex-start; margin-top: 8px; }
+}

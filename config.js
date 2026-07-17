@@ -44,13 +44,14 @@ window.FAMILY_CONFIG = {
     { name: "family-todo", version: "20260716-family-todo-v1" },
     { name: "adaptive-feeding", version: "20260717-polished-quick-log-v2" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
-    { name: "feeding-stepper-fix", version: "20260717-button-handler-v1" },
-    { name: "feeding-db-compat", version: "20260717-db-check-fix-v1" },
+    { name: "feeding-stepper-fix", version: "20260717-button-handler-v1", style: false },
+    { name: "feeding-db-compat", version: "20260717-db-check-fix-v1", style: false },
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
+    { name: "growth-layout", version: "20260717-unified-v1", script: false },
   ];
 
-  modules.forEach(({ name, version }) => {
+  modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
     if (document.querySelector(`link[data-module="${name}"]`)) return;
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
@@ -89,18 +90,30 @@ window.FAMILY_CONFIG = {
     const script = document.createElement("script");
     script.src = `${name}.js?v=${version}`;
     script.dataset.module = name;
+    // Dynamic scripts are async by default. Disabling async lets the browser
+    // download them together while still applying compatibility patches in
+    // the declared order.
+    script.async = false;
     script.onload = resolve;
-    script.onerror = resolve;
+    script.onerror = () => {
+      console.error(`가족 앱 모듈을 불러오지 못했어요: ${name}`);
+      resolve();
+    };
     document.body.appendChild(script);
   });
 
-  const loadModules = async () => {
-    for (const module of modules) {
-      if (module.script === false) continue;
-      await loadScript(module);
-    }
-  };
+  let startModules;
+  window.FAMILY_MODULES_READY = new Promise((resolve) => {
+    startModules = async () => {
+      if (document.documentElement.dataset.familyModulesLoading) return;
+      document.documentElement.dataset.familyModulesLoading = "true";
+      const scripts = modules.filter((module) => module.script !== false);
+      await Promise.all(scripts.map(loadScript));
+      document.documentElement.dataset.familyModulesReady = "true";
+      resolve();
+    };
+  });
 
-  if (document.readyState === "complete") loadModules();
-  else window.addEventListener("load", loadModules, { once: true });
+  if (window.__familyCoreReady) startModules();
+  else window.addEventListener("family:core-ready", startModules, { once: true });
 })();
