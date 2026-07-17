@@ -1,0 +1,9 @@
+.care-split-entry[data-care-entry-id] {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.care-split-entry[data-care-entry-id]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--entry-color, var(--blue)) 30%, transparent);
+  outline-offset: 2px;
+}

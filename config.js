@@ -43,6 +43,7 @@ window.FAMILY_CONFIG = {
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260716-family-todo-v1" },
     { name: "adaptive-feeding", version: "20260717-polished-quick-log-v2" },
+    { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
     { name: "feeding-stepper-fix", version: "20260717-button-handler-v1" },
     { name: "feeding-db-compat", version: "20260717-db-check-fix-v1" },
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
