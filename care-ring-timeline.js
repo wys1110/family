@@ -1,4 +1,20 @@
 (() => {
+  const CARE_DAY_MODE_KEY = "family-care-day-mode-v1";
+  const CARE_DAY_MODES = new Set(["timeline", "clock"]);
+  const circularCareClock = renderDailyCareClock;
+  const baseRenderCarePattern = renderCarePattern;
+
+  const storedCareDayMode = () => {
+    try {
+      const saved = localStorage.getItem(CARE_DAY_MODE_KEY);
+      return CARE_DAY_MODES.has(saved) ? saved : "timeline";
+    } catch {
+      return "timeline";
+    }
+  };
+
+  let careDayMode = storedCareDayMode();
+
   const typeOf = (entry) => {
     if (entry.category === "수유·이유식") {
       const feedingType = String(entry.feedingType || "").trim();
@@ -49,19 +65,81 @@
     document.querySelector(".care-rhythm-legend .sleep")?.remove();
   };
 
+  const ensureSleepControls = ({ activate = false } = {}) => {
+    if (activate) carePatternCategories.add("sleep");
+
+    const categories = document.querySelector("#carePatternCategories");
+    if (categories && !categories.querySelector('[data-pattern-category="sleep"]')) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "sleep";
+      button.dataset.patternCategory = "sleep";
+      button.innerHTML = '<i>Zz</i>수면';
+      const diaperButton = categories.querySelector('[data-pattern-category="diaper"]');
+      categories.insertBefore(button, diaperButton || null);
+    }
+
+    const legend = document.querySelector(".care-rhythm-legend");
+    if (legend && !legend.querySelector(".sleep")) {
+      const item = document.createElement("span");
+      item.className = "sleep";
+      item.textContent = "수면";
+      const diaperItem = legend.querySelector(".diaper");
+      legend.insertBefore(item, diaperItem || null);
+    }
+  };
+
   const categoryIsVisible = (type) => {
     if (carePatternCategories.has(type)) return true;
     return ["formula", "breast"].includes(type) && carePatternCategories.has("feed");
   };
 
-  removeSleepControls();
-  const carePatternContent = document.querySelector("#carePatternContent");
-  if (carePatternContent && !carePatternContent.dataset.entryEditBound) {
-    carePatternContent.dataset.entryEditBound = "true";
-    carePatternContent.addEventListener("click", openCareEntryEditor);
-  }
+  const ensureDayModeControl = () => {
+    let control = document.querySelector("#careDayModeControl");
+    if (control) return control;
 
-  renderDailyCareClock = function renderSplitCareTimeline(entries) {
+    const tabs = document.querySelector("#carePatternTabs");
+    if (!tabs) return null;
+
+    control = document.createElement("div");
+    control.id = "careDayModeControl";
+    control.className = "care-day-mode-control";
+    control.innerHTML = `
+      <span>하루 보기</span>
+      <div role="group" aria-label="하루 돌봄 패턴 표시 방식">
+        <button type="button" data-care-day-mode="timeline" aria-pressed="false">타임라인</button>
+        <button type="button" data-care-day-mode="clock" aria-pressed="false">원형 시계</button>
+      </div>
+    `;
+    control.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-care-day-mode]");
+      if (!button || button.dataset.careDayMode === careDayMode) return;
+
+      careDayMode = CARE_DAY_MODES.has(button.dataset.careDayMode) ? button.dataset.careDayMode : "timeline";
+      try { localStorage.setItem(CARE_DAY_MODE_KEY, careDayMode); } catch { /* 현재 화면에는 적용 */ }
+
+      if (careDayMode === "clock") ensureSleepControls({ activate: true });
+      else removeSleepControls();
+
+      renderCarePattern(activeBabyEntries());
+      toast(careDayMode === "clock" ? "원형 시계로 바꿨어요 🕐" : "타임라인으로 바꿨어요");
+    });
+    tabs.after(control);
+    return control;
+  };
+
+  const updateDayModeControl = () => {
+    const control = ensureDayModeControl();
+    if (!control) return;
+    control.hidden = carePatternView !== "day";
+    control.querySelectorAll("[data-care-day-mode]").forEach((button) => {
+      const active = button.dataset.careDayMode === careDayMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  };
+
+  const renderSplitCareTimeline = (entries) => {
     removeSleepControls();
 
     const date = parseDate(carePatternDate);
@@ -116,5 +194,33 @@
       </section>`;
   };
 
+  renderDailyCareClock = function renderSelectedDailyCarePattern(entries) {
+    if (careDayMode === "clock") {
+      ensureSleepControls();
+      return circularCareClock(entries);
+    }
+    return renderSplitCareTimeline(entries);
+  };
+
+  renderCarePattern = function renderCarePatternWithDayMode(entries) {
+    ensureDayModeControl();
+    if (careDayMode === "clock") ensureSleepControls();
+    else removeSleepControls();
+
+    const result = baseRenderCarePattern(entries);
+    updateDayModeControl();
+    return result;
+  };
+
+  const carePatternContent = document.querySelector("#carePatternContent");
+  if (carePatternContent && !carePatternContent.dataset.entryEditBound) {
+    carePatternContent.dataset.entryEditBound = "true";
+    carePatternContent.addEventListener("click", openCareEntryEditor);
+  }
+
+  ensureDayModeControl();
+  if (careDayMode === "clock") ensureSleepControls();
+  else removeSleepControls();
+  updateDayModeControl();
   renderGrowth();
 })();
