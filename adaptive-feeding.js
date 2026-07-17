@@ -6,7 +6,12 @@
     formula: { label: "분유", title: "분유 수유", type: "분유" },
   };
   const sourceOrder = ["breast", "pumped", "formula"];
+  const BOTTLE_DEFAULT_ML = 100;
+  const BOTTLE_STEP_ML = 10;
+  const BOTTLE_MIN_ML = 10;
+  const BOTTLE_MAX_ML = 300;
   let source = readSource();
+  let bottleAmounts = { pumped: BOTTLE_DEFAULT_ML, formula: BOTTLE_DEFAULT_ML };
 
   function readSource() {
     try { const saved = localStorage.getItem(KEY); return sourceOrder.includes(saved) ? saved : "breast"; }
@@ -38,24 +43,34 @@
     const baby = activeBaby?.();
     return Number(baby?.birthWeight) > 0 ? { kg: Number(baby.birthWeight), label: "출생 몸무게" } : null;
   }
-  function ageRange() {
-    const baby = activeBaby?.();
-    const days = baby?.birthDate ? daysFromBirth(baby.birthDate) : null;
-    if (days !== null && days < 7) return [30, 60];
-    if (days !== null && days < 31) return [40, 120];
-    if (days !== null && days < 90) return [50, 180];
-    return [60, 240];
+  function resetBottleAmounts() {
+    bottleAmounts = { pumped: BOTTLE_DEFAULT_ML, formula: BOTTLE_DEFAULT_ML };
   }
-  function bottleRecommendation(kind) {
-    const recent = entries().filter((entry) => typeOf(entry) === kind && Number(entry.feedingMl) > 0)
-      .sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`))
-      .slice(0, 12).map((entry) => Number(entry.feedingMl));
-    const weight = latestWeight(), [minimum, maximum] = ageRange();
-    const history = median(recent), weightValue = weight ? weight.kg * 165 / 8 : null;
-    let center = history && weightValue ? history * .72 + weightValue * .28 : history || weightValue || (kind === "pumped" ? 80 : 100);
-    center = Math.min(maximum, Math.max(minimum, Math.round(center / 10) * 10));
-    const step = center <= 70 ? 10 : 20;
-    return { center, values: [...new Set([Math.max(minimum, center - step), center, Math.min(maximum, center + step)])], weight, recentCount: recent.length };
+  function bottleContext(kind) {
+    const recentCount = entries().filter((entry) => typeOf(entry) === kind && Number(entry.feedingMl) > 0).slice(0, 12).length;
+    return { weight: latestWeight(), recentCount };
+  }
+  function bottlePreset(kind) {
+    const ml = bottleAmounts[kind] || BOTTLE_DEFAULT_ML;
+    return {
+      label: `${ml} ml`, note: kind === "pumped" ? "유축모유" : "분유",
+      title: SOURCES[kind].title, feedingType: SOURCES[kind].type, feedingMl: ml,
+    };
+  }
+  function updateBottleAmount(delta) {
+    if (source === "breast") return;
+    const current = bottleAmounts[source] || BOTTLE_DEFAULT_ML;
+    bottleAmounts[source] = Math.min(BOTTLE_MAX_ML, Math.max(BOTTLE_MIN_ML, current + delta));
+    activeQuickPresets = [bottlePreset(source)];
+    const ml = bottleAmounts[source];
+    const amount = document.querySelector("#feedingQuickAmount");
+    const saveLabel = document.querySelector("#feedingQuickSaveLabel");
+    if (amount) amount.textContent = ml;
+    if (saveLabel) saveLabel.textContent = `${ml} ml 기록하기`;
+    document.querySelectorAll("[data-feeding-adjust]").forEach((button) => {
+      const next = ml + Number(button.dataset.feedingAdjust);
+      button.disabled = next < BOTTLE_MIN_ML || next > BOTTLE_MAX_ML;
+    });
   }
   function presets(kind) {
     if (kind === "breast") return [
@@ -63,11 +78,7 @@
       { label: "오른쪽 10분", note: "직수", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 10 },
       { label: "양쪽 20분", note: "직수", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 20 },
     ];
-    const info = bottleRecommendation(kind);
-    return info.values.map((ml) => ({
-      label: `${ml} ml`, note: `${kind === "pumped" ? "유축" : "분유"} · ${ml === info.center ? "추천" : ml < info.center ? "조금 적게" : "조금 많이"}`,
-      title: SOURCES[kind].title, feedingType: SOURCES[kind].type, feedingMl: ml,
-    }));
+    return [bottlePreset(kind)];
   }
   function installFeedingOptions() {
     const select = document.querySelector("#growthFeedingType");
@@ -89,7 +100,9 @@
     grid.before(wrap);
     wrap.addEventListener("click", (event) => {
       const button = event.target.closest("[data-feeding-source]");
+      const adjust = event.target.closest("[data-feeding-adjust]");
       if (button) { setSource(button.dataset.feedingSource); renderQuick(); }
+      if (adjust) { event.preventDefault(); updateBottleAmount(Number(adjust.dataset.feedingAdjust)); }
       if (event.target.closest("[data-record-weight]")) {
         document.querySelector("#quickLogDialog")?.close(); openGrowthDialog(null, "성장");
         setTimeout(() => document.querySelector("#growthWeight")?.focus(), 100);
@@ -104,16 +117,23 @@
     activeQuickPresets = presets(source);
     document.querySelectorAll("[data-feeding-source]").forEach((button) => button.classList.toggle("active", button.dataset.feedingSource === source));
     document.querySelector("#quickLogTitle").textContent = source === "breast" ? "직수를 바로 기록해요" : `${SOURCES[source].label}를 바로 기록해요`;
-    document.querySelector("#quickLogCopy").textContent = source === "breast" ? "방향과 시간을 누르면 현재 시간으로 저장됩니다." : "몸무게와 최근 기록을 반영한 버튼이에요. 아기의 배고픔·포만 신호와 의료진 안내가 우선이에요.";
+    document.querySelector("#quickLogCopy").textContent = source === "breast" ? "방향과 시간을 누르면 현재 시간으로 저장됩니다." : "100 ml에서 시작해 10 ml씩 조절한 뒤 기록하세요. 아기의 배고픔·포만 신호와 의료진 안내가 우선이에요.";
     const meta = document.querySelector("#feedingQuickMeta");
     if (source === "breast") meta.textContent = "실제 시간은 상세 입력에서 조정할 수 있어요.";
     else {
-      const info = bottleRecommendation(source), evidence = [info.weight && `${info.weight.label} ${info.weight.kg}kg`, info.recentCount && `최근 ${info.recentCount}회`].filter(Boolean);
-      meta.innerHTML = evidence.length ? `<span>${escapeHtml(evidence.join(" · "))} 반영 · 기록 기반 참고값</span>` : '<span>몸무게를 기록하면 버튼이 자동 조정돼요.</span><button type="button" data-record-weight>몸무게 기록</button>';
+      const info = bottleContext(source), evidence = [info.weight && `${info.weight.label} ${info.weight.kg}kg`, info.recentCount && `최근 ${info.recentCount}회`].filter(Boolean);
+      meta.innerHTML = evidence.length ? `<span>${escapeHtml(evidence.join(" · "))} · 수유량 참고</span>` : '<span>몸무게를 기록하면 수유량 판단에 참고할 수 있어요.</span><button type="button" data-record-weight>몸무게 기록</button>';
     }
     const grid = document.querySelector("#quickPresetGrid");
     grid.classList.toggle("direct-feeding", source === "breast");
-    grid.innerHTML = activeQuickPresets.map((preset, index) => `<button type="button" class="${source}" data-preset-index="${index}"><span>${escapeHtml(preset.label)}</span><small>${escapeHtml(preset.note)}</small></button>`).join("");
+    grid.classList.toggle("bottle-feeding", source !== "breast");
+    if (source === "breast") {
+      grid.innerHTML = activeQuickPresets.map((preset, index) => `<button type="button" class="${source}" data-preset-index="${index}"><span>${escapeHtml(preset.label)}</span><small>${escapeHtml(preset.note)}</small></button>`).join("");
+    } else {
+      const ml = bottleAmounts[source];
+      grid.innerHTML = `<div class="feeding-amount-stepper" role="group" aria-label="${SOURCES[source].label} 수유량 조절"><button type="button" data-feeding-adjust="-10" aria-label="10 ml 줄이기">−10</button><output class="feeding-amount-value" aria-live="polite"><strong id="feedingQuickAmount">${ml}</strong><span>ml</span></output><button type="button" data-feeding-adjust="10" aria-label="10 ml 늘리기">+10</button></div><button type="button" class="feeding-save-button ${source}" data-preset-index="0"><span id="feedingQuickSaveLabel">${ml} ml 기록하기</span><small>현재 시간으로 바로 저장</small></button>`;
+      updateBottleAmount(0);
+    }
   }
 
   const baseQuickPresets = quickPresets;
@@ -122,11 +142,11 @@
   openGrowthQuick = function adaptiveOpenQuick(category) {
     if (category !== "수유·이유식") {
       document.querySelector("#feedingQuickTabs")?.setAttribute("hidden", "");
-      document.querySelector("#quickPresetGrid")?.classList.remove("direct-feeding");
+      document.querySelector("#quickPresetGrid")?.classList.remove("direct-feeding", "bottle-feeding");
       return baseOpenGrowthQuick(category);
     }
     if (!activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
-    installFeedingOptions(); renderQuick(); document.querySelector("#quickLogDialog").showModal();
+    resetBottleAmounts(); installFeedingOptions(); renderQuick(); document.querySelector("#quickLogDialog").showModal();
   };
 
   const baseTodaySummary = renderTodayCareSummary;

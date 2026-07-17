@@ -9,6 +9,18 @@
 .quick-preset-grid button.pumped { background:linear-gradient(145deg,#f5fbff,#e7f1f6); }
 .quick-preset-grid button.formula { background:linear-gradient(145deg,#fffaf0,#f7ead4); }
 .quick-preset-grid button.breast { background:linear-gradient(145deg,#fff8f5,#f5e4e0); }
+
+.quick-preset-grid.bottle-feeding { display:grid; grid-template-columns:1fr; gap:12px; }
+.feeding-amount-stepper { display:grid; grid-template-columns:72px minmax(0,1fr) 72px; align-items:center; gap:10px; padding:12px; border:1px solid rgba(91,107,98,.12); border-radius:20px; background:rgba(255,255,255,.72); }
+.feeding-amount-stepper > button { min-height:58px; padding:0; border:0; border-radius:16px; color:var(--label); background:rgba(118,118,128,.1); font-size:18px; font-weight:800; cursor:pointer; touch-action:manipulation; }
+.feeding-amount-stepper > button:active { color:white; background:var(--blue); transform:scale(.97); }
+.feeding-amount-stepper > button:disabled { opacity:.35; cursor:default; }
+.feeding-amount-value { display:flex; align-items:baseline; justify-content:center; gap:5px; color:var(--label); }
+.feeding-amount-value strong { font-size:34px; line-height:1; letter-spacing:-1px; }
+.feeding-amount-value span { color:var(--secondary); font-size:14px; font-weight:750; }
+.quick-preset-grid .feeding-save-button { min-height:72px; width:100%; border:0; border-radius:20px; }
+.quick-preset-grid .feeding-save-button span { font-size:20px; }
+.quick-preset-grid .feeding-save-button small { margin-top:5px; font-size:9px; }
 .quick-preset-grid button.pumped:active,.quick-preset-grid button.formula:active,.quick-preset-grid button.breast:active { color:white; background:var(--blue); }
 .care-pattern-categories .pumped i,.care-rhythm-legend .pumped::before,.care-linear-legend .pumped::before,.care-split-entry.pumped i { background:#71a7b8; }
 .care-pattern-categories .pumped.active { color:#3f7485; border-color:rgba(113,167,184,.24); background:rgba(113,167,184,.13); }
