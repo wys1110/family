@@ -32,7 +32,7 @@ window.FAMILY_CONFIG = {
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
     { name: "care-ring-timeline", version: "20260717-entry-edit-v1" },
-    { name: "growth-dedup", version: "20260717-growth-cleanup-v3" },
+    { name: "growth-dedup", version: "20260717-compact-recording-v4" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
