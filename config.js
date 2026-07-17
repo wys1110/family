@@ -29,7 +29,7 @@ window.FAMILY_CONFIG = {
     { name: "english-stories", version: "20260716-baby-stories" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
-    { name: "care-time-emphasis", version: "20260716-large-times-v1" },
+    { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
