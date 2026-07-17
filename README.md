@@ -41,6 +41,16 @@ anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema
 
 Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지 않습니다. 자세한 내용은 [Supabase Google 로그인 공식 문서](https://supabase.com/docs/guides/auth/social-login/auth-google)를 참고하세요.
 
+## 가족 MCP
+
+[`supabase/functions/family-mcp`](supabase/functions/family-mcp)에 가족 앱 전용 원격 MCP 서버가 포함되어 있습니다. Supabase 사용자 인증과 기존 가족 단위 RLS를 그대로 사용하며 일정·할 일·아기 돌봄 기록을 자연어 도구로 조회하거나 추가할 수 있습니다.
+
+```bash
+supabase functions deploy family-mcp
+```
+
+배포, 인증, MCP 연결 및 테스트 방법은 [`family-mcp/README.md`](supabase/functions/family-mcp/README.md)를 참고하세요. `service_role` 키는 사용하지 않으며 삭제와 비공개 사진·개인 공간 도구는 노출하지 않습니다.
+
 ## 주요 기능
 
 - 월간 달력 및 오늘 일정
@@ -70,7 +80,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 
 아기 프로필, 생후 일수, 원터치 수유 기록을 추가하려면 [`supabase/migrations/20260715_baby_profiles_and_quick_logs.sql`](supabase/migrations/20260715_baby_profiles_and_quick_logs.sql)을 SQL Editor에서 한 번 실행합니다.
 
-기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.
+기존 일정에 날짜 범위를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_event_date_ranges.sql`](supabase/migrations/20260715_event_date_ranges.sql)을 SQL Editor에서 한 번 실행합니다. 기존 일정의 종료일은 시작일과 동일하게 자동 설정됩니다.
 
 가족 구성원 추가와 구성원별 일정 색상을 사용하려면 [`supabase/migrations/20260715_family_calendar_members.sql`](supabase/migrations/20260715_family_calendar_members.sql)을 SQL Editor에서 한 번 실행합니다. 기존 가족 공간에는 가족·아빠·엄마·도윤이 자동 등록되며, 이후 추가한 구성원은 가족 모두에게 공유됩니다.
 
