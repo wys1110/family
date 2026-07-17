@@ -17,29 +17,39 @@
   function mergeRecordingTools() {
     const timerCard = document.querySelector("#careTimerCard");
     const quickSection = document.querySelector("#growthQuickSection");
-    if (!timerCard || !quickSection || timerCard.querySelector(".care-quick-block")) return;
+    if (!timerCard) return;
 
-    const quickGrid = quickSection.querySelector(".growth-quick-grid");
+    timerCard.querySelector("#careTimerStarts")?.remove();
+
+    let block = timerCard.querySelector(".care-quick-block");
+    let quickGrid = block?.querySelector(".growth-quick-grid") || quickSection?.querySelector(".growth-quick-grid");
     if (!quickGrid) return;
 
-    const block = document.createElement("div");
-    block.className = "care-quick-block";
-    block.innerHTML = `
-      <div class="care-quick-heading">
-        <div><strong>빠른 기록</strong><small>자주 쓰는 기록은 한 번에 남겨요</small></div>
-        <span>ONE TAP</span>
-      </div>
-    `;
-    block.appendChild(quickGrid);
-    timerCard.appendChild(block);
-    quickSection.remove();
+    quickGrid
+      .querySelectorAll('[data-growth-quick="건강·병원"], [data-growth-quick="성장"], [data-growth-quick="첫 순간"]')
+      .forEach((button) => button.remove());
+
+    if (!block) {
+      block = document.createElement("div");
+      block.className = "care-quick-block";
+      block.innerHTML = `
+        <div class="care-quick-heading">
+          <div><strong>빠른 기록</strong><small>자주 쓰는 기록은 한 번에 남겨요</small></div>
+          <span>ONE TAP</span>
+        </div>
+      `;
+      block.appendChild(quickGrid);
+      timerCard.appendChild(block);
+    }
+
+    quickSection?.remove();
 
     const title = document.querySelector("#careTimerTitle");
     if (title) title.textContent = "기록하기";
     const eyebrow = timerCard.querySelector(".care-timer-heading .eyebrow");
     if (eyebrow) eyebrow.textContent = "CARE LOG";
     const description = timerCard.querySelector(".care-timer-heading small");
-    if (description) description.textContent = "타이머 또는 빠른 기록으로 바로 남겨요";
+    if (description) description.textContent = "빠른 기록으로 바로 남겨요";
     const badge = timerCard.querySelector(".care-live-badge");
     if (badge) badge.innerHTML = '<i aria-hidden="true"></i> 기록';
   }
