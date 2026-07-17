@@ -203,15 +203,15 @@
   border-radius: 20px;
 }
 
-.quick-preset-grid button.pumped {
+.quick-preset-grid button.pumped:not(.feeding-save-button) {
   background: linear-gradient(145deg, #f5fbff, #e7f1f6);
 }
 
-.quick-preset-grid button.formula {
+.quick-preset-grid button.formula:not(.feeding-save-button) {
   background: linear-gradient(145deg, #fffaf0, #f7ead4);
 }
 
-.quick-preset-grid button.breast {
+.quick-preset-grid button.breast:not(.feeding-save-button) {
   background: linear-gradient(145deg, #fff8f5, #f5e4e0);
 }
 
@@ -388,9 +388,9 @@
   background: color-mix(in srgb, var(--surface-2) 80%, #f6ede7);
 }
 
-.quick-preset-grid button.pumped:active,
-.quick-preset-grid button.formula:active,
-.quick-preset-grid button.breast:active {
+.quick-preset-grid button.pumped:not(.feeding-save-button):active,
+.quick-preset-grid button.formula:not(.feeding-save-button):active,
+.quick-preset-grid button.breast:not(.feeding-save-button):active {
   color: white;
   background: var(--blue);
 }
