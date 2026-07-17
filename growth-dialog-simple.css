@@ -1,0 +1,220 @@
+/* Compact, task-focused growth record sheet */
+#growthDialog {
+  width: min(calc(100% - 24px), 480px);
+  max-height: calc(100dvh - 20px);
+  margin: auto auto 10px;
+  overflow: hidden;
+  border-radius: 26px;
+  background: #fbfaf8;
+  box-shadow: 0 28px 80px rgba(43, 38, 34, .24);
+}
+
+#growthDialog #growthForm {
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 22px 20px max(18px, env(safe-area-inset-bottom));
+  scrollbar-width: none;
+}
+
+#growthDialog #growthForm::-webkit-scrollbar { display: none; }
+#growthDialog .sheet-handle { display: none; }
+
+#growthDialog .dialog-header {
+  align-items: center;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+#growthDialog .dialog-header .eyebrow {
+  margin-bottom: 3px;
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+#growthDialog .dialog-header h2 {
+  font-size: 25px;
+  font-weight: 780;
+  letter-spacing: -.045em;
+}
+
+#growthDialog .close-button {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  color: #77736f;
+  background: rgba(93, 88, 84, .08);
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+#growthDialog .close-button:focus { outline: none; }
+#growthDialog .close-button:focus-visible { outline: 2px solid rgba(86, 121, 106, .4); outline-offset: 2px; }
+
+#growthDialog label {
+  margin-bottom: 13px;
+  color: #77736f;
+  font-size: 11px;
+  font-weight: 680;
+}
+
+#growthDialog input,
+#growthDialog select,
+#growthDialog textarea {
+  min-height: 50px;
+  margin-top: 6px;
+  padding: 0 14px;
+  border: 1px solid rgba(82, 76, 72, .1);
+  border-radius: 14px;
+  color: var(--label);
+  background: #fff;
+  box-shadow: none;
+}
+
+#growthDialog textarea {
+  min-height: 96px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+  line-height: 1.5;
+}
+
+#growthDialog input:focus,
+#growthDialog select:focus,
+#growthDialog textarea:focus {
+  border-color: rgba(86, 121, 106, .55);
+  box-shadow: 0 0 0 3px rgba(86, 121, 106, .1);
+}
+
+#growthDialog .field-optional { display: none; }
+
+#growthDialog .growth-primary-row {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: 9px;
+  margin-bottom: 13px;
+}
+
+#growthDialog .growth-primary-row label { margin: 0; }
+#growthDialog input[type="date"],
+#growthDialog input[type="time"] { height: 50px; }
+
+#growthDialog .growth-detail-group {
+  margin: 0 0 13px;
+  padding: 14px;
+  border: 1px solid rgba(82, 76, 72, .08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: none;
+}
+
+#growthDialog .growth-detail-group .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+#growthDialog .growth-detail-group .form-row + .form-row { margin-top: 10px; }
+#growthDialog .growth-detail-group label { margin: 0; }
+#growthDialog .field-group-title { margin-bottom: 10px; }
+
+#growthDialog.routine-growth-record .growth-title-field,
+#growthDialog.routine-growth-record .growth-category-field { display: none; }
+
+#growthDialog .growth-optional-toggle {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  margin: 1px 0 12px;
+  padding: 0 13px;
+  border: 1px solid rgba(82, 76, 72, .09);
+  border-radius: 13px;
+  color: #69645f;
+  background: rgba(255, 255, 255, .55);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+}
+
+#growthDialog .growth-optional-toggle i {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+#growthDialog.routine-growth-record .growth-optional-toggle { display: flex; }
+#growthDialog.routine-growth-record .growth-optional-field { display: none; }
+#growthDialog.routine-growth-record.show-growth-optional .growth-optional-field { display: block; }
+
+#growthDialog .photo-fieldset {
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+#growthDialog .photo-add-button {
+  min-height: 46px;
+  border-color: rgba(86, 121, 106, .25);
+  color: var(--blue);
+  background: rgba(86, 121, 106, .06);
+}
+
+#growthDialog .photo-help { display: none; }
+
+#growthDialog .dialog-actions {
+  bottom: -1px;
+  gap: 9px;
+  margin: 8px -20px -18px;
+  padding: 13px 20px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(82, 76, 72, .07);
+  background: rgba(251, 250, 248, .95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+#growthDialog .dialog-actions button {
+  min-height: 50px;
+  border-radius: 15px;
+}
+
+#growthDialog .danger-button {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  color: #b85f5d;
+  background: #f9e6e5;
+}
+
+#growthDialog .primary-button {
+  background: #6f917d;
+  box-shadow: none;
+}
+
+@media (max-width: 520px) {
+  #growthDialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 12px);
+    margin-bottom: 6px;
+    border-radius: 25px;
+  }
+
+  #growthDialog #growthForm {
+    max-height: calc(100dvh - 12px);
+    padding: 20px 18px max(16px, env(safe-area-inset-bottom));
+  }
+
+  #growthDialog .dialog-actions {
+    margin-right: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  #growthDialog .growth-primary-row,
+  #growthDialog .growth-detail-group .form-row {
+    grid-template-columns: 1fr;
+  }
+}
