@@ -192,7 +192,8 @@
     if (legend) legend.innerHTML = ["formula", "pumped", "breast", "diaper"].map((kind) => `<span class="${kind}">${label(kind)}</span>`).join("");
   }
   growthCareType = typeOf;
-  renderDailyCareClock = function adaptiveDailyTimeline(items) {
+  const baseDailyCarePattern = renderDailyCareClock;
+  const renderAdaptiveDailyTimeline = function adaptiveDailyTimeline(items) {
     installCareControls();
     const date = parseDate(carePatternDate), today = dateKey(new Date());
     const dayItems = items.filter((entry) => entry.date === carePatternDate && typeOf(entry));
@@ -209,6 +210,14 @@
       return `<div class="care-split-row"><div class="care-split-cell feeding">${cards(row.filter((entry) => typeOf(entry) !== "diaper"))}</div><time class="care-split-time">${escapeHtml(time)}</time><div class="care-split-cell diaper">${cards(row.filter((entry) => typeOf(entry) === "diaper"))}</div></div>`;
     }).join("");
     document.querySelector("#carePatternContent").innerHTML = `<section class="care-linear-card"><div class="care-linear-summary adaptive-feeding-summary"><article class="formula"><span>분유</span><strong>${sum("formula", "feedingMl")}mL</strong><small>${byType.formula.length}회</small></article><article class="pumped"><span>유축</span><strong>${sum("pumped", "feedingMl")}mL</strong><small>${byType.pumped.length}회</small></article><article class="breast"><span>직수</span><strong>${formatDuration(sum("breast", "feedingMinutes"))}</strong><small>${byType.breast.length}회</small></article><article class="diaper"><span>기저귀</span><strong>${byType.diaper.length}회</strong><small>오늘 기록</small></article></div><div class="care-split-heading"><span>직수 · 유축 · 분유</span><span>시간</span><span>기저귀</span></div><div class="care-split-timeline">${rows || '<p class="care-linear-empty">이 날짜에는 수유·기저귀 시간 기록이 없어요.</p>'}</div></section>`;
+  };
+  renderDailyCareClock = function adaptiveDailyCarePattern(items) {
+    const clockButton = document.querySelector('[data-care-day-mode="clock"]');
+    let useClock = clockButton?.classList.contains("active") || document.activeElement === clockButton;
+    try { useClock ||= localStorage.getItem("family-care-day-mode-v1") === "clock"; } catch { /* 현재 선택 상태 사용 */ }
+    return useClock
+      ? baseDailyCarePattern.apply(this, arguments)
+      : renderAdaptiveDailyTimeline.apply(this, arguments);
   };
 
   renderWeeklyCarePattern = function adaptiveWeeklyPattern(items) {
