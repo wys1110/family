@@ -41,6 +41,7 @@ window.FAMILY_CONFIG = {
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260716-family-todo-v1" },
+    { name: "adaptive-feeding", version: "20260717-weight-history-v1" },
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
   ];
