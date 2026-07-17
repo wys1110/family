@@ -25,6 +25,7 @@ window.FAMILY_CONFIG = {
   if (themeMeta) themeMeta.content = themeColors[initialTheme];
 
   const modules = [
+    { name: "growth-delete-sync", version: "20260717-delete-refresh-v1" },
     { name: "calendar-swipe", version: "20260716-fast-swipe" },
     { name: "english-stories", version: "20260716-baby-stories" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
