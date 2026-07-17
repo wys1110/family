@@ -30,6 +30,7 @@ window.FAMILY_CONFIG = {
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
+    { name: "care-ring-timeline", version: "20260717-ring-v1" },
     { name: "growth-dedup", version: "20260717-growth-cleanup-v2" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
