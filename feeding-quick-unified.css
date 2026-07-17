@@ -1,0 +1,232 @@
+/* 직수·유축·분유 빠른 기록을 하나의 컴포넌트 체계로 통일합니다. */
+#quickLogDialog.feeding-quick-active {
+  --feeding-primary: color-mix(in srgb, var(--indigo) 86%, #66566f);
+  --feeding-primary-strong: color-mix(in srgb, var(--indigo) 72%, #4f4059);
+  --feeding-primary-soft: color-mix(in srgb, var(--indigo) 11%, var(--surface));
+  --feeding-panel-border: color-mix(in srgb, var(--indigo) 13%, transparent);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs-wrap {
+  margin-bottom: 14px;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs {
+  min-height: 50px;
+  border-radius: 17px;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button {
+  border-radius: 13px;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button.active {
+  color: var(--feeding-primary-strong);
+  box-shadow: 0 4px 13px rgba(76, 65, 72, .09);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-meta {
+  min-height: 30px;
+  margin-top: 8px;
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding,
+#quickLogDialog.feeding-quick-active .quick-preset-grid.bottle-feeding {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 13px;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-amount-stepper,
+#quickLogDialog.feeding-quick-active .feeding-direct-selector {
+  min-height: 126px;
+  padding: 15px;
+  border: 1px solid var(--feeding-panel-border);
+  border-radius: 24px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 97%, white), color-mix(in srgb, var(--surface) 92%, #f2eef4));
+  box-shadow: 0 12px 30px rgba(70, 59, 68, .07), inset 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-option {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 94px;
+  padding: 11px 7px 10px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(100, 89, 99, .08);
+  border-radius: 18px;
+  color: var(--label);
+  background: rgba(255, 255, 255, .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 7px;
+  border-radius: 11px;
+  color: var(--feeding-primary-strong);
+  background: var(--feeding-primary-soft);
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: -.04em;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-copy {
+  display: block;
+  min-width: 0;
+  text-align: center;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-copy strong,
+#quickLogDialog.feeding-quick-active .feeding-direct-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-copy strong {
+  font-size: 11px;
+  font-weight: 790;
+  letter-spacing: -.035em;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-copy small {
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 8px;
+  font-weight: 620;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: white;
+  background: var(--feeding-primary);
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity .14s ease, transform .14s ease;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-option.selected {
+  border-color: color-mix(in srgb, var(--feeding-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--feeding-primary-soft) 66%, white);
+  box-shadow: 0 7px 18px rgba(93, 75, 101, .1);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-option.selected .feeding-direct-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-option:active {
+  transform: scale(.97);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-direct-option:focus-visible,
+#quickLogDialog.feeding-quick-active .feeding-save-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--feeding-primary) 30%, transparent);
+  outline-offset: 2px;
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button {
+  min-height: 88px;
+  padding: 16px 68px;
+  border: 1px solid color-mix(in srgb, var(--feeding-primary) 24%, transparent);
+  border-radius: 24px;
+  color: white;
+  background: linear-gradient(135deg, var(--feeding-primary-strong), var(--feeding-primary));
+  box-shadow: 0 13px 28px rgba(88, 70, 97, .2);
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button::before {
+  left: 22px;
+  width: 42px;
+  height: 42px;
+  color: var(--feeding-primary-strong);
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 6px 16px rgba(52, 40, 58, .16);
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button strong {
+  color: white;
+  font-size: 21px;
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button small {
+  color: rgba(255, 255, 255, .68);
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button:active {
+  color: white;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--feeding-primary-strong) 92%, black), var(--feeding-primary));
+  box-shadow: 0 8px 19px rgba(88, 70, 97, .17);
+  transform: scale(.985);
+}
+
+#quickLogDialog.feeding-quick-active .quick-detail-button {
+  min-height: 56px;
+  margin-top: 13px;
+  border-radius: 18px;
+}
+
+@media (max-width: 390px) {
+  #quickLogDialog.feeding-quick-active .feeding-amount-stepper,
+  #quickLogDialog.feeding-quick-active .feeding-direct-selector {
+    min-height: 116px;
+    padding: 12px;
+  }
+
+  #quickLogDialog.feeding-quick-active .feeding-direct-selector {
+    gap: 6px;
+  }
+
+  #quickLogDialog.feeding-quick-active .feeding-direct-option {
+    min-height: 88px;
+    padding-inline: 4px;
+    border-radius: 16px;
+  }
+
+  #quickLogDialog.feeding-quick-active .feeding-direct-copy strong {
+    font-size: 10px;
+  }
+
+  #quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button {
+    min-height: 84px;
+    padding-right: 58px;
+    padding-left: 58px;
+  }
+
+  #quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button::before {
+    left: 17px;
+    width: 39px;
+    height: 39px;
+  }
+
+  #quickLogDialog.feeding-quick-active .quick-preset-grid .feeding-save-button strong {
+    font-size: 19px;
+  }
+}
