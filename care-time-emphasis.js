@@ -39,7 +39,7 @@
       .filter((entry) => entry.date === carePatternDate && entry.time)
       .map((entry) => ({ entry, type: careType(entry) }))
       .filter(({ type }) => type && carePatternCategories.has(type))
-      .sort((a, b) => a.entry.time.localeCompare(b.entry.time));
+      .sort((a, b) => b.entry.time.localeCompare(a.entry.time));
 
     if (!items.length) return;
 
