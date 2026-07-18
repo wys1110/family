@@ -113,6 +113,18 @@
   line-height: 1.45;
 }
 
+.care-clock-center-day.care-clock-intake-total {
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -.045em;
+}
+
+.care-clock-center-caption.care-clock-intake-meta {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
 @media (min-width: 768px) {
   .daily-intake-summary {
     gap: 16px;
