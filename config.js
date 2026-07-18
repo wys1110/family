@@ -4,6 +4,16 @@ window.FAMILY_CONFIG = {
 };
 
 (() => {
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  if (viewportMeta) {
+    viewportMeta.content = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+  }
+
+  const preventViewportZoom = (event) => event.preventDefault();
+  document.addEventListener("gesturestart", preventViewportZoom, { passive: false });
+  document.addEventListener("gesturechange", preventViewportZoom, { passive: false });
+  document.addEventListener("gestureend", preventViewportZoom, { passive: false });
+
   const themeStorageKey = "family-theme-v1";
   const themeColors = {
     forest: "#fff8f3",
