@@ -35,7 +35,7 @@ window.FAMILY_CONFIG = {
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
     { name: "growth-dedup", version: "20260718-logic-audit-v1" },
     { name: "feature-request", version: "20260718-logic-audit-v1" },
-    { name: "refresh-button", version: "20260718-bottom-right-v2" },
+    { name: "refresh-button", version: "20260718-viewport-root-v3" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "feeding-reminder", version: "20260718-logic-audit-v1" },
