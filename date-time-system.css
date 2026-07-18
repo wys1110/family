@@ -11,10 +11,10 @@
   display: block;
   min-width: 0;
   color: color-mix(in srgb, var(--secondary) 92%, var(--label));
-  font-size: 12px;
-  font-weight: 760;
-  line-height: 1.35;
-  letter-spacing: -.01em;
+  font-size: var(--type-label-size);
+  font-weight: var(--type-weight-medium);
+  line-height: var(--type-leading-label);
+  letter-spacing: var(--type-tracking-label);
 }
 
 .sheet-dialog input[type="date"],
@@ -36,10 +36,10 @@
   outline: none;
   color: var(--label) !important;
   background: color-mix(in srgb, var(--surface) 94%, var(--surface-2)) !important;
-  font-size: 16px !important;
-  font-weight: 700 !important;
-  line-height: normal !important;
-  letter-spacing: -.018em;
+  font-size: var(--type-body-size);
+  font-weight: var(--type-weight-medium);
+  line-height: var(--type-leading-body);
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
   text-align: left;
   text-overflow: clip;
