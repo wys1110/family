@@ -76,6 +76,9 @@ let calendarSwipeState = null;
 let suppressCalendarClickUntil = 0;
 let monthSwipeAnimating = false;
 let lastAuthSessionKey = null;
+let bootstrapRequestId = 0;
+let eventSaveInProgress = false;
+let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
 
@@ -219,13 +222,27 @@ function renderDailyVerse() {
 }
 
 async function bootstrapData() {
+  const requestId = ++bootstrapRequestId;
+  const sessionKey = authSessionKey(state.session);
   let loaded = true;
   try {
     if (state.supabase && state.session) {
+      // Do not leave the previous household visible while the next membership
+      // and its data are being resolved.
+      state.household = null;
+      state.babies = [];
+      state.archivedBabies = [];
+      state.events = [];
+      state.growthEntries = [];
+      state.familyMembers = [...DEFAULT_FAMILY_MEMBERS];
+      state.activeBabyId = null;
+      render();
+      updateAuthGate();
       const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
+      if (!isCurrentBootstrap(requestId, sessionKey)) return false;
       if (error) throw error;
       state.household = memberships?.[0]?.households || null;
-      if (state.household) loaded = await loadRemoteData();
+      if (state.household) loaded = await loadRemoteData(requestId, sessionKey, state.household.id);
       else { state.babies = []; state.archivedBabies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
     } else {
       state.household = null;
@@ -235,20 +252,39 @@ async function bootstrapData() {
       state.archivedBabies = babies.filter((baby) => baby.archivedAt);
       state.events = readLocalJson(STORAGE_KEY, []).map(normalizeEvent);
       state.growthEntries = readLocalJson(GROWTH_STORAGE_KEY, []);
+      if (state.babies.length === 1 && state.growthEntries.some((entry) => !entry.babyId)) {
+        state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = state.babies[0].id; });
+        try { localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); } catch { /* 메모리 귀속은 유지 */ }
+      }
     }
   } catch (error) {
+    if (!isCurrentBootstrap(requestId, sessionKey)) return false;
     loaded = false;
     console.error("가족 기록 불러오기 실패", error);
     toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
+  if (!isCurrentBootstrap(requestId, sessionKey)) return false;
   selectInitialBaby();
+  validateCareTimerContext();
   render();
   updateAuthGate();
+  window.dispatchEvent(new CustomEvent("familycontextchange", {
+    detail: {
+      userId: state.session?.user?.id || null,
+      householdId: state.household?.id || null,
+      activeBabyId: state.activeBabyId || null,
+      remote: Boolean(state.supabase && state.session),
+    },
+  }));
   if (state.session && !state.household && !state.onboardingPrompted) {
     state.onboardingPrompted = true;
     setTimeout(openAccountDialog, 250);
   }
   return loaded;
+}
+
+function isCurrentBootstrap(requestId, sessionKey) {
+  return requestId === bootstrapRequestId && sessionKey === authSessionKey(state.session);
 }
 
 function readLocalJson(key, fallback) {
@@ -260,13 +296,15 @@ function readLocalJson(key, fallback) {
   }
 }
 
-async function loadRemoteData() {
+async function loadRemoteData(requestId, sessionKey, householdId) {
+  const supabase = state.supabase;
   const [babiesResult, eventsResult, growthResult, membersResult] = await Promise.all([
-    state.supabase.from("babies").select("*").eq("household_id", state.household.id).order("birth_date"),
-    state.supabase.from("events").select("*").eq("household_id", state.household.id).order("event_date"),
-    state.supabase.from("growth_entries").select("*").eq("household_id", state.household.id).order("entry_date", { ascending: false }),
-    state.supabase.from("calendar_members").select("*").eq("household_id", state.household.id).order("sort_order"),
+    supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date"),
+    supabase.from("events").select("*").eq("household_id", householdId).order("event_date"),
+    supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false }),
+    supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order"),
   ]);
+  if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
   if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요");
   else {
     const babies = babiesResult.data.map(fromBabyRemote);
@@ -278,15 +316,22 @@ async function loadRemoteData() {
   else {
     state.growthEntries = growthResult.data.map(fromGrowthRemote);
     const entries = state.growthEntries;
-    const householdId = state.household.id;
+    const hydratedHouseholdId = householdId;
     hydrateGrowthPhotoUrls(entries).then(() => {
-      if (state.household?.id === householdId && state.growthEntries === entries) renderGrowth();
+      if (state.household?.id === hydratedHouseholdId && state.growthEntries === entries) renderGrowth();
     }).catch((error) => console.warn("성장 사진 주소 불러오기 실패", error));
   }
   state.familyMembers = membersResult.error || !membersResult.data?.length
     ? [...DEFAULT_FAMILY_MEMBERS]
     : membersResult.data.map((row) => ({ id: row.id, name: row.name, color: validColor(row.color) }));
   if (!state.familyMembers.some((member) => member.name === state.quickMember)) state.quickMember = state.familyMembers[0]?.name || "가족";
+  if (state.babies.length === 1 && state.growthEntries.some((entry) => !entry.babyId)) {
+    const babyId = state.babies[0].id;
+    const { error } = await supabase.from("growth_entries").update({ baby_id: babyId }).eq("household_id", householdId).is("baby_id", null);
+    if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
+    if (error) toast("이전 성장 기록을 아기 프로필에 연결하지 못했어요");
+    else state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = babyId; });
+  }
   return ![babiesResult, eventsResult, growthResult, membersResult].some((result) => result.error);
 }
 
@@ -316,9 +361,30 @@ function toGrowthRemote(entry) {
 }
 
 function selectInitialBaby() {
-  const saved = localStorage.getItem(ACTIVE_BABY_KEY);
+  let saved = null;
+  try { saved = localStorage.getItem(ACTIVE_BABY_KEY); } catch { /* 첫 아기 사용 */ }
   state.activeBabyId = state.babies.some((baby) => baby.id === saved) ? saved : state.babies[0]?.id || null;
-  if (state.activeBabyId) localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId);
+  if (state.activeBabyId) try { localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId); } catch { /* 현재 선택 유지 */ }
+}
+
+function careTimerContextKey() {
+  if (state.supabase && state.session) return `${state.session.user.id}:${state.household?.id || "no-household"}`;
+  return "device";
+}
+
+function validateCareTimerContext() {
+  if (!careTimer) return;
+  const currentKey = careTimerContextKey();
+  const babyIsCurrent = state.babies.some((baby) => baby.id === careTimer.babyId);
+  if (!careTimer.contextKey && babyIsCurrent) {
+    careTimer.contextKey = currentKey;
+    persistCareTimer();
+    return;
+  }
+  if (careTimer.contextKey !== currentKey || !babyIsCurrent) {
+    careTimer = null;
+    persistCareTimer();
+  }
 }
 
 async function hydrateGrowthPhotoUrls(entries) {
@@ -389,7 +455,14 @@ function bindUi() {
   document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
 }
 
-function changeMonth(delta) { state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1); renderCalendar(); }
+function changeMonth(delta) {
+  const selectedDay = parseDate(state.selectedDate).getDate();
+  state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1);
+  const lastDay = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + 1, 0).getDate();
+  state.selectedDate = dateKey(new Date(state.viewDate.getFullYear(), state.viewDate.getMonth(), Math.min(selectedDay, lastDay)));
+  renderCalendar();
+  renderAgenda();
+}
 async function slideMonth(delta) {
   if (monthSwipeAnimating) return;
   monthSwipeAnimating = true;
@@ -468,7 +541,13 @@ function switchView(view) {
   try { localStorage.setItem(ACTIVE_VIEW_KEY, nextView); } catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
   $("#calendarView").hidden = nextView !== "calendar";
   $("#growthView").hidden = nextView !== "growth";
-  document.querySelectorAll(".view-tab").forEach((button) => button.classList.toggle("active", button.dataset.view === nextView));
+  document.querySelectorAll(".view-tab").forEach((button) => {
+    const active = button.dataset.view === nextView;
+    button.classList.toggle("active", active);
+    button.setAttribute("role", "tab");
+    button.setAttribute("aria-selected", String(active));
+  });
+  $("#addEventButton").hidden = false;
   $("#addEventButton").innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
 }
 
@@ -865,14 +944,27 @@ function syncDateShortcutSelection() {
 
 async function saveEvent(event) {
   event.preventDefault();
+  if (eventSaveInProgress) return;
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const startDate = $("#eventDate").value;
   const endDate = $("#eventEndDate").value || startDate;
   if (endDate < startDate) return toast("종료일은 시작일 이후로 선택해 주세요");
   const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: startDate, endDate, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
-  if (!await storeEvent(item)) return;
-  const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
-  persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
+  const submit = $("#eventSubmitButton");
+  eventSaveInProgress = true;
+  submit.disabled = true;
+  submit.setAttribute("aria-busy", "true");
+  submit.textContent = "저장 중…";
+  try {
+    if (!await storeEvent(item)) return;
+    const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
+    persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
+  } finally {
+    eventSaveInProgress = false;
+    submit.disabled = false;
+    submit.setAttribute("aria-busy", "false");
+    submit.textContent = $("#eventId").value ? "변경사항 저장" : "일정 추가";
+  }
 }
 
 async function deleteEvent() {
@@ -915,7 +1007,7 @@ function renderGrowth() {
 function activeBaby() { return state.babies.find((baby) => baby.id === state.activeBabyId) || null; }
 function activeBabyEntries() {
   if (!state.activeBabyId) return [];
-  return state.growthEntries.filter((entry) => entry.babyId === state.activeBabyId || (!entry.babyId && state.babies.length === 1));
+  return state.growthEntries.filter((entry) => entry.babyId === state.activeBabyId);
 }
 
 function renderBabyProfile(baby) {
@@ -991,7 +1083,7 @@ function startCareTimerFromEvent(event) {
   if (careTimer) { toast("진행 중인 기록을 먼저 멈춰주세요"); return; }
   const definition = careTimerDefinition(button.dataset.careTimer);
   if (!definition) return;
-  careTimer = { ...definition, babyId: state.activeBabyId, startedAt: Date.now() };
+  careTimer = { ...definition, babyId: state.activeBabyId, contextKey: careTimerContextKey(), startedAt: Date.now() };
   persistCareTimer();
   renderCareTimer();
   renderTodayCareSummary(activeBabyEntries());
@@ -1067,22 +1159,25 @@ async function stopCareTimer() {
     height: null, weight: null, head: null, feedingMl: null, feedingType: isFeeding ? "모유" : "", feedingSide: isFeeding ? (finishedTimer.switched ? "양쪽" : finishedTimer.side) : "", feedingMinutes: isFeeding ? minutes : null,
     sleepMinutes: isFeeding ? null : minutes, temperature: null, diaperKind: "", note: finishedTimer.switched ? `타이머로 자동 기록 · ${finishedTimer.side}에서 마침` : "타이머로 자동 기록", photoPaths: [], photoUrls: [],
   };
-  if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
-    if (error) {
-      careTimerSaveInProgress = false;
-      renderCareTimer();
-      toast("저장하지 못했어요. 타이머는 그대로 유지했어요");
-      return;
+  try {
+    if (finishedTimer.contextKey !== careTimerContextKey() || !state.babies.some((baby) => baby.id === finishedTimer.babyId)) throw new Error("timer context changed");
+    if (state.supabase && state.session) {
+      const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+      if (error) throw error;
     }
+    state.growthEntries.push(entry);
+    if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+    careTimer = null;
+    persistCareTimer();
+    renderGrowth();
+    showGrowthComplete(`${finishedTimer.label} ${formatDuration(minutes)} 기록을 저장했어요.`);
+  } catch (error) {
+    console.error("돌봄 타이머 저장 실패", error);
+    toast("저장하지 못했어요. 타이머는 그대로 유지했어요");
+  } finally {
+    careTimerSaveInProgress = false;
+    if (careTimer) renderCareTimer();
   }
-  state.growthEntries.push(entry);
-  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
-  careTimer = null;
-  careTimerSaveInProgress = false;
-  persistCareTimer();
-  renderGrowth();
-  showGrowthComplete(`${finishedTimer.label} ${formatDuration(minutes)} 기록을 저장했어요.`);
 }
 
 function growthCareType(entry) {
@@ -1289,7 +1384,7 @@ function syncGrowthSummaryDisclosure() {
 }
 
 function renderGrowthInsights(entries) {
-  const measured = entries.filter((entry) => entry.height || entry.weight || entry.head).sort((a, b) => b.date.localeCompare(a.date));
+  const measured = entries.filter((entry) => entry.height || entry.weight || entry.head).sort((a, b) => `${b.date}T${b.time || "00:00"}`.localeCompare(`${a.date}T${a.time || "00:00"}`));
   const latest = measured[0]; const baby = activeBaby();
   if (!latest) {
     $("#growthInsightRow").innerHTML = `<article class="growth-insight-empty"><div><p class="eyebrow">GROWTH</p><strong>첫 성장 측정을 남겨보세요</strong><span>키·몸무게·머리둘레의 변화를 이어서 볼 수 있어요.</span></div><button type="button" data-growth-quick="성장">측정 기록</button></article>`;
@@ -1405,7 +1500,9 @@ function changeGrowthFilter(event) {
 function selectBabyFromEvent(event) {
   const button = event.target.closest("[data-baby-id]"); if (!button) return;
   state.activeBabyId = button.dataset.babyId; state.growthFilter = "all";
-  localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId); renderGrowth();
+  try { localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId); } catch { /* 현재 선택 유지 */ }
+  renderGrowth();
+  window.dispatchEvent(new CustomEvent("familybabychange", { detail: { activeBabyId: state.activeBabyId } }));
 }
 
 function growthEntryMeta(entry) {
@@ -1521,20 +1618,38 @@ function openBabyDialog(baby = null) {
 
 async function saveBaby(event) {
   event.preventDefault();
+  if (babySaveInProgress) return;
   if (state.supabase && !state.household) { $("#babyDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const isNew = !$("#babyId").value;
   const previous = state.babies.find((item) => item.id === $("#babyId").value);
   const baby = { id: $("#babyId").value || uid(), name: $("#babyName").value.trim(), birthDate: $("#babyBirthDate").value, birthTime: $("#babyBirthTime").value, sex: $("#babySex").value, birthWeight: numberOrNull($("#babyBirthWeight").value), birthHeight: numberOrNull($("#babyBirthHeight").value), archivedAt: previous?.archivedAt || null };
-  if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("babies").upsert(toBabyRemote(baby));
-    if (error) return toast("아기 프로필을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
-    if (isNew && state.babies.length === 0) await state.supabase.from("growth_entries").update({ baby_id: baby.id }).eq("household_id", state.household.id).is("baby_id", null);
+  const submit = $("#babySubmitButton");
+  babySaveInProgress = true;
+  submit.disabled = true;
+  submit.setAttribute("aria-busy", "true");
+  submit.textContent = "저장 중…";
+  let legacyLinked = true;
+  try {
+    if (state.supabase && state.session) {
+      const { error } = await state.supabase.from("babies").upsert(toBabyRemote(baby));
+      if (error) return toast("아기 프로필을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
+      if (isNew && state.babies.length === 0) {
+        const { error: linkError } = await state.supabase.from("growth_entries").update({ baby_id: baby.id }).eq("household_id", state.household.id).is("baby_id", null);
+        legacyLinked = !linkError;
+      }
+    }
+    const index = state.babies.findIndex((item) => item.id === baby.id); if (index >= 0) state.babies[index] = baby; else state.babies.push(baby);
+    if (isNew && state.babies.length === 1 && legacyLinked) state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = baby.id; });
+    state.activeBabyId = baby.id; try { localStorage.setItem(ACTIVE_BABY_KEY, baby.id); } catch { /* 현재 선택 유지 */ }
+    if (!state.supabase) { persistLocalBabies(); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
+    $("#babyDialog").close(); renderGrowth();
+    toast(!legacyLinked ? "프로필은 저장했지만 이전 기록 연결에 실패했어요" : isNew ? `${baby.name}의 성장일기를 시작했어요` : "아기 프로필을 수정했어요");
+  } finally {
+    babySaveInProgress = false;
+    submit.disabled = false;
+    submit.setAttribute("aria-busy", "false");
+    submit.textContent = $("#babyId").value ? "변경사항 저장" : "프로필 만들기";
   }
-  const index = state.babies.findIndex((item) => item.id === baby.id); if (index >= 0) state.babies[index] = baby; else state.babies.push(baby);
-  if (isNew && state.babies.length === 1) state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = baby.id; });
-  state.activeBabyId = baby.id; localStorage.setItem(ACTIVE_BABY_KEY, baby.id);
-  if (!state.supabase) { persistLocalBabies(); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
-  $("#babyDialog").close(); renderGrowth(); toast(isNew ? `${baby.name}의 성장일기를 시작했어요` : "아기 프로필을 수정했어요");
 }
 
 function persistLocalBabies() {
@@ -1700,7 +1815,14 @@ async function saveGrowthEntry(event) {
         return toast("성장 기록을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
       }
       if (growthPhotoDraft.removedPaths.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(growthPhotoDraft.removedPaths);
-      await hydrateGrowthPhotoUrls([entry]);
+      try {
+        await hydrateGrowthPhotoUrls([entry]);
+      } catch (error) {
+        // The row and its files are already committed. A temporary signed URL
+        // failure must not turn a successful save into a duplicate retry.
+        entry.photoUrls = [];
+        console.warn("성장 사진 미리보기 주소를 불러오지 못했어요", error);
+      }
     }
     const index = state.growthEntries.findIndex((item) => item.id === entry.id); if (index >= 0) state.growthEntries[index] = entry; else state.growthEntries.push(entry);
     if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
