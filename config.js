@@ -35,7 +35,7 @@ window.FAMILY_CONFIG = {
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
     { name: "growth-dedup", version: "20260718-premium-v1" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
-    { name: "refresh-button", version: "20260716-refresh-v1" },
+    { name: "refresh-button", version: "20260718-bottom-right-v2" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
     { name: "feeding-reminder", version: "20260717-user-interval-v1" },
