@@ -1,5 +1,5 @@
 /*
- * Family typography system v3
+ * Family typography system v4
  * One hierarchy for calendar, growth, stories, requests and settings.
  */
 
@@ -123,10 +123,13 @@ body {
 
 /* Page titles */
 #calendarView .hero-card h2,
+#calendarView .todo-overview-heading h2,
 #growthView .growth-page-header h2,
 #growthView .baby-profile-copy h2,
 #growthView .photo-album-header h2,
-#englishView .english-page-header h2 {
+#englishView .english-page-header h2,
+#featureRequestView .feature-request-heading h2,
+#settingsView #themeSettingsTitle {
   font-size: var(--type-page-size);
   font-weight: var(--type-weight-bold);
   line-height: var(--type-leading-heading);
@@ -135,13 +138,12 @@ body {
 
 /* Section titles */
 #calendarView :is(.calendar-toolbar, .section-heading) h2,
-#calendarView .todo-overview-heading h2,
 #growthView :is(.section-heading, .care-timer-heading, .care-pattern-heading, .growth-summary-header, .growth-chart-heading) h2,
 #growthView .baby-empty-card h2,
 #englishView .english-story-cover h2,
 #englishView .english-library-section h2,
-#featureRequestView :is(.feature-request-heading, .feature-request-admin-heading) h2,
-#settingsView .settings-heading h2,
+#featureRequestView .feature-request-admin-heading h2,
+#settingsView .settings-heading h2:not(#themeSettingsTitle),
 .sheet-dialog .dialog-header h2,
 .completion-dialog h2 {
   font-size: var(--type-section-size);
@@ -247,6 +249,7 @@ textarea::placeholder {
   .care-pattern-categories button,
   .care-pattern-categories button i,
   .care-split-heading span,
+  .care-split-time,
   .care-time-list-heading span,
   .daily-intake-summary header > div > span,
   .daily-intake-breakdown span,
@@ -397,6 +400,35 @@ input[type="datetime-local"],
   font-size: var(--type-control-size);
   font-weight: var(--type-weight-bold);
   line-height: 1;
+}
+
+/* Keep icon glyphs and their Korean control labels on one optical baseline. */
+#calendarView :is(.calendar-subtabs button, .todo-quick-form button),
+.app-shell .family-todo-fab,
+#growthView :is(.add-baby-button, .growth-summary-toggle, .latest-growth-actions button) {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#calendarView :is(.calendar-subtabs button > span, .todo-quick-form button > span),
+.app-shell .family-todo-fab > span,
+#growthView :is(.add-baby-button > span, .latest-growth-actions button > span:first-child) {
+  font-size: var(--type-icon-small);
+  font-weight: var(--type-weight-medium);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+#growthView :is(.growth-summary-toggle > span, .latest-growth-actions button > span:not(:first-child)) {
+  font-size: var(--type-control-size);
+  font-weight: var(--type-weight-semibold);
+  line-height: var(--type-leading-control);
+  letter-spacing: var(--type-tracking-body);
+}
+
+#calendarView .todo-quick-form button {
+  display: inline-flex;
 }
 
 /* Forms and sheets share the same hierarchy as the five pages. */
