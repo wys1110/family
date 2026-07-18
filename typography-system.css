@@ -473,6 +473,19 @@ input[type="datetime-local"],
 
 /* Identical title rhythm even when a page uses a plain header or a card header. */
 #growthView .growth-page-header h2,
+#englishView .english-page-header h2 {
+  min-height: 31.2px;
+  color: var(--type-color-strong);
+  font-family: var(--font-family-sans);
+  font-size: var(--type-page-size);
+  font-weight: var(--type-weight-bold);
+  font-kerning: normal;
+  line-height: var(--type-leading-heading);
+  letter-spacing: var(--type-tracking-heading);
+  text-wrap: balance;
+}
+
+#growthView .growth-page-header h2,
 #englishView .english-page-header h2,
 #featureRequestView .feature-request-heading h2,
 #settingsView #themeSettingsTitle {
