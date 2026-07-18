@@ -1,0 +1,463 @@
+/* Shared form-sheet design system: growth, events, baby profile, account, and quick logs. */
+:root {
+  --sheet-bg: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  --sheet-panel: color-mix(in srgb, var(--surface) 96%, transparent);
+  --sheet-panel-strong: var(--surface);
+  --sheet-border: color-mix(in srgb, var(--label) 11%, transparent);
+  --sheet-border-strong: color-mix(in srgb, var(--label) 17%, transparent);
+  --sheet-muted: color-mix(in srgb, var(--secondary) 88%, var(--label));
+  --sheet-accent-soft: color-mix(in srgb, var(--blue) 10%, transparent);
+  --sheet-shadow: 0 28px 80px rgba(38, 42, 39, .22);
+}
+
+.sheet-dialog {
+  width: min(calc(100% - 24px), 560px);
+  max-height: calc(100dvh - 18px);
+  margin: auto auto 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 30%, transparent);
+  border-radius: 30px;
+  color: var(--label);
+  background: var(--sheet-bg);
+  box-shadow: var(--sheet-shadow);
+}
+
+.sheet-dialog.compact { width: min(calc(100% - 24px), 500px); }
+
+.sheet-dialog::backdrop {
+  background: rgba(38, 39, 38, .42);
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+}
+
+.sheet-dialog > form,
+.sheet-dialog > .sheet-panel {
+  max-height: calc(100dvh - 18px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 24px max(22px, env(safe-area-inset-bottom));
+  scrollbar-width: none;
+  scroll-padding-bottom: 110px;
+}
+
+.sheet-dialog > form::-webkit-scrollbar,
+.sheet-dialog > .sheet-panel::-webkit-scrollbar { display: none; }
+
+.sheet-dialog .sheet-handle {
+  position: relative;
+  top: auto;
+  z-index: 1;
+  display: block;
+  width: 42px;
+  height: 5px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary) 32%, transparent);
+}
+
+.sheet-dialog .dialog-header {
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.sheet-dialog .dialog-header > div { min-width: 0; }
+
+.sheet-dialog .dialog-header .eyebrow {
+  margin: 0 0 4px;
+  color: var(--sheet-muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .035em;
+}
+
+.sheet-dialog .dialog-header h2 {
+  overflow: hidden;
+  color: var(--label);
+  font-size: clamp(25px, 6vw, 31px);
+  font-weight: 820;
+  line-height: 1.12;
+  letter-spacing: -.05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-dialog .close-button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0 0 2px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 50%;
+  color: var(--secondary);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  font-size: 27px;
+  font-weight: 350;
+  line-height: 1;
+  box-shadow: 0 5px 16px rgba(37, 43, 39, .05);
+}
+
+.sheet-dialog .close-button:active { transform: scale(.95); }
+.sheet-dialog .close-button:focus { outline: none; }
+.sheet-dialog .close-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 30%, transparent);
+  outline-offset: 2px;
+}
+
+.sheet-dialog label,
+.sheet-dialog legend {
+  color: var(--sheet-muted);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+}
+
+.sheet-dialog label { margin-bottom: 16px; }
+
+.sheet-dialog input,
+.sheet-dialog select,
+.sheet-dialog textarea {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 7px;
+  padding: 0 15px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 15px;
+  outline: none;
+  color: var(--label);
+  background: var(--sheet-panel-strong);
+  font-size: 15px;
+  font-weight: 620;
+  line-height: 1.25;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .45), 0 6px 18px rgba(50, 58, 53, .035);
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.sheet-dialog textarea {
+  min-height: 112px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.sheet-dialog input::placeholder,
+.sheet-dialog textarea::placeholder {
+  color: color-mix(in srgb, var(--tertiary) 90%, transparent);
+  font-weight: 540;
+}
+
+.sheet-dialog input:focus,
+.sheet-dialog select:focus,
+.sheet-dialog textarea:focus {
+  border-color: color-mix(in srgb, var(--blue) 62%, transparent);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 11%, transparent);
+}
+
+.sheet-dialog input:disabled,
+.sheet-dialog select:disabled,
+.sheet-dialog textarea:disabled { opacity: .58; }
+
+.sheet-dialog .title-field input,
+.sheet-dialog .growth-title-field input {
+  min-height: 56px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.sheet-dialog .form-row,
+.sheet-dialog .event-date-fields,
+.sheet-dialog .bulk-defaults {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sheet-dialog .form-row > label,
+.sheet-dialog .event-date-fields > label,
+.sheet-dialog .bulk-defaults > label { min-width: 0; }
+
+.sheet-dialog .all-day-row,
+.sheet-dialog .range-toggle-row {
+  min-height: 64px;
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 16px;
+  background: var(--sheet-panel-strong);
+  box-shadow: none;
+}
+
+.sheet-dialog .member-fieldset,
+.sheet-dialog .color-fieldset,
+.sheet-dialog .photo-fieldset {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.sheet-dialog .member-fieldset legend,
+.sheet-dialog .color-fieldset legend,
+.sheet-dialog .photo-fieldset legend {
+  width: 100%;
+  margin-bottom: 9px;
+}
+
+.sheet-dialog .member-selector button,
+.sheet-dialog .date-shortcuts button {
+  min-height: 40px;
+  border-radius: 12px;
+}
+
+.sheet-dialog .dialog-actions {
+  position: sticky;
+  z-index: 5;
+  bottom: -1px;
+  display: flex;
+  gap: 10px;
+  margin: 18px -24px -22px;
+  padding: 14px 24px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--sheet-border);
+  background: color-mix(in srgb, var(--sheet-bg) 93%, transparent);
+  box-shadow: 0 -14px 30px color-mix(in srgb, var(--sheet-bg) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+}
+
+.sheet-dialog .dialog-actions button,
+.sheet-dialog .member-submit-button,
+.sheet-dialog .quick-detail-button {
+  min-height: 54px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 780;
+  letter-spacing: -.02em;
+}
+
+.sheet-dialog .primary-button,
+.sheet-dialog .member-submit-button {
+  color: white;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--blue) 92%, #435f52), color-mix(in srgb, var(--green) 88%, #78977f));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--blue) 20%, transparent);
+}
+
+.sheet-dialog .primary-button:active,
+.sheet-dialog .member-submit-button:active { transform: translateY(1px) scale(.99); }
+
+.sheet-dialog .danger-button {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+  box-shadow: none;
+}
+
+.sheet-dialog .bulk-cancel-button {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border: 1px solid var(--sheet-border);
+  color: var(--secondary);
+  background: var(--surface);
+}
+
+.bulk-event-dialog .bulk-dialog-copy,
+.sheet-dialog .member-dialog-copy,
+.sheet-dialog .baby-archive-copy,
+.sheet-dialog .quick-log-copy {
+  margin: -7px 1px 18px;
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.bulk-event-dialog #bulkEventText { min-height: 190px; }
+.bulk-event-dialog .bulk-format-help {
+  border: 1px solid var(--sheet-border);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--surface-2) 70%, var(--surface));
+}
+
+.quick-log-dialog .quick-preset-grid { gap: 10px; }
+.quick-log-dialog .quick-preset-grid button {
+  min-height: 82px;
+  border-color: var(--sheet-border);
+  border-radius: 18px;
+  background: var(--sheet-panel-strong);
+  box-shadow: none;
+}
+
+/* Growth record sheet */
+#growthDialog {
+  width: min(calc(100% - 24px), 570px);
+  background: var(--sheet-bg);
+}
+
+#growthDialog #growthForm {
+  max-height: calc(100dvh - 18px);
+  padding: 12px 24px max(22px, env(safe-area-inset-bottom));
+}
+
+#growthDialog .sheet-handle { display: block; }
+#growthDialog .dialog-header { margin-bottom: 22px; }
+#growthDialog .dialog-header h2 { font-size: clamp(28px, 6.5vw, 34px); }
+#growthDialog .field-optional { display: none; }
+
+#growthDialog .growth-primary-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+#growthDialog .growth-primary-row label { margin: 0; }
+
+#growthDialog .growth-category-field select {
+  min-height: 54px;
+  font-size: 16px;
+  font-weight: 730;
+}
+
+#growthDialog .growth-detail-group {
+  margin: 0 0 17px;
+  padding: 16px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 20px;
+  background: var(--sheet-panel);
+  box-shadow: 0 9px 28px rgba(48, 57, 52, .045);
+}
+
+#growthDialog .field-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 13px;
+  padding-bottom: 11px;
+  border-bottom: 1px dashed var(--sheet-border);
+  color: var(--label);
+  font-size: 13px;
+  font-weight: 790;
+}
+
+#growthDialog .field-group-title::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(var(--green), var(--blue));
+  box-shadow: 7px 4px 0 -1px color-mix(in srgb, var(--green) 70%, transparent), 14px -2px 0 -1px color-mix(in srgb, var(--blue) 70%, transparent);
+  margin-right: 12px;
+}
+
+#growthDialog .growth-detail-group .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#growthDialog .growth-detail-group .form-row + .form-row { margin-top: 11px; }
+#growthDialog .growth-detail-group label { margin: 0; }
+
+#growthDialog .growth-detail-group .three-columns label:nth-child(3) { grid-column: 1 / -1; }
+
+#growthDialog input[type="number"] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 730;
+}
+
+#growthDialog .growth-note-field textarea { min-height: 124px; }
+
+#growthDialog .growth-optional-toggle {
+  min-height: 46px;
+  margin: 1px 0 14px;
+  padding: 0 14px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 14px;
+  color: var(--blue);
+  background: var(--sheet-accent-soft);
+}
+
+#growthDialog .photo-fieldset {
+  padding: 14px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 18px;
+  background: var(--sheet-panel);
+}
+
+#growthDialog .growth-photo-grid { gap: 8px; }
+#growthDialog .growth-photo-item { border-radius: 14px; }
+
+#growthDialog .photo-add-button {
+  min-height: 50px;
+  border: 1px dashed color-mix(in srgb, var(--blue) 35%, transparent);
+  border-radius: 14px;
+  color: var(--blue);
+  background: var(--sheet-accent-soft);
+}
+
+#growthDialog .photo-help { display: block; margin-top: 8px; }
+
+#growthDialog .dialog-actions { margin-top: 20px; }
+#growthDialog .dialog-actions button { min-height: 56px; }
+#growthDialog .primary-button { font-size: 16px; }
+
+@media (min-width: 700px) {
+  #growthDialog .growth-detail-group .three-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #growthDialog .growth-detail-group .three-columns label:nth-child(3) { grid-column: auto; }
+}
+
+@media (max-width: 520px) {
+  .sheet-dialog,
+  .sheet-dialog.compact,
+  #growthDialog {
+    width: 100%;
+    max-height: calc(100dvh - 5px);
+    margin: auto auto 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .sheet-dialog > form,
+  .sheet-dialog > .sheet-panel,
+  #growthDialog #growthForm {
+    max-height: calc(100dvh - 5px);
+    padding: 11px 17px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .sheet-dialog .sheet-handle,
+  #growthDialog .sheet-handle { margin-bottom: 17px; }
+
+  .sheet-dialog .dialog-header { margin-bottom: 19px; }
+  .sheet-dialog .dialog-header h2 { font-size: 27px; }
+  #growthDialog .dialog-header h2 { font-size: 30px; }
+
+  .sheet-dialog .dialog-actions,
+  #growthDialog .dialog-actions {
+    margin-right: -17px;
+    margin-bottom: max(-18px, calc(env(safe-area-inset-bottom) * -1));
+    margin-left: -17px;
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+}
+
+@media (max-width: 380px) {
+  .sheet-dialog .form-row,
+  .sheet-dialog .event-date-fields,
+  .sheet-dialog .bulk-defaults,
+  #growthDialog .growth-primary-row,
+  #growthDialog .growth-detail-group .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  #growthDialog .growth-detail-group .three-columns label:nth-child(3) { grid-column: auto; }
+  .sheet-dialog .dialog-header h2 { font-size: 25px; }
+  #growthDialog .dialog-header h2 { font-size: 28px; }
+}
