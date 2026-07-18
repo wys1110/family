@@ -8,9 +8,16 @@
     lastAlertReference: "",
   };
 
+  const scopedStorageKey = () => {
+    if (typeof state !== "undefined" && state.session?.user?.id && state.household?.id) {
+      return `${STORAGE_KEY}:${state.session.user.id}:${state.household.id}:${state.activeBabyId || "no-baby"}`;
+    }
+    return `${STORAGE_KEY}:device:${typeof state !== "undefined" ? state.activeBabyId || "no-baby" : "no-baby"}`;
+  };
+
   const readSettings = () => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
+      const saved = JSON.parse(localStorage.getItem(scopedStorageKey()) || "null") || {};
       return {
         ...DEFAULTS,
         ...saved,
@@ -29,7 +36,7 @@
   let checking = false;
 
   const persist = () => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminder)); } catch { /* 현재 기기에서만 동작 */ }
+    try { localStorage.setItem(scopedStorageKey(), JSON.stringify(reminder)); } catch { /* 현재 기기에서만 동작 */ }
   };
 
   const feedingTypeOf = (entry) => {
@@ -276,6 +283,14 @@
     if (!settingsReady && attempt < 40) setTimeout(() => install(attempt + 1), 100);
   };
 
+  const reloadForContext = () => {
+    reminder = readSettings();
+    document.querySelector("#feedingReminderSettings")?.remove();
+    hideAlert();
+    installSettingsCard();
+    checkReminder();
+  };
+
   if (typeof renderGrowth === "function" && !renderGrowth.__feedingReminderWrapped) {
     const originalRenderGrowth = renderGrowth;
     const enhancedRenderGrowth = function (...args) {
@@ -288,6 +303,8 @@
   }
 
   window.addEventListener("focus", checkReminder);
+  window.addEventListener("familycontextchange", reloadForContext);
+  window.addEventListener("familybabychange", reloadForContext);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminder(); });
   setInterval(checkReminder, 60 * 1000);
   install();
