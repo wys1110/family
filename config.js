@@ -56,6 +56,7 @@ window.FAMILY_CONFIG = {
     { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
     { name: "growth-date-time-alignment", version: "20260718-ios-grid-fix-v1", script: false },
     { name: "daily-intake-summary", version: "20260718-clock-total-v2" },
+    { name: "growth-measurements", version: "20260718-growth-curves-v1" },
     { name: "premium-ui", version: "20260718-premium-v1", script: false },
   ];
 
