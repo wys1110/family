@@ -21,6 +21,8 @@
     loading: false,
     storage: 'local',
     busyIds: new Set(),
+    loadId: 0,
+    contextKey: '',
   };
 
   const originalCalendarChildren = [...calendarView.children];
@@ -174,13 +176,13 @@
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  function addRecurrence(value, recurrence) {
+  function addRecurrence(value, recurrence, monthlyAnchorDay = null) {
     const source = parseDate(value);
     if (!source) return null;
     if (recurrence === 'daily') source.setDate(source.getDate() + 1);
     if (recurrence === 'weekly') source.setDate(source.getDate() + 7);
     if (recurrence === 'monthly') {
-      const day = source.getDate();
+      const day = monthlyAnchorDay || source.getDate();
       const targetYear = source.getMonth() === 11 ? source.getFullYear() + 1 : source.getFullYear();
       const targetMonth = (source.getMonth() + 1) % 12;
       const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
@@ -200,6 +202,26 @@
     if (typeof state === 'undefined') return null;
     if (!state.supabase || !state.session || !state.household?.id) return null;
     return { supabase: state.supabase, session: state.session, household: state.household };
+  }
+
+  function contextKey(context = familyContext()) {
+    return context ? `${context.session.user.id}:${context.household.id}` : 'device';
+  }
+
+  function localKey(context = familyContext()) {
+    return context ? `${LOCAL_KEY}:${context.household.id}` : LOCAL_KEY;
+  }
+
+  function claimLegacyLocalTodos(context) {
+    if (!context) return;
+    const scopedKey = localKey(context);
+    try {
+      if (localStorage.getItem(scopedKey) !== null) return;
+      const legacy = localStorage.getItem(LOCAL_KEY);
+      if (legacy === null) return;
+      localStorage.setItem(scopedKey, legacy);
+      localStorage.removeItem(LOCAL_KEY);
+    } catch { /* 기존 데이터는 원래 위치에 보존 */ }
   }
 
   async function waitForFamilyContext() {
@@ -227,16 +249,16 @@
     };
   }
 
-  function readLocalTodos() {
+  function readLocalTodos(context = familyContext()) {
     try {
-      const data = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+      const data = JSON.parse(localStorage.getItem(localKey(context)) || '[]');
       return Array.isArray(data) ? data.map(normalizeTodo) : [];
     } catch { return []; }
   }
 
-  function writeLocalTodos(todos = moduleState.todos) {
-    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(todos)); }
-    catch { announce('브라우저 저장 공간을 사용할 수 없어요.'); }
+  function writeLocalTodos(todos = moduleState.todos, context = familyContext()) {
+    try { localStorage.setItem(localKey(context), JSON.stringify(todos)); }
+    catch (error) { announce('브라우저 저장 공간을 사용할 수 없어요.'); throw error; }
   }
 
   function toRemote(todo, context) {
@@ -258,7 +280,7 @@
   }
 
   function isMissingTable(error) {
-    return error?.code === '42P01' || error?.code === 'PGRST205' || /family_todos/i.test(error?.message || '');
+    return error?.code === '42P01' || error?.code === 'PGRST205';
   }
 
   function announce(message) {
@@ -291,14 +313,17 @@
 
   async function loadTodos({ silent = false } = {}) {
     if (moduleState.loading) return;
+    const loadId = ++moduleState.loadId;
     moduleState.loading = true;
     if (!silent) renderTodos();
     updateStorageNote();
 
     const context = await waitForFamilyContext();
+    if (loadId !== moduleState.loadId) return;
     if (!context) {
+      moduleState.contextKey = 'device';
       moduleState.storage = 'local';
-      moduleState.todos = readLocalTodos();
+      moduleState.todos = readLocalTodos(null);
       moduleState.loaded = true;
       moduleState.loading = false;
       renderTodos();
@@ -306,34 +331,46 @@
       return;
     }
 
-    const { data, error } = await context.supabase
-      .from('family_todos')
-      .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
-      .eq('household_id', context.household.id)
-      .order('completed', { ascending: true })
-      .order('due_date', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(500);
+    claimLegacyLocalTodos(context);
+    const expectedContext = contextKey(context);
+    moduleState.contextKey = expectedContext;
+
+    let result;
+    try {
+      result = await context.supabase
+        .from('family_todos')
+        .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
+        .eq('household_id', context.household.id)
+        .order('completed', { ascending: true })
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(500);
+    } catch {
+      result = { data: null, error: new Error('network request failed') };
+    }
+    if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
+    const { data, error } = result;
 
     if (error) {
-      moduleState.storage = 'local';
-      moduleState.todos = readLocalTodos();
+      moduleState.storage = isMissingTable(error) ? 'local' : 'remote';
+      moduleState.todos = isMissingTable(error) ? readLocalTodos(context) : [];
       moduleState.loaded = true;
       moduleState.loading = false;
       renderTodos();
       decorateCalendar();
-      if (!silent && !isMissingTable(error)) announce('할 일을 불러오지 못해 기기 저장으로 전환했어요.');
+      if (!silent && !isMissingTable(error)) announce('할 일을 불러오지 못했어요. 다시 시도해 주세요.');
       return;
     }
 
     let remoteData = data || [];
-    const localTodos = readLocalTodos();
+    const localTodos = readLocalTodos(context);
     if (localTodos.length) {
       const { error: migrateError } = await context.supabase
         .from('family_todos')
         .upsert(localTodos.map((todo) => toRemote(todo, context)), { onConflict: 'id' });
+      if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
       if (!migrateError) {
-        try { localStorage.removeItem(LOCAL_KEY); } catch { /* 원격 저장은 완료됨 */ }
+        try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
         const { data: refreshedData, error: refreshedError } = await context.supabase
           .from('family_todos')
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
@@ -342,6 +379,7 @@
           .order('due_date', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
           .limit(500);
+        if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
         if (!refreshedError) remoteData = refreshedData || [];
       }
     }
@@ -392,7 +430,8 @@
     }
 
     moduleState.todos.unshift(todo);
-    writeLocalTodos();
+    try { writeLocalTodos(); }
+    catch (error) { moduleState.todos.shift(); throw error; }
     renderTodos();
     decorateCalendar();
     if (!quiet) announce('할 일을 추가했어요.');
@@ -427,23 +466,29 @@
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
           .single();
         if (!error) {
-          moduleState.todos[index] = normalizeTodo(data);
+          const currentIndex = moduleState.todos.findIndex((todo) => todo.id === id);
+          if (currentIndex < 0) return null;
+          moduleState.todos[currentIndex] = normalizeTodo(data);
           renderTodos();
           decorateCalendar();
           if (!quiet) announce('할 일을 수정했어요.');
-          return moduleState.todos[index];
+          return moduleState.todos[currentIndex];
         }
         if (!isMissingTable(error)) throw error;
         moduleState.storage = 'local';
       }
     }
 
-    moduleState.todos[index] = normalizeTodo({ ...moduleState.todos[index], ...patch, updatedAt: new Date().toISOString() });
-    writeLocalTodos();
+    const localIndex = moduleState.todos.findIndex((todo) => todo.id === id);
+    if (localIndex < 0) return null;
+    const previous = moduleState.todos[localIndex];
+    moduleState.todos[localIndex] = normalizeTodo({ ...previous, ...patch, updatedAt: new Date().toISOString() });
+    try { writeLocalTodos(); }
+    catch (error) { moduleState.todos[localIndex] = previous; throw error; }
     renderTodos();
     decorateCalendar();
     if (!quiet) announce('할 일을 수정했어요.');
-    return moduleState.todos[index];
+    return moduleState.todos[localIndex];
   }
 
   async function deleteTodo(id) {
@@ -463,8 +508,13 @@
       }
     }
 
-    moduleState.todos.splice(index, 1);
-    if (moduleState.storage === 'local') writeLocalTodos();
+    const currentIndex = moduleState.todos.findIndex((todo) => todo.id === id);
+    if (currentIndex < 0) return;
+    const [removed] = moduleState.todos.splice(currentIndex, 1);
+    if (moduleState.storage === 'local') {
+      try { writeLocalTodos(); }
+      catch (error) { moduleState.todos.splice(currentIndex, 0, removed); throw error; }
+    }
     renderTodos();
     decorateCalendar();
     announce('할 일을 삭제했어요.');
@@ -472,6 +522,20 @@
 
   function recurrenceLabel(value) {
     return ({ daily: '매일', weekly: '매주', monthly: '매월' })[value] || '';
+  }
+
+  function monthlyAnchorDay(todo) {
+    let current = todo;
+    let anchor = parseDate(current?.dueDate)?.getDate() || null;
+    const visited = new Set();
+    while (current?.parentId && !visited.has(current.parentId)) {
+      visited.add(current.parentId);
+      const parent = moduleState.todos.find((item) => item.id === current.parentId);
+      if (!parent) break;
+      current = parent;
+      anchor = parseDate(parent.dueDate)?.getDate() || anchor;
+    }
+    return anchor;
   }
 
   function dueLabel(todo) {
@@ -649,13 +713,15 @@
     if (!todo || moduleState.busyIds.has(todo.id)) return;
     moduleState.busyIds.add(todo.id);
     renderTodos();
+    let completedSaved = false;
     try {
       const completed = !todo.completed;
       const completedAt = completed ? new Date().toISOString() : null;
       await updateTodo(todo.id, { completed, completedAt }, { quiet: true });
+      completedSaved = true;
 
       if (completed && todo.recurrence !== 'none' && todo.dueDate) {
-        const nextDueDate = addRecurrence(todo.dueDate, todo.recurrence);
+        const nextDueDate = addRecurrence(todo.dueDate, todo.recurrence, todo.recurrence === 'monthly' ? monthlyAnchorDay(todo) : null);
         if (nextDueDate) {
           const existing = moduleState.todos.some((item) => item.parentId === todo.id);
           if (!existing) {
@@ -672,6 +738,9 @@
         }
       } else announce(completed ? '완료했어요 🎉' : '다시 할 일로 돌렸어요.');
     } catch {
+      if (completedSaved && !todo.completed) {
+        try { await updateTodo(todo.id, { completed: false, completedAt: null }, { quiet: true }); } catch { /* 서버 재조회로 복구 */ }
+      }
       announce('완료 상태를 변경하지 못했어요.');
     } finally {
       moduleState.busyIds.delete(todo.id);
@@ -715,9 +784,11 @@
   todoFab.addEventListener('click', () => openTodoDialog());
   refreshButton.addEventListener('click', async () => {
     refreshButton.disabled = true;
-    await loadTodos({ silent: true });
-    refreshButton.disabled = false;
-    announce('가족 할 일을 새로고침했어요.');
+    try {
+      await loadTodos({ silent: true });
+      announce('가족 할 일을 새로고침했어요.');
+    } catch { announce('할 일을 새로고침하지 못했어요.'); }
+    finally { refreshButton.disabled = false; }
   });
 
   dialog.querySelector('[data-todo-close]').addEventListener('click', () => dialog.close());
@@ -784,6 +855,18 @@
   document.querySelector('.view-tabs')?.addEventListener('click', () => setTimeout(syncFab, 0));
   window.addEventListener('focus', () => {
     if (moduleState.mode === 'todo' && moduleState.storage === 'remote') loadTodos({ silent: true });
+  });
+  window.addEventListener('familycontextchange', () => {
+    moduleState.loadId += 1;
+    moduleState.loading = false;
+    moduleState.loaded = false;
+    moduleState.storage = 'local';
+    moduleState.contextKey = contextKey();
+    moduleState.todos = [];
+    moduleState.busyIds.clear();
+    renderTodos();
+    decorateCalendar();
+    loadTodos({ silent: true });
   });
 
   setMode(moduleState.mode, { persist: false });
