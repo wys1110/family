@@ -54,6 +54,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-dialog-simple", version: "20260717-simple-v1" },
     { name: "growth-photo-recovery", version: "20260718-signed-url-refresh-v1", style: false },
     { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
+    { name: "daily-intake-summary", version: "20260718-daily-total-v1" },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
