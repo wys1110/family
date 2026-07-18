@@ -59,6 +59,25 @@
     const directValue = totals.breastMinutes ? formatDuration(totals.breastMinutes) : "0분";
     const dateContext = carePatternDate === dateKey(new Date()) ? "오늘" : "선택한 날";
 
+    const clock = content.querySelector(".care-clock");
+    if (clock) {
+      const kicker = clock.querySelector(".care-clock-center-kicker");
+      const total = clock.querySelector(".care-clock-center-day");
+      const caption = clock.querySelector(".care-clock-center-caption");
+      const ageText = total?.textContent?.trim() || "";
+      if (kicker) kicker.textContent = "하루 수유";
+      if (total) {
+        total.textContent = `${formatMl(totals.bottleMl)}mL`;
+        total.classList.add("care-clock-intake-total");
+      }
+      if (caption) {
+        caption.textContent = [ageText, `직수 ${directValue}`].filter(Boolean).join(" · ");
+        caption.classList.add("care-clock-intake-meta");
+      }
+      const currentLabel = clock.getAttribute("aria-label") || `${dateContext} 돌봄 패턴`;
+      clock.setAttribute("aria-label", `${currentLabel}, 총 수유량 ${formatMl(totals.bottleMl)}밀리리터, 직수 ${directValue}`);
+    }
+
     content.insertAdjacentHTML("afterbegin", `
       <section class="daily-intake-summary" aria-label="${dateContext} 수유 합계" aria-live="polite">
         <header>
