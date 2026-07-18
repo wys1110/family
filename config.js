@@ -67,7 +67,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-intake-summary", version: "20260718-clock-total-v2" },
     { name: "growth-measurements", version: "20260718-combined-growth-v2" },
     { name: "growth-chart-polish", version: "20260718-premium-chart-v1" },
-    { name: "growth-history-edit", version: "20260718-history-edit-v1" },
+    { name: "growth-history-edit", version: "20260718-history-edit-v1", style: false, script: false },
     { name: "premium-ui", version: "20260718-premium-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260718-consolidated-v3", script: false },
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
@@ -75,6 +75,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
     { name: "typography-system", version: "20260718-title-balance-v6", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
+    { name: "growth-inline-chart", version: "20260718-inline-v1" },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
