@@ -25,24 +25,32 @@ jobs:
 
           path = Path("index.html")
           text = path.read_text(encoding="utf-8")
+          lines = text.splitlines()
 
-          old = '''            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>
-            <div class="care-pattern-date" id="carePatternDateNav">
-              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
-            </div>'''
-          new = '''            <div class="care-pattern-date" id="carePatternDateNav">
-              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
-            </div>
-            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>'''
+          content_marker = '<div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>'
+          nav_marker = '<div class="care-pattern-date" id="carePatternDateNav">'
 
-          if old in text:
-              text = text.replace(old, new, 1)
+          content_index = next((i for i, line in enumerate(lines) if content_marker in line), None)
+          nav_index = next((i for i, line in enumerate(lines) if nav_marker in line), None)
 
-          text = text.replace(
-              'config.js?v=20260718-inline-growth-v2',
+          if content_index is not None and nav_index is not None and nav_index > content_index:
+              nav_end = nav_index
+              while nav_end < len(lines) and lines[nav_end].strip() != '</div>':
+                  nav_end += 1
+              if nav_end >= len(lines):
+                  raise RuntimeError("care date navigation closing tag not found")
+
+              nav_block = lines[nav_index:nav_end + 1]
+              del lines[nav_index:nav_end + 1]
+              content_index = next(i for i, line in enumerate(lines) if content_marker in line)
+              lines[content_index:content_index] = nav_block
+
+          updated = "\n".join(lines) + "\n"
+          updated = updated.replace(
               'config.js?v=20260718-care-date-nav-v1',
+              'config.js?v=20260718-care-date-nav-v2',
           )
-          path.write_text(text, encoding="utf-8")
+          path.write_text(updated, encoding="utf-8")
           PY
 
       - name: Commit source-order fix
