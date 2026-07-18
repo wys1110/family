@@ -53,6 +53,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-layout", version: "20260717-baby-archive-v1", script: false },
     { name: "growth-dialog-simple", version: "20260717-simple-v1" },
     { name: "growth-photo-recovery", version: "20260718-signed-url-refresh-v1", style: false },
+    { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
