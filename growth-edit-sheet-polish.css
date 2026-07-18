@@ -1,0 +1,298 @@
+/* Final pass for the routine growth-record editor shown from care timelines. */
+#growthDialog {
+  width: min(calc(100% - 18px), 500px);
+  height: auto;
+  max-height: calc(100dvh - max(18px, env(safe-area-inset-top)));
+  margin: auto auto max(6px, env(safe-area-inset-bottom));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 38%, transparent);
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--surface-2) 58%, var(--surface));
+  box-shadow: 0 26px 72px rgba(42, 39, 37, .24);
+}
+
+#growthDialog #growthForm {
+  width: 100%;
+  max-height: calc(100dvh - max(18px, env(safe-area-inset-top)) - max(6px, env(safe-area-inset-bottom)));
+  padding: 12px 18px 0;
+  overflow-x: clip;
+  overflow-y: auto;
+  scroll-padding-bottom: 92px;
+  scrollbar-width: none;
+}
+
+#growthDialog #growthForm::-webkit-scrollbar { display: none; }
+
+#growthDialog .sheet-handle {
+  display: block;
+  width: 38px;
+  height: 5px;
+  margin: 0 auto 15px;
+  background: color-mix(in srgb, var(--secondary) 26%, transparent);
+}
+
+#growthDialog .dialog-header {
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 17px;
+}
+
+#growthDialog .dialog-header > div { min-width: 0; }
+
+#growthDialog .dialog-header .eyebrow {
+  margin: 0 0 3px;
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 720;
+  letter-spacing: .01em;
+}
+
+#growthDialog .dialog-header h2 {
+  overflow: visible;
+  color: var(--label);
+  font-size: clamp(26px, 7vw, 30px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -.05em;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+#growthDialog .close-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--label) 10%, transparent);
+  color: color-mix(in srgb, var(--secondary) 88%, var(--label));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  font-size: 25px;
+  font-weight: 330;
+  box-shadow: 0 5px 14px rgba(48, 43, 40, .055);
+}
+
+#growthDialog label,
+#growthDialog legend {
+  color: color-mix(in srgb, var(--secondary) 90%, var(--label));
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+#growthDialog input,
+#growthDialog select,
+#growthDialog textarea {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  padding: 0 13px;
+  border: 1px solid color-mix(in srgb, var(--label) 9%, transparent);
+  border-radius: 14px;
+  color: var(--label);
+  background: var(--surface);
+  font-size: 15px;
+  font-weight: 650;
+  box-shadow: none;
+}
+
+#growthDialog input:focus,
+#growthDialog select:focus,
+#growthDialog textarea:focus {
+  border-color: color-mix(in srgb, var(--blue) 52%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+
+#growthDialog .growth-primary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+  gap: 9px;
+  margin: 0 0 13px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--label) 8%, transparent);
+  border-radius: 19px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 6px 20px rgba(49, 44, 41, .035);
+}
+
+#growthDialog .growth-primary-row label { min-width: 0; margin: 0; }
+
+#growthDialog input[type="date"],
+#growthDialog input[type="time"] {
+  display: block;
+  width: 100%;
+  height: 48px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 11px;
+  overflow: hidden;
+  font-size: 16px !important;
+  font-variant-numeric: tabular-nums;
+}
+
+#growthDialog input[type="date"]::-webkit-date-and-time-value,
+#growthDialog input[type="time"]::-webkit-date-and-time-value {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+#growthDialog .growth-detail-group {
+  margin: 0 0 13px;
+  padding: 13px;
+  border: 1px solid color-mix(in srgb, var(--label) 8%, transparent);
+  border-radius: 19px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 6px 20px rgba(49, 44, 41, .035);
+}
+
+#growthDialog .growth-detail-group .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+#growthDialog .growth-detail-group .form-row + .form-row { margin-top: 9px; }
+#growthDialog .growth-detail-group label { min-width: 0; margin: 0; }
+
+#growthDialog .field-group-title {
+  margin: 0 0 11px;
+  padding: 0;
+  border: 0;
+  color: var(--label);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+#growthDialog .field-group-title::before { display: none; }
+
+#growthDialog .growth-optional-toggle {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  margin: 0 0 13px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--label) 9%, transparent);
+  border-radius: 15px;
+  color: color-mix(in srgb, var(--label) 80%, var(--blue));
+  background: color-mix(in srgb, var(--surface) 84%, var(--surface-2));
+  font-size: 11.5px;
+  font-weight: 740;
+  box-shadow: none;
+}
+
+#growthDialog.routine-growth-record .growth-optional-toggle { display: flex; }
+#growthDialog .growth-optional-toggle i { font-size: 18px; font-style: normal; font-weight: 400; }
+
+#growthDialog .growth-note-field textarea {
+  min-height: 102px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  line-height: 1.5;
+}
+
+#growthDialog .photo-fieldset {
+  margin: 0 0 13px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--label) 8%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+#growthDialog .photo-add-button {
+  min-height: 46px;
+  border: 1px dashed color-mix(in srgb, var(--blue) 30%, transparent);
+  border-radius: 14px;
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 6%, var(--surface));
+}
+
+#growthDialog .dialog-actions {
+  position: sticky;
+  z-index: 8;
+  bottom: 0;
+  display: flex;
+  gap: 9px;
+  margin: 14px -18px 0;
+  padding: 12px 18px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid color-mix(in srgb, var(--label) 8%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 -10px 24px rgba(48, 44, 41, .055);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+#growthDialog .dialog-actions button {
+  min-height: 52px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 780;
+}
+
+#growthDialog .danger-button {
+  flex: 0 0 76px;
+  padding: 0 12px;
+  color: color-mix(in srgb, var(--red) 92%, #8f4f4b);
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+}
+
+#growthDialog .primary-button {
+  flex: 1 1 auto;
+  color: white;
+  background: color-mix(in srgb, var(--green) 88%, #5d7b69);
+  box-shadow: 0 9px 20px color-mix(in srgb, var(--green) 18%, transparent);
+}
+
+html[data-family-theme="night"] #growthDialog {
+  border-color: rgba(255,255,255,.09);
+  background: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  box-shadow: 0 28px 78px rgba(0,0,0,.45);
+}
+
+html[data-family-theme="night"] #growthDialog .growth-primary-row,
+html[data-family-theme="night"] #growthDialog .growth-detail-group,
+html[data-family-theme="night"] #growthDialog .photo-fieldset,
+html[data-family-theme="night"] #growthDialog .growth-optional-toggle {
+  border-color: rgba(255,255,255,.08);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+@media (max-width: 520px) {
+  #growthDialog {
+    position: fixed;
+    inset: auto 0 max(4px, env(safe-area-inset-bottom));
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
+    margin: 0 auto;
+    border-right: 1px solid color-mix(in srgb, white 34%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, white 34%, transparent);
+    border-left: 1px solid color-mix(in srgb, white 34%, transparent);
+    border-radius: 29px;
+  }
+
+  #growthDialog #growthForm {
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
+    padding: 11px 17px 0;
+  }
+
+  #growthDialog .dialog-header { margin-bottom: 15px; }
+  #growthDialog .dialog-header h2 { font-size: clamp(26px, 7.4vw, 29px); }
+
+  #growthDialog .dialog-actions {
+    margin-right: -17px;
+    margin-left: -17px;
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+}
+
+@media (max-width: 360px) {
+  #growthDialog .growth-primary-row,
+  #growthDialog .growth-detail-group .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  #growthDialog .growth-primary-row { gap: 8px; }
+  #growthDialog .danger-button { flex-basis: 70px; }
+}
