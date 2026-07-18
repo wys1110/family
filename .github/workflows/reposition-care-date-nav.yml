@@ -1,0 +1,58 @@
+name: Reposition care date navigation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reposition-care-date-nav.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Move date navigation above timeline
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+
+          old = '''            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>
+            <div class="care-pattern-date" id="carePatternDateNav">
+              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
+            </div>'''
+          new = '''            <div class="care-pattern-date" id="carePatternDateNav">
+              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
+            </div>
+            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>'''
+
+          if old in text:
+              text = text.replace(old, new, 1)
+
+          text = text.replace(
+              'config.js?v=20260718-inline-growth-v2',
+              'config.js?v=20260718-care-date-nav-v1',
+          )
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit source-order fix
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No changes required"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: render care date navigation above timeline"
+          git push
