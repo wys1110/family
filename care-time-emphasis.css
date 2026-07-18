@@ -1,7 +1,7 @@
 .care-clock-hour {
   fill:rgba(42,49,45,.82) !important;
-  font-size:13px !important;
-  font-weight:800 !important;
+  font-size:var(--type-label-size);
+  font-weight:var(--type-weight-medium);
   font-variant-numeric:tabular-nums;
 }
 
@@ -58,7 +58,7 @@
 .care-time-row time {
   color:var(--care-time-color);
   font-size:24px;
-  font-weight:820;
+  font-weight:var(--type-weight-bold);
   letter-spacing:-.055em;
   line-height:1;
   font-variant-numeric:tabular-nums;
@@ -95,7 +95,7 @@
 }
 
 @media (min-width:768px) {
-  .care-clock-hour { font-size:15px !important; }
+  .care-clock-hour { font-size:var(--type-label-size); }
   .care-time-list { padding:20px; }
   .care-time-list-items { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
   .care-time-row { min-height:70px; grid-template-columns:92px 11px minmax(0,1fr); padding:10px 14px; }
