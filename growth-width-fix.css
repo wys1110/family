@@ -1,0 +1,44 @@
+/* Keep the growth journal inside the app shell on narrow mobile viewports.
+   A single implicit grid track can otherwise expand to a child's min-content
+   width (notably the three timer buttons), stretching every card to the right. */
+#growthView,
+#babyJournalContent {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#growthView {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+#babyJournalContent {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#babyJournalContent > *,
+#growthView .baby-profile-main,
+#growthView .care-timer-starts,
+#growthView .growth-quick-grid,
+#growthView .care-pattern-heading,
+#growthView .care-rhythm-legend {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#growthView .care-timer-starts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#growthView .care-timer-starts > button,
+#growthView .growth-quick-grid > button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#growthView .care-timer-starts > button strong,
+#growthView .care-timer-starts > button small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
