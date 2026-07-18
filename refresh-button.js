@@ -1,17 +1,8 @@
 (() => {
   if (document.querySelector('[data-refresh-module]')) return;
 
-  const topbar = document.querySelector('.topbar');
-  const accountButton = document.querySelector('#accountButton');
-  if (!topbar || !accountButton) return;
-
-  let actions = topbar.querySelector('.topbar-actions');
-  if (!actions) {
-    actions = document.createElement('div');
-    actions.className = 'topbar-actions';
-    topbar.insertBefore(actions, accountButton);
-    actions.appendChild(accountButton);
-  }
+  const appShell = document.querySelector('#appShell');
+  if (!appShell) return;
 
   const button = document.createElement('button');
   button.id = 'refreshButton';
@@ -21,8 +12,7 @@
   button.setAttribute('aria-label', '최신 기록 새로고침');
   button.setAttribute('title', '새로고침');
   button.innerHTML = '<span aria-hidden="true">↻</span>';
-  actions.insertBefore(button, accountButton);
-  topbar.classList.add('has-refresh-action');
+  appShell.appendChild(button);
 
   const showCompleteToast = () => {
     const toast = document.querySelector('#toast');
