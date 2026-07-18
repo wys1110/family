@@ -60,6 +60,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-history-edit", version: "20260718-history-edit-v1" },
     { name: "premium-ui", version: "20260718-premium-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260718-consolidated-v3", script: false },
+    { name: "growth-when-polish", version: "20260718-balanced-fields-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
