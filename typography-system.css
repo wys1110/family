@@ -71,9 +71,20 @@ body {
   letter-spacing: var(--type-tracking-body);
 }
 
-.app-shell .view-tab > span {
-  font-size: var(--type-icon-small);
+.app-shell .view-tab > .view-tab-icon {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 17px;
+  font-weight: var(--type-weight-regular);
   line-height: 1;
+  letter-spacing: 0;
+}
+
+.app-shell .view-tab > .view-tab-label {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-control-size);
+  font-weight: var(--type-weight-semibold);
+  line-height: var(--type-leading-control);
+  letter-spacing: var(--type-tracking-body);
 }
 
 /*
@@ -458,6 +469,23 @@ input[type="datetime-local"],
 
 #settingsView .theme-option {
   min-height: 90px;
+}
+
+/* Identical title rhythm even when a page uses a plain header or a card header. */
+#growthView .growth-page-header h2,
+#englishView .english-page-header h2,
+#featureRequestView .feature-request-heading h2,
+#settingsView #themeSettingsTitle {
+  margin-block: 4px 5px;
+}
+
+#growthView .growth-page-header .eyebrow,
+#englishView .english-page-header .eyebrow,
+#featureRequestView .feature-request-heading .eyebrow,
+#englishView .english-page-header h2 + span,
+#featureRequestView .feature-request-heading h2 + span,
+#settingsView #themeSettingsTitle + span {
+  margin-block: 0;
 }
 
 @media (max-width: 520px) {
