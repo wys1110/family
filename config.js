@@ -60,7 +60,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-history-edit", version: "20260718-history-edit-v1" },
     { name: "premium-ui", version: "20260718-premium-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260718-consolidated-v3", script: false },
-    { name: "growth-when-polish", version: "20260718-balanced-fields-v1", script: false },
+    { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
   ];
