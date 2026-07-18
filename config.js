@@ -58,6 +58,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-intake-summary", version: "20260718-clock-total-v2" },
     { name: "growth-measurements", version: "20260718-growth-curves-v1" },
     { name: "premium-ui", version: "20260718-premium-v1", script: false },
+    { name: "growth-edit-sheet-polish", version: "20260718-layout-v2", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
