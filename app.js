@@ -196,7 +196,7 @@ async function init() {
   if (window.FAMILY_MODULES_READY) {
     await Promise.race([
       window.FAMILY_MODULES_READY,
-      new Promise((resolve) => setTimeout(resolve, 1800)),
+      new Promise((resolve) => setTimeout(resolve, 5000)),
     ]);
   }
   await bootstrapData();
@@ -207,10 +207,7 @@ function authSessionKey(session) {
 }
 
 function lockMobileZoom() {
-  const preventGestureZoom = (event) => event.preventDefault();
-  ["gesturestart", "gesturechange", "gestureend"].forEach((type) => {
-    document.addEventListener(type, preventGestureZoom, { passive: false });
-  });
+  // Keep native pinch zoom available for accessibility.
 }
 
 function renderDailyVerse() {
