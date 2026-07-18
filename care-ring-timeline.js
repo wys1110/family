@@ -118,8 +118,7 @@
       careDayMode = CARE_DAY_MODES.has(button.dataset.careDayMode) ? button.dataset.careDayMode : "timeline";
       try { localStorage.setItem(CARE_DAY_MODE_KEY, careDayMode); } catch { /* 현재 화면에는 적용 */ }
 
-      if (careDayMode === "clock") ensureSleepControls({ activate: true });
-      else removeSleepControls();
+      ensureSleepControls({ activate: true });
 
       renderCarePattern(activeBabyEntries());
       toast(careDayMode === "clock" ? "원형 시계로 바꿨어요 🕐" : "타임라인으로 바꿨어요");
@@ -140,7 +139,7 @@
   };
 
   const renderSplitCareTimeline = (entries) => {
-    removeSleepControls();
+    ensureSleepControls({ activate: true });
 
     const date = parseDate(carePatternDate);
     const today = dateKey(new Date());
@@ -204,8 +203,7 @@
 
   renderCarePattern = function renderCarePatternWithDayMode(entries) {
     ensureDayModeControl();
-    if (careDayMode === "clock") ensureSleepControls();
-    else removeSleepControls();
+    ensureSleepControls({ activate: true });
 
     const result = baseRenderCarePattern(entries);
     updateDayModeControl();
@@ -219,8 +217,7 @@
   }
 
   ensureDayModeControl();
-  if (careDayMode === "clock") ensureSleepControls();
-  else removeSleepControls();
+  ensureSleepControls({ activate: true });
   updateDayModeControl();
   renderGrowth();
 })();
