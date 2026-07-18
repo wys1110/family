@@ -1,8 +1,20 @@
 (() => {
-  if (document.querySelector('[data-refresh-module]')) return;
+  const pageBody = document.body;
+  if (!pageBody) return;
 
-  const appShell = document.querySelector('#appShell');
-  if (!appShell) return;
+  // Keep both floating actions as direct body children. A transformed or filtered
+  // app container can otherwise make position: fixed behave like position: absolute
+  // on mobile Safari and leave the buttons halfway down the document.
+  const addEventButton = document.querySelector('#addEventButton');
+  if (addEventButton && addEventButton.parentElement !== pageBody) {
+    pageBody.appendChild(addEventButton);
+  }
+
+  const existingButton = document.querySelector('[data-refresh-module]');
+  if (existingButton) {
+    if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
+    return;
+  }
 
   const button = document.createElement('button');
   button.id = 'refreshButton';
@@ -12,7 +24,7 @@
   button.setAttribute('aria-label', '최신 기록 새로고침');
   button.setAttribute('title', '새로고침');
   button.innerHTML = '<span aria-hidden="true">↻</span>';
-  appShell.appendChild(button);
+  pageBody.appendChild(button);
 
   const showCompleteToast = () => {
     const toast = document.querySelector('#toast');
