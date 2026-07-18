@@ -7,9 +7,14 @@
   text-align: center;
 }
 
+/* Hide legacy + / pencil glyphs until the cleanup script replaces them. */
 .growth-inline-actions button > span,
 .growth-inline-empty > button > span {
-  position: relative;
+  display: none;
+}
+
+.growth-inline-actions button > span.growth-inline-action-icon,
+.growth-inline-empty > button > span.growth-inline-action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -18,38 +23,20 @@
   min-width: 18px;
   height: 18px;
   margin: 0;
-  overflow: hidden;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
+  overflow: visible;
+  color: currentColor;
+  -webkit-text-fill-color: currentColor;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 15px;
+  line-height: 1;
 }
 
 .growth-inline-actions button > span::before,
-.growth-inline-empty > button > span::before {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: initial;
-  -webkit-text-fill-color: initial;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 15px !important;
-  line-height: 1 !important;
-}
-
 .growth-inline-actions button > span::after,
+.growth-inline-empty > button > span::before,
 .growth-inline-empty > button > span::after {
+  display: none !important;
   content: none !important;
-}
-
-button[data-growth-inline-action="add"] > span::before {
-  content: "🌱";
-}
-
-button[data-growth-inline-action="edit"] > span::before {
-  content: "✏️";
 }
 
 .growth-inline-legend span {
@@ -86,17 +73,13 @@ button[data-growth-inline-action="edit"] > span::before {
     gap: 9px;
   }
 
-  .growth-inline-actions button > span,
-  .growth-inline-empty > button > span {
+  .growth-inline-actions button > span.growth-inline-action-icon,
+  .growth-inline-empty > button > span.growth-inline-action-icon {
     flex-basis: 20px;
     width: 20px;
     min-width: 20px;
     height: 20px;
-  }
-
-  .growth-inline-actions button > span::before,
-  .growth-inline-empty > button > span::before {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
   .growth-inline-grid text,
