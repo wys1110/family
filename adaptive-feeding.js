@@ -6,6 +6,7 @@
     formula: { label: "분유", title: "분유 수유", type: "분유" },
   };
   const sourceOrder = ["breast", "pumped", "formula"];
+  const careKinds = ["formula", "pumped", "breast", "solid", "sleep", "diaper"];
   const BOTTLE_DEFAULT_ML = 100;
   const BOTTLE_STEP_ML = 10;
   const BOTTLE_MIN_ML = 10;
@@ -23,11 +24,13 @@
   }
   function typeOf(entry) {
     if (entry?.category === "기저귀") return "diaper";
+    if (entry?.category === "수면") return "sleep";
     if (entry?.category !== "수유·이유식") return "";
     const type = String(entry.feedingType || "");
     const title = String(entry.title || "");
     if (type === "유축모유" || title.includes("유축")) return "pumped";
     if (type === "모유" || title.includes("모유")) return "breast";
+    if (type === "이유식" || title.includes("이유식")) return "solid";
     return "formula";
   }
   function entries() { return typeof activeBabyEntries === "function" ? activeBabyEntries() : []; }
@@ -177,19 +180,38 @@
     if (note && parts.length) note.textContent = parts.join(" · ");
   };
 
-  function label(kind) { return ({ formula: "분유", pumped: "유축", breast: "직수", diaper: "기저귀" })[kind]; }
+  const baseGrowthSummary = renderGrowthSummary;
+  renderGrowthSummary = function adaptiveGrowthSummary(items) {
+    baseGrowthSummary(items);
+    const periodDays = { day: 1, week: 7, month: 30 }[state.growthSummaryPeriod] || 1;
+    const end = dateKey(new Date());
+    const start = addDays(end, 1 - periodDays);
+    const feedings = items.filter((entry) => entry.date >= start && entry.date <= end && entry.category === "수유·이유식");
+    const total = (kind, field) => feedings.filter((entry) => typeOf(entry) === kind).reduce((sum, entry) => sum + (Number(entry[field]) || 0), 0);
+    const parts = [
+      ["분유", total("formula", "feedingMl"), "mL"],
+      ["유축", total("pumped", "feedingMl"), "mL"],
+      ["이유식", total("solid", "feedingMl"), "mL"],
+      ["직수", total("breast", "feedingMinutes"), "분"],
+    ].filter(([, value]) => value).map(([labelText, value, unit]) => `${labelText} ${value}${unit}`);
+    const note = document.querySelector("#growthSummaryGrid .summary-card.feed small");
+    if (note) note.textContent = parts.join(" · ") || (feedings.length ? "수유량·시간 미입력" : "기록 없음");
+  };
+
+  function label(kind) { return ({ formula: "분유", pumped: "유축", breast: "직수", solid: "이유식", sleep: "수면", diaper: "기저귀" })[kind]; }
   function detail(entry, kind) {
-    if (["formula", "pumped"].includes(kind)) return Number(entry.feedingMl) ? `${Number(entry.feedingMl)}mL` : label(kind);
+    if (["formula", "pumped", "solid"].includes(kind)) return Number(entry.feedingMl) ? `${Number(entry.feedingMl)}mL` : label(kind);
     if (kind === "breast") return [entry.feedingSide, Number(entry.feedingMinutes) ? formatDuration(Number(entry.feedingMinutes)) : ""].filter(Boolean).join(" · ") || "직수";
+    if (kind === "sleep") return Number(entry.sleepMinutes) ? formatDuration(Number(entry.sleepMinutes)) : "수면";
     return entry.diaperKind || "교체";
   }
   function installCareControls() {
     const container = document.querySelector("#carePatternCategories");
     if (!container || container.querySelector('[data-pattern-category="pumped"]')) return;
-    carePatternCategories.clear(); ["formula", "pumped", "breast", "diaper"].forEach((kind) => carePatternCategories.add(kind));
-    container.innerHTML = ["formula", "pumped", "breast", "diaper"].map((kind) => `<button type="button" class="${kind} active" data-pattern-category="${kind}" aria-pressed="true"><i>${kind === "formula" ? "F" : kind === "pumped" ? "P" : kind === "breast" ? "M" : "D"}</i>${label(kind)}</button>`).join("");
+    carePatternCategories.clear(); careKinds.forEach((kind) => carePatternCategories.add(kind));
+    container.innerHTML = careKinds.map((kind) => `<button type="button" class="${kind} active" data-pattern-category="${kind}" aria-pressed="true"><i>${kind === "formula" ? "F" : kind === "pumped" ? "P" : kind === "breast" ? "M" : kind === "solid" ? "S" : kind === "sleep" ? "Zz" : "D"}</i>${label(kind)}</button>`).join("");
     const legend = document.querySelector(".care-rhythm-legend");
-    if (legend) legend.innerHTML = ["formula", "pumped", "breast", "diaper"].map((kind) => `<span class="${kind}">${label(kind)}</span>`).join("");
+    if (legend) legend.innerHTML = careKinds.map((kind) => `<span class="${kind}">${label(kind)}</span>`).join("");
   }
   growthCareType = typeOf;
   const baseDailyCarePattern = renderDailyCareClock;
@@ -200,7 +222,7 @@
     const groups = dayItems.filter((entry) => entry.time && carePatternCategories.has(typeOf(entry))).reduce((map, entry) => {
       if (!map.has(entry.time)) map.set(entry.time, []); map.get(entry.time).push(entry); return map;
     }, new Map());
-    const byType = Object.fromEntries(["formula", "pumped", "breast", "diaper"].map((kind) => [kind, dayItems.filter((entry) => typeOf(entry) === kind)]));
+    const byType = Object.fromEntries(careKinds.map((kind) => [kind, dayItems.filter((entry) => typeOf(entry) === kind)]));
     const sum = (kind, field) => byType[kind].reduce((total, entry) => total + (Number(entry[field]) || 0), 0);
     const dayLabel = carePatternDate === today ? "오늘" : `${["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}요일`;
     document.querySelector("#carePatternDateLabel").textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 · ${dayLabel}`;
@@ -209,7 +231,7 @@
       const cards = (list) => list.map((entry) => { const kind = typeOf(entry); return `<article class="care-split-entry ${kind}"><span><i></i><strong>${label(kind)}</strong></span><small>${escapeHtml(detail(entry, kind))}</small></article>`; }).join("");
       return `<div class="care-split-row"><div class="care-split-cell feeding">${cards(row.filter((entry) => typeOf(entry) !== "diaper"))}</div><time class="care-split-time">${escapeHtml(time)}</time><div class="care-split-cell diaper">${cards(row.filter((entry) => typeOf(entry) === "diaper"))}</div></div>`;
     }).join("");
-    document.querySelector("#carePatternContent").innerHTML = `<section class="care-linear-card"><div class="care-linear-summary adaptive-feeding-summary"><article class="formula"><span>분유</span><strong>${sum("formula", "feedingMl")}mL</strong><small>${byType.formula.length}회</small></article><article class="pumped"><span>유축</span><strong>${sum("pumped", "feedingMl")}mL</strong><small>${byType.pumped.length}회</small></article><article class="breast"><span>직수</span><strong>${formatDuration(sum("breast", "feedingMinutes"))}</strong><small>${byType.breast.length}회</small></article><article class="diaper"><span>기저귀</span><strong>${byType.diaper.length}회</strong><small>오늘 기록</small></article></div><div class="care-split-heading"><span>직수 · 유축 · 분유</span><span>시간</span><span>기저귀</span></div><div class="care-split-timeline">${rows || '<p class="care-linear-empty">이 날짜에는 수유·기저귀 시간 기록이 없어요.</p>'}</div></section>`;
+    document.querySelector("#carePatternContent").innerHTML = `<section class="care-linear-card"><div class="care-linear-summary adaptive-feeding-summary"><article class="formula"><span>분유</span><strong>${sum("formula", "feedingMl")}mL</strong><small>${byType.formula.length}회</small></article><article class="pumped"><span>유축</span><strong>${sum("pumped", "feedingMl")}mL</strong><small>${byType.pumped.length}회</small></article><article class="breast"><span>직수</span><strong>${formatDuration(sum("breast", "feedingMinutes"))}</strong><small>${byType.breast.length}회</small></article><article class="solid"><span>이유식</span><strong>${sum("solid", "feedingMl")}mL</strong><small>${byType.solid.length}회</small></article><article class="sleep"><span>수면</span><strong>${formatDuration(sum("sleep", "sleepMinutes"))}</strong><small>${byType.sleep.length}회</small></article><article class="diaper"><span>기저귀</span><strong>${byType.diaper.length}회</strong><small>오늘 기록</small></article></div><div class="care-split-heading"><span>수유 · 이유식 · 수면</span><span>시간</span><span>기저귀</span></div><div class="care-split-timeline">${rows || '<p class="care-linear-empty">이 날짜에는 돌봄 시간 기록이 없어요.</p>'}</div></section>`;
   };
   renderDailyCareClock = function adaptiveDailyCarePattern(items) {
     const clockButton = document.querySelector('[data-care-day-mode="clock"]');
@@ -222,11 +244,11 @@
 
   renderWeeklyCarePattern = function adaptiveWeeklyPattern(items) {
     installCareControls();
-    const end = dateKey(new Date()), kinds = ["formula", "pumped", "breast", "diaper"], days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
+    const end = dateKey(new Date()), kinds = careKinds, days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
     const data = days.map((day) => {
       const current = items.filter((entry) => entry.date === day);
       const total = (kind, field) => current.filter((entry) => typeOf(entry) === kind).reduce((sum, entry) => sum + (Number(entry[field]) || (field ? 0 : 1)), 0);
-      return { day, formula: total("formula", "feedingMl"), pumped: total("pumped", "feedingMl"), breast: total("breast", "feedingMinutes"), diaper: current.filter((entry) => typeOf(entry) === "diaper").length };
+      return { day, formula: total("formula", "feedingMl"), pumped: total("pumped", "feedingMl"), breast: total("breast", "feedingMinutes"), solid: total("solid", "feedingMl"), sleep: total("sleep", "sleepMinutes"), diaper: current.filter((entry) => typeOf(entry) === "diaper").length };
     });
     const selected = kinds.filter((kind) => carePatternCategories.has(kind));
     const maxima = Object.fromEntries(kinds.map((kind) => [kind, Math.max(1, ...data.map((item) => item[kind]))]));
@@ -238,7 +260,7 @@
   };
   renderCareIntervals = function adaptiveIntervals(items) {
     installCareControls();
-    const start = addDays(dateKey(new Date()), -6), kinds = ["formula", "pumped", "breast", "diaper"].filter((kind) => carePatternCategories.has(kind));
+    const start = addDays(dateKey(new Date()), -6), kinds = careKinds.filter((kind) => carePatternCategories.has(kind));
     const cards = kinds.map((kind) => {
       const times = items.filter((entry) => entry.date >= start && typeOf(entry) === kind && entry.time).map((entry) => new Date(`${entry.date}T${entry.time}:00`).getTime()).filter(Number.isFinite).sort((a, b) => a - b);
       const gaps = times.slice(1).map((time, index) => Math.round((time - times[index]) / 60000)).filter((minutes) => minutes > 0 && minutes <= 1440), typical = median(gaps);
