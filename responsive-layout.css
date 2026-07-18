@@ -86,7 +86,7 @@
     min-height: 46px;
     padding-inline: 10px !important;
     border-radius: 11px;
-    font-size: 14px !important;
+    font-size: var(--type-control-size);
   }
 
   .hero-card,
