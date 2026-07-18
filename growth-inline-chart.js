@@ -70,16 +70,16 @@
     return path;
   };
 
-  const scaleBounds = (values, fallbackMargin) => {
-    if (!values.length) return { min: 0, max: 1, range: 1 };
+  const scaleBounds = (values, defaultRange, fallbackMargin) => {
+    if (!values.length) return { ...defaultRange, range: defaultRange.max - defaultRange.min };
     const rawMin = Math.min(...values);
     const rawMax = Math.max(...values);
     const difference = rawMax - rawMin;
     const margin = difference
-      ? Math.max(difference * 0.2, fallbackMargin * 0.3)
+      ? Math.max(difference * 0.18, fallbackMargin * 0.3)
       : fallbackMargin;
-    const min = Math.max(0, rawMin - margin);
-    const max = rawMax + margin;
+    const min = Math.max(0, Math.min(defaultRange.min, rawMin - margin));
+    const max = Math.max(defaultRange.max, rawMax + margin);
     return { min, max, range: Math.max(max - min, 0.01) };
   };
 
@@ -89,10 +89,19 @@
     const padding = { left: 43, right: 71, top: 25, bottom: 38 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
+    const defaultRanges = {
+      height: { min: 45, max: 65 },
+      weight: { min: 2, max: 8 },
+      head: { min: 32, max: 44 },
+    };
     const fallbackMargins = { height: 2, weight: 0.5, head: 1.5 };
     const scales = Object.fromEntries(Object.keys(metrics).map((key) => [
       key,
-      scaleBounds(entries.map((entry) => numberValue(entry[key])).filter((value) => value !== null), fallbackMargins[key]),
+      scaleBounds(
+        entries.map((entry) => numberValue(entry[key])).filter((value) => value !== null),
+        defaultRanges[key],
+        fallbackMargins[key],
+      ),
     ]));
     const xForIndex = (index) => entries.length === 1
       ? padding.left + plotWidth / 2
@@ -133,7 +142,8 @@
 
       const path = smoothPath(points);
       const latestPoint = points.at(-1);
-      const latestLabelY = Math.max(13, Math.min(height - padding.bottom - 5, latestPoint.y - 11));
+      const labelOffsets = { height: -12, weight: -12, head: 18 };
+      const latestLabelY = Math.max(13, Math.min(height - padding.bottom - 5, latestPoint.y + labelOffsets[metricKey]));
       return `
         ${path ? `<path class="growth-inline-line growth-inline-line--${metricKey}" d="${path}" style="stroke:${metric.color}"></path>` : ""}
         ${points.map((point) => `
@@ -173,7 +183,7 @@
 
   const signatureFor = (entries) => {
     const babyId = typeof activeBaby === "function" ? activeBaby()?.id || "" : "";
-    return `${babyId}|${entries.map((entry) => [entry.id, entry.date, entry.time || "", entry.height || "", entry.weight || "", entry.head || ""].join(":" )).join("|")}`;
+    return `${babyId}|${entries.map((entry) => [entry.id, entry.date, entry.time || "", entry.height || "", entry.weight || "", entry.head || ""].join(":")).join("|")}`;
   };
 
   const renderInlineChart = () => {
