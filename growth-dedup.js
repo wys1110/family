@@ -127,7 +127,6 @@
   }
 
   function applyGrowthDedupLayout() {
-    ensureCompactRecordingStyles();
     useWeeklySummaryByDefault();
     mergeRecordingTools();
     reorderGrowthSections();
