@@ -63,7 +63,7 @@ window.FAMILY_CONFIG = {
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
-    { name: "typography-system", version: "20260718-type-system-v2", script: false },
+    { name: "typography-system", version: "20260718-page-hierarchy-v3", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
