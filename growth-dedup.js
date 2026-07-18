@@ -80,6 +80,8 @@
     const quickSection = document.querySelector("#growthQuickSection");
     if (!timerCard) return;
 
+    timerCard.querySelector("#careTimerStarts")?.remove();
+
     let block = timerCard.querySelector(".care-quick-block");
     const quickGrid = block?.querySelector(".growth-quick-grid") || quickSection?.querySelector(".growth-quick-grid");
     if (!quickGrid) return;
