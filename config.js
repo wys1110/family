@@ -33,7 +33,7 @@ window.FAMILY_CONFIG = {
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
     { name: "care-ring-timeline", version: "20260717-day-mode-v2" },
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
-    { name: "growth-dedup", version: "20260717-compact-recording-v4" },
+    { name: "growth-dedup", version: "20260718-quick-feed-diaper-v5" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
