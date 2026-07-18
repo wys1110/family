@@ -1,0 +1,347 @@
+/*
+ * Family typography system
+ * Loaded after feature styles so every screen shares one readable hierarchy.
+ */
+
+:root {
+  --font-family-sans: "Pretendard", -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-family-serif: Georgia, "Apple Myungjo", "Nanum Myeongjo", serif;
+
+  --type-page-size: 24px;
+  --type-section-size: 18px;
+  --type-card-size: 16px;
+  --type-body-size: 15px;
+  --type-control-size: 14px;
+  --type-label-size: 13px;
+
+  --type-weight-regular: 400;
+  --type-weight-medium: 500;
+  --type-weight-semibold: 600;
+  --type-weight-bold: 700;
+
+  --type-leading-heading: 1.3;
+  --type-leading-body: 1.5;
+  --type-leading-control: 1.35;
+
+  --type-tracking-heading: -.025em;
+  --type-tracking-body: -.01em;
+  --type-tracking-label: .01em;
+
+  --type-color-strong: var(--label, #38443e);
+  --type-color-body: var(--label, #38443e);
+  --type-color-muted: var(--secondary, #7d7b76);
+}
+
+html {
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  color: var(--type-color-body);
+  font-family: var(--font-family-sans);
+  font-size: var(--type-body-size);
+  font-weight: var(--type-weight-regular);
+  line-height: var(--type-leading-body);
+  letter-spacing: var(--type-tracking-body);
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+/* Page and display titles */
+h1,
+.topbar h1,
+.growth-page-header h2,
+.auth-panel h1,
+.hero-card h2,
+.growth-hero h2,
+.baby-profile-copy h2 {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-page-size) !important;
+  font-weight: var(--type-weight-bold) !important;
+  line-height: var(--type-leading-heading) !important;
+  letter-spacing: var(--type-tracking-heading) !important;
+}
+
+/* Section titles */
+h2,
+.section-heading h2,
+.calendar-toolbar h2,
+.care-timer-heading h2,
+.care-pattern-heading h2,
+.growth-summary-header h2,
+.dialog-header h2 {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-section-size) !important;
+  font-weight: var(--type-weight-bold) !important;
+  line-height: var(--type-leading-heading) !important;
+  letter-spacing: var(--type-tracking-heading) !important;
+}
+
+/* Card titles and prominent row labels */
+h3,
+h4,
+.agenda-main strong,
+.growth-body strong,
+.account-card strong,
+.care-timer-starts strong,
+.care-timer-status strong,
+.summary-card strong,
+.growth-insight-row > article strong {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-card-size) !important;
+  font-weight: var(--type-weight-semibold) !important;
+  line-height: var(--type-leading-heading) !important;
+  letter-spacing: var(--type-tracking-body) !important;
+}
+
+p,
+li,
+dd,
+dt,
+blockquote,
+figcaption,
+.auth-copy,
+.account-card p,
+.member-dialog-copy,
+.bulk-dialog-copy,
+.completion-panel > p:not(.eyebrow) {
+  font-size: var(--type-body-size) !important;
+  font-weight: var(--type-weight-regular);
+  line-height: var(--type-leading-body) !important;
+  letter-spacing: var(--type-tracking-body);
+}
+
+/* Form and action controls */
+button,
+[role="button"],
+.view-tab,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-control-size) !important;
+  font-weight: var(--type-weight-semibold) !important;
+  line-height: var(--type-leading-control) !important;
+  letter-spacing: var(--type-tracking-body) !important;
+}
+
+input:not([type="button"]):not([type="submit"]):not([type="reset"]),
+select,
+textarea {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-body-size) !important;
+  font-weight: var(--type-weight-medium);
+  line-height: var(--type-leading-body) !important;
+  letter-spacing: var(--type-tracking-body);
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-size: var(--type-body-size);
+  font-weight: var(--type-weight-regular);
+}
+
+label,
+legend,
+small,
+cite,
+figcaption,
+.eyebrow,
+.album-kicker,
+.album-stamp,
+.field-optional,
+.field-group-title,
+.form-privacy-note,
+.calendar-help,
+.photo-help,
+.bulk-format-help,
+.bulk-preview-empty,
+.bulk-errors,
+.growth-summary-footer,
+.care-pattern-note,
+.archive-note,
+.auth-note,
+.member-dialog-copy {
+  font-family: var(--font-family-sans);
+  font-size: var(--type-label-size) !important;
+  font-weight: var(--type-weight-medium) !important;
+  line-height: var(--type-leading-body) !important;
+  letter-spacing: var(--type-tracking-label) !important;
+}
+
+:where(
+  [class*="-kicker"],
+  [class*="-badge"],
+  [class*="-help"],
+  [class*="-note"],
+  [class*="-caption"],
+  [class*="-meta"],
+  [class*="-label"]
+) {
+  font-size: var(--type-label-size) !important;
+  font-weight: var(--type-weight-medium) !important;
+  line-height: var(--type-leading-control) !important;
+}
+
+/* Compact text that previously fell below the 13px readability floor */
+.daily-verse-heading p,
+.daily-verse-heading > span:last-child,
+.daily-verse-card cite,
+.family-chip,
+.weekdays span,
+.day-number,
+.day-event-preview,
+.calendar-event-bar,
+.calendar-overflow-badge,
+.more-events,
+.count-badge,
+.quick-date-badge span,
+.quick-add-heading label > span,
+.agenda-main .time,
+.growth-date,
+.growth-body i,
+.photo-count,
+.baby-selector button,
+.baby-profile-copy p,
+.baby-profile-copy > span,
+.baby-dday small,
+.today-care-grid span,
+.summary-card span,
+.insight-title span,
+.growth-insight-row > article span,
+.growth-insight-empty span,
+.recent-photo-grid span,
+.quick-log-copy,
+.event-when b,
+.drag-ghost small,
+.bulk-preview-list > p,
+.bulk-preview-list small,
+.photo-viewer-panel figcaption span,
+.recent-photo-actions button,
+.photo-album-header > div > span,
+.photo-album-header > strong,
+.photo-album-month span,
+.photo-album-grid button > span,
+.care-snapshot-heading span,
+.care-snapshot-heading i,
+.care-live-badge,
+.care-timer-status em,
+.care-rhythm-legend span,
+.care-pattern-date strong,
+.care-clock-hour,
+.care-clock-center-kicker,
+.care-clock-center-caption,
+.care-clock-periods span,
+.care-clock-summary span,
+.care-rhythm-day strong,
+.care-rhythm-day span,
+.care-rhythm-empty span,
+.care-interval-card span,
+.feeding-reminder-copy,
+.feeding-reminder-meta,
+.todo-meta,
+.settings-copy,
+.settings-note,
+.feature-request-meta {
+  font-size: var(--type-label-size) !important;
+  font-weight: var(--type-weight-medium) !important;
+  line-height: var(--type-leading-control) !important;
+  letter-spacing: var(--type-tracking-body) !important;
+}
+
+.growth-hero::before,
+.growth-diary-mascot i {
+  font-size: var(--type-label-size) !important;
+  font-weight: var(--type-weight-semibold) !important;
+  line-height: var(--type-leading-control) !important;
+}
+
+/* Dates, times and measurements stay aligned and easy to scan. */
+time,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+.agenda-main .time,
+.event-when,
+.growth-date,
+.quick-date-badge,
+.care-pattern-date,
+.care-clock-hour,
+.care-timer-status time,
+.baby-dday,
+.today-care-grid strong,
+.summary-card strong,
+.growth-measurement-value,
+.growth-chart-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0 !important;
+}
+
+/* Keep decorative glyphs independent from the text scale. */
+.daily-verse-heading .verse-cross,
+.google-mark,
+.avatar-button i,
+.growth-sprout,
+.growth-arrow,
+.quick-symbol,
+.timer-start-icon,
+.drag-handle,
+.close-button,
+.icon-button {
+  line-height: 1 !important;
+}
+
+.icon-button {
+  font-size: 25px !important;
+}
+
+.close-button,
+.drag-handle {
+  font-size: 22px !important;
+}
+
+.growth-photo-item button {
+  font-size: 16px !important;
+}
+
+/* Theme-specific font choices remain intentional. */
+.daily-verse-card blockquote,
+[data-family-theme="storybook"] .daily-verse-card blockquote,
+[data-family-theme="ghibli"] .daily-verse-card blockquote {
+  font-family: var(--font-family-serif);
+}
+
+@media (max-width: 520px) {
+  body {
+    font-size: var(--type-body-size);
+  }
+
+  h1,
+  .topbar h1,
+  .growth-page-header h2,
+  .auth-panel h1,
+  .hero-card h2,
+  .growth-hero h2,
+  .baby-profile-copy h2 {
+    font-size: var(--type-page-size) !important;
+  }
+
+  .view-tab,
+  .day-event-preview,
+  .calendar-event-bar,
+  .calendar-help,
+  .family-chip {
+    font-size: var(--type-label-size) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    --type-page-size: 24px;
+  }
+}
