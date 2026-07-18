@@ -27,7 +27,7 @@ window.FAMILY_CONFIG = {
   const modules = [
     { name: "growth-delete-sync", version: "20260717-delete-refresh-v1" },
     { name: "calendar-swipe", version: "20260716-fast-swipe" },
-    { name: "english-stories", version: "20260716-baby-stories" },
+    { name: "english-stories", version: "20260718-title-balance-v2" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
@@ -63,7 +63,7 @@ window.FAMILY_CONFIG = {
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
-    { name: "typography-system", version: "20260718-visual-alignment-v5", script: false },
+    { name: "typography-system", version: "20260718-title-balance-v6", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
