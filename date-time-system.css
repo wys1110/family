@@ -1,0 +1,198 @@
+/* Shared premium date/time controls for every sheet form. */
+:root {
+  --date-time-control-height: 54px;
+  --date-time-control-radius: 16px;
+}
+
+.sheet-dialog label:has(> input[type="date"]),
+.sheet-dialog label:has(> input[type="time"]),
+#growthDialog .growth-primary-row > label {
+  position: relative;
+  display: block;
+  min-width: 0;
+  color: color-mix(in srgb, var(--secondary) 92%, var(--label));
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+}
+
+.sheet-dialog input[type="date"],
+.sheet-dialog input[type="time"],
+#growthDialog .growth-primary-row input[type="date"],
+#growthDialog .growth-primary-row input[type="time"] {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: var(--date-time-control-height) !important;
+  min-height: var(--date-time-control-height) !important;
+  margin: 7px 0 0 !important;
+  padding: 0 15px !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--label) 11%, transparent) !important;
+  border-radius: var(--date-time-control-radius) !important;
+  outline: none;
+  color: var(--label) !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--surface-2)) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+  letter-spacing: -.018em;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  text-overflow: clip;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: 0 4px 14px rgba(49, 44, 41, .035) !important;
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.sheet-dialog input[type="date"]:focus,
+.sheet-dialog input[type="time"]:focus,
+#growthDialog .growth-primary-row input[type="date"]:focus,
+#growthDialog .growth-primary-row input[type="time"]:focus {
+  border-color: color-mix(in srgb, var(--blue) 48%, transparent) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 10%, transparent), 0 5px 16px rgba(49, 44, 41, .045) !important;
+}
+
+.sheet-dialog input[type="date"]::-webkit-date-and-time-value,
+.sheet-dialog input[type="time"]::-webkit-date-and-time-value,
+.sheet-dialog input[type="date"]::-webkit-datetime-edit,
+.sheet-dialog input[type="time"]::-webkit-datetime-edit,
+#growthDialog .growth-primary-row input[type="date"]::-webkit-date-and-time-value,
+#growthDialog .growth-primary-row input[type="time"]::-webkit-date-and-time-value,
+#growthDialog .growth-primary-row input[type="date"]::-webkit-datetime-edit,
+#growthDialog .growth-primary-row input[type="time"]::-webkit-datetime-edit {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  line-height: normal;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sheet-dialog input[type="date"]::-webkit-calendar-picker-indicator,
+.sheet-dialog input[type="time"]::-webkit-calendar-picker-indicator,
+#growthDialog .growth-primary-row input[type="date"]::-webkit-calendar-picker-indicator,
+#growthDialog .growth-primary-row input[type="time"]::-webkit-calendar-picker-indicator {
+  width: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+@supports selector(label:has(> input)) {
+  .sheet-dialog label:has(> input[type="date"])::after,
+  .sheet-dialog label:has(> input[type="time"])::after,
+  #growthDialog .growth-primary-row > label:has(> input[type="date"])::after,
+  #growthDialog .growth-primary-row > label:has(> input[type="time"])::after {
+    position: absolute;
+    z-index: 1;
+    bottom: 17px;
+    left: 15px;
+    width: 20px;
+    height: 20px;
+    content: "";
+    pointer-events: none;
+    background-color: color-mix(in srgb, var(--secondary) 84%, var(--label));
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+  }
+
+  .sheet-dialog label:has(> input[type="date"])::after,
+  #growthDialog .growth-primary-row > label:has(> input[type="date"])::after {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5.5' width='17' height='15' rx='2.5'/%3E%3Cpath d='M7 3.5v4M17 3.5v4M3.5 9.5h17'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5.5' width='17' height='15' rx='2.5'/%3E%3Cpath d='M7 3.5v4M17 3.5v4M3.5 9.5h17'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .sheet-dialog label:has(> input[type="time"])::after,
+  #growthDialog .growth-primary-row > label:has(> input[type="time"])::after {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5v5l3.4 2'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5v5l3.4 2'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .sheet-dialog input[type="date"],
+  .sheet-dialog input[type="time"],
+  #growthDialog .growth-primary-row input[type="date"],
+  #growthDialog .growth-primary-row input[type="time"] {
+    padding-left: 47px !important;
+  }
+}
+
+.sheet-dialog .form-row:has(> label > input[type="date"]):has(> label > input[type="time"]),
+#growthDialog .growth-primary-row {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr) !important;
+  align-items: stretch;
+  gap: 12px !important;
+}
+
+.sheet-dialog .form-row:has(> label > input[type="date"]):has(> label > input[type="time"]) > label,
+#growthDialog .growth-primary-row > label {
+  margin-bottom: 0;
+}
+
+.sheet-dialog .event-date-fields,
+.sheet-dialog .bulk-defaults {
+  align-items: stretch;
+  gap: 12px;
+}
+
+html[data-family-theme="night"] .sheet-dialog input[type="date"],
+html[data-family-theme="night"] .sheet-dialog input[type="time"],
+html[data-family-theme="night"] #growthDialog .growth-primary-row input[type="date"],
+html[data-family-theme="night"] #growthDialog .growth-primary-row input[type="time"] {
+  border-color: rgba(255, 255, 255, .09) !important;
+  background: color-mix(in srgb, var(--surface) 95%, transparent) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12) !important;
+}
+
+@media (max-width: 370px) {
+  .sheet-dialog .form-row:has(> label > input[type="date"]):has(> label > input[type="time"]),
+  #growthDialog .growth-primary-row {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr) !important;
+    gap: 9px !important;
+  }
+
+  @supports selector(label:has(> input)) {
+    .sheet-dialog input[type="date"],
+    .sheet-dialog input[type="time"],
+    #growthDialog .growth-primary-row input[type="date"],
+    #growthDialog .growth-primary-row input[type="time"] {
+      padding-right: 11px !important;
+      padding-left: 43px !important;
+    }
+
+    .sheet-dialog label:has(> input[type="date"])::after,
+    .sheet-dialog label:has(> input[type="time"])::after,
+    #growthDialog .growth-primary-row > label:has(> input[type="date"])::after,
+    #growthDialog .growth-primary-row > label:has(> input[type="time"])::after {
+      left: 13px;
+      bottom: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+@media (max-width: 350px) {
+  .sheet-dialog .form-row:has(> label > input[type="date"]):has(> label > input[type="time"]),
+  .sheet-dialog .event-date-fields,
+  .sheet-dialog .bulk-defaults,
+  #growthDialog .growth-primary-row {
+    grid-template-columns: 1fr !important;
+  }
+}
