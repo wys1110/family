@@ -1,8 +1,8 @@
 .refresh-button {
-  position: fixed;
-  z-index: 20;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  position: fixed !important;
+  z-index: 1000;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: grid;
   place-items: center;
   width: 52px;
@@ -21,6 +21,15 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+}
+
+/* The main action is moved to body by refresh-button.js for the same iOS fix. */
+body > #addEventButton.fab {
+  position: fixed !important;
+  z-index: 999;
+  left: 50%;
+  right: auto;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 .refresh-button span {
@@ -58,17 +67,25 @@
 
 @media (min-width: 768px) {
   .refresh-button {
-    right: 24px;
-    bottom: 24px;
+    right: calc(24px + env(safe-area-inset-right, 0px));
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body > #addEventButton.fab {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 }
 
 @media (max-width: 380px) {
   .refresh-button {
-    right: max(14px, env(safe-area-inset-right));
-    bottom: max(14px, env(safe-area-inset-bottom));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     width: 48px;
     height: 48px;
+  }
+
+  body > #addEventButton.fab {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .refresh-button span { font-size: 23px; }
