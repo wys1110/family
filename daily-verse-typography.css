@@ -1,0 +1,53 @@
+/*
+ * Daily verse typography
+ * Keeps the home verse card aligned with the app-wide type scale.
+ */
+.daily-verse-card {
+  min-height: 118px;
+  padding: 17px 18px 16px;
+}
+
+.daily-verse-heading {
+  gap: 9px;
+}
+
+.daily-verse-heading .verse-cross {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  font-size: 11px;
+}
+
+.daily-verse-heading p {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -.01em;
+}
+
+.daily-verse-heading > span:last-child {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.daily-verse-card blockquote {
+  margin: 12px 0 5px;
+  font-size: clamp(19px, 4.8vw, 22px);
+  line-height: 1.4;
+  letter-spacing: -.03em;
+}
+
+.daily-verse-card cite {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 360px) {
+  .daily-verse-card {
+    padding-inline: 16px;
+  }
+
+  .daily-verse-heading > span:last-child {
+    display: none;
+  }
+}
