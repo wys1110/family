@@ -76,7 +76,7 @@ window.FAMILY_CONFIG = {
     { name: "typography-system", version: "20260718-title-balance-v6", script: false },
     { name: "daily-verse-typography", version: "20260718-font-v2", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
-    { name: "growth-inline-chart", version: "20260718-inline-v1" },
+    { name: "growth-inline-chart", version: "20260718-inline-v2" },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
