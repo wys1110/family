@@ -1,0 +1,68 @@
+/* Previous growth entry access and four-action layout. */
+.latest-growth-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 360px);
+  max-width: 360px;
+}
+
+.latest-growth-actions button,
+.latest-growth-actions button.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  flex: none;
+}
+
+.latest-growth-actions button.primary {
+  grid-column: auto;
+  flex-basis: auto;
+}
+
+.latest-growth-actions [data-growth-history-action="open"] span:first-child {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.growth-measure-history {
+  scroll-margin-top: 18px;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.growth-measure-history.growth-history-highlight {
+  border-top-color: color-mix(in srgb, var(--blue) 36%, transparent);
+  background: color-mix(in srgb, var(--blue) 4%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 6%, transparent);
+}
+
+.growth-history-form-hint {
+  margin: -2px 0 14px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--blue) 15%, transparent);
+  border-radius: 14px;
+  color: color-mix(in srgb, var(--secondary) 88%, var(--label));
+  background: color-mix(in srgb, var(--blue) 6%, var(--surface));
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+@media (max-width: 620px) {
+  .latest-growth-actions {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 350px) {
+  .latest-growth-actions {
+    grid-template-columns: 1fr;
+  }
+}
