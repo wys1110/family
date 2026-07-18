@@ -33,13 +33,13 @@ window.FAMILY_CONFIG = {
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
     { name: "care-ring-timeline", version: "20260717-day-mode-v2" },
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
-    { name: "growth-dedup", version: "20260718-quick-feed-diaper-v5" },
+    { name: "growth-dedup", version: "20260718-premium-v1" },
     { name: "feature-request", version: "20260716-feature-request-db-v1" },
     { name: "refresh-button", version: "20260716-refresh-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
     { name: "feeding-reminder", version: "20260717-user-interval-v1" },
-    { name: "tab-emojis", version: "20260716-tab-emojis-v1" },
+    { name: "tab-emojis", version: "20260718-premium-v1" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260716-family-todo-v1" },
@@ -55,6 +55,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-photo-recovery", version: "20260718-signed-url-refresh-v1", style: false },
     { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
     { name: "daily-intake-summary", version: "20260718-daily-total-v1" },
+    { name: "premium-ui", version: "20260718-premium-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
