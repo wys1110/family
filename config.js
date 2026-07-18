@@ -39,7 +39,7 @@ window.FAMILY_CONFIG = {
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260716-theme-settings-v1" },
     { name: "feeding-reminder", version: "20260717-user-interval-v1" },
-    { name: "tab-emojis", version: "20260718-premium-v1" },
+    { name: "tab-emojis", version: "20260718-baseline-v2" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260716-family-todo-v1" },
@@ -63,7 +63,7 @@ window.FAMILY_CONFIG = {
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
-    { name: "typography-system", version: "20260718-aligned-v4", script: false },
+    { name: "typography-system", version: "20260718-visual-alignment-v5", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
