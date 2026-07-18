@@ -1,0 +1,83 @@
+.invite-link-card {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.invite-link-card .invite-link-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 2px;
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+  font-size: 21px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+
+.invite-link-card strong {
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -.025em;
+}
+
+.invite-link-card p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.invite-link-action,
+.invite-link-card .invite-link-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 7px;
+  border: 0;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--theme-hero-start, #6b8777), var(--theme-hero-end, #8fa68e));
+  font-size: 14px;
+  font-weight: 780;
+  box-shadow: 0 10px 22px rgba(var(--theme-accent-rgb, 86, 121, 106), .18);
+}
+
+.invite-link-action:disabled {
+  opacity: .65;
+}
+
+.invite-link-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 2px;
+  color: var(--tertiary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.invite-link-divider::before,
+.invite-link-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: color-mix(in srgb, var(--label) 8%, transparent);
+}
+
+.invite-link-help {
+  margin: 14px 4px 2px;
+  color: var(--tertiary);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+html[data-family-theme="night"] .invite-link-card .invite-link-icon {
+  background: color-mix(in srgb, var(--blue) 14%, var(--surface));
+}
