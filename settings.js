@@ -158,7 +158,10 @@
       });
       if (settingsView) settingsView.hidden = false;
       document.querySelectorAll('.view-tab').forEach((button) => {
-        button.classList.toggle('active', button.dataset.view === VIEW_NAME);
+        const active = button.dataset.view === VIEW_NAME;
+        button.classList.toggle('active', active);
+        button.setAttribute('role', 'tab');
+        button.setAttribute('aria-selected', String(active));
       });
       if (addButton) addButton.hidden = true;
     };
