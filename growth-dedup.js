@@ -47,7 +47,7 @@
         border: 0;
       }
       #growthView #careTimerCard .care-quick-block .growth-quick-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         margin: 0;
       }
@@ -87,7 +87,7 @@
     if (!quickGrid) return;
 
     quickGrid
-      .querySelectorAll('[data-growth-quick="건강·병원"], [data-growth-quick="성장"], [data-growth-quick="첫 순간"]')
+      .querySelectorAll('[data-growth-quick="수면"], [data-growth-quick="건강·병원"], [data-growth-quick="성장"], [data-growth-quick="첫 순간"]')
       .forEach((button) => button.remove());
 
     if (!block) {
