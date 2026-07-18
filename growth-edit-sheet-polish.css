@@ -170,9 +170,9 @@
   overflow: hidden;
   -webkit-appearance: none;
   appearance: none;
-  font-size: 16px !important;
-  font-weight: 680;
-  line-height: 1.2 !important;
+  font-size: var(--type-body-size);
+  font-weight: var(--type-weight-medium);
+  line-height: var(--type-leading-body);
   font-variant-numeric: tabular-nums;
   text-overflow: clip;
   white-space: nowrap;
