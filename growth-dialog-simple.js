@@ -2,6 +2,7 @@
   const dialog = document.querySelector("#growthDialog");
   const form = document.querySelector("#growthForm");
   const categorySelect = document.querySelector("#growthCategory");
+  const submitButton = document.querySelector("#growthSubmitButton");
   if (!dialog || !form || !categorySelect || dialog.dataset.simpleLayoutBound === "true") return;
 
   dialog.dataset.simpleLayoutBound = "true";
@@ -37,6 +38,13 @@
   optionalToggle.innerHTML = '<span>메모·사진 추가</span><i aria-hidden="true">＋</i>';
   noteLabel?.before(optionalToggle);
 
+  const isEditing = () => Boolean(document.querySelector("#growthId")?.value);
+
+  const syncSubmitLabel = () => {
+    if (!submitButton || submitButton.getAttribute("aria-busy") === "true") return;
+    submitButton.textContent = isEditing() ? "수정하기" : "기록하기";
+  };
+
   const optionalHasContent = () => Boolean(
     document.querySelector("#growthNote")?.value.trim()
     || document.querySelector("#growthPhotoPreview")?.childElementCount
@@ -52,7 +60,7 @@
   const applySimpleLayout = () => {
     const category = categorySelect.value;
     const routine = routineCategories.has(category);
-    const editing = Boolean(document.querySelector("#growthId")?.value);
+    const editing = isEditing();
 
     dialog.classList.toggle("routine-growth-record", routine);
     dialog.classList.toggle("general-growth-record", !routine);
@@ -67,6 +75,8 @@
     } else {
       setOptionalOpen(true);
     }
+
+    syncSubmitLabel();
   };
 
   optionalToggle.addEventListener("click", () => {
@@ -75,6 +85,13 @@
 
   categorySelect.addEventListener("change", () => requestAnimationFrame(applySimpleLayout));
   dialog.addEventListener("close", () => setOptionalOpen(false));
+
+  if (submitButton) {
+    new MutationObserver(syncSubmitLabel).observe(submitButton, {
+      attributes: true,
+      attributeFilter: ["aria-busy"],
+    });
+  }
 
   if (typeof openGrowthDialog === "function" && !openGrowthDialog.__simpleLayoutWrapped) {
     const originalOpenGrowthDialog = openGrowthDialog;
