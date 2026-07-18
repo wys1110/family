@@ -83,9 +83,9 @@ html .view-tab {
   border: 1px solid transparent;
   border-radius: 13px;
   color: var(--secondary);
-  font-size: 10.5px !important;
-  font-weight: 720;
-  letter-spacing: -.02em;
+  font-size: var(--type-control-size);
+  font-weight: var(--type-weight-semibold);
+  letter-spacing: var(--type-tracking-body);
 }
 html .view-tab.active {
   color: var(--label);
@@ -307,7 +307,7 @@ html[data-family-theme="night"] #quickLogDialog.feeding-quick-active .feeding-di
   .topbar { min-height: 70px; margin-bottom: 22px; }
   .daily-verse-card { min-height: 122px; padding: 21px 26px; border-radius: var(--ui-radius-lg); }
   html .view-tabs { margin-bottom: 24px; }
-  html .view-tab { min-height: 48px; padding-inline: 12px !important; font-size: 14px !important; }
+  html .view-tab { min-height: 48px; padding-inline: 12px !important; font-size: var(--type-control-size); }
   .hero-card { min-height: 210px; }
   .calendar-card { padding: 27px 22px 20px; border-radius: 30px; }
   .growth-list { grid-template-columns: 1fr; max-width: 820px; }
@@ -335,7 +335,7 @@ html[data-family-theme="night"] #quickLogDialog.feeding-quick-active .feeding-di
 
 @media (max-width: 360px) {
   .app-shell { padding-right: 11px; padding-left: 11px; }
-  html .view-tab { padding-inline: 2px !important; font-size: 9.5px !important; }
+  html .view-tab { padding-inline: 2px !important; font-size: var(--type-control-size); }
   .daily-verse-card { padding-right: 15px; padding-left: 15px; }
   .calendar-help { align-items: flex-start; padding-right: 8px; padding-left: 8px; text-align: left; }
 }
