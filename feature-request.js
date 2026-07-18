@@ -78,17 +78,26 @@
   const refreshButton = view.querySelector('#featureRequestRefresh');
   let isOwner = false;
   let adminInitialized = false;
+  let adminContextKey = '';
+  let requestLoadId = 0;
+  let submitInProgress = false;
   let messageTimer = null;
 
+  const contextKey = (context = getFamilyContext()) => context
+    ? `${context.session.user.id}:${context.household.id}`
+    : 'device';
+
+  let activeDraftKey = `${DRAFT_KEY}:${typeof state !== 'undefined' && state.session?.user?.id ? state.session.user.id : 'device'}`;
+
   const readDraft = () => {
-    try { return localStorage.getItem(DRAFT_KEY) || ''; }
+    try { return localStorage.getItem(activeDraftKey) || ''; }
     catch { return ''; }
   };
 
   const saveDraft = (value) => {
     try {
-      if (value) localStorage.setItem(DRAFT_KEY, value);
-      else localStorage.removeItem(DRAFT_KEY);
+      if (value) localStorage.setItem(activeDraftKey, value);
+      else localStorage.removeItem(activeDraftKey);
     } catch { /* 브라우저 저장이 막혀도 입력은 계속 허용 */ }
   };
 
@@ -171,33 +180,48 @@
       adminCount.textContent = '가족 공간 연결 후 요청을 확인할 수 있어요.';
       return;
     }
-
+    const loadId = ++requestLoadId;
+    const expectedContext = contextKey(context);
     refreshButton.disabled = true;
     refreshButton.textContent = '불러오는 중…';
-    const { data, error } = await context.supabase
-      .from('feature_requests')
-      .select('id, content, status, requester_name, created_at, updated_at')
-      .eq('household_id', context.household.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    refreshButton.disabled = false;
-    refreshButton.textContent = '새로고침';
-
-    if (error) {
-      adminCount.textContent = '요청을 불러오지 못했어요.';
-      requestList.innerHTML = '<div class="feature-request-empty error"><strong>DB 업데이트가 필요해요</strong><span>Supabase에 기능 요청 마이그레이션이 적용됐는지 확인해 주세요.</span></div>';
-      return;
+    try {
+      const { data, error } = await context.supabase
+        .from('feature_requests')
+        .select('id, content, status, requester_name, created_at, updated_at')
+        .eq('household_id', context.household.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (loadId !== requestLoadId || expectedContext !== adminContextKey || expectedContext !== contextKey()) return;
+      if (error) {
+        adminCount.textContent = '요청을 불러오지 못했어요.';
+        requestList.innerHTML = '<div class="feature-request-empty error"><strong>DB 업데이트가 필요해요</strong><span>Supabase에 기능 요청 마이그레이션이 적용됐는지 확인해 주세요.</span></div>';
+        return;
+      }
+      renderRequests(data || []);
+    } catch {
+      if (loadId === requestLoadId && expectedContext === adminContextKey) adminCount.textContent = '요청을 불러오지 못했어요.';
+    } finally {
+      if (loadId === requestLoadId) {
+        refreshButton.disabled = false;
+        refreshButton.textContent = '새로고침';
+      }
     }
-    renderRequests(data || []);
   };
 
   const initializeAdmin = async () => {
-    if (adminInitialized) {
+    const context = await waitForFamilyContext();
+    if (!context) return;
+    const expectedContext = contextKey(context);
+    if (adminInitialized && adminContextKey === expectedContext) {
       if (isOwner) loadRequests();
       return;
     }
-    const context = await waitForFamilyContext();
-    if (!context) return;
+
+    adminInitialized = false;
+    isOwner = false;
+    adminContextKey = expectedContext;
+    admin.hidden = true;
+    requestList.innerHTML = '';
 
     const { data, error } = await context.supabase
       .from('household_members')
@@ -206,6 +230,7 @@
       .eq('user_id', context.session.user.id)
       .maybeSingle();
 
+    if (expectedContext !== contextKey()) return;
     adminInitialized = true;
     isOwner = !error && data?.role === 'owner';
     admin.hidden = !isOwner;
@@ -236,14 +261,19 @@
       });
       if (featureView) featureView.hidden = false;
       document.querySelectorAll('.view-tab').forEach((button) => {
-        button.classList.toggle('active', button.dataset.view === VIEW_NAME);
+        const active = button.dataset.view === VIEW_NAME;
+        button.classList.toggle('active', active);
+        button.setAttribute('role', 'tab');
+        button.setAttribute('aria-selected', String(active));
       });
       if (addButton) addButton.hidden = true;
       initializeAdmin();
     };
 
+    Object.keys(previousSwitchView).forEach((key) => {
+      try { enhancedSwitchView[key] = previousSwitchView[key]; } catch { /* 읽기 전용 속성은 건너뜀 */ }
+    });
     enhancedSwitchView.__featureRequestInstalled = true;
-    enhancedSwitchView.__englishStoriesInstalled = previousSwitchView.__englishStoriesInstalled;
     switchView = enhancedSwitchView;
     return true;
   };
@@ -281,59 +311,81 @@
     if (previousStatus === nextStatus) return;
 
     const context = await waitForFamilyContext();
-    if (!context) return;
+    if (!context) { select.value = previousStatus; return; }
+    const expectedContext = contextKey(context);
     select.disabled = true;
-    const { error } = await context.supabase
-      .from('feature_requests')
-      .update({ status: nextStatus, updated_at: new Date().toISOString() })
-      .eq('id', item.dataset.requestId)
-      .eq('household_id', context.household.id);
-    select.disabled = false;
-
-    if (error) {
+    try {
+      const { error } = await context.supabase
+        .from('feature_requests')
+        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .eq('id', item.dataset.requestId)
+        .eq('household_id', context.household.id);
+      if (error || expectedContext !== contextKey()) throw error || new Error('family context changed');
+      item.dataset.status = nextStatus;
+      showMessage(`요청 상태를 ‘${statusLabel(nextStatus)}’로 변경했어요.`);
+    } catch {
       select.value = previousStatus;
       showMessage('요청 상태를 변경하지 못했어요.', 'error');
-      return;
+    } finally {
+      select.disabled = false;
     }
-    item.dataset.status = nextStatus;
-    showMessage(`요청 상태를 ‘${statusLabel(nextStatus)}’로 변경했어요.`);
   });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submitInProgress) return;
     const request = textarea.value.trim();
     if (!request) {
       textarea.focus();
       return;
     }
 
-    const context = await waitForFamilyContext();
-    if (!context) {
-      showMessage('로그인하고 가족 공간에 연결한 뒤 등록해 주세요.', 'error');
-      return;
-    }
-
+    submitInProgress = true;
     setSaving(true);
-    const { error } = await context.supabase.from('feature_requests').insert({
-      household_id: context.household.id,
-      content: request,
-      status: 'new',
-      requester_name: requesterName(context.session),
-      created_by: context.session.user.id,
-    });
-    setSaving(false);
-
-    if (error) {
-      const migrationMissing = error.code === '42P01' || /feature_requests/i.test(error.message || '');
-      showMessage(migrationMissing ? '기능 요청 DB가 아직 준비되지 않았어요.' : '요청을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');
-      return;
+    try {
+      const context = await waitForFamilyContext();
+      if (!context) {
+        showMessage('로그인하고 가족 공간에 연결한 뒤 등록해 주세요.', 'error');
+        return;
+      }
+      const expectedContext = contextKey(context);
+      const { error } = await context.supabase.from('feature_requests').insert({
+        household_id: context.household.id,
+        content: request,
+        status: 'new',
+        requester_name: requesterName(context.session),
+        created_by: context.session.user.id,
+      });
+      if (error || expectedContext !== contextKey()) {
+        const migrationMissing = error?.code === '42P01' || /feature_requests/i.test(error?.message || '');
+        showMessage(migrationMissing ? '기능 요청 DB가 아직 준비되지 않았어요.' : '요청을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');
+        return;
+      }
+      textarea.value = '';
+      saveDraft('');
+      updateCount();
+      showMessage('요청을 등록했어요. 관리자가 확인할게요.');
+      if (isOwner) loadRequests();
+    } catch {
+      showMessage('요청을 저장하지 못했어요. 작성 내용은 그대로 보관했어요.', 'error');
+    } finally {
+      submitInProgress = false;
+      setSaving(false);
     }
+  });
 
-    textarea.value = '';
-    saveDraft('');
+  window.addEventListener('familycontextchange', (event) => {
+    requestLoadId += 1;
+    isOwner = false;
+    adminInitialized = false;
+    adminContextKey = '';
+    admin.hidden = true;
+    requestList.innerHTML = '';
+    adminCount.textContent = '등록된 요청을 불러오는 중이에요.';
+    activeDraftKey = `${DRAFT_KEY}:${event.detail?.userId || 'device'}`;
+    textarea.value = readDraft();
     updateCount();
-    showMessage('요청을 등록했어요. 관리자가 확인할게요.');
-    if (isOwner) loadRequests();
+    if (!view.hidden) initializeAdmin();
   });
 
   restoreFeatureRequestView();
