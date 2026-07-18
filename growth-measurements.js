@@ -5,12 +5,11 @@
   document.documentElement.dataset.growthMeasurementsBound = "true";
 
   const metrics = {
-    height: { label: "키", unit: "cm", decimals: 1 },
-    weight: { label: "몸무게", unit: "kg", decimals: 2 },
-    head: { label: "머리둘레", unit: "cm", decimals: 1 },
+    height: { label: "키", unit: "cm", decimals: 1, color: "#b46b7c", axis: "cm" },
+    weight: { label: "몸무게", unit: "kg", decimals: 2, color: "#547fb8", axis: "kg" },
+    head: { label: "머리둘레", unit: "cm", decimals: 1, color: "#6da45c", axis: "cm" },
   };
 
-  let activeMetric = "weight";
   let chartDialog = null;
   let enhanceQueued = false;
 
@@ -51,7 +50,9 @@
   const formatDate = (value, includeYear = false) => {
     if (!value) return "";
     const [year, month, day] = value.split("-").map(Number);
-    return includeYear ? `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}` : `${month}.${day}`;
+    return includeYear
+      ? `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`
+      : `${month}.${day}`;
   };
 
   const openGrowthEntry = (entry) => {
@@ -86,13 +87,15 @@
       titleCard.appendChild(actions);
     }
 
-    [...insightRow.children].filter((element) => element.matches("article") && !element.classList.contains("growth-insight-empty")).forEach((card) => {
-      card.classList.add("latest-growth-metric-card");
-      card.dataset.latestGrowthEdit = "true";
-      card.tabIndex = 0;
-      card.setAttribute("role", "button");
-      card.setAttribute("aria-label", "최근 성장 측정 기록 수정");
-    });
+    [...insightRow.children]
+      .filter((element) => element.matches("article") && !element.classList.contains("growth-insight-empty"))
+      .forEach((card) => {
+        card.classList.add("latest-growth-metric-card");
+        card.dataset.latestGrowthEdit = "true";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", "최근 성장 측정 기록 수정");
+      });
   };
 
   const queueEnhancement = () => {
@@ -118,6 +121,17 @@
     return path;
   };
 
+  const scaleBounds = (values, fallbackMargin) => {
+    if (!values.length) return { min: 0, max: 1, range: 1 };
+    const rawMin = Math.min(...values);
+    const rawMax = Math.max(...values);
+    const difference = rawMax - rawMin;
+    const margin = difference ? Math.max(difference * 0.18, fallbackMargin * 0.35) : fallbackMargin;
+    const min = Math.max(0, rawMin - margin);
+    const max = rawMax + margin;
+    return { min, max, range: Math.max(max - min, 0.01) };
+  };
+
   const ensureChartDialog = () => {
     if (chartDialog) return chartDialog;
 
@@ -132,9 +146,9 @@
           <div><p class="eyebrow">GROWTH CURVE</p><h2 id="growthChartTitle">성장 곡선</h2></div>
           <button type="button" class="close-button" data-growth-chart-close aria-label="닫기">×</button>
         </div>
-        <div class="growth-chart-tabs" role="tablist" aria-label="성장 항목 선택"></div>
+        <div class="growth-chart-tabs" role="list" aria-label="성장 항목 범례"></div>
         <section class="growth-chart-card" aria-live="polite"></section>
-        <p class="growth-chart-note">우리 아기의 측정값을 이어 본 개인 추세선이에요. 의료 성장곡선이나 백분위 기준과는 다릅니다.</p>
+        <p class="growth-chart-note">키·몸무게·머리둘레를 한 그래프에서 비교한 개인 추세선이에요. 의료 성장곡선이나 백분위 기준과는 다릅니다.</p>
         <section class="growth-measure-history" aria-labelledby="growthMeasureHistoryTitle">
           <div class="growth-measure-history-heading">
             <div><p class="eyebrow">MEASUREMENT HISTORY</p><h3 id="growthMeasureHistoryTitle">측정 기록</h3></div>
@@ -148,12 +162,6 @@
 
     chartDialog.querySelector("[data-growth-chart-close]").addEventListener("click", () => chartDialog.close());
     chartDialog.querySelector("[data-growth-chart-add]").addEventListener("click", addGrowthEntry);
-    chartDialog.querySelector(".growth-chart-tabs").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-growth-chart-metric]");
-      if (!button || button.disabled) return;
-      activeMetric = button.dataset.growthChartMetric;
-      renderChartDialog();
-    });
     chartDialog.querySelector(".growth-measure-history-list").addEventListener("click", (event) => {
       const button = event.target.closest("[data-growth-measure-entry]");
       if (!button) return;
@@ -167,51 +175,93 @@
     return chartDialog;
   };
 
-  const chartSvg = (items, metricKey) => {
-    const metric = metrics[metricKey];
+  const chartSvg = (entries) => {
     const width = 360;
-    const height = 220;
-    const padding = { left: 44, right: 18, top: 24, bottom: 38 };
+    const height = 238;
+    const padding = { left: 42, right: 42, top: 31, bottom: 40 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
-    const values = items.map((item) => item.value);
-    const rawMin = Math.min(...values);
-    const rawMax = Math.max(...values);
-    const difference = rawMax - rawMin;
-    const fallback = metricKey === "weight" ? 0.5 : 2;
-    const margin = difference ? difference * 0.18 : fallback;
-    const min = Math.max(0, rawMin - margin);
-    const max = rawMax + margin;
-    const range = Math.max(max - min, 0.01);
-    const points = items.map((item, index) => ({
-      ...item,
-      x: items.length === 1 ? padding.left + plotWidth / 2 : padding.left + (index / (items.length - 1)) * plotWidth,
-      y: padding.top + ((max - item.value) / range) * plotHeight,
-    }));
-    const curve = smoothPath(points);
-    const baseline = padding.top + plotHeight;
-    const area = curve ? `${curve} L ${points.at(-1).x.toFixed(2)} ${baseline} L ${points[0].x.toFixed(2)} ${baseline} Z` : "";
+    const cmValues = entries.flatMap((entry) => ["height", "head"]
+      .map((key) => numberValue(entry[key]))
+      .filter((value) => value !== null));
+    const kgValues = entries
+      .map((entry) => numberValue(entry.weight))
+      .filter((value) => value !== null);
+    const cmScale = scaleBounds(cmValues, 2);
+    const kgScale = scaleBounds(kgValues, 0.5);
+    const xForIndex = (index) => entries.length === 1
+      ? padding.left + plotWidth / 2
+      : padding.left + (index / (entries.length - 1)) * plotWidth;
+    const yForValue = (value, axis) => {
+      const scale = axis === "kg" ? kgScale : cmScale;
+      return padding.top + ((scale.max - value) / scale.range) * plotHeight;
+    };
+
     const grid = [0, 1, 2, 3].map((index) => {
       const ratio = index / 3;
       const y = padding.top + ratio * plotHeight;
-      const value = max - ratio * range;
-      return `<g class="growth-chart-grid"><line x1="${padding.left}" y1="${y.toFixed(2)}" x2="${width - padding.right}" y2="${y.toFixed(2)}"></line><text x="${padding.left - 8}" y="${(y + 4).toFixed(2)}">${escapeText(formatValue(value, metricKey, false))}</text></g>`;
+      const cmValue = cmScale.max - ratio * cmScale.range;
+      const kgValue = kgScale.max - ratio * kgScale.range;
+      return `
+        <g class="growth-chart-grid">
+          <line x1="${padding.left}" y1="${y.toFixed(2)}" x2="${width - padding.right}" y2="${y.toFixed(2)}"></line>
+          <text x="${padding.left - 8}" y="${(y + 3).toFixed(2)}">${escapeText(cmValue.toLocaleString("ko-KR", { maximumFractionDigits: 1 }))}</text>
+          <text x="${width - padding.right + 8}" y="${(y + 3).toFixed(2)}" style="text-anchor:start; fill:${metrics.weight.color}">${escapeText(kgValue.toLocaleString("ko-KR", { maximumFractionDigits: 2 }))}</text>
+        </g>
+      `;
     }).join("");
-    const pointMarkup = points.map((point, index) => {
-      const showLabel = points.length <= 5 || index === 0 || index === points.length - 1;
-      return `<g class="growth-chart-point"><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="5"></circle>${showLabel ? `<text x="${point.x.toFixed(2)}" y="${Math.max(13, point.y - 12).toFixed(2)}">${escapeText(formatValue(point.value, metricKey, false))}</text>` : ""}</g>`;
+
+    const seriesMarkup = Object.entries(metrics).map(([metricKey, metric]) => {
+      const points = entries.map((entry, entryIndex) => {
+        const value = numberValue(entry[metricKey]);
+        if (value === null) return null;
+        return {
+          entry,
+          entryIndex,
+          value,
+          x: xForIndex(entryIndex),
+          y: yForValue(value, metric.axis),
+        };
+      }).filter(Boolean);
+      if (!points.length) return "";
+
+      const curve = smoothPath(points);
+      const labelOffset = metricKey === "head" ? 17 : -11;
+      const pointMarkup = points.map((point, pointIndex) => {
+        const showLabel = points.length <= 4 || pointIndex === 0 || pointIndex === points.length - 1;
+        const labelY = Math.min(height - padding.bottom - 4, Math.max(13, point.y + labelOffset));
+        return `
+          <g class="growth-chart-point">
+            <circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="4.5" style="stroke:${metric.color}"></circle>
+            ${showLabel ? `<text x="${point.x.toFixed(2)}" y="${labelY.toFixed(2)}" style="fill:${metric.color}">${escapeText(formatValue(point.value, metricKey, false))}</text>` : ""}
+          </g>
+        `;
+      }).join("");
+
+      return `
+        ${curve ? `<path class="growth-chart-line" d="${curve}" style="stroke:${metric.color}; stroke-width:3; filter:drop-shadow(0 3px 4px color-mix(in srgb, ${metric.color} 18%, transparent))"></path>` : ""}
+        ${pointMarkup}
+      `;
     }).join("");
-    const dateLabels = points.length === 1
-      ? `<text class="growth-chart-date-label" x="${points[0].x.toFixed(2)}" y="${height - 10}">${escapeText(formatDate(points[0].entry.date))}</text>`
-      : `<text class="growth-chart-date-label start" x="${padding.left}" y="${height - 10}">${escapeText(formatDate(points[0].entry.date))}</text><text class="growth-chart-date-label end" x="${width - padding.right}" y="${height - 10}">${escapeText(formatDate(points.at(-1).entry.date))}</text>`;
+
+    const labelIndexes = entries.length === 1
+      ? [0]
+      : [...new Set([0, Math.round((entries.length - 1) / 2), entries.length - 1])];
+    const dateLabels = labelIndexes.map((index, labelIndex) => {
+      const anchorClass = labelIndex === 0 && entries.length > 1
+        ? " start"
+        : labelIndex === labelIndexes.length - 1 && entries.length > 1
+          ? " end"
+          : "";
+      return `<text class="growth-chart-date-label${anchorClass}" x="${xForIndex(index).toFixed(2)}" y="${height - 10}">${escapeText(formatDate(entries[index].date))}</text>`;
+    }).join("");
 
     return `
-      <svg class="growth-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeText(metric.label)} 측정 변화 그래프">
-        <defs><linearGradient id="growthCurveArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-opacity=".24"></stop><stop offset="100%" stop-opacity="0"></stop></linearGradient></defs>
+      <svg class="growth-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="키, 몸무게, 머리둘레 통합 성장 변화 그래프">
+        <text x="${padding.left}" y="14" style="fill:${metrics.height.color}; font-size:8px; font-weight:760">cm</text>
+        <text x="${width - padding.right}" y="14" style="fill:${metrics.weight.color}; font-size:8px; font-weight:760; text-anchor:end">kg</text>
         ${grid}
-        ${area ? `<path class="growth-chart-area" d="${area}"></path>` : ""}
-        ${curve ? `<path class="growth-chart-line" d="${curve}"></path>` : ""}
-        ${pointMarkup}
+        ${seriesMarkup}
         ${dateLabels}
       </svg>
     `;
@@ -220,32 +270,35 @@
   const renderChartDialog = () => {
     const dialog = ensureChartDialog();
     const entries = measurementEntries();
-    const availableMetrics = Object.keys(metrics).filter((metricKey) => entries.some((entry) => numberValue(entry[metricKey]) !== null));
-    if (!availableMetrics.includes(activeMetric)) activeMetric = availableMetrics[0] || "weight";
+    const latest = entries.at(-1) || null;
 
     dialog.querySelector("#growthChartTitle").textContent = `${typeof activeBaby === "function" && activeBaby() ? activeBaby().name : "아기"} 성장 곡선`;
     dialog.querySelector(".growth-chart-tabs").innerHTML = Object.entries(metrics).map(([key, metric]) => {
       const count = entries.filter((entry) => numberValue(entry[key]) !== null).length;
-      return `<button type="button" role="tab" data-growth-chart-metric="${key}" class="${key === activeMetric ? "active" : ""}" aria-selected="${key === activeMetric}" ${count ? "" : "disabled"}>${metric.label}<small>${count}</small></button>`;
+      return `
+        <button type="button" class="active" role="listitem" tabindex="-1" aria-label="${escapeText(metric.label)} ${count}개 기록" style="${count ? "" : "opacity:.38"}">
+          <span aria-hidden="true" style="color:${metric.color}; font-size:10px">●</span>
+          ${escapeText(metric.label)}
+          <small>${count}</small>
+        </button>
+      `;
     }).join("");
 
-    const items = entries.map((entry) => ({ entry, value: numberValue(entry[activeMetric]) })).filter((item) => item.value !== null);
     const chartCard = dialog.querySelector(".growth-chart-card");
-    if (!items.length) {
-      chartCard.innerHTML = `<div class="growth-chart-empty"><strong>아직 ${escapeText(metrics[activeMetric].label)} 기록이 없어요</strong><span>새 성장 기록을 추가하면 곡선으로 이어서 볼 수 있어요.</span><button type="button" data-empty-growth-add>기록 추가</button></div>`;
+    if (!entries.length || !latest) {
+      chartCard.innerHTML = `<div class="growth-chart-empty"><strong>아직 성장 측정 기록이 없어요</strong><span>키·몸무게·머리둘레를 기록하면 한 그래프에서 함께 볼 수 있어요.</span><button type="button" data-empty-growth-add>기록 추가</button></div>`;
       chartCard.querySelector("[data-empty-growth-add]").addEventListener("click", addGrowthEntry);
     } else {
-      const first = items[0];
-      const latest = items.at(-1);
-      const delta = latest.value - first.value;
-      const deltaText = items.length < 2 ? "첫 측정" : `${delta > 0 ? "+" : ""}${formatValue(delta, activeMetric)} 변화`;
+      const latestValues = Object.keys(metrics)
+        .map((key) => formatValue(latest[key], key))
+        .join(" · ");
       chartCard.innerHTML = `
         <div class="growth-chart-summary">
-          <div><span>최근 ${escapeText(metrics[activeMetric].label)}</span><strong>${escapeText(formatValue(latest.value, activeMetric))}</strong></div>
-          <div><span>${items.length}회 측정</span><strong class="${delta < 0 ? "down" : ""}">${escapeText(deltaText)}</strong></div>
+          <div><span>최근 측정값</span><strong>${escapeText(latestValues)}</strong></div>
+          <div><span>전체 측정</span><strong>${entries.length < 2 ? "첫 측정" : `${entries.length}회 기록`}</strong></div>
         </div>
-        ${chartSvg(items, activeMetric)}
-        <p>${items.length < 2 ? "측정 기록이 2개 이상 쌓이면 변화 곡선이 나타나요." : `${escapeText(formatDate(first.entry.date, true))}부터 ${escapeText(formatDate(latest.entry.date, true))}까지의 측정값을 부드럽게 연결했어요.`}</p>
+        ${chartSvg(entries)}
+        <p>${entries.length < 2 ? "측정 기록이 2개 이상 쌓이면 세 항목의 변화 곡선이 나타나요." : `${escapeText(formatDate(entries[0].date, true))}부터 ${escapeText(formatDate(latest.date, true))}까지의 세 측정값을 함께 표시했어요.`}</p>
       `;
     }
 
