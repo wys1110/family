@@ -61,4 +61,31 @@ describe("Gemini 전송 계층", () => {
     });
     await expect(transport.generateText("질문", { json: false })).rejects.toThrow("GEMINI_HTTP_429");
   });
+
+  test("검색 grounding을 요청하고 실제 메타데이터 출처만 반환한다", async () => {
+    let requestBody;
+    const transport = createGeminiTransport({
+      apiKey: "secret-key",
+      fetchImpl: async (_url, init) => {
+        requestBody = JSON.parse(init.body);
+        return new Response(JSON.stringify({
+          candidates: [{
+            content: { parts: [{ text: "공식 답변 https://untrusted.example" }] },
+            groundingMetadata: {
+              groundingChunks: [{ web: { title: "질병관리청", uri: "https://www.kdca.go.kr/health" } }],
+            },
+          }],
+        }), { status: 200 });
+      },
+    });
+
+    const result = await transport.generateGroundedText("검색 질문");
+
+    expect(requestBody.tools).toEqual([{ google_search: {} }]);
+    expect(result).toEqual({
+      text: "공식 답변 https://untrusted.example",
+      sources: [{ title: "질병관리청", url: "https://www.kdca.go.kr/health", type: "web" }],
+      grounded: true,
+    });
+  });
 });
