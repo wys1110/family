@@ -1,11 +1,14 @@
 (() => {
   const STORAGE_KEY = "family-feeding-reminder-v1";
+  const CLAIM_SUFFIX = ":alert-claim";
+  const TAB_ID = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   const DEFAULTS = {
     enabled: false,
     target: "breast",
     intervalMinutes: 180,
     enabledAt: 0,
     lastAlertReference: "",
+    dismissedBannerReference: "",
   };
 
   const scopedStorageKey = () => {
@@ -15,18 +18,20 @@
     return `${STORAGE_KEY}:device:${typeof state !== "undefined" ? state.activeBabyId || "no-baby" : "no-baby"}`;
   };
 
+  const sanitizeSettings = (saved = {}) => ({
+    ...DEFAULTS,
+    ...saved,
+    enabled: Boolean(saved.enabled),
+    target: ["breast", "formula", "all"].includes(saved.target) ? saved.target : DEFAULTS.target,
+    intervalMinutes: Math.max(15, Math.min(24 * 60, Number(saved.intervalMinutes) || DEFAULTS.intervalMinutes)),
+    enabledAt: Number(saved.enabledAt) || 0,
+    lastAlertReference: String(saved.lastAlertReference || ""),
+    dismissedBannerReference: String(saved.dismissedBannerReference || ""),
+  });
+
   const readSettings = () => {
     try {
-      const saved = JSON.parse(localStorage.getItem(scopedStorageKey()) || "null") || {};
-      return {
-        ...DEFAULTS,
-        ...saved,
-        enabled: Boolean(saved.enabled),
-        target: ["breast", "formula", "all"].includes(saved.target) ? saved.target : DEFAULTS.target,
-        intervalMinutes: Math.max(15, Math.min(24 * 60, Number(saved.intervalMinutes) || DEFAULTS.intervalMinutes)),
-        enabledAt: Number(saved.enabledAt) || 0,
-        lastAlertReference: String(saved.lastAlertReference || ""),
-      };
+      return sanitizeSettings(JSON.parse(localStorage.getItem(scopedStorageKey()) || "null") || {});
     } catch {
       return { ...DEFAULTS };
     }
@@ -34,6 +39,8 @@
 
   let reminder = readSettings();
   let checking = false;
+  let activeReferenceKey = "";
+  let cardStatusUpdater = null;
 
   const persist = () => {
     try { localStorage.setItem(scopedStorageKey(), JSON.stringify(reminder)); } catch { /* 현재 기기에서만 동작 */ }
@@ -100,21 +107,45 @@
         if (typeof switchView === "function") switchView("growth");
         if (typeof openGrowthDialog === "function") openGrowthDialog(null, "수유·이유식");
       }
-      if (event.target.closest("[data-feeding-reminder-close]")) banner.hidden = true;
+      if (event.target.closest("[data-feeding-reminder-close]")) {
+        banner.hidden = true;
+        if (!activeReferenceKey) return;
+        reminder = readSettings();
+        reminder.dismissedBannerReference = activeReferenceKey;
+        persist();
+      }
     });
     return banner;
   };
 
-  const showAlert = (elapsedMinutes, referenceKey) => {
+  const showDueBanner = (elapsedMinutes, referenceKey) => {
+    activeReferenceKey = referenceKey;
+    const banner = ensureAlertBanner();
+    if (!banner) return;
+    if (reminder.dismissedBannerReference === referenceKey) {
+      banner.hidden = true;
+      return;
+    }
+    const label = targetLabel();
+    banner.querySelector("strong").textContent = `${label} 시간이 지났어요`;
+    banner.querySelector("span").textContent = `마지막 ${label} 기록 후 ${durationText(elapsedMinutes)}이 지났어요.`;
+    banner.hidden = false;
+  };
+
+  const hideAlert = () => {
+    activeReferenceKey = "";
+    const banner = document.querySelector("#feedingReminderAlert");
+    if (banner) banner.hidden = true;
+  };
+
+  const notifyOnce = (elapsedMinutes, referenceKey) => {
     const label = targetLabel();
     const text = `마지막 ${label} 기록 후 ${durationText(elapsedMinutes)}이 지났어요.`;
-    const banner = ensureAlertBanner();
-    if (banner) {
-      banner.querySelector("strong").textContent = `${label} 시간이 지났어요`;
-      banner.querySelector("span").textContent = text;
-      banner.hidden = false;
+    const pageVisible = document.visibilityState === "visible";
+    if (pageVisible && typeof toast === "function") {
+      toast(text);
+      return;
     }
-    if (typeof toast === "function") toast(text);
     if ("Notification" in window && Notification.permission === "granted") {
       try {
         new Notification(`가족 돌봄 · ${label} 알림`, {
@@ -122,26 +153,71 @@
           tag: `family-feeding-${referenceKey}`,
           renotify: false,
         });
-      } catch { /* 브라우저가 시스템 알림을 막아도 화면 알림은 유지 */ }
+      } catch { /* 브라우저가 시스템 알림을 막아도 화면 배너는 유지 */ }
     }
   };
 
-  const hideAlert = () => {
-    const banner = document.querySelector("#feedingReminderAlert");
-    if (banner) banner.hidden = true;
+  const markAlertReference = (referenceKey) => {
+    const latest = readSettings();
+    reminder = latest;
+    if (!latest.enabled || latest.lastAlertReference === referenceKey) return false;
+    reminder.lastAlertReference = referenceKey;
+    persist();
+    return true;
   };
 
-  const checkReminder = () => {
+  const fallbackAlertClaim = async (referenceKey) => {
+    const claimKey = `${scopedStorageKey()}${CLAIM_SUFFIX}`;
+    const now = Date.now();
+    try {
+      const currentClaim = JSON.parse(localStorage.getItem(claimKey) || "null");
+      if (currentClaim?.referenceKey === referenceKey && Number(currentClaim.expiresAt) > now) return false;
+    } catch { /* 새 claim으로 복구 */ }
+
+    await new Promise((resolve) => setTimeout(resolve, 25 + Math.floor(Math.random() * 75)));
+    if (readSettings().lastAlertReference === referenceKey) return false;
+
+    const token = `${TAB_ID}:${Date.now()}:${Math.random()}`;
+    try {
+      localStorage.setItem(claimKey, JSON.stringify({
+        referenceKey,
+        token,
+        expiresAt: Date.now() + 5000,
+      }));
+      await new Promise((resolve) => setTimeout(resolve, 90));
+      const winner = JSON.parse(localStorage.getItem(claimKey) || "null");
+      if (winner?.token !== token) return false;
+    } catch {
+      return markAlertReference(referenceKey);
+    }
+    return markAlertReference(referenceKey);
+  };
+
+  const claimAlert = async (referenceKey) => {
+    const lockManager = navigator.locks;
+    if (lockManager?.request) {
+      const lockName = `family-feeding-alert:${scopedStorageKey()}`;
+      return lockManager.request(lockName, { mode: "exclusive", ifAvailable: true }, (lock) => {
+        if (!lock) return false;
+        return markAlertReference(referenceKey);
+      });
+    }
+    return fallbackAlertClaim(referenceKey);
+  };
+
+  const checkReminder = async () => {
     if (checking) return;
     checking = true;
     try {
+      reminder = readSettings();
+      cardStatusUpdater?.();
       if (!reminder.enabled || typeof state === "undefined") {
         hideAlert();
         return;
       }
 
       const latest = latestMatchingEntry();
-      const baseTimestamp = latest?.timestamp || reminder.enabledAt || Date.now();
+      const baseTimestamp = Math.max(latest?.timestamp || 0, reminder.enabledAt || 0) || Date.now();
       const elapsedMinutes = (Date.now() - baseTimestamp) / 60000;
       const referenceKey = `${state.activeBabyId || "baby"}:${reminder.target}:${baseTimestamp}`;
 
@@ -149,11 +225,10 @@
         hideAlert();
         return;
       }
-      if (reminder.lastAlertReference === referenceKey) return;
 
-      reminder.lastAlertReference = referenceKey;
-      persist();
-      showAlert(elapsedMinutes, referenceKey);
+      showDueBanner(elapsedMinutes, referenceKey);
+      if (reminder.lastAlertReference === referenceKey) return;
+      if (await claimAlert(referenceKey)) notifyOnce(elapsedMinutes, referenceKey);
     } finally {
       checking = false;
     }
@@ -174,7 +249,7 @@
         <div>
           <p class="eyebrow">REMINDER</p>
           <h2>수유 알림</h2>
-          <span>정한 시간 동안 기록이 없으면 이 기기에서 알려줘요.</span>
+          <span>정한 시간 동안 기록이 없으면 이 기기에서 한 번 알려줘요.</span>
         </div>
         <label class="feeding-reminder-switch">
           <input id="feedingReminderEnabled" type="checkbox" ${reminder.enabled ? "checked" : ""}>
@@ -210,8 +285,12 @@
     const status = card.querySelector("#feedingReminderStatus");
 
     const updateStatus = () => {
+      enabled.checked = reminder.enabled;
+      target.value = reminder.target;
+      hoursInput.value = String(Math.floor(reminder.intervalMinutes / 60));
+      minutesInput.value = String(reminder.intervalMinutes % 60);
       status.textContent = reminder.enabled
-        ? `${targetLabel()} 기록이 ${durationText(reminder.intervalMinutes)} 없으면 알림`
+        ? `${targetLabel()} 기록이 ${durationText(reminder.intervalMinutes)} 없으면 주기당 한 번 알림`
         : "현재 알림이 꺼져 있어요.";
       if (!("Notification" in window)) {
         permissionButton.textContent = "이 브라우저는 시스템 알림 미지원";
@@ -221,24 +300,29 @@
         permissionButton.disabled = true;
       } else if (Notification.permission === "denied") {
         permissionButton.textContent = "브라우저 설정에서 알림 허용 필요";
+        permissionButton.disabled = false;
+      } else {
+        permissionButton.textContent = "브라우저 알림 허용";
+        permissionButton.disabled = false;
       }
     };
+    cardStatusUpdater = updateStatus;
 
     const saveInterval = () => {
       const next = Math.max(15, Math.min(24 * 60, (Number(hoursInput.value) || 0) * 60 + (Number(minutesInput.value) || 0)));
+      reminder = readSettings();
       reminder.intervalMinutes = next;
-      hoursInput.value = String(Math.floor(next / 60));
-      minutesInput.value = String(next % 60);
-      reminder.lastAlertReference = "";
       persist();
       updateStatus();
       checkReminder();
     };
 
     enabled.addEventListener("change", () => {
+      reminder = readSettings();
       reminder.enabled = enabled.checked;
       reminder.enabledAt = reminder.enabled ? Date.now() : 0;
       reminder.lastAlertReference = "";
+      reminder.dismissedBannerReference = "";
       persist();
       updateStatus();
       checkReminder();
@@ -246,8 +330,9 @@
     });
 
     target.addEventListener("change", () => {
+      reminder = readSettings();
       reminder.target = target.value;
-      reminder.lastAlertReference = "";
+      reminder.dismissedBannerReference = "";
       persist();
       updateStatus();
       checkReminder();
@@ -258,10 +343,8 @@
     card.querySelector(".feeding-reminder-presets").addEventListener("click", (event) => {
       const button = event.target.closest("[data-reminder-minutes]");
       if (!button) return;
+      reminder = readSettings();
       reminder.intervalMinutes = Number(button.dataset.reminderMinutes);
-      hoursInput.value = String(Math.floor(reminder.intervalMinutes / 60));
-      minutesInput.value = String(reminder.intervalMinutes % 60);
-      reminder.lastAlertReference = "";
       persist();
       updateStatus();
       checkReminder();
@@ -285,6 +368,7 @@
 
   const reloadForContext = () => {
     reminder = readSettings();
+    cardStatusUpdater = null;
     document.querySelector("#feedingReminderSettings")?.remove();
     hideAlert();
     installSettingsCard();
@@ -302,9 +386,16 @@
     renderGrowth = enhancedRenderGrowth;
   }
 
+  window.addEventListener("storage", (event) => {
+    if (event.key !== scopedStorageKey()) return;
+    reminder = readSettings();
+    cardStatusUpdater?.();
+    checkReminder();
+  });
   window.addEventListener("focus", checkReminder);
   window.addEventListener("familycontextchange", reloadForContext);
   window.addEventListener("familybabychange", reloadForContext);
+  window.addEventListener("family:growth-entry-saved", checkReminder);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminder(); });
   setInterval(checkReminder, 60 * 1000);
   install();
