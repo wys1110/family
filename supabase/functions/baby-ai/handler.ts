@@ -49,17 +49,16 @@ const CORS_HEADERS = {
 };
 
 export const STRATEGY_RESPONSE_SCHEMA = {
-  type: "object",
+  type: "OBJECT",
   properties: {
-    summary: { type: "string", description: "쉬운 한국어 한 줄 요약" },
-    observations: { type: "array", items: { type: "string" } },
-    actions: { type: "array", items: { type: "string" } },
-    watch: { type: "array", items: { type: "string" } },
-    reassess: { type: "string" },
-    safety: { type: "string" },
+    summary: { type: "STRING", description: "쉬운 한국어 한 줄 요약" },
+    observations: { type: "ARRAY", items: { type: "STRING" } },
+    actions: { type: "ARRAY", items: { type: "STRING" } },
+    watch: { type: "ARRAY", items: { type: "STRING" } },
+    reassess: { type: "STRING" },
+    safety: { type: "STRING" },
   },
   required: ["summary", "observations", "actions", "watch", "reassess", "safety"],
-  additionalProperties: false,
 };
 
 export function createBabyAiHandler(deps: HandlerDependencies) {

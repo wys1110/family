@@ -99,6 +99,10 @@ describe("baby-ai Edge Function handler", () => {
 
     expect(response.status).toBe(200);
     expect(calls.map((call) => call.kind)).toEqual(["search", "synthesis"]);
+    expect(calls[1].options.responseSchema.type).toBe("OBJECT");
+    expect(calls[1].options.responseSchema.properties.actions.type).toBe("ARRAY");
+    expect(calls[1].options.responseSchema.properties.actions.items.type).toBe("STRING");
+    expect(calls[1].options.responseSchema).not.toHaveProperty("additionalProperties");
     expect(calls[1].options.responseSchema.required).toContain("summary");
     expect(saved.content.sources).toEqual([officialSource]);
     expect(body.content.sources).toEqual([officialSource]);
