@@ -8,6 +8,7 @@
   let loadedBabyId = null;
   let loadSequence = 0;
   let latestStrategies = { feeding: null, sleep: null };
+  let refreshTimer = null;
 
   const status = root.querySelector("#babyAiStatus");
   const profileForm = root.querySelector("#babyAiProfileForm");
@@ -292,6 +293,22 @@
     await loadBabyAi();
   }
 
+  async function scheduleRefreshFromCareLog(event) {
+    const detail = event.detail || {};
+    const context = familyContext();
+    if (!core || !context || detail.babyId !== context.babyId || !core.isAiCareCategory(detail.category)) return;
+    const { data, error } = await context.supabase.rpc("schedule_baby_ai_refresh", { target_baby_id: context.babyId });
+    if (error || !data) {
+      setStatus("기록은 저장했지만 AI 전략 갱신 예약에 실패했어요. DB 설정을 확인해 주세요.", "error");
+      return;
+    }
+    const dueAt = new Date(data);
+    setStatus(`새 기록을 모으는 중이에요. ${formatDateTime(dueAt)} 이후 수유·수면 전략을 갱신해요.`, "pending");
+    clearTimeout(refreshTimer);
+    const delay = Math.max(1000, dueAt.getTime() - Date.now() + 5000);
+    refreshTimer = setTimeout(loadBabyAi, delay);
+  }
+
   function text(formData, name) {
     return String(formData.get(name) || "").trim() || null;
   }
@@ -321,6 +338,7 @@
   chatForm.addEventListener("submit", askQuestion);
   window.addEventListener("familybabychange", loadBabyAi);
   window.addEventListener("familycontextchange", loadBabyAi);
+  window.addEventListener("family:growth-entry-saved", scheduleRefreshFromCareLog);
 
   import("./baby-ai-core.js?v=20260719-v1")
     .then((module) => {
