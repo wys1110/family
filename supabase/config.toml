@@ -1,0 +1,4 @@
+project_id = "family"
+
+[functions.baby-ai]
+verify_jwt = false

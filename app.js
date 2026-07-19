@@ -101,6 +101,16 @@ function showGrowthComplete(message) {
   if (!dialog.open) dialog.showModal();
 }
 
+function dispatchGrowthEntrySaved(entry) {
+  window.dispatchEvent(new CustomEvent("family:growth-entry-saved", {
+    detail: {
+      babyId: entry.babyId,
+      category: entry.category,
+      savedAt: new Date().toISOString(),
+    },
+  }));
+}
+
 function dateKey(date) {
   const y = date.getFullYear();
   return `${y}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -1167,6 +1177,7 @@ async function stopCareTimer() {
     }
     state.growthEntries.push(entry);
     if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+    dispatchGrowthEntrySaved(entry);
     careTimer = null;
     persistCareTimer();
     renderGrowth();
@@ -1567,6 +1578,7 @@ async function saveGrowthPresetFromEvent(event) {
   }
   state.growthEntries.push(entry);
   if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+  dispatchGrowthEntrySaved(entry);
   $("#quickLogDialog").close(); renderGrowth(); showGrowthComplete(`${preset.label} 기록을 저장했어요.`);
 }
 
@@ -1786,6 +1798,7 @@ async function uploadGrowthPhotos(entryId) {
 async function saveGrowthEntry(event) {
   event.preventDefault();
   if (growthSaveInProgress) return;
+  const isNewEntry = !$("#growthId").value;
   setGrowthSaving(true);
   try {
     if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
@@ -1826,6 +1839,7 @@ async function saveGrowthEntry(event) {
     }
     const index = state.growthEntries.findIndex((item) => item.id === entry.id); if (index >= 0) state.growthEntries[index] = entry; else state.growthEntries.push(entry);
     if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+    if (isNewEntry) dispatchGrowthEntrySaved(entry);
     resetGrowthPhotoDraft();
     $("#growthDialog").close();
     renderGrowth();
