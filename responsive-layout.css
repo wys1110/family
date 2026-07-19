@@ -38,6 +38,27 @@
     height: 14px;
   }
 
+  .desktop-logout-button:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid rgba(83, 111, 98, .16);
+    border-radius: 14px;
+    color: #536f62;
+    background: rgba(255, 255, 255, .72);
+    font-size: 13px;
+    font-weight: 720;
+    box-shadow: 0 8px 22px rgba(70, 92, 81, .08);
+    cursor: pointer;
+  }
+
+  .desktop-logout-button:not([hidden]):disabled {
+    cursor: wait;
+    opacity: .55;
+  }
+
   .daily-verse-card {
     min-height: 126px;
     margin-bottom: 20px;

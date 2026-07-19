@@ -413,6 +413,7 @@ function bindUi() {
   $("#addEventButton").addEventListener("click", () => state.activeView === "calendar" ? openEventDialog() : openGrowthDialog());
   document.querySelectorAll(".view-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
   $("#accountButton").addEventListener("click", openAccountDialog);
+  $("#desktopLogoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
   $("#bulkAddButton").addEventListener("click", openBulkEventDialog);
@@ -538,11 +539,16 @@ function renderHeader() {
   $("#todaySummary").textContent = todayEvents.length ? `오늘은 ${todayEvents.length}개의 약속이 있어요` : "오늘도 우리답게";
 }
 function updateSyncBadge() { $("#syncDot").classList.toggle("online", Boolean(state.session && state.household)); }
+function updateDesktopLogoutVisibility() {
+  const button = $("#desktopLogoutButton");
+  if (button) button.hidden = !(state.supabase && state.session);
+}
 function updateAuthGate() {
   const loginRequired = Boolean(state.authReady && state.supabase && !state.session);
   $("#authGate").hidden = !loginRequired;
   $("#appShell").toggleAttribute("inert", loginRequired);
   document.body.classList.toggle("auth-required", loginRequired);
+  updateDesktopLogoutVisibility();
 }
 function switchView(view) {
   const nextView = view === "growth" ? "growth" : "calendar";
@@ -1863,6 +1869,31 @@ async function deleteGrowthEntry() {
 }
 
 function openAccountDialog() { renderAccount(); $("#accountDialog").showModal(); }
+async function signOutCurrentUser(button = null) {
+  if (!state.supabase || !state.session) return false;
+  const originalLabel = button?.textContent || "로그아웃";
+  if (button) {
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.textContent = "로그아웃 중…";
+  }
+  try {
+    const { error } = await state.supabase.auth.signOut();
+    if (error) throw error;
+    $("#accountDialog")?.close();
+    return true;
+  } catch (error) {
+    console.error("로그아웃 실패", error);
+    toast("로그아웃하지 못했어요. 다시 시도해 주세요");
+    return false;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.setAttribute("aria-busy", "false");
+      button.textContent = originalLabel;
+    }
+  }
+}
 function renderAccount() {
   const root = $("#accountContent");
   if (!state.supabase) { root.innerHTML = `<div class="account-card"><strong>이 기기에 안전하게 저장 중</strong><p>현재 일정은 이 브라우저에만 저장됩니다. 가족과 함께 쓰려면 README의 Supabase 연결을 완료해 주세요.</p></div>`; return; }
@@ -1875,7 +1906,7 @@ function renderAccount() {
     $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); return;
   }
   root.innerHTML = `<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
-  $("#logoutButton").addEventListener("click", async () => { await state.supabase.auth.signOut(); $("#accountDialog").close(); });
+  $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
 }
 function authRedirectUrl() { return `${location.origin}${location.pathname}`; }
 async function signInWithGoogle() {
