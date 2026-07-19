@@ -45,6 +45,7 @@ window.FAMILY_CONFIG = {
     { name: "care-date-nav-position", version: "20260718-above-timeline-v1", style: false },
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
     { name: "growth-dedup", version: "20260718-hide-timer-starts-v2" },
+    { name: "growth-default-today", version: "20260719-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260718-logic-audit-v1" },
     { name: "refresh-button", version: "20260719-preserve-scroll-v1" },
