@@ -197,14 +197,23 @@
     renderChat();
     button.disabled = true;
     button.textContent = "답변 중…";
+    setStatus("믿을 만한 자료를 확인하고 있어요.", "pending");
     try {
       const { data, error } = await context.supabase.functions.invoke("baby-ai", {
         body: { action: "chat", babyId: context.babyId, question, history: historyForRequest },
       });
       if (error || !data?.answer) throw error || new Error("EMPTY_ANSWER");
-      chatHistory.push({ role: "assistant", text: data.answer, urgent: Boolean(data.urgent) });
-    } catch {
-      chatHistory.push({ role: "assistant", text: "답변을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.", error: true });
+      chatHistory.push({
+        role: "assistant",
+        text: data.answer,
+        urgent: Boolean(data.urgent),
+        sources: Array.isArray(data.sources) ? data.sources : [],
+      });
+      setStatus(data.grounded ? "믿을 만한 자료를 바탕으로 답했어요." : "안전 안내를 바로 보여드렸어요.");
+    } catch (error) {
+      const code = await readFunctionErrorCode(error);
+      chatHistory.push({ role: "assistant", text: babyAiErrorMessage(code, "chat"), error: true });
+      setStatus(babyAiErrorMessage(code, "chat"), "error");
     } finally {
       renderChat();
       button.disabled = false;
@@ -220,7 +229,7 @@
     chatLog.innerHTML = chatHistory.map((message) => {
       const classes = ["baby-ai-message", message.role === "user" ? "user" : "assistant"];
       if (message.urgent || message.error) classes.push("urgent");
-      return `<p class="${classes.join(" ")}">${safeHtml(message.text)}</p>`;
+      return `<article class="${classes.join(" ")}"><p>${safeHtml(message.text)}</p>${message.role === "assistant" ? renderBabyAiSources(message.sources) : ""}</article>`;
     }).join("");
     chatLog.scrollTop = chatLog.scrollHeight;
   }
@@ -231,7 +240,7 @@
     button.disabled = true;
     const original = button.textContent;
     button.textContent = "전략 만드는 중…";
-    setStatus(`${kind === "feeding" ? "수유" : "수면"} 기록과 가족 패턴을 살펴보고 있어요.`);
+    setStatus(`믿을 만한 자료와 최근 ${kind === "feeding" ? "수유" : "수면"} 기록을 살펴보고 있어요.`, "pending");
     try {
       const { data, error } = await context.supabase.functions.invoke("baby-ai", {
         body: { action: "generate-strategy", babyId: context.babyId, kind },
@@ -239,8 +248,9 @@
       if (error || !data?.draftId) throw error || new Error("EMPTY_DRAFT");
       setStatus("새 전략 제안을 만들었어요. 내용을 확인한 뒤 가족 전략으로 확정해 주세요.");
       await loadBabyAi();
-    } catch {
-      setStatus("전략을 만들지 못했어요. AI Function 설정과 연결을 확인해 주세요.", "error");
+    } catch (error) {
+      const code = await readFunctionErrorCode(error);
+      setStatus(babyAiErrorMessage(code, "strategy"), "error");
     } finally {
       button.disabled = false;
       button.textContent = original;
@@ -273,6 +283,7 @@
       <p class="baby-ai-strategy-summary">${safeHtml(content.summary || "")}</p>
       ${sections.map((section) => `<section class="baby-ai-strategy-section"><strong>${safeHtml(section.title)}</strong><ul>${section.items.map((item) => `<li>${safeHtml(item)}</li>`).join("")}</ul></section>`).join("")}
       ${content.safety ? `<section class="baby-ai-strategy-section"><strong>안전 안내</strong><ul><li>${safeHtml(content.safety)}</li></ul></section>` : ""}
+      ${renderBabyAiSources(content.sources, { showLegacy: true })}
       <p class="baby-ai-strategy-meta"><span>최근 ${Number(strategy.source_log_count || 0)}개 기록 참고</span><span>${safeHtml(formatDateTime(strategy.generated_at))} 생성</span></p>
       ${strategy.status === "draft" ? `<button class="baby-ai-confirm" type="button" data-confirm-strategy="${safeHtml(strategy.id)}">가족 전략으로 확정</button>` : ""}
     `;
@@ -317,6 +328,58 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "시간 미정";
     return new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+
+  function safeSourceUrl(value) {
+    try {
+      const url = new URL(String(value || ""));
+      return url.protocol === "https:" ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function renderBabyAiSources(sources = [], { showLegacy = false } = {}) {
+    const safeSources = (Array.isArray(sources) ? sources : [])
+      .slice(0, 5)
+      .map((source) => ({
+        title: String(source?.title || "참고 자료").trim() || "참고 자료",
+        url: safeSourceUrl(source?.url),
+        type: source?.type === "youtube" ? "영상" : "웹",
+      }))
+      .filter((source) => source.url);
+    if (!safeSources.length) {
+      return showLegacy ? '<p class="baby-ai-source-legacy">출처 표시 기능 적용 전에 생성된 전략이에요.</p>' : "";
+    }
+    return `<section class="baby-ai-sources"><strong>참고한 자료</strong><ul>${safeSources.map((source) => `<li><span>${source.type}</span><a href="${safeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${safeHtml(source.title)}</a></li>`).join("")}</ul></section>`;
+  }
+
+  async function readFunctionErrorCode(error) {
+    const statusCode = Number(error?.context?.status || 0);
+    if (statusCode === 401) return "UNAUTHORIZED";
+    try {
+      const response = typeof error?.context?.clone === "function" ? error.context.clone() : error?.context;
+      const payload = await response?.json?.();
+      if (/^[A-Z0-9_]+$/.test(String(payload?.error || ""))) return payload.error;
+    } catch { /* 응답 본문이 JSON이 아니면 메시지로 분류 */ }
+    const message = String(error?.message || "");
+    if (/failed to send|fetch|network|load failed/i.test(message)) return "NETWORK_ERROR";
+    return "UNKNOWN";
+  }
+
+  function babyAiErrorMessage(code, mode = "chat") {
+    const messages = {
+      UNAUTHORIZED: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+      NETWORK_ERROR: "인터넷 연결을 확인해 주세요.",
+      AI_RATE_LIMITED: "AI 사용량이 잠시 많아요. 잠시 뒤 다시 시도해 주세요.",
+      INVALID_AI_RESPONSE: "AI 답변 형식을 확인하지 못했어요. 다시 눌러 주세요.",
+      GROUNDING_UNAVAILABLE: "믿을 만한 인터넷 자료를 찾지 못했어요. 질문을 조금 더 구체적으로 써 주세요.",
+      AI_TEMPORARILY_UNAVAILABLE: "AI 연결이 잠시 불안정해요. 잠시 뒤 다시 시도해 주세요.",
+      DRAFT_SAVE_FAILED: "전략은 만들었지만 저장하지 못했어요. 다시 시도해 주세요.",
+    };
+    return messages[code] || (mode === "strategy"
+      ? "전략을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요."
+      : "답변을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.");
   }
 
   function safeHtml(value) {

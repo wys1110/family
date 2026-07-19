@@ -1,3 +1,5 @@
+import type { GroundedSource } from "./sources.ts";
+
 export type StrategyKind = "feeding" | "sleep";
 
 export type ChatMessage = {
@@ -23,6 +25,7 @@ export type StrategyContent = {
   watch: string[];
   reassess: string;
   safety: string;
+  sources?: GroundedSource[];
 };
 
 export const URGENT_GUIDANCE = [
@@ -39,6 +42,26 @@ const URGENT_PATTERNS = [
   /경련|발작/,
   /축\s*늘어|깨워도\s*(안|못)\s*일어나/,
   /심한\s*탈수|소변.{0,8}(안\s*나|없)/,
+];
+
+const SEARCH_KEYWORDS = [
+  "수유",
+  "분유",
+  "모유",
+  "직수",
+  "젖병",
+  "트림",
+  "토",
+  "게움",
+  "수면",
+  "낮잠",
+  "밤잠",
+  "잠",
+  "울음",
+  "보챔",
+  "배고픔",
+  "포만",
+  "피로",
 ];
 
 const PROFILE_KEYS = [
@@ -78,6 +101,7 @@ export function buildChatPrompt(
   context: BabyAiContext,
   history: ChatMessage[],
   question: string,
+  evidence = "",
 ): string {
   const safeHistory = history.slice(-8).map((message) => ({
     role: message.role === "assistant" ? "assistant" : "user",
@@ -87,7 +111,11 @@ export function buildChatPrompt(
   return [
     baseInstructions(),
     "목적: 보호자의 일반 육아 질문에 이해하기 쉬운 한국어로 답하세요.",
+    "초등학생도 이해할 수 있는 짧고 쉬운 문장을 쓰세요. 어려운 말은 괄호 안에 쉬운 뜻을 붙이세요.",
+    "답변 순서: 한 줄 결론, 지금 할 일, 지켜볼 것, 병원에 갈 때, 참고한 자료.",
+    "참고한 자료에는 아래 공식 근거의 기관명만 적고 URL을 새로 만들지 마세요.",
     "확인 가능한 사실과 일반 원칙을 구분하고, 불확실하면 필요한 추가 관찰을 물어보세요.",
+    evidence ? `검색으로 확인한 공식 근거:\n${clipText(evidence)}` : "검색 근거를 받지 못했다면 최신 정보라고 단정하지 마세요.",
     "아기와 가족의 참고 정보:",
     JSON.stringify(safeContext(context)),
     "현재 브라우저 세션의 최근 대화:",
@@ -97,11 +125,29 @@ export function buildChatPrompt(
   ].join("\n\n");
 }
 
-export function buildStrategyPrompt(context: BabyAiContext, kind: StrategyKind): string {
+export function buildEvidencePrompt(
+  context: BabyAiContext,
+  topic: StrategyKind | "general",
+  question = "",
+): string {
+  const subject = topic === "feeding" ? "영아 수유" : topic === "sleep" ? "영아 수면" : "영아 돌봄";
+  const keywords = SEARCH_KEYWORDS.filter((keyword) => String(question || "").includes(keyword));
+  return [
+    `${ageBandForDays(context.baby?.ageDays)} ${subject} 일반 원칙을 검색하세요.`,
+    keywords.length ? `일반 주제: ${keywords.slice(0, 5).join(", ")}` : "일반 주제만 검색하세요.",
+    "질병관리청, 보건복지부, 소아청소년과 학회, WHO, CDC, AAP, NHS 자료를 우선하세요.",
+    "하정훈의 삐뽀삐뽀 119 소아과 등 신원이 확인된 소아청소년과 전문의 유튜브도 보조 자료로 사용할 수 있습니다.",
+    "개인 이름, 연락처, 계정 정보, 가족 일정, 자유 메모는 검색하지 마세요.",
+  ].join("\n");
+}
+
+export function buildStrategyPrompt(context: BabyAiContext, kind: StrategyKind, evidence = ""): string {
   const focus = kind === "feeding" ? "수유" : "수면";
   return [
     baseInstructions(),
     `목적: 최근 7일 기록과 공동 프로필을 바탕으로 ${focus} 전략을 제안하세요.`,
+    "초등학생도 이해할 수 있는 짧고 쉬운 한국어로 쓰고, 한 항목에는 한 행동만 담으세요.",
+    evidence ? `검색으로 확인한 공식 근거:\n${clipText(evidence)}` : "검색 근거를 받지 못했다면 최신 정보라고 단정하지 마세요.",
     "기록에 없는 사실을 추측하지 말고, 관찰과 제안을 명확히 구분하세요.",
     "오늘부터 적용 가능한 작은 단계로 작성하고 부모 생활 패턴 안에서 담당 시간을 나누세요.",
     "반드시 JSON 객체 하나만 반환하세요.",
@@ -151,6 +197,15 @@ function baseInstructions(): string {
     "약 이름이나 용량을 정하지 말고, 의료 판단이 필요한 경우 소아청소년과 또는 보건 전문가 상담을 안내하세요.",
     "아기의 배고픔·포만·피로 신호와 보호자의 안전을 우선하세요.",
   ].join(" ");
+}
+
+function ageBandForDays(value: unknown): string {
+  const days = Number(value);
+  if (!Number.isFinite(days) || days < 0) return "월령을 모르는";
+  if (days < 60) return "생후 0~1개월";
+  if (days < 180) return "생후 2~5개월";
+  if (days < 365) return "생후 6~11개월";
+  return "생후 12개월 이상";
 }
 
 function safeContext(context: BabyAiContext): Record<string, unknown> {

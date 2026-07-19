@@ -1,8 +1,8 @@
 // @ts-nocheck -- Supabase Edge Runtime provides Deno and npm: imports.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { buildStrategyPrompt, parseStrategy, sevenDayStart } from "./domain.ts";
+import { sevenDayStart } from "./domain.ts";
 import { createGeminiTransport } from "./gemini.ts";
-import { createBabyAiHandler } from "./handler.ts";
+import { createBabyAiHandler, generateGroundedStrategy } from "./handler.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -26,7 +26,9 @@ Deno.serve(async (request: Request) => {
     },
     isCronAuthorized: (req) => secureEqual(req.headers.get("x-baby-ai-cron") || "", BABY_AI_CRON_SECRET),
     loadContext: async (_userId, babyId) => loadContext(userClient, babyId),
+    generateGroundedText: (prompt) => gemini().generateGroundedText(prompt),
     generateText: (prompt, options) => gemini().generateText(prompt, options),
+    reportError: (code, action) => console.error("BABY_AI_ERROR", { code, action }),
     saveDraft: async (input) => {
       const { data: baby, error: babyError } = await serviceClient
         .from("babies")
@@ -140,15 +142,11 @@ async function processRefreshQueue(serviceClient) {
 
 async function generateScheduledDraft(client, context, babyId: string, kind: "feeding" | "sleep") {
   const now = new Date();
-  const prompt = buildStrategyPrompt(context, kind);
-  let raw = await gemini().generateText(prompt, { json: true });
-  let content;
-  try {
-    content = parseStrategy(raw);
-  } catch {
-    raw = await gemini().generateText(`${prompt}\n\n필수 키를 모두 포함한 JSON 객체만 다시 반환하세요.`, { json: true });
-    content = parseStrategy(raw);
-  }
+  const transport = gemini();
+  const content = await generateGroundedStrategy({
+    generateGroundedText: (prompt) => transport.generateGroundedText(prompt),
+    generateText: (prompt, options) => transport.generateText(prompt, options),
+  }, context, kind);
 
   const { error } = await client.from("baby_ai_strategy_drafts").insert({
     baby_id: babyId,

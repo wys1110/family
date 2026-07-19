@@ -1,5 +1,19 @@
+import { resolveTrustedSources, type GroundedSource, type GroundingChunk } from "./sources.ts";
+
 export type GeminiTransport = {
-  generateText(prompt: string, options: { json: boolean }): Promise<string>;
+  generateText(prompt: string, options: GeminiGenerateOptions): Promise<string>;
+  generateGroundedText(prompt: string): Promise<GeminiResult>;
+};
+
+export type GeminiGenerateOptions = {
+  json: boolean;
+  responseSchema?: Record<string, unknown>;
+};
+
+export type GeminiResult = {
+  text: string;
+  sources: GroundedSource[];
+  grounded: boolean;
 };
 
 export type GeminiTransportOptions = {
@@ -16,6 +30,19 @@ export function createGeminiTransport(options: GeminiTransportOptions): GeminiTr
 
   return {
     async generateText(prompt, requestOptions) {
+      const result = await requestGemini(prompt, requestOptions, false);
+      return result.text;
+    },
+    async generateGroundedText(prompt) {
+      return requestGemini(prompt, { json: false }, true);
+    },
+  };
+
+  async function requestGemini(
+    prompt: string,
+    requestOptions: GeminiGenerateOptions,
+    grounding: boolean,
+  ): Promise<GeminiResult> {
       const response = await fetchImpl(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
@@ -26,10 +53,14 @@ export function createGeminiTransport(options: GeminiTransportOptions): GeminiTr
           },
           body: JSON.stringify({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
+            ...(grounding ? { tools: [{ google_search: {} }] } : {}),
             generationConfig: {
               temperature: requestOptions.json ? 0.2 : 0.4,
               maxOutputTokens: requestOptions.json ? 3000 : 2000,
-              ...(requestOptions.json ? { responseMimeType: "application/json" } : {}),
+              ...(requestOptions.json ? {
+                responseMimeType: "application/json",
+                ...(requestOptions.responseSchema ? { responseSchema: requestOptions.responseSchema } : {}),
+              } : {}),
             },
           }),
         },
@@ -42,15 +73,19 @@ export function createGeminiTransport(options: GeminiTransportOptions): GeminiTr
         .join("")
         .trim();
       if (!text) throw new Error("GEMINI_EMPTY_RESPONSE");
-      return text;
-    },
-  };
+      const chunks = payload.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const sources = grounding ? await resolveTrustedSources(chunks, fetchImpl) : [];
+      return { text, sources, grounded: sources.length > 0 };
+  }
 }
 
 type GeminiResponse = {
   candidates?: Array<{
     content?: {
       parts?: Array<{ text?: string }>;
+    };
+    groundingMetadata?: {
+      groundingChunks?: GroundingChunk[];
     };
   }>;
 };

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   buildChatPrompt,
+  buildEvidencePrompt,
   buildStrategyPrompt,
   containsUrgentSignal,
   parseStrategy,
@@ -40,6 +41,37 @@ describe("Gemini 육아 도메인", () => {
     expect(prompt).not.toContain("메시지-1");
     expect(prompt).toContain("메시지-2");
     expect(prompt).toContain("새 질문");
+  });
+
+  test("검색 입력은 자유 메모와 연락처를 보내지 않는다", () => {
+    const privateContext = {
+      ...context,
+      profile: {
+        ...context.profile,
+        babyNotes: "민준 010-1234-5678 parent@example.com https://family.example",
+        motherSchedule: { notes: "엄마 회사는 솔페" },
+      },
+    };
+
+    const prompt = buildEvidencePrompt(privateContext, "sleep", "민준이가 밤잠을 못 자요. 010-1234-5678");
+
+    expect(prompt).not.toContain("민준");
+    expect(prompt).not.toContain("010-1234-5678");
+    expect(prompt).not.toContain("parent@example.com");
+    expect(prompt).not.toContain("family.example");
+    expect(prompt).not.toContain("솔페");
+    expect(prompt).toContain("영아 수면");
+    expect(prompt).toContain("밤잠");
+  });
+
+  test("최종 답변 프롬프트는 초등학생도 이해할 다섯 부분을 요구한다", () => {
+    const prompt = buildChatPrompt(context, [], "질문", "공식 근거");
+
+    for (const title of ["한 줄 결론", "지금 할 일", "지켜볼 것", "병원에 갈 때", "참고한 자료"]) {
+      expect(prompt).toContain(title);
+    }
+    expect(prompt).toContain("초등학생도 이해");
+    expect(prompt).toContain("공식 근거");
   });
 
   test("완전한 전략 JSON만 허용한다", () => {
