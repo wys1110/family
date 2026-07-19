@@ -50,7 +50,7 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260719-preserve-scroll-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
-    { name: "feeding-reminder", version: "20260718-logic-audit-v1" },
+    { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260719-push-v1" },
     { name: "tab-emojis", version: "20260718-baseline-v2" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
