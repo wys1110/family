@@ -1,5 +1,8 @@
 export const AI_CARE_CATEGORIES = new Set(["수유·이유식", "수면"]);
 
+const RATE_LIMIT_MESSAGE = "AI 사용량이 잠시 많아요. 잠시 뒤 다시 시도해 주세요.";
+const GEMINI_RESTING_MESSAGE = "제미나이가 지금 쉬는 중이에요 😴 잠시 후 다시 질문해 주세요.";
+
 export function isAiCareCategory(category) {
   return AI_CARE_CATEGORIES.has(category);
 }
@@ -21,6 +24,24 @@ export function formatStrategySections(content) {
   ];
 }
 
+export function replaceGeminiRateLimitMessage(root = document) {
+  root.querySelectorAll("#babyAiAssistant .baby-ai-status, #babyAiAssistant .baby-ai-message p").forEach((element) => {
+    if (element.textContent?.trim() === RATE_LIMIT_MESSAGE) element.textContent = GEMINI_RESTING_MESSAGE;
+  });
+}
+
+function installFriendlyGeminiErrors() {
+  const root = document.querySelector("#babyAiAssistant");
+  if (!root || root.dataset.friendlyGeminiErrors === "true") return;
+  root.dataset.friendlyGeminiErrors = "true";
+  new MutationObserver(() => replaceGeminiRateLimitMessage(root)).observe(root, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  replaceGeminiRateLimitMessage(root);
+}
+
 if (typeof window !== "undefined") {
   window.FamilyBabyAiCore = {
     AI_CARE_CATEGORIES,
@@ -28,5 +49,7 @@ if (typeof window !== "undefined") {
     refreshDueAt,
     shouldReplaceDraft,
     formatStrategySections,
+    replaceGeminiRateLimitMessage,
   };
+  installFriendlyGeminiErrors();
 }
