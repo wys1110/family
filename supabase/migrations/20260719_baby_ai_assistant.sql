@@ -129,7 +129,7 @@ begin
   set status = 'superseded'
   where baby_id = target_row.baby_id
     and kind = target_row.kind
-    and status = 'confirmed'
+    and status in ('draft', 'confirmed')
     and id <> target_row.id;
 
   update public.baby_ai_strategy_drafts

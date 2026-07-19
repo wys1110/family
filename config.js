@@ -85,6 +85,8 @@ window.FAMILY_CONFIG = {
     { name: "growth-inline-visual-polish", version: "20260718-v1", script: false },
     { name: "growth-inline-approved-polish", version: "20260718-v3", script: false },
     { name: "invite-link", version: "20260718-v1" },
+    { name: "baby-ai-core", version: "20260719-v1", style: false, script: false },
+    { name: "baby-ai", version: "20260719-v1" },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {

@@ -28,6 +28,11 @@ describe("AI 육아 도우미 마이그레이션", () => {
     expect(sql).toContain("status = 'confirmed'");
   });
 
+  test("전략 확정 시 같은 종류의 오래된 초안도 다시 노출되지 않게 정리한다", () => {
+    const sql = migrationSql();
+    expect(sql).toMatch(/set status = 'superseded'[\s\S]*status in \('draft', 'confirmed'\)[\s\S]*id <> target_row\.id/);
+  });
+
   test("프로필 텍스트와 전략 상태에 제약을 둔다", () => {
     const sql = migrationSql();
     expect(sql).toContain("char_length(baby_notes) <= 2000");

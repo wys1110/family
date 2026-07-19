@@ -301,7 +301,7 @@ begin
   if target_row.id is null then raise exception 'strategy not found'; end if;
   if not public.is_household_member(target_row.household_id) then raise exception 'forbidden'; end if;
   update public.baby_ai_strategy_drafts set status = 'superseded'
-    where baby_id = target_row.baby_id and kind = target_row.kind and status = 'confirmed' and id <> target_row.id;
+    where baby_id = target_row.baby_id and kind = target_row.kind and status in ('draft', 'confirmed') and id <> target_row.id;
   update public.baby_ai_strategy_drafts set status = 'confirmed', confirmed_by = auth.uid(), confirmed_at = now()
     where id = target_row.id and status in ('draft', 'confirmed');
   if not found then raise exception 'strategy cannot be confirmed'; end if;
