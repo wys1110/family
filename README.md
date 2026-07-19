@@ -62,6 +62,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - 영어동화 전체·문장별 음성 재생, 느린 속도, 오늘의 동화 완료 표시
 - 가족 구성원 기능 요청 DB 저장과 가족 관리자 전용 조회·상태 관리
 - 가족 공동 아기 특징·부모 생활 패턴과 최근 7일 기록을 반영하는 AI 육아 질문·수유·수면 전략
+- 매일 지정 시각에 오늘 일정을 보내는 홈 화면 앱 푸시 브리핑
 
 영어동화는 브라우저의 영어 음성 읽기 기능을 사용하며 별도 DB 설정 없이 바로 동작합니다. 완료 표시는 현재 기기의 로그인 계정별 로컬 저장소에 보관됩니다.
 
@@ -82,6 +83,52 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 기능 요청을 Supabase DB에 저장하고 가족 관리자만 조회·상태 변경하도록 하려면 [`supabase/migrations/20260716_feature_requests.sql`](supabase/migrations/20260716_feature_requests.sql)을 SQL Editor에서 한 번 실행합니다. 일반 가족 구성원은 요청 등록만 가능하며 목록 조회 권한은 없습니다.
 
 가족 할 일을 모든 가족 기기에서 공유하려면 [`supabase/migrations/20260716_family_todos.sql`](supabase/migrations/20260716_family_todos.sql)을 SQL Editor에서 한 번 실행합니다. 적용 전에도 기능은 동작하지만 현재 기기의 로컬 저장소에만 임시 저장됩니다.
+
+## 매일 일정 브리핑 앱 알림 배포
+
+브라우저가 닫혀 있어도 오전 9시에 알림을 받으려면 Web Push용 Edge Function과 Cron을 한 번 배포해야 합니다. iPhone은 iOS 16.4 이상에서 사이트를 **홈 화면에 추가한 앱**으로 실행해야 푸시 권한을 요청할 수 있습니다.
+
+1. SQL Editor에서 [`supabase/migrations/20260719_daily_briefing_push.sql`](supabase/migrations/20260719_daily_briefing_push.sql)을 실행합니다.
+2. VAPID 키를 한 번 생성합니다.
+
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+
+3. Git에 포함되지 않는 `supabase/.env.push` 파일에 아래 값을 저장합니다.
+
+   ```dotenv
+   DAILY_BRIEFING_VAPID_SUBJECT=mailto:관리자_이메일
+   DAILY_BRIEFING_VAPID_PUBLIC_KEY=생성된_공개키
+   DAILY_BRIEFING_VAPID_PRIVATE_KEY=생성된_비밀키
+   DAILY_BRIEFING_CRON_SECRET=충분히_긴_무작위_문자열
+   ```
+
+4. 비밀값과 Edge Function을 배포합니다.
+
+   ```bash
+   export SUPABASE_PROJECT_ID="프로젝트-ref"
+   supabase secrets set --env-file ./supabase/.env.push --project-ref "$SUPABASE_PROJECT_ID"
+   supabase functions deploy daily-briefing-push --project-ref "$SUPABASE_PROJECT_ID"
+   ```
+
+5. Supabase **Database → Vault**에 아래 이름으로 값을 등록합니다.
+
+   - `daily_briefing_project_url`: Supabase Project URL
+   - `daily_briefing_publishable_key`: 브라우저용 publishable key 또는 anon key
+   - `daily_briefing_cron_secret`: `DAILY_BRIEFING_CRON_SECRET`과 같은 값
+
+6. SQL Editor에서 [`supabase/daily-briefing-cron.sql`](supabase/daily-briefing-cron.sql)을 실행합니다.
+7. iPhone에서 Safari 공유 버튼 → **홈 화면에 추가** → 앱 아이콘으로 실행 → **설정 → 아침 일정 브리핑 → 앱 알림 켜기**를 누릅니다. 기본 시간은 오전 9시이며 테스트 알림으로 즉시 확인할 수 있습니다.
+
+확인은 Edge Function 로그와 아래 쿼리로 합니다.
+
+```sql
+select jobname, schedule, active from cron.job where jobname = 'daily-briefing-push-every-5-minutes';
+select enabled, timezone, briefing_time, last_sent_on, last_error from public.push_subscriptions order by updated_at desc;
+```
+
+VAPID 비밀키와 Cron 비밀값은 저장소, 브라우저 코드, 이슈 또는 채팅에 넣지 마세요.
 
 ## AI 육아 도우미 배포
 
