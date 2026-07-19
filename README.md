@@ -61,6 +61,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 - 아기에게 들려주는 창작 영어동화 7편과 한글 뜻
 - 영어동화 전체·문장별 음성 재생, 느린 속도, 오늘의 동화 완료 표시
 - 가족 구성원 기능 요청 DB 저장과 가족 관리자 전용 조회·상태 관리
+- 가족 공동 아기 특징·부모 생활 패턴과 최근 7일 기록을 반영하는 AI 육아 질문·수유·수면 전략
 
 영어동화는 브라우저의 영어 음성 읽기 기능을 사용하며 별도 DB 설정 없이 바로 동작합니다. 완료 표시는 현재 기기의 로그인 계정별 로컬 저장소에 보관됩니다.
 
@@ -81,3 +82,40 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 기능 요청을 Supabase DB에 저장하고 가족 관리자만 조회·상태 변경하도록 하려면 [`supabase/migrations/20260716_feature_requests.sql`](supabase/migrations/20260716_feature_requests.sql)을 SQL Editor에서 한 번 실행합니다. 일반 가족 구성원은 요청 등록만 가능하며 목록 조회 권한은 없습니다.
 
 가족 할 일을 모든 가족 기기에서 공유하려면 [`supabase/migrations/20260716_family_todos.sql`](supabase/migrations/20260716_family_todos.sql)을 SQL Editor에서 한 번 실행합니다. 적용 전에도 기능은 동작하지만 현재 기기의 로컬 저장소에만 임시 저장됩니다.
+
+## AI 육아 도우미 배포
+
+AI 기능은 브라우저에서 Gemini를 직접 호출하지 않습니다. 로그인 사용자는 Supabase Edge Function을 호출하며 `GEMINI_API_KEY`와 예약 작업용 `BABY_AI_CRON_SECRET`은 Supabase Function Secret으로만 보관합니다. 일반 질문은 DB에 저장하지 않고, 가족이 확정한 수유·수면 전략만 공동 저장합니다.
+
+1. Supabase SQL Editor에서 [`supabase/migrations/20260719_baby_ai_assistant.sql`](supabase/migrations/20260719_baby_ai_assistant.sql)을 실행합니다.
+2. Git에 포함되지 않는 `supabase/.env.ai` 파일을 만들고 다음 두 값을 입력합니다.
+
+   ```dotenv
+   GEMINI_API_KEY=Google_AI_Studio에서_발급한_키
+   BABY_AI_CRON_SECRET=충분히_긴_무작위_문자열
+   ```
+
+3. 로컬 셸에 Supabase 프로젝트 ref를 설정한 뒤 비밀값과 함수를 배포합니다.
+
+   ```bash
+   export SUPABASE_PROJECT_ID="프로젝트-ref"
+   supabase secrets set --env-file ./supabase/.env.ai --project-ref "$SUPABASE_PROJECT_ID"
+   supabase functions deploy baby-ai --project-ref "$SUPABASE_PROJECT_ID"
+   ```
+
+4. Supabase Dashboard의 **Database → Vault**에 아래 이름으로 값을 등록합니다.
+
+   - `baby_ai_project_url`: Supabase Project URL
+   - `baby_ai_publishable_key`: 브라우저용 publishable key 또는 기존 anon key
+   - `baby_ai_cron_secret`: `BABY_AI_CRON_SECRET`과 동일한 값
+
+5. SQL Editor에서 [`supabase/baby-ai-cron.sql`](supabase/baby-ai-cron.sql)을 실행합니다. 5분마다 만료된 갱신 큐를 확인하며, 새 수유·수면 기록은 마지막 기록으로부터 30분 뒤 처리됩니다.
+
+확인은 Supabase **Edge Functions → baby-ai → Logs**와 SQL Editor의 아래 쿼리로 합니다.
+
+```sql
+select jobname, schedule, active from cron.job where jobname = 'baby-ai-refresh-every-5-minutes';
+select baby_id, due_at, status, attempt_count from public.baby_ai_refresh_queue order by due_at;
+```
+
+마이그레이션이나 Function Secret이 적용되지 않은 환경에서도 캘린더와 성장일기는 그대로 동작하며 AI 카드에 관리자 설정 안내만 표시됩니다. `service_role`, Gemini 키, cron 비밀값은 `config.js`, GitHub Actions 로그, 이슈 또는 채팅에 넣지 마세요.
