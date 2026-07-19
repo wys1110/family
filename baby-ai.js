@@ -25,9 +25,19 @@
     };
   }
 
-  function setStatus(message, kind = "") {
-    status.textContent = message;
+  function setStatus(message, kind = "", action = null) {
     status.className = `baby-ai-status${kind ? ` ${kind}` : ""}`;
+    status.replaceChildren();
+    const copy = document.createElement("span");
+    copy.textContent = message;
+    status.appendChild(copy);
+    if (!action) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "baby-ai-status-action";
+    button.dataset.babyAiStatusAction = action.name;
+    button.textContent = action.label;
+    status.appendChild(button);
   }
 
   function selectTab(name) {
@@ -91,12 +101,37 @@
       setStatus("최근 7일 기록과 가족 패턴을 사용할 준비가 됐어요.");
       return;
     }
-    if (queue.status === "failed" && Number(queue.attempt_count) >= 3) {
-      setStatus("자동 전략 갱신이 세 번 실패했어요. 전략 탭에서 직접 다시 만들어 주세요.", "error");
+    const attempts = Number(queue.attempt_count || 0);
+    if (queue.status === "processing") {
+      setStatus("새 기록을 바탕으로 수유·수면 전략을 갱신하고 있어요.", "pending");
+      return;
+    }
+    if (queue.status === "failed" && attempts >= 3) {
+      setStatus(`${queueFailureMessage(queue.last_error)} 자동 갱신을 바로 다시 시작할 수 있어요.`, "error", {
+        name: "retry-refresh",
+        label: "지금 다시 시도",
+      });
       return;
     }
     const due = formatDateTime(queue.due_at);
+    if (queue.status === "failed") {
+      setStatus(`${queueFailureMessage(queue.last_error)} ${due} 이후 자동으로 다시 시도해요.`, "pending");
+      return;
+    }
     setStatus(`새 기록을 모으는 중이에요. ${due} 이후 수유·수면 전략을 갱신해요.`, "pending");
+  }
+
+  function queueFailureMessage(code) {
+    const messages = {
+      INVALID_STRATEGY_RESPONSE: "AI 응답 형식을 확인하지 못했어요.",
+      INVALID_AI_RESPONSE: "AI 응답 형식을 확인하지 못했어요.",
+      GROUNDING_UNAVAILABLE: "신뢰할 수 있는 자료를 불러오지 못했어요.",
+      GEMINI_HTTP_429: "AI 사용량이 잠시 많았어요.",
+      AI_RATE_LIMITED: "AI 사용량이 잠시 많았어요.",
+      DRAFT_SAVE_FAILED: "전략 저장 중 오류가 있었어요.",
+      PROCESSING_TIMEOUT: "갱신 작업이 중간에 멈췄어요.",
+    };
+    return messages[String(code || "")] || "자동 전략 갱신이 완료되지 않았어요.";
   }
 
   function clearProfileForm() {
@@ -246,11 +281,45 @@
         body: { action: "generate-strategy", babyId: context.babyId, kind },
       });
       if (error || !data?.draftId) throw error || new Error("EMPTY_DRAFT");
-      setStatus("새 전략 제안을 만들었어요. 내용을 확인한 뒤 가족 전략으로 확정해 주세요.");
       await loadBabyAi();
+      setStatus("새 전략 제안을 만들었어요. 내용을 확인한 뒤 가족 전략으로 확정해 주세요.");
     } catch (error) {
       const code = await readFunctionErrorCode(error);
       setStatus(babyAiErrorMessage(code, "strategy"), "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+
+  async function retryFailedRefresh(button) {
+    const context = familyContext();
+    if (!context) return setStatus("먼저 가족 공간에 로그인하고 아기를 선택해 주세요.", "error");
+    button.disabled = true;
+    const original = button.textContent;
+    button.textContent = "재시도 중…";
+    setStatus("자동 전략 갱신을 다시 준비하고 있어요.", "pending");
+    try {
+      const { data, error } = await context.supabase.functions.invoke("baby-ai", {
+        body: { action: "retry-refresh", babyId: context.babyId },
+      });
+      if (error) {
+        const code = await readFunctionErrorCode(error);
+        if (code !== "UNKNOWN_ACTION") throw new Error(code);
+        const fallback = await context.supabase.rpc("schedule_baby_ai_refresh", { target_baby_id: context.babyId });
+        if (fallback.error || !fallback.data) throw fallback.error || new Error("REFRESH_RETRY_FAILED");
+        setStatus(`자동 갱신을 다시 예약했어요. ${formatDateTime(fallback.data)} 이후 다시 시도해요.`, "pending");
+        return;
+      }
+      if (!data?.dueAt) throw new Error("REFRESH_RETRY_FAILED");
+      await loadBabyAi();
+      setStatus("자동 갱신을 다시 시작했어요. 보통 5분 안에 새 전략이 만들어져요.", "pending");
+    } catch (error) {
+      const code = await readFunctionErrorCode(error);
+      setStatus(babyAiErrorMessage(code, "refresh"), "error", {
+        name: "retry-refresh",
+        label: "다시 시도",
+      });
     } finally {
       button.disabled = false;
       button.textContent = original;
@@ -300,8 +369,8 @@
       button.textContent = "가족 전략으로 확정";
       return setStatus("전략을 확정하지 못했어요. 다시 시도해 주세요.", "error");
     }
-    setStatus("가족 공동 전략으로 확정했어요.");
     await loadBabyAi();
+    setStatus("가족 공동 전략으로 확정했어요.");
   }
 
   async function scheduleRefreshFromCareLog(event) {
@@ -363,6 +432,7 @@
       if (/^[A-Z0-9_]+$/.test(String(payload?.error || ""))) return payload.error;
     } catch { /* 응답 본문이 JSON이 아니면 메시지로 분류 */ }
     const message = String(error?.message || "");
+    if (/^[A-Z0-9_]+$/.test(message)) return message;
     if (/failed to send|fetch|network|load failed/i.test(message)) return "NETWORK_ERROR";
     return "UNKNOWN";
   }
@@ -376,10 +446,13 @@
       GROUNDING_UNAVAILABLE: "믿을 만한 인터넷 자료를 찾지 못했어요. 질문을 조금 더 구체적으로 써 주세요.",
       AI_TEMPORARILY_UNAVAILABLE: "AI 연결이 잠시 불안정해요. 잠시 뒤 다시 시도해 주세요.",
       DRAFT_SAVE_FAILED: "전략은 만들었지만 저장하지 못했어요. 다시 시도해 주세요.",
+      QUEUE_RETRY_FAILED: "자동 갱신을 다시 예약하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+      REFRESH_RETRY_FAILED: "자동 갱신을 다시 예약하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
     };
-    return messages[code] || (mode === "strategy"
-      ? "전략을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요."
-      : "답변을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.");
+    if (messages[code]) return messages[code];
+    if (mode === "strategy") return "전략을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+    if (mode === "refresh") return "자동 갱신을 다시 시작하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+    return "답변을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.";
   }
 
   function safeHtml(value) {
@@ -392,6 +465,8 @@
   root.addEventListener("click", (event) => {
     const tab = event.target.closest("[data-baby-ai-tab]");
     if (tab) selectTab(tab.dataset.babyAiTab);
+    const retry = event.target.closest('[data-baby-ai-status-action="retry-refresh"]');
+    if (retry) retryFailedRefresh(retry);
     const generate = event.target.closest("[data-generate-strategy]");
     if (generate) generateStrategy(generate.dataset.generateStrategy, generate);
     const confirm = event.target.closest("[data-confirm-strategy]");
