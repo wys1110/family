@@ -1,0 +1,22 @@
+{
+  "id": "./",
+  "name": "우리 가족",
+  "short_name": "우리 가족",
+  "description": "가족 일정과 아기 성장 기록을 함께 관리하는 앱",
+  "lang": "ko-KR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#f5f3ef",
+  "theme_color": "#f5f3ef",
+  "icons": [
+    {
+      "src": "assets/family-mascots.webp",
+      "sizes": "any",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
