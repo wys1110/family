@@ -129,10 +129,7 @@
     root.querySelector("#createHouseholdForm")?.addEventListener("submit", createHousehold);
     root.querySelector("#shareFamilyInvite")?.addEventListener("click", shareInvite);
     root.querySelector("#joinFamilyInvite")?.addEventListener("click", (event) => joinFromInvite(event.currentTarget));
-    root.querySelector("#logoutButton")?.addEventListener("click", async () => {
-      await state.supabase.auth.signOut();
-      document.querySelector("#accountDialog")?.close();
-    });
+    root.querySelector("#logoutButton")?.addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
   };
 
   const renderInviteAccount = () => {
