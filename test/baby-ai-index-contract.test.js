@@ -18,3 +18,9 @@ test("JWT 검증을 핸들러 안에서 명시적으로 수행한다", () => {
   expect(config).toContain("[functions.baby-ai]");
   expect(config).toContain("verify_jwt = false");
 });
+
+test("예약 전략 생성도 필수 JSON schema를 사용한다", () => {
+  const source = readFileSync("supabase/functions/baby-ai/index.ts", "utf8");
+  expect(source).toContain("STRATEGY_RESPONSE_SCHEMA");
+  expect(source).toContain("responseSchema: STRATEGY_RESPONSE_SCHEMA");
+});

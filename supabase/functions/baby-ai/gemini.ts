@@ -1,5 +1,10 @@
 export type GeminiTransport = {
-  generateText(prompt: string, options: { json: boolean }): Promise<string>;
+  generateText(prompt: string, options: GeminiGenerateOptions): Promise<string>;
+};
+
+export type GeminiGenerateOptions = {
+  json: boolean;
+  responseSchema?: Record<string, unknown>;
 };
 
 export type GeminiTransportOptions = {
@@ -29,7 +34,10 @@ export function createGeminiTransport(options: GeminiTransportOptions): GeminiTr
             generationConfig: {
               temperature: requestOptions.json ? 0.2 : 0.4,
               maxOutputTokens: requestOptions.json ? 3000 : 2000,
-              ...(requestOptions.json ? { responseMimeType: "application/json" } : {}),
+              ...(requestOptions.json ? {
+                responseMimeType: "application/json",
+                ...(requestOptions.responseSchema ? { responseSchema: requestOptions.responseSchema } : {}),
+              } : {}),
             },
           }),
         },

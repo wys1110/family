@@ -2,7 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildStrategyPrompt, parseStrategy, sevenDayStart } from "./domain.ts";
 import { createGeminiTransport } from "./gemini.ts";
-import { createBabyAiHandler } from "./handler.ts";
+import { createBabyAiHandler, STRATEGY_RESPONSE_SCHEMA } from "./handler.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -141,12 +141,15 @@ async function processRefreshQueue(serviceClient) {
 async function generateScheduledDraft(client, context, babyId: string, kind: "feeding" | "sleep") {
   const now = new Date();
   const prompt = buildStrategyPrompt(context, kind);
-  let raw = await gemini().generateText(prompt, { json: true });
+  let raw = await gemini().generateText(prompt, { json: true, responseSchema: STRATEGY_RESPONSE_SCHEMA });
   let content;
   try {
     content = parseStrategy(raw);
   } catch {
-    raw = await gemini().generateText(`${prompt}\n\n필수 키를 모두 포함한 JSON 객체만 다시 반환하세요.`, { json: true });
+    raw = await gemini().generateText(`${prompt}\n\n필수 키를 모두 포함한 JSON 객체만 다시 반환하세요.`, {
+      json: true,
+      responseSchema: STRATEGY_RESPONSE_SCHEMA,
+    });
     content = parseStrategy(raw);
   }
 

@@ -81,6 +81,36 @@ describe("baby-ai Edge Function handler", () => {
     expect((await response.json()).draftId).toBe("draft-2");
   });
 
+  test("전략 생성은 여섯 필수 필드의 JSON schema를 전달한다", async () => {
+    const strategy = JSON.stringify({
+      summary: "요약",
+      observations: [],
+      actions: ["실행"],
+      watch: [],
+      reassess: "3일",
+      safety: "필요시 상담",
+    });
+    let receivedSchema;
+    const handler = createBabyAiHandler(fakeDeps({
+      generateText: async (_prompt, options) => {
+        receivedSchema = options.responseSchema;
+        return strategy;
+      },
+    }));
+
+    const response = await handler(request({ action: "generate-strategy", babyId: BABY_ID, kind: "sleep" }));
+
+    expect(response.status).toBe(200);
+    expect(receivedSchema.required).toEqual([
+      "summary",
+      "observations",
+      "actions",
+      "watch",
+      "reassess",
+      "safety",
+    ]);
+  });
+
   test("잘못된 전략 응답을 한 번 교정한 뒤 저장한다", async () => {
     let calls = 0;
     const handler = createBabyAiHandler(fakeDeps({

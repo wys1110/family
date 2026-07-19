@@ -15,7 +15,7 @@ export type HandlerDependencies = {
   authenticate(request: Request): Promise<{ userId: string } | null>;
   isCronAuthorized(request: Request): boolean;
   loadContext(userId: string, babyId: string): Promise<BabyAiContext | null>;
-  generateText(prompt: string, options: { json: boolean }): Promise<string>;
+  generateText(prompt: string, options: { json: boolean; responseSchema?: Record<string, unknown> }): Promise<string>;
   saveDraft(input: {
     userId: string;
     babyId: string;
@@ -41,6 +41,20 @@ const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-baby-ai-cron",
   "access-control-allow-methods": "POST, OPTIONS",
+};
+
+export const STRATEGY_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string", description: "쉬운 한국어 한 줄 요약" },
+    observations: { type: "array", items: { type: "string" } },
+    actions: { type: "array", items: { type: "string" } },
+    watch: { type: "array", items: { type: "string" } },
+    reassess: { type: "string" },
+    safety: { type: "string" },
+  },
+  required: ["summary", "observations", "actions", "watch", "reassess", "safety"],
+  additionalProperties: false,
 };
 
 export function createBabyAiHandler(deps: HandlerDependencies) {
@@ -116,7 +130,7 @@ async function handleStrategy(
   }
 
   const prompt = buildStrategyPrompt(context, body.kind);
-  let raw = await deps.generateText(prompt, { json: true });
+  let raw = await deps.generateText(prompt, { json: true, responseSchema: STRATEGY_RESPONSE_SCHEMA });
   let content: StrategyContent;
   try {
     content = parseStrategy(raw);
@@ -124,7 +138,7 @@ async function handleStrategy(
     raw = await deps.generateText([
       prompt,
       "이전 응답은 필수 JSON 구조가 아니었습니다. 설명이나 코드 펜스 없이 필수 키를 모두 포함한 JSON 객체만 다시 반환하세요.",
-    ].join("\n\n"), { json: true });
+    ].join("\n\n"), { json: true, responseSchema: STRATEGY_RESPONSE_SCHEMA });
     content = parseStrategy(raw);
   }
 
