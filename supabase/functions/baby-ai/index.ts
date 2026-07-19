@@ -121,17 +121,30 @@ async function processRefreshQueue(serviceClient) {
   const now = new Date();
   const nowIso = now.toISOString();
   const staleBefore = new Date(now.getTime() - 15 * 60_000).toISOString();
-  const { error: recoveryError } = await serviceClient
+  const { data: staleRows, error: staleLoadError } = await serviceClient
     .from("baby_ai_refresh_queue")
-    .update({
-      status: "failed",
-      due_at: nowIso,
-      last_error: "PROCESSING_TIMEOUT",
-      updated_at: nowIso,
-    })
+    .select("baby_id,generation,attempt_count")
     .eq("status", "processing")
-    .lt("updated_at", staleBefore);
-  if (recoveryError) throw new Error("QUEUE_RECOVERY_FAILED");
+    .lt("updated_at", staleBefore)
+    .limit(10);
+  if (staleLoadError) throw new Error("QUEUE_RECOVERY_FAILED");
+
+  for (const stale of staleRows || []) {
+    const attemptCount = Math.min(3, Number(stale.attempt_count || 0) + 1);
+    const { error: recoveryError } = await serviceClient
+      .from("baby_ai_refresh_queue")
+      .update({
+        status: "failed",
+        attempt_count: attemptCount,
+        due_at: nowIso,
+        last_error: "PROCESSING_TIMEOUT",
+        updated_at: nowIso,
+      })
+      .eq("baby_id", stale.baby_id)
+      .eq("generation", stale.generation)
+      .eq("status", "processing");
+    if (recoveryError) throw new Error("QUEUE_RECOVERY_FAILED");
+  }
 
   const { data: rows, error } = await serviceClient
     .from("baby_ai_refresh_queue")
