@@ -87,6 +87,7 @@ window.FAMILY_CONFIG = {
     { name: "invite-link", version: "20260718-v1" },
     { name: "baby-ai-core", version: "20260719-v1", style: false, script: false },
     { name: "baby-ai", version: "20260719-v2" },
+    { name: "baby-ai-time-fields", version: "20260719-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
