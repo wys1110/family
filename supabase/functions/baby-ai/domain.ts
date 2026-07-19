@@ -1,3 +1,5 @@
+import type { GroundedSource } from "./sources.ts";
+
 export type StrategyKind = "feeding" | "sleep";
 
 export type ChatMessage = {
@@ -23,6 +25,7 @@ export type StrategyContent = {
   watch: string[];
   reassess: string;
   safety: string;
+  sources?: GroundedSource[];
 };
 
 export const URGENT_GUIDANCE = [
