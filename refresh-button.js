@@ -37,6 +37,51 @@
     window.setTimeout(() => toast.classList.remove('show'), 2200);
   };
 
+  const createScrollCheckpoint = () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    let cancelled = false;
+    let completed = false;
+    const passiveOptions = { passive: true };
+
+    const removeInteractionListeners = () => {
+      window.removeEventListener('touchstart', cancelRestore, passiveOptions);
+      window.removeEventListener('pointerdown', cancelRestore, passiveOptions);
+      window.removeEventListener('wheel', cancelRestore, passiveOptions);
+      window.removeEventListener('keydown', cancelRestore);
+    };
+
+    const cancelRestore = () => {
+      cancelled = true;
+      removeInteractionListeners();
+    };
+
+    window.addEventListener('touchstart', cancelRestore, passiveOptions);
+    window.addEventListener('pointerdown', cancelRestore, passiveOptions);
+    window.addEventListener('wheel', cancelRestore, passiveOptions);
+    window.addEventListener('keydown', cancelRestore);
+
+    const apply = () => {
+      if (cancelled || completed) return;
+      const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo(0, Math.min(scrollTop, maxScrollTop));
+    };
+
+    return {
+      restore() {
+        if (cancelled || completed) return removeInteractionListeners();
+        window.requestAnimationFrame(() => {
+          apply();
+          window.setTimeout(apply, 120);
+          window.setTimeout(() => {
+            apply();
+            completed = true;
+            removeInteractionListeners();
+          }, 450);
+        });
+      },
+    };
+  };
+
   try {
     if (sessionStorage.getItem('family-refresh-complete-v1') === '1') {
       sessionStorage.removeItem('family-refresh-complete-v1');
@@ -46,6 +91,7 @@
 
   button.addEventListener('click', async () => {
     if (button.disabled) return;
+    const scrollCheckpoint = createScrollCheckpoint();
     button.disabled = true;
     button.classList.add('refreshing');
     button.setAttribute('aria-busy', 'true');
@@ -58,6 +104,7 @@
       console.error('최신 기록 갱신 실패', error);
       if (typeof toast === 'function') toast('새로고침하지 못했어요. 다시 시도해 주세요');
     } finally {
+      scrollCheckpoint.restore();
       button.disabled = false;
       button.classList.remove('refreshing');
       button.removeAttribute('aria-busy');
