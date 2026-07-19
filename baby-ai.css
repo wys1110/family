@@ -34,6 +34,10 @@
 .baby-ai-heading small { display: block; margin-top: 5px; color: var(--secondary); font-size: 11px; line-height: 1.45; }
 
 .baby-ai-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin: 14px 0 0;
   padding: 10px 12px;
   border-radius: 13px;
@@ -43,8 +47,22 @@
   line-height: 1.45;
 }
 
+.baby-ai-status > span { flex: 1 1 auto; min-width: 0; }
 .baby-ai-status.error { color: #9c4650; background: rgba(201, 83, 97, .1); }
 .baby-ai-status.pending { color: #8a642e; background: rgba(205, 155, 75, .12); }
+.baby-ai-status-action {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  color: inherit;
+  background: rgba(255, 255, 255, .72);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.baby-ai-status-action:disabled { cursor: wait; opacity: .55; }
 
 .baby-ai-tabs {
   display: grid;
@@ -199,6 +217,8 @@
   .baby-ai-assistant { padding: 16px; border-radius: 22px; }
   .baby-ai-form-grid, .baby-ai-parent-grid { grid-template-columns: 1fr; }
   .baby-ai-tabs button { font-size: 9px; }
+  .baby-ai-status { align-items: stretch; flex-direction: column; }
+  .baby-ai-status-action { align-self: flex-start; }
 }
 
 @media (min-width: 900px) {

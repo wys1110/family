@@ -13,7 +13,7 @@ test("AI 카드와 접근 가능한 상태 영역을 제공한다", () => {
 test("AI core와 UI 모듈을 core 이후 순서대로 로드한다", () => {
   const config = readFileSync("config.js", "utf8");
   expect(config).toContain('{ name: "baby-ai-core",');
-  expect(config).toContain('{ name: "baby-ai", version: "20260719-v2"');
+  expect(config).toContain('{ name: "baby-ai", version: "20260720-refresh-recovery-v1"');
   expect(config.indexOf('{ name: "baby-ai-core",')).toBeLessThan(config.indexOf('{ name: "baby-ai",'));
 });
 
@@ -23,6 +23,16 @@ test("UI 모듈은 프로필, 질문, 전략 확정 동작을 연결한다", () 
   expect(source).toContain('functions.invoke("baby-ai"');
   expect(source).toContain('rpc("confirm_baby_ai_strategy"');
   expect(source).toContain("familybabychange");
+});
+
+test("실패한 자동 갱신은 상태 영역에서 바로 재시도할 수 있다", () => {
+  const source = readFileSync("baby-ai.js", "utf8");
+  const style = readFileSync("baby-ai.css", "utf8");
+  expect(source).toContain('action: "retry-refresh"');
+  expect(source).toContain('data-baby-ai-status-action="retry-refresh"');
+  expect(source).toContain("schedule_baby_ai_refresh");
+  expect(source).toContain("보통 5분 안에 새 전략이 만들어져요");
+  expect(style).toContain(".baby-ai-status-action");
 });
 
 test("AI 답변과 전략은 안전한 실제 출처 링크를 표시한다", () => {

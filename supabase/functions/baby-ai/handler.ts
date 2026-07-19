@@ -30,6 +30,11 @@ export type HandlerDependencies = {
     sourceWindowEnd: string;
     sourceLogCount: number;
   }): Promise<{ id: string }>;
+  retryRefresh(input: {
+    userId: string;
+    babyId: string;
+    context: BabyAiContext;
+  }): Promise<{ dueAt: string }>;
   processRefreshQueue(): Promise<{ processed: number; failed: number }>;
   now(): Date;
 };
@@ -95,6 +100,13 @@ export function createBabyAiHandler(deps: HandlerDependencies) {
       }
       if (body.action === "generate-strategy") {
         return await handleStrategy(deps, auth.userId, context, body);
+      }
+      if (body.action === "retry-refresh") {
+        return json(await deps.retryRefresh({
+          userId: auth.userId,
+          babyId: body.babyId,
+          context,
+        }));
       }
       return json({ error: "UNKNOWN_ACTION" }, 400);
     } catch (error) {
@@ -204,7 +216,7 @@ function topicForQuestion(question: string): StrategyKind | "general" {
 function publicErrorCode(error: unknown): string {
   const code = safeErrorCode(error);
   if (code === "INVALID_STRATEGY_RESPONSE") return "INVALID_AI_RESPONSE";
-  if (code === "GROUNDING_UNAVAILABLE" || code === "DRAFT_SAVE_FAILED") return code;
+  if (code === "GROUNDING_UNAVAILABLE" || code === "DRAFT_SAVE_FAILED" || code === "QUEUE_RETRY_FAILED") return code;
   if (code === "GEMINI_HTTP_429") return "AI_RATE_LIMITED";
   if (/^GEMINI_HTTP_5\d\d$/.test(code)) return "AI_TEMPORARILY_UNAVAILABLE";
   return "AI_REQUEST_FAILED";

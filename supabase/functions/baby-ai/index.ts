@@ -55,6 +55,7 @@ Deno.serve(async (request: Request) => {
       if (error || !data) throw new Error("DRAFT_SAVE_FAILED");
       return { id: data.id };
     },
+    retryRefresh: ({ babyId, context }) => retryRefreshQueue(serviceClient, context, babyId),
     processRefreshQueue: () => processRefreshQueue(serviceClient),
     now: () => new Date(),
   });
@@ -92,12 +93,64 @@ async function loadContext(client, babyId: string) {
   };
 }
 
+async function retryRefreshQueue(serviceClient, context, babyId: string) {
+  if (!context.householdId) throw new Error("QUEUE_RETRY_FAILED");
+  const dueAt = new Date().toISOString();
+  const { data: existing, error: loadError } = await serviceClient
+    .from("baby_ai_refresh_queue")
+    .select("generation")
+    .eq("baby_id", babyId)
+    .maybeSingle();
+  if (loadError) throw new Error("QUEUE_RETRY_FAILED");
+
+  const { error } = await serviceClient.from("baby_ai_refresh_queue").upsert({
+    baby_id: babyId,
+    household_id: context.householdId,
+    due_at: dueAt,
+    status: "pending",
+    attempt_count: 0,
+    generation: Number(existing?.generation || 0) + 1,
+    last_error: null,
+    updated_at: dueAt,
+  }, { onConflict: "baby_id" });
+  if (error) throw new Error("QUEUE_RETRY_FAILED");
+  return { dueAt };
+}
+
 async function processRefreshQueue(serviceClient) {
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const staleBefore = new Date(now.getTime() - 15 * 60_000).toISOString();
+  const { data: staleRows, error: staleLoadError } = await serviceClient
+    .from("baby_ai_refresh_queue")
+    .select("baby_id,generation,attempt_count")
+    .eq("status", "processing")
+    .lt("updated_at", staleBefore)
+    .limit(10);
+  if (staleLoadError) throw new Error("QUEUE_RECOVERY_FAILED");
+
+  for (const stale of staleRows || []) {
+    const attemptCount = Math.min(3, Number(stale.attempt_count || 0) + 1);
+    const { error: recoveryError } = await serviceClient
+      .from("baby_ai_refresh_queue")
+      .update({
+        status: "failed",
+        attempt_count: attemptCount,
+        due_at: nowIso,
+        last_error: "PROCESSING_TIMEOUT",
+        updated_at: nowIso,
+      })
+      .eq("baby_id", stale.baby_id)
+      .eq("generation", stale.generation)
+      .eq("status", "processing");
+    if (recoveryError) throw new Error("QUEUE_RECOVERY_FAILED");
+  }
+
   const { data: rows, error } = await serviceClient
     .from("baby_ai_refresh_queue")
     .select("baby_id,household_id,due_at,status,attempt_count,generation")
     .in("status", ["pending", "failed"])
-    .lte("due_at", new Date().toISOString())
+    .lte("due_at", nowIso)
     .lt("attempt_count", 3)
     .order("due_at")
     .limit(10);
@@ -119,8 +172,7 @@ async function processRefreshQueue(serviceClient) {
     try {
       const context = await loadContext(serviceClient, row.baby_id);
       if (!context) throw new Error("BABY_NOT_FOUND");
-      await generateScheduledDraft(serviceClient, context, row.baby_id, "feeding");
-      await generateScheduledDraft(serviceClient, context, row.baby_id, "sleep");
+      await generateScheduledDrafts(serviceClient, context, row.baby_id);
       await serviceClient.from("baby_ai_refresh_queue").delete()
         .eq("baby_id", row.baby_id)
         .eq("generation", row.generation);
@@ -140,25 +192,29 @@ async function processRefreshQueue(serviceClient) {
   return { processed, failed };
 }
 
-async function generateScheduledDraft(client, context, babyId: string, kind: "feeding" | "sleep") {
+async function generateScheduledDrafts(client, context, babyId: string) {
   const now = new Date();
   const transport = gemini();
-  const content = await generateGroundedStrategy({
-    generateGroundedText: (prompt) => transport.generateGroundedText(prompt),
-    generateText: (prompt, options) => transport.generateText(prompt, options),
-  }, context, kind);
+  const drafts = [];
+  for (const kind of ["feeding", "sleep"] as const) {
+    const content = await generateGroundedStrategy({
+      generateGroundedText: (prompt) => transport.generateGroundedText(prompt),
+      generateText: (prompt, options) => transport.generateText(prompt, options),
+    }, context, kind);
+    drafts.push({
+      baby_id: babyId,
+      household_id: context.householdId,
+      kind,
+      status: "draft",
+      content,
+      source_window_start: sevenDayStart(now),
+      source_window_end: now.toISOString(),
+      source_log_count: context.logs.length,
+      generated_by: null,
+    });
+  }
 
-  const { error } = await client.from("baby_ai_strategy_drafts").insert({
-    baby_id: babyId,
-    household_id: context.householdId,
-    kind,
-    status: "draft",
-    content,
-    source_window_start: sevenDayStart(now),
-    source_window_end: now.toISOString(),
-    source_log_count: context.logs.length,
-    generated_by: null,
-  });
+  const { error } = await client.from("baby_ai_strategy_drafts").insert(drafts);
   if (error) throw new Error("DRAFT_SAVE_FAILED");
 }
 
