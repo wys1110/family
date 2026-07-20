@@ -4,19 +4,40 @@
   "short_name": "우리 가족",
   "description": "가족 일정과 아기 성장 기록을 함께 관리하는 앱",
   "lang": "ko-KR",
-  "start_url": "./",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "orientation": "portrait-primary",
-  "background_color": "#f5f3ef",
-  "theme_color": "#f5f3ef",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f5efe5",
+  "theme_color": "#fff8f3",
+  "prefer_related_applications": false,
+  "categories": ["lifestyle", "parenting", "productivity"],
   "icons": [
+    {
+      "src": "assets/app-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
     {
       "src": "assets/family-mascots.webp",
       "sizes": "any",
       "type": "image/webp",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
