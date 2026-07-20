@@ -4,9 +4,9 @@
 .notification-center-button:active{transform:scale(.96)}
 .notification-center-button.has-unread{border-color:rgba(201,130,145,.35);background:color-mix(in srgb,var(--surface) 80%,rgba(201,130,145,.18))}
 .notification-center-button b{position:absolute;top:-4px;right:-5px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--bg);border-radius:999px;color:#fff;background:var(--red);font-size:8px;font-weight:800;line-height:1}
-.notification-center-dialog{width:min(calc(100% - 24px),560px);max-height:min(76vh,700px);margin:auto;border:0;border-radius:30px;background:transparent;padding:0;overflow:visible;color:var(--label)}
+.notification-center-dialog{box-sizing:border-box;width:min(calc(100% - 24px),560px);max-height:min(76vh,700px);margin:auto;border:0;border-radius:30px;background:transparent;padding:0;overflow:visible;color:var(--label)}
 .notification-center-dialog::backdrop{background:rgba(28,32,30,.32);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
-.notification-center-panel{display:flex;flex-direction:column;max-height:min(76vh,700px);overflow:hidden;border:1px solid color-mix(in srgb,var(--separator) 74%,transparent);border-radius:30px;background:color-mix(in srgb,var(--surface) 96%,transparent);box-shadow:0 28px 90px rgba(32,42,37,.22);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}
+.notification-center-panel{display:flex;flex-direction:column;box-sizing:border-box;width:100%;max-height:min(76vh,700px);overflow:hidden;border:1px solid color-mix(in srgb,var(--separator) 74%,transparent);border-radius:30px;background:color-mix(in srgb,var(--surface) 96%,transparent);box-shadow:0 28px 90px rgba(32,42,37,.22);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}
 .notification-center-panel>.sheet-handle{width:38px;height:5px;margin:10px auto 6px;border-radius:999px;background:color-mix(in srgb,var(--secondary) 25%,transparent)}
 .notification-center-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:4px 18px 7px}
 .notification-center-header>div:first-child{display:flex;align-items:center;gap:11px}
@@ -51,7 +51,7 @@
 .notification-reminder-field small{color:var(--secondary);font-size:8px;line-height:1.45}
 .notification-custom-time[hidden]{display:none!important}
 @media(max-width:560px){
-  .notification-center-dialog{width:100%;max-height:76vh;margin:auto 0 0;border-radius:30px 30px 0 0}
+  .notification-center-dialog{width:calc(100% - 24px);max-width:none;max-height:76vh;margin:auto auto 0;border-radius:30px 30px 0 0}
   .notification-center-panel{max-height:76vh;border-radius:30px 30px 0 0;border-bottom:0}
   .notification-item-foreground{grid-template-columns:minmax(0,1fr)}
   .notification-item-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 10px 9px;gap:5px}
