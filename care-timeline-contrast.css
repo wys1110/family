@@ -1,0 +1,123 @@
+/* Night-theme legibility pass for the split care timeline. */
+
+.care-linear-card,
+.care-linear-summary,
+.care-split-time,
+.care-split-entry,
+.care-linear-empty {
+  -webkit-font-smoothing: antialiased;
+}
+
+.care-pattern-section {
+  scroll-margin-bottom: 112px;
+}
+
+html[data-family-theme="night"] .care-linear-card {
+  color: var(--label);
+  border-color: rgba(255, 255, 255, .10);
+  background: linear-gradient(180deg, rgba(31, 38, 46, .97), rgba(24, 30, 37, .97));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .28);
+}
+
+html[data-family-theme="night"] .care-linear-summary {
+  border-color: rgba(255, 255, 255, .10);
+  background: rgba(255, 255, 255, .055);
+}
+
+html[data-family-theme="night"] .care-linear-summary article {
+  border-color: rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] .care-linear-summary span,
+html[data-family-theme="night"] .care-linear-summary small,
+html[data-family-theme="night"] .care-linear-legend span,
+html[data-family-theme="night"] .care-split-heading {
+  color: #c4c9cd;
+}
+
+html[data-family-theme="night"] .care-linear-summary strong {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .18);
+}
+
+html[data-family-theme="night"] .care-split-timeline::before {
+  background: rgba(255, 255, 255, .18);
+}
+
+html[data-family-theme="night"] .care-split-time {
+  color: #f7f7f4;
+  border-color: rgba(255, 255, 255, .14);
+  background: rgba(42, 50, 59, .98);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .34);
+}
+
+/* Pastel activity cards intentionally keep dark copy in the night theme. */
+html[data-family-theme="night"] .care-split-entry {
+  color: #20252a;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+
+html[data-family-theme="night"] .care-split-entry strong {
+  color: #20252a;
+  font-weight: 800;
+}
+
+html[data-family-theme="night"] .care-split-entry small {
+  color: #52575c;
+  font-weight: 600;
+}
+
+html[data-family-theme="night"] .care-split-entry.formula {
+  --entry-border: rgba(226, 161, 93, .42);
+  --entry-bg: linear-gradient(145deg, rgba(255, 242, 214, .98), rgba(238, 218, 184, .98));
+}
+
+html[data-family-theme="night"] .care-split-entry.breast {
+  --entry-border: rgba(201, 135, 151, .42);
+  --entry-bg: linear-gradient(145deg, rgba(250, 226, 235, .98), rgba(231, 204, 215, .98));
+}
+
+html[data-family-theme="night"] .care-split-entry.diaper {
+  --entry-border: rgba(154, 118, 84, .42);
+  --entry-bg: linear-gradient(145deg, rgba(242, 232, 219, .98), rgba(218, 204, 188, .98));
+}
+
+html[data-family-theme="night"] .care-split-edit {
+  border-color: color-mix(in srgb, var(--entry-color) 35%, transparent);
+  color: color-mix(in srgb, var(--entry-color) 88%, #20252a);
+  background: rgba(255, 255, 255, .84);
+  opacity: .92;
+}
+
+html[data-family-theme="night"] .care-linear-empty {
+  color: #d2d6d9;
+  background: rgba(255, 255, 255, .06);
+}
+
+@media (max-width: 520px) {
+  .care-pattern-section {
+    padding-bottom: 88px;
+  }
+
+  html[data-family-theme="night"] .care-split-time {
+    min-height: 31px;
+    display: grid;
+    place-items: center;
+    padding-block: 6px;
+    font-size: 12px;
+    letter-spacing: -.02em;
+  }
+
+  html[data-family-theme="night"] .care-split-entry strong {
+    font-size: 11px;
+  }
+
+  html[data-family-theme="night"] .care-split-entry small {
+    font-size: 9px;
+  }
+}
