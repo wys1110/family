@@ -35,6 +35,27 @@
 .care-linear-summary .breast strong { color: #b56f82; }
 .care-linear-summary .diaper strong { color: #856548; }
 
+.care-linear-summary .care-summary-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+#growthView .care-summary-emoji,
+#growthView .care-entry-emoji {
+  margin: 0;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+#growthView .care-summary-emoji {
+  display: inline-block;
+  font-size: 13px;
+}
+
 .care-linear-legend {
   display: flex;
   justify-content: flex-end;
@@ -160,6 +181,16 @@
   min-width: 0;
 }
 
+#growthView .care-entry-emoji {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .10));
+}
+
 .care-split-entry i {
   flex: 0 0 auto;
   width: 7px;
@@ -251,6 +282,8 @@
   .care-split-row { grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); gap: 6px; }
   .care-split-time { width: 48px; padding: 7px 2px; font-size: 11px; }
   .care-split-entry { width: 100%; padding: 8px 27px 8px 8px; border-radius: 12px; }
+  #growthView .care-entry-emoji { width: 18px; height: 18px; font-size: 15px; }
+  #growthView .care-summary-emoji { font-size: 12px; }
   .care-split-entry strong { font-size: 9px; }
   .care-split-entry small { font-size: 8px; }
   .care-split-edit { right: 6px; bottom: 7px; width: 17px; height: 17px; font-size: 9px; }
