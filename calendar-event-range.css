@@ -13,10 +13,28 @@
 /*
  * The core renderer writes compact mobile lane offsets inline (34px base,
  * 18px steps). Tablet styles enlarge both date numbers and event bars, so
- * re-space those known lanes after the responsive rules have loaded.
- * Dense weeks then grow naturally through the grid's auto row sizing.
+ * re-space those known lanes and explicitly reserve enough height per week.
+ * A fixed 94px row lets the third lane spill into the following week's date
+ * numbers; the per-week variables below grow only the dense rows.
  */
 @media (min-width: 768px) {
+  #calendarView .calendar-grid {
+    --calendar-week-1-height: 96px;
+    --calendar-week-2-height: 96px;
+    --calendar-week-3-height: 96px;
+    --calendar-week-4-height: 96px;
+    --calendar-week-5-height: 96px;
+    --calendar-week-6-height: 96px;
+    grid-auto-rows: 96px;
+    grid-template-rows:
+      var(--calendar-week-1-height)
+      var(--calendar-week-2-height)
+      var(--calendar-week-3-height)
+      var(--calendar-week-4-height)
+      var(--calendar-week-5-height)
+      var(--calendar-week-6-height);
+  }
+
   #calendarView .calendar-event-bar {
     height: 20px;
     line-height: 20px;
@@ -27,4 +45,26 @@
   #calendarView .calendar-event-bar[style*="--event-top:70px"] { margin-top: 92px; }
   #calendarView .calendar-event-bar[style*="--event-top:88px"] { margin-top: 116px; }
   #calendarView .calendar-overflow-badge[style*="--event-top:106px"] { margin-top: 140px; }
+
+  /* Three visible lanes need 120px, four lanes 144px, and +N needs 168px. */
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:1"][style*="--event-top:70px"]) { --calendar-week-1-height: 120px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:2"][style*="--event-top:70px"]) { --calendar-week-2-height: 120px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:3"][style*="--event-top:70px"]) { --calendar-week-3-height: 120px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:4"][style*="--event-top:70px"]) { --calendar-week-4-height: 120px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:5"][style*="--event-top:70px"]) { --calendar-week-5-height: 120px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:6"][style*="--event-top:70px"]) { --calendar-week-6-height: 120px; }
+
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:1"][style*="--event-top:88px"]) { --calendar-week-1-height: 144px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:2"][style*="--event-top:88px"]) { --calendar-week-2-height: 144px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:3"][style*="--event-top:88px"]) { --calendar-week-3-height: 144px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:4"][style*="--event-top:88px"]) { --calendar-week-4-height: 144px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:5"][style*="--event-top:88px"]) { --calendar-week-5-height: 144px; }
+  #calendarView .calendar-grid:has(.calendar-event-bar[style*="grid-row:6"][style*="--event-top:88px"]) { --calendar-week-6-height: 144px; }
+
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:1"][style*="--event-top:106px"]) { --calendar-week-1-height: 168px; }
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:2"][style*="--event-top:106px"]) { --calendar-week-2-height: 168px; }
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:3"][style*="--event-top:106px"]) { --calendar-week-3-height: 168px; }
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:4"][style*="--event-top:106px"]) { --calendar-week-4-height: 168px; }
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:5"][style*="--event-top:106px"]) { --calendar-week-5-height: 168px; }
+  #calendarView .calendar-grid:has(.calendar-overflow-badge[style*="grid-row:6"][style*="--event-top:106px"]) { --calendar-week-6-height: 168px; }
 }
