@@ -52,6 +52,7 @@ window.FAMILY_CONFIG = {
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260720-push-diagnostics-v2" },
+    { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260718-baseline-v2" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
@@ -92,6 +93,8 @@ window.FAMILY_CONFIG = {
     { name: "baby-ai-time-fields", version: "20260719-v1", script: false },
     { name: "page-header-spacing", version: "20260720-v1", script: false },
   ];
+
+  window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
     if (document.querySelector(`link[data-module="${name}"]`)) return;
