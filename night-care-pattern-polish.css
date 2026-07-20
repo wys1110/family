@@ -1,0 +1,204 @@
+/* Night-theme care-pattern palette: category-tinted dark surfaces with readable text. */
+
+html[data-family-theme="night"] #growthView .care-pattern-section {
+  --care-formula: #e6ad57;
+  --care-pumped: #5ec0d8;
+  --care-breast: #ef7fa8;
+  --care-solid: #60cc8c;
+  --care-sleep: #a47df3;
+  --care-diaper: #5aa7ff;
+}
+
+/* Keep the legend, selector chips, charts, and cards on one color system. */
+html[data-family-theme="night"] #growthView .care-rhythm-legend .formula,
+html[data-family-theme="night"] #growthView .care-pattern-categories .formula {
+  --legend: var(--care-formula);
+  --category-color: var(--care-formula);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .pumped,
+html[data-family-theme="night"] #growthView .care-pattern-categories .pumped {
+  --legend: var(--care-pumped);
+  --category-color: var(--care-pumped);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .breast,
+html[data-family-theme="night"] #growthView .care-pattern-categories .breast {
+  --legend: var(--care-breast);
+  --category-color: var(--care-breast);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .solid,
+html[data-family-theme="night"] #growthView .care-pattern-categories .solid {
+  --legend: var(--care-solid);
+  --category-color: var(--care-solid);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .sleep,
+html[data-family-theme="night"] #growthView .care-pattern-categories .sleep {
+  --legend: var(--care-sleep);
+  --category-color: var(--care-sleep);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .diaper,
+html[data-family-theme="night"] #growthView .care-pattern-categories .diaper {
+  --legend: var(--care-diaper);
+  --category-color: var(--care-diaper);
+}
+
+html[data-family-theme="night"] #growthView .care-pattern-categories button.active {
+  color: #fbfdff;
+  border-color: color-mix(in srgb, var(--category-color) 70%, rgba(255, 255, 255, .10));
+  background:
+    radial-gradient(circle at 28% 18%, color-mix(in srgb, var(--category-color) 20%, transparent), transparent 58%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--category-color) 28%, #17304f),
+      color-mix(in srgb, var(--category-color) 13%, #0d223b));
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, .26),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+
+html[data-family-theme="night"] #growthView .care-pattern-categories button.active i {
+  color: #ffffff;
+  background: var(--category-color);
+  box-shadow:
+    0 5px 12px color-mix(in srgb, var(--category-color) 28%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+/* Adaptive interval cards were still using the light-theme white surface. */
+html[data-family-theme="night"] #growthView .adaptive-interval-card {
+  --care-accent: var(--care-diaper);
+  --care-card-start: #234f7e;
+  --care-card-end: #193552;
+  color: #f8faff;
+  border: 1px solid color-mix(in srgb, var(--care-accent) 58%, rgba(255, 255, 255, .08));
+  border-top: 3px solid var(--care-accent);
+  background:
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--care-accent) 28%, transparent), transparent 48%),
+    linear-gradient(145deg, var(--care-card-start), var(--care-card-end));
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .075);
+  -webkit-font-smoothing: antialiased;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.formula {
+  --care-accent: var(--care-formula);
+  --care-card-start: #554126;
+  --care-card-end: #30271d;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.pumped {
+  --care-accent: var(--care-pumped);
+  --care-card-start: #175266;
+  --care-card-end: #113647;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.breast {
+  --care-accent: var(--care-breast);
+  --care-card-start: #61334e;
+  --care-card-end: #39243a;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.solid {
+  --care-accent: var(--care-solid);
+  --care-card-start: #245b44;
+  --care-card-end: #183b33;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.sleep {
+  --care-accent: var(--care-sleep);
+  --care-card-start: #493d78;
+  --care-card-end: #2d2a52;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card.diaper {
+  --care-accent: var(--care-diaper);
+  --care-card-start: #255789;
+  --care-card-end: #193957;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card span {
+  color: color-mix(in srgb, var(--care-accent) 72%, #ffffff);
+  font-weight: 720;
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card strong {
+  color: #ffffff !important;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .22);
+}
+
+html[data-family-theme="night"] #growthView .adaptive-interval-card small {
+  color: #ced8e8 !important;
+  font-weight: 560;
+}
+
+/* Match the day-pattern summary and event cards to the same palette. */
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary article {
+  --care-accent: #8eb9ff;
+  color: #f8faff;
+  border-color: color-mix(in srgb, var(--care-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--care-accent) 12%, #142b48);
+}
+
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .formula { --care-accent: var(--care-formula); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .pumped { --care-accent: var(--care-pumped); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .breast { --care-accent: var(--care-breast); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .solid { --care-accent: var(--care-solid); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .sleep { --care-accent: var(--care-sleep); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .diaper { --care-accent: var(--care-diaper); }
+
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary span,
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary small {
+  color: #c5d0e0;
+}
+
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary strong {
+  color: var(--care-accent);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.formula {
+  --entry-color: var(--care-formula);
+  --entry-border: color-mix(in srgb, var(--care-formula) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #554126, #30271d);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.pumped {
+  --entry-color: var(--care-pumped);
+  --entry-border: color-mix(in srgb, var(--care-pumped) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #175266, #113647);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.breast {
+  --entry-color: var(--care-breast);
+  --entry-border: color-mix(in srgb, var(--care-breast) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #61334e, #39243a);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.solid {
+  --entry-color: var(--care-solid);
+  --entry-border: color-mix(in srgb, var(--care-solid) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #245b44, #183b33);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.sleep {
+  --entry-color: var(--care-sleep);
+  --entry-border: color-mix(in srgb, var(--care-sleep) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #493d78, #2d2a52);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.diaper {
+  --entry-color: var(--care-diaper);
+  --entry-border: color-mix(in srgb, var(--care-diaper) 50%, transparent);
+  --entry-bg: linear-gradient(145deg, #255789, #193957);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry strong {
+  color: #ffffff;
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry small {
+  color: #d2dbe9;
+}
