@@ -9,3 +9,22 @@
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
+
+/*
+ * The core renderer writes compact mobile lane offsets inline (34px base,
+ * 18px steps). Tablet styles enlarge both date numbers and event bars, so
+ * re-space those known lanes after the responsive rules have loaded.
+ * Dense weeks then grow naturally through the grid's auto row sizing.
+ */
+@media (min-width: 768px) {
+  #calendarView .calendar-event-bar {
+    height: 20px;
+    line-height: 20px;
+  }
+
+  #calendarView .calendar-event-bar[style*="--event-top:34px"] { margin-top: 44px; }
+  #calendarView .calendar-event-bar[style*="--event-top:52px"] { margin-top: 68px; }
+  #calendarView .calendar-event-bar[style*="--event-top:70px"] { margin-top: 92px; }
+  #calendarView .calendar-event-bar[style*="--event-top:88px"] { margin-top: 116px; }
+  #calendarView .calendar-overflow-badge[style*="--event-top:106px"] { margin-top: 140px; }
+}
