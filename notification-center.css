@@ -7,17 +7,17 @@
 .notification-center-dialog{width:min(calc(100% - 24px),560px);max-height:min(76vh,700px);margin:auto;border:0;border-radius:30px;background:transparent;padding:0;overflow:visible;color:var(--label)}
 .notification-center-dialog::backdrop{background:rgba(28,32,30,.32);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
 .notification-center-panel{display:flex;flex-direction:column;max-height:min(76vh,700px);overflow:hidden;border:1px solid color-mix(in srgb,var(--separator) 74%,transparent);border-radius:30px;background:color-mix(in srgb,var(--surface) 96%,transparent);box-shadow:0 28px 90px rgba(32,42,37,.22);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}
-.notification-center-panel>.sheet-handle{width:38px;height:5px;margin:10px auto 2px;border-radius:999px;background:color-mix(in srgb,var(--secondary) 25%,transparent)}
-.notification-center-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px 13px}
+.notification-center-panel>.sheet-handle{width:38px;height:5px;margin:10px auto 6px;border-radius:999px;background:color-mix(in srgb,var(--secondary) 25%,transparent)}
+.notification-center-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:4px 18px 7px}
 .notification-center-header>div:first-child{display:flex;align-items:center;gap:11px}
 .notification-center-header .eyebrow{display:none}
-.notification-center-header h2{display:flex;align-items:center;gap:11px;font-size:25px;letter-spacing:-.04em}
-.notification-center-header h2::before{content:"";display:block;width:42px;height:42px;border-radius:50%;background-color:color-mix(in srgb,var(--blue) 11%,var(--surface));background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b7180' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E");background-position:center;background-repeat:no-repeat;background-size:22px}
+.notification-center-header h2{display:flex;align-items:center;gap:10px;margin:0;font-size:24px;line-height:1;letter-spacing:-.04em}
+.notification-center-header h2::before{content:"";display:block;flex:0 0 auto;width:40px;height:40px;border-radius:50%;background-color:color-mix(in srgb,var(--blue) 11%,var(--surface));background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b7180' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E");background-position:center;background-repeat:no-repeat;background-size:21px}
 .notification-center-header-actions{display:flex;align-items:center;gap:7px}
 .notification-center-header-actions>button:first-child{min-height:34px;padding:0 10px;border:0;border-radius:11px;color:var(--blue);background:rgba(var(--theme-accent-rgb,86,121,106),.09);font-size:10px;font-weight:750}
-.notification-center-header .close-button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;color:var(--secondary);background:var(--surface-2);font-size:24px;font-weight:400;line-height:1}
-.notification-center-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin:0 16px 12px;padding:4px;border-radius:17px;background:var(--surface-2)}
-.notification-center-tabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:5px;min-height:42px;border:0;border-radius:14px;color:var(--secondary);background:transparent;font-size:11px;font-weight:760;cursor:pointer}
+.notification-center-header .close-button{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;color:var(--secondary);background:var(--surface-2);font-size:24px;font-weight:400;line-height:1}
+.notification-center-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin:0 18px 14px;padding:4px;border-radius:16px;background:var(--surface-2)}
+.notification-center-tabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:5px;min-height:40px;border:0;border-radius:13px;color:var(--secondary);background:transparent;font-size:11px;font-weight:760;cursor:pointer}
 .notification-center-tabs button span{display:none}
 .notification-center-tabs button.active{color:var(--label);background:var(--surface);box-shadow:0 3px 10px rgba(28,40,34,.08)}
 .notification-center-tabs button.active::after{content:"";position:absolute;right:22%;bottom:0;left:22%;height:3px;border-radius:999px;background:var(--blue)}
