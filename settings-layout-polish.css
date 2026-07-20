@@ -1,0 +1,126 @@
+/* Settings screen: compact, aligned mobile controls. */
+
+#settingsView [data-calendar-font-card] .calendar-font-number-wrap > .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Settings are auto-saved, so the floating refresh action only covers controls here. */
+body:has(#settingsView:not([hidden])) .refresh-button {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(.86);
+}
+
+@media (max-width: 767.98px) {
+  #settingsView [data-calendar-font-card] .settings-heading {
+    margin-bottom: 14px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-number-control {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    gap: 8px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-step-button,
+  #settingsView [data-calendar-font-card] .calendar-font-number-wrap {
+    min-height: 48px;
+    border-radius: 15px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-step-button {
+    font-size: 24px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-number-input {
+    position: relative;
+    z-index: 1;
+    height: 46px;
+    padding: 0 38px 0 12px;
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-number-unit {
+    z-index: 2;
+    right: 13px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-preview {
+    min-height: 54px;
+    margin-top: 8px;
+    padding: 9px 10px;
+    place-items: stretch;
+    border-radius: 15px;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-preview span {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 30px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(var(--theme-accent-rgb), .10);
+    text-align: left;
+  }
+
+  #settingsView [data-calendar-font-card] .calendar-font-range-note {
+    margin-top: 6px;
+  }
+
+  #settingsView [data-calendar-font-card] .theme-save-note {
+    margin-top: 12px;
+  }
+
+  #settingsView #dailyBriefingSettings .settings-heading {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  #settingsView #dailyBriefingSettings .settings-heading > div {
+    min-width: 0;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-switch {
+    position: relative;
+    grid-column: auto;
+    align-self: center;
+    justify-self: end;
+    margin: 0;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-form {
+    gap: 10px;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-time-field {
+    grid-template-columns: minmax(0, 1fr) 126px;
+    gap: 10px;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-time-field input {
+    min-width: 0;
+    min-height: 42px;
+    padding-inline: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-actions {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  #settingsView #dailyBriefingSettings .daily-briefing-actions button {
+    min-height: 40px;
+  }
+}
