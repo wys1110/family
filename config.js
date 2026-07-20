@@ -48,7 +48,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260718-logic-audit-v1" },
-    { name: "refresh-button", version: "20260720-stable-viewport-v2" },
+    { name: "refresh-button", version: "20260720-deep-page-reload-v1" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
