@@ -51,7 +51,7 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260720-stable-viewport-v2" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
-    { name: "calendar-font-settings", version: "20260720-v1", style: false },
+    { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260720-push-diagnostics-v2" },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
