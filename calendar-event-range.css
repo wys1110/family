@@ -10,22 +10,23 @@
   font-feature-settings: "tnum" 1;
 }
 
-/* Keep every calendar label visually centered in both axes. */
+/* Vertically center labels while keeping the beginning of each title visible. */
 #calendarView .calendar-event-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 #calendarView .calendar-event-bar > span {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
+  min-width: 0;
   line-height: 1;
-  text-align: center;
+  text-align: left;
 }
 
 #calendarView .calendar-overflow-badge {
