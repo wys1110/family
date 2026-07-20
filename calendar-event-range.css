@@ -10,6 +10,31 @@
   font-feature-settings: "tnum" 1;
 }
 
+/* Keep every calendar label visually centered in both axes. */
+#calendarView .calendar-event-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#calendarView .calendar-event-bar > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  text-align: center;
+}
+
+#calendarView .calendar-overflow-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 /*
  * Event lanes are rendered with compact inline offsets (34px + 18px per lane).
  * At wider widths the bars become taller, so keep a real 4px gap between lanes.
