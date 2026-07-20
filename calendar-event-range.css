@@ -14,16 +14,20 @@
  * Center labels that fit. When a title reaches the bar width, let the label
  * fill the available space and left-align it so the beginning stays visible.
  * Keep mobile labels compact so more of each schedule title remains visible.
+ * iOS Safari may automatically inflate tiny button text, so disable that only
+ * for calendar event bars and pin the rendered size with an important rule.
  */
 #calendarView .calendar-event-bar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding-inline: 2px;
-  font-size: 8px;
-  font-weight: 700;
+  font-size: 7px !important;
+  font-weight: 600;
   line-height: 16px;
   letter-spacing: -.04em;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
 }
 
 #calendarView .calendar-event-bar > span {
@@ -38,11 +42,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: inherit;
+  font-size: inherit !important;
   font-weight: inherit;
   line-height: 1;
   letter-spacing: inherit;
   text-align: left;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
 }
 
 #calendarView .calendar-overflow-badge {
@@ -62,7 +68,7 @@
   #calendarView .calendar-event-bar {
     height: 18px;
     padding-inline: 3px;
-    font-size: 9px;
+    font-size: 8px !important;
     line-height: 18px;
     letter-spacing: -.03em;
   }
@@ -78,7 +84,7 @@
   #calendarView .calendar-event-bar {
     height: 22px;
     padding-inline: 5px;
-    font-size: 10px;
+    font-size: 10px !important;
     line-height: 22px;
     letter-spacing: -.01em;
   }
