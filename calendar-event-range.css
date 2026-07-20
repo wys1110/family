@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: flex-start;
   padding-inline: 2px;
-  font-size: 7px !important;
+  font-size: 8px !important;
   font-weight: 600;
   line-height: 16px;
   letter-spacing: -.04em;
@@ -68,7 +68,7 @@
   #calendarView .calendar-event-bar {
     height: 18px;
     padding-inline: 3px;
-    font-size: 8px !important;
+    font-size: 9px !important;
     line-height: 18px;
     letter-spacing: -.03em;
   }
@@ -84,7 +84,7 @@
   #calendarView .calendar-event-bar {
     height: 22px;
     padding-inline: 5px;
-    font-size: 10px !important;
+    font-size: 11px !important;
     line-height: 22px;
     letter-spacing: -.01em;
   }
