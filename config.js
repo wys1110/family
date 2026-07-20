@@ -99,6 +99,7 @@ window.FAMILY_CONFIG = {
     { name: "night-theme-polish", version: "20260720-growth-colors-v2" },
     { name: "growth-care-color-polish", version: "20260720-feeding-diaper-v1", script: false },
     { name: "night-care-pattern-polish", version: "20260720-v1", script: false },
+    { name: "night-feature-request-polish", version: "20260720-v1", script: false },
     { name: "night-baby-ai-polish", version: "20260720-v1", script: false },
   ];
 
