@@ -13,11 +13,17 @@
 /*
  * Center labels that fit. When a title reaches the bar width, let the label
  * fill the available space and left-align it so the beginning stays visible.
+ * Keep mobile labels compact so more of each schedule title remains visible.
  */
 #calendarView .calendar-event-bar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  padding-inline: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: -.02em;
 }
 
 #calendarView .calendar-event-bar > span {
@@ -52,6 +58,7 @@
 @media (min-width: 700px) and (max-width: 767.98px) {
   #calendarView .calendar-event-bar {
     height: 18px;
+    font-size: 10px;
     line-height: 18px;
   }
 
@@ -65,7 +72,10 @@
 @media (min-width: 768px) {
   #calendarView .calendar-event-bar {
     height: 22px;
+    padding-inline: 6px;
+    font-size: 11px;
     line-height: 22px;
+    letter-spacing: 0;
   }
 
   #calendarView .calendar-event-bar[style*="34px"] { margin-top: 44px; }
