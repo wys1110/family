@@ -1,8 +1,7 @@
 /* Keep the complete event editor inside one rounded frame. */
 #eventDialog {
   --event-frame-line: color-mix(in srgb, var(--label) 18%, transparent);
-  --event-frame-line-soft: color-mix(in srgb, var(--label) 11%, transparent);
-  --event-frame-footer: color-mix(in srgb, var(--event-sheet-bg) 96%, transparent);
+  --event-frame-divider: color-mix(in srgb, var(--label) 28%, transparent);
   box-sizing: border-box;
   width: min(calc(100% - 28px), 560px);
   max-height: calc(100dvh - 32px);
@@ -19,9 +18,12 @@
 #eventDialog #eventForm {
   box-sizing: border-box;
   max-height: calc(100dvh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 12px 20px max(18px, env(safe-area-inset-bottom));
   scroll-padding-top: 12px;
-  scroll-padding-bottom: 136px;
+  scroll-padding-bottom: 32px;
 }
 
 #eventDialog .sheet-handle,
@@ -39,18 +41,16 @@
   min-width: 0;
 }
 
+/* The submit area belongs to the form flow so it scrolls together with the fields. */
 #eventDialog .dialog-actions {
-  position: sticky;
-  z-index: 6;
-  bottom: 0;
-  margin: 18px -20px calc(-1 * max(18px, env(safe-area-inset-bottom)));
-  padding: 14px 20px max(18px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--event-frame-line-soft);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--event-frame-footer) 82%, transparent), var(--event-frame-footer) 28%);
-  box-shadow: 0 -14px 30px color-mix(in srgb, var(--event-sheet-bg) 90%, transparent);
-  backdrop-filter: blur(22px) saturate(130%);
-  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  position: static;
+  margin: 22px -20px 0;
+  padding: 18px 20px 4px;
+  border-top: 1px solid var(--event-frame-divider);
+  background: transparent;
+  box-shadow: 0 -1px 0 color-mix(in srgb, white 5%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 #eventDialog .dialog-actions button {
@@ -60,13 +60,16 @@
 
 html[data-family-theme="night"] #eventDialog {
   --event-frame-line: rgba(148, 190, 247, .34);
-  --event-frame-line-soft: rgba(148, 190, 247, .18);
-  --event-frame-footer: rgba(9, 25, 44, .98);
+  --event-frame-divider: rgba(148, 190, 247, .38);
   border-color: var(--event-frame-line);
   box-shadow:
     0 30px 90px rgba(0, 0, 0, .58),
     inset 0 1px 0 rgba(255, 255, 255, .06),
     inset 0 0 0 1px rgba(99, 150, 224, .04);
+}
+
+html[data-family-theme="night"] #eventDialog .dialog-actions {
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, .04);
 }
 
 @media (max-width: 520px) {
