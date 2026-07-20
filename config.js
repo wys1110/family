@@ -95,6 +95,7 @@ window.FAMILY_CONFIG = {
     { name: "event-dialog-polish", version: "20260720-v1", script: false },
     { name: "care-timeline-contrast", version: "20260720-night-legibility-v1", script: false },
     { name: "night-theme-polish", version: "20260720-growth-colors-v2" },
+    { name: "night-baby-ai-polish", version: "20260720-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
