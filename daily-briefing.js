@@ -76,15 +76,35 @@
     return serviceWorkerRegistration;
   };
 
+  const functionErrorCode = async (error) => {
+    const context = error?.context;
+
+    if (context && typeof context.clone === "function" && typeof context.json === "function") {
+      try {
+        const payload = await context.clone().json();
+        if (payload?.error) return String(payload.error);
+      } catch { /* JSON 응답이 아니면 다음 후보 확인 */ }
+    }
+
+    const body = context?.body;
+    if (body && typeof body === "object" && body.error) return String(body.error);
+    if (typeof body === "string" && body.trim()) {
+      try {
+        const payload = JSON.parse(body);
+        if (payload?.error) return String(payload.error);
+      } catch { /* 일반 문자열 응답 사용 */ }
+      return body.trim();
+    }
+
+    return String(error?.message || error || "FUNCTION_FAILED");
+  };
+
   const invoke = async (body) => {
     if (typeof state === "undefined" || !state.supabase || !state.session || !state.household) {
       throw new Error("LOGIN_REQUIRED");
     }
     const { data, error } = await state.supabase.functions.invoke(FUNCTION_NAME, { body });
-    if (error) {
-      const message = error.context?.body?.error || error.message || "FUNCTION_FAILED";
-      throw new Error(message);
-    }
+    if (error) throw new Error(await functionErrorCode(error));
     if (data?.error) throw new Error(data.error);
     return data || {};
   };
@@ -110,27 +130,43 @@
     return registration.pushManager.getSubscription();
   };
 
-  const syncSubscription = async (subscription, { test = false } = {}) => {
+  const syncSubscription = async (subscription, { enabled = briefing.enabled } = {}) => {
     const payload = {
       action: "subscribe",
       householdId: state.household.id,
       subscription: subscription.toJSON(),
-      enabled: briefing.enabled,
+      enabled,
       time: briefing.time,
       timezone: briefing.timezone,
     };
     await invoke(payload);
-    if (test) await invoke({ action: "test", householdId: state.household.id, endpoint: subscription.endpoint });
+  };
+
+  const sendTest = async (subscription) => {
+    const result = await invoke({
+      action: "test",
+      householdId: state.household.id,
+      endpoint: subscription.endpoint,
+    });
+    if (!Number(result.sent)) throw new Error("TEST_SEND_FAILED");
   };
 
   const friendlyError = (error) => {
     const code = String(error?.message || error || "");
     if (code.includes("LOGIN_REQUIRED") || code.includes("UNAUTHORIZED")) return "로그인 후 가족 공간에서 사용할 수 있어요.";
     if (code.includes("PUSH_UNSUPPORTED")) return "이 브라우저는 앱 알림을 지원하지 않아요.";
-    if (code.includes("PUSH_NOT_CONFIGURED") || code.includes("FunctionsHttpError") || code.includes("FUNCTION_FAILED")) return "서버 알림 설정이 아직 완료되지 않았어요.";
+    if (code.includes("PUSH_NOT_CONFIGURED") || code.includes("FunctionsHttpError") || code.includes("FUNCTION_FAILED")) {
+      return "알림 서버 준비가 끝나지 않았어요. 관리자 설정 후 다시 시도해 주세요.";
+    }
+    if (code.includes("SUBSCRIBE_FAILED")) return "알림 구독을 서버에 저장하지 못했어요. 데이터베이스 설정을 확인해 주세요.";
+    if (code.includes("SUBSCRIPTION_LOAD_FAILED")) return "저장된 알림 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.";
+    if (code.includes("SUBSCRIPTION_NOT_FOUND")) return "이 기기의 알림 연결을 찾지 못했어요. 앱 알림 켜기를 다시 눌러 주세요.";
+    if (code.includes("INVALID_SUBSCRIPTION")) return "이 기기의 알림 정보가 올바르지 않아요. 앱을 완전히 닫았다가 다시 열어 주세요.";
+    if (code.includes("TEST_SEND_FAILED")) return "알림 연결은 완료됐지만 테스트 발송에 실패했어요. 잠시 후 다시 눌러 주세요.";
     if (code.includes("NotAllowedError") || code.includes("PERMISSION_DENIED")) return "iPhone 설정에서 이 앱의 알림을 허용해 주세요.";
     if (code.includes("HOUSEHOLD_NOT_FOUND")) return "가족 공간을 확인하지 못했어요.";
-    return "알림 설정 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
+    if (/Failed to fetch|NetworkError|Load failed|network/i.test(code)) return "네트워크 연결을 확인한 뒤 다시 시도해 주세요.";
+    return "알림 서버 응답을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.";
   };
 
   const setBusy = (next) => {
@@ -157,6 +193,7 @@
     }
 
     setBusy(true);
+    updateStatus(test ? "테스트 알림을 준비하고 있어요…" : "알림 서버에 연결하고 있어요…");
     try {
       const permissionPromise = Notification.permission === "default"
         ? Notification.requestPermission()
@@ -174,15 +211,28 @@
         });
       }
 
-      briefing.enabled = true;
       briefing.timezone = resolvedTimezone();
-      await syncSubscription(subscription, { test });
+      await syncSubscription(subscription, { enabled: true });
+      briefing.enabled = true;
       briefing.pushReady = true;
       persist();
       updateControls();
-      if (typeof toast === "function") toast(test ? "테스트 일정 브리핑을 보냈어요 🔔" : `매일 ${briefing.time} 일정 브리핑을 켰어요 🔔`);
+
+      if (test) {
+        try {
+          await sendTest(subscription);
+          if (typeof toast === "function") toast("테스트 일정 브리핑을 보냈어요 🔔");
+        } catch (error) {
+          updateStatus(friendlyError(error), "error");
+          console.error("일정 브리핑 테스트 발송 실패", error);
+          return true;
+        }
+      } else if (typeof toast === "function") {
+        toast(`매일 ${briefing.time} 일정 브리핑을 켰어요 🔔`);
+      }
       return true;
     } catch (error) {
+      briefing.enabled = false;
       briefing.pushReady = false;
       persist();
       updateControls();
@@ -201,7 +251,9 @@
     persist();
     try {
       const subscription = await currentSubscription();
-      if (subscription && state?.session && state?.household) await syncSubscription(subscription);
+      if (subscription && state?.session && state?.household) {
+        await syncSubscription(subscription, { enabled: false });
+      }
       if (typeof toast === "function") toast("일정 브리핑 알림을 껐어요");
     } catch (error) {
       console.warn("일정 브리핑 비활성화 동기화 실패", error);
@@ -309,7 +361,7 @@
       if (!briefing.enabled || !briefing.pushReady) return;
       try {
         const subscription = await currentSubscription();
-        if (subscription) await syncSubscription(subscription);
+        if (subscription) await syncSubscription(subscription, { enabled: true });
         if (typeof toast === "function") toast(`일정 브리핑을 ${nextTime}로 바꿨어요`);
       } catch (error) {
         briefing.pushReady = false;
