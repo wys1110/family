@@ -79,7 +79,7 @@ window.FAMILY_CONFIG = {
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
     { name: "growth-summary-remove", version: "20260718-remove-care-summary-v1", script: false },
     { name: "typography-system", version: "20260718-title-balance-v6", script: false },
-    { name: "calendar-event-range", version: "20260720-tablet-lanes-v3", script: false },
+    { name: "calendar-event-range", version: "20260720-tablet-lanes-v4", script: false },
     { name: "daily-verse-typography", version: "20260718-font-v2", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
     { name: "growth-inline-chart", version: "20260718-inline-v2" },
