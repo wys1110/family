@@ -99,6 +99,7 @@
 
   const registerServiceWorker = async () => {
     if (!("serviceWorker" in navigator)) return null;
+    if (registration) return registration;
     try {
       registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL, { scope: "./", updateViaCache: "none" });
       await navigator.serviceWorker.ready;
@@ -156,10 +157,8 @@
     return true;
   };
 
-  const mount = (attempt = 0) => {
-    ensureMetadata();
-    registerServiceWorker();
-    if (!installCard() && attempt < 60) setTimeout(() => mount(attempt + 1), 100);
+  const mountCard = (attempt = 0) => {
+    if (!installCard() && attempt < 60) setTimeout(() => mountCard(attempt + 1), 100);
   };
 
   window.addEventListener("beforeinstallprompt", (event) => {
@@ -176,5 +175,7 @@
   window.addEventListener("offline", updateCard);
   window.matchMedia?.("(display-mode: standalone)").addEventListener?.("change", updateCard);
 
-  mount();
+  ensureMetadata();
+  registerServiceWorker();
+  mountCard();
 })();
