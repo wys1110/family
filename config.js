@@ -51,7 +51,7 @@ window.FAMILY_CONFIG = {
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
-    { name: "daily-briefing", version: "20260719-push-v1" },
+    { name: "daily-briefing", version: "20260720-push-diagnostics-v2" },
     { name: "tab-emojis", version: "20260718-baseline-v2" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
