@@ -92,6 +92,7 @@ window.FAMILY_CONFIG = {
     { name: "baby-ai", version: "20260720-refresh-recovery-v1" },
     { name: "baby-ai-time-fields", version: "20260719-v1", script: false },
     { name: "page-header-spacing", version: "20260720-v1", script: false },
+    { name: "event-dialog-polish", version: "20260720-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
