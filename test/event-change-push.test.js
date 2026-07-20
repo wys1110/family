@@ -30,6 +30,9 @@ test("일정 변경 푸시는 날짜와 일정 화면 이동 정보를 포함하
   expect(edge).toContain("renotify: true");
   expect(worker).toContain("renotify: Boolean(payload.renotify)");
   expect(worker).toContain("eventId: payload.eventId ||");
+  expect(client).toContain('new URLSearchParams(location.search)');
+  expect(client).toContain('state.selectedDate = date');
+  expect(client).toContain('switchView("calendar")');
 });
 
 test("일정 변경 데이터는 서버에서 길이와 날짜 형식을 검증한다", () => {
