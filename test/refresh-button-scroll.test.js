@@ -3,35 +3,36 @@ import { expect, test } from "vitest";
 
 const source = readFileSync("refresh-button.js", "utf8");
 
-test("새로고침 중 문서 높이를 유지하고 다음 페인트 전에 스크롤을 복원한다", () => {
-  expect(source).toContain("const preservedHeight = Math.max(root.scrollHeight, pageBody.scrollHeight)");
-  expect(source).toContain("pageBody.style.minHeight = `${preservedHeight}px`");
-  expect(source).toContain("root.style.scrollBehavior = 'auto'");
-  expect(source).toContain("const scrollCheckpoint = createScrollCheckpoint()");
-  expect(source).toContain("const loaded = await refreshWithStableViewport(scrollCheckpoint)");
-  expect(source).toContain("window.scrollTo(0, Math.min(scrollTop, maxScrollTop))");
-  expect(source).toMatch(/releaseTemporaryStyles\(\);[\s\S]*apply\(\);[\s\S]*window\.requestAnimationFrame/);
+test("새로고침 버튼은 데이터만 갱신하지 않고 페이지를 완전히 다시 읽는다", () => {
+  expect(source).toContain("button.setAttribute('aria-label', '페이지 완전 새로고침')");
+  expect(source).toContain("const target = new URL(window.location.href)");
+  expect(source).toContain("target.searchParams.set('__refresh'");
+  expect(source).toContain("window.location.replace(target.href)");
+  expect(source).not.toContain("bootstrapData()");
 });
 
-test("지원 브라우저에서는 기존 화면을 유지한 채 갱신 결과로 즉시 교체한다", () => {
-  expect(source).toContain("typeof document.startViewTransition !== 'function'");
-  expect(source).toContain("const transition = document.startViewTransition(runRefresh)");
-  expect(source).toContain("await transition.finished");
-  expect(source).toContain("::view-transition-old(root)");
-  expect(source).toContain("animation: none !important");
-  expect(source).toMatch(/loaded = await bootstrapData\(\)[\s\S]*finally \{[\s\S]*scrollCheckpoint\.restore\(\)/);
+test("iOS 앱 모드의 캐시를 우회하도록 고유 새로고침 주소를 만든다", () => {
+  expect(source).toContain("target.searchParams.delete('__appv')");
+  expect(source).toContain("Date.now()");
+  expect(source).toContain("Math.random().toString(36)");
 });
 
-test("사용자가 갱신 중 직접 스크롤하면 자동 복원을 취소한다", () => {
-  expect(source).toContain("window.addEventListener('touchstart', cancelRestore, passiveOptions)");
-  expect(source).toContain("window.addEventListener('pointerdown', cancelRestore, passiveOptions)");
-  expect(source).toContain("window.addEventListener('wheel', cancelRestore, passiveOptions)");
-  expect(source).toContain("window.addEventListener('keydown', cancelRestore)");
-  expect(source).toMatch(/const cancelRestore = \(\) => \{[\s\S]*releaseTemporaryStyles\(\)/);
+test("페이지를 다시 읽기 전에 현재 앱의 서비스 워커 업데이트를 짧게 확인한다", () => {
+  expect(source).toContain("navigator.serviceWorker.getRegistration()");
+  expect(source).toContain("await registration.update()");
+  expect(source).toContain("registration.waiting?.postMessage({ type: 'SKIP_WAITING' })");
+  expect(source).toMatch(/Promise\.race\([\s\S]*updateServiceWorker\(\)[\s\S]*window\.setTimeout\(resolve, 900\)/);
+  expect(source).not.toContain("getRegistrations()");
+});
+
+test("재로딩 완료 후 사용자에게 완료 안내를 표시한다", () => {
+  expect(source).toContain("sessionStorage.setItem('family-refresh-complete-v1', '1')");
+  expect(source).toContain("sessionStorage.getItem('family-refresh-complete-v1') === '1'");
+  expect(source).toContain("message.textContent = '페이지를 새로 읽어왔어요'");
 });
 
 test("변경된 새로고침 모듈을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
   const config = readFileSync("config.js", "utf8");
 
-  expect(config).toContain('{ name: "refresh-button", version: "20260720-stable-viewport-v2" }');
+  expect(config).toContain('{ name: "refresh-button", version: "20260720-deep-page-reload-v1" }');
 });

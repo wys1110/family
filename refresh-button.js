@@ -21,8 +21,8 @@
   button.className = 'refresh-button';
   button.type = 'button';
   button.dataset.refreshModule = '';
-  button.setAttribute('aria-label', '최신 기록 새로고침');
-  button.setAttribute('title', '새로고침');
+  button.setAttribute('aria-label', '페이지 완전 새로고침');
+  button.setAttribute('title', '완전 새로고침');
   button.innerHTML = '<span aria-hidden="true">↻</span>';
   pageBody.appendChild(button);
 
@@ -31,112 +31,10 @@
     const message = document.querySelector('#toastMessage');
     const action = document.querySelector('#toastAction');
     if (!toast || !message || toast.classList.contains('show')) return;
-    message.textContent = '최신 기록으로 갱신했어요';
+    message.textContent = '페이지를 새로 읽어왔어요';
     if (action) action.hidden = true;
     toast.classList.add('show');
     window.setTimeout(() => toast.classList.remove('show'), 2200);
-  };
-
-  const createScrollCheckpoint = () => {
-    const root = document.documentElement;
-    const scrollTop = window.scrollY || root.scrollTop || 0;
-    const preservedHeight = Math.max(root.scrollHeight, pageBody.scrollHeight);
-    const previousMinHeight = pageBody.style.minHeight;
-    const previousScrollBehavior = root.style.scrollBehavior;
-    let cancelled = false;
-    let restoring = false;
-    let completed = false;
-    let stylesReleased = false;
-    const passiveOptions = { passive: true };
-
-    // Prevent the temporary empty render from shortening the document and
-    // clamping Safari to the top while remote data is still loading.
-    pageBody.style.minHeight = `${preservedHeight}px`;
-    root.style.scrollBehavior = 'auto';
-
-    const releaseTemporaryStyles = () => {
-      if (stylesReleased) return;
-      stylesReleased = true;
-      pageBody.style.minHeight = previousMinHeight;
-      root.style.scrollBehavior = previousScrollBehavior;
-    };
-
-    const removeInteractionListeners = () => {
-      window.removeEventListener('touchstart', cancelRestore, passiveOptions);
-      window.removeEventListener('pointerdown', cancelRestore, passiveOptions);
-      window.removeEventListener('wheel', cancelRestore, passiveOptions);
-      window.removeEventListener('keydown', cancelRestore);
-    };
-
-    const cancelRestore = () => {
-      cancelled = true;
-      releaseTemporaryStyles();
-      removeInteractionListeners();
-    };
-
-    window.addEventListener('touchstart', cancelRestore, passiveOptions);
-    window.addEventListener('pointerdown', cancelRestore, passiveOptions);
-    window.addEventListener('wheel', cancelRestore, passiveOptions);
-    window.addEventListener('keydown', cancelRestore);
-
-    const apply = () => {
-      if (cancelled || completed) return;
-      const maxScrollTop = Math.max(0, root.scrollHeight - window.innerHeight);
-      window.scrollTo(0, Math.min(scrollTop, maxScrollTop));
-    };
-
-    return {
-      restore() {
-        if (completed || restoring) return;
-        if (cancelled) {
-          releaseTemporaryStyles();
-          return removeInteractionListeners();
-        }
-        restoring = true;
-        releaseTemporaryStyles();
-        // Restore before the next paint, then verify once on the following frame.
-        apply();
-        window.requestAnimationFrame(() => {
-          apply();
-          completed = true;
-          removeInteractionListeners();
-        });
-      },
-    };
-  };
-
-  const refreshWithStableViewport = async (scrollCheckpoint) => {
-    let loaded = false;
-    const runRefresh = async () => {
-      try {
-        loaded = await bootstrapData();
-        return loaded;
-      } finally {
-        scrollCheckpoint.restore();
-      }
-    };
-
-    if (typeof document.startViewTransition !== 'function') return runRefresh();
-
-    const transitionStyle = document.createElement('style');
-    transitionStyle.dataset.refreshTransition = '';
-    transitionStyle.textContent = `
-      ::view-transition-old(root),
-      ::view-transition-new(root) {
-        animation: none !important;
-      }
-    `;
-    document.head.appendChild(transitionStyle);
-
-    try {
-      // Keep the current viewport snapshot visible until the refreshed DOM and
-      // original scroll position are both ready, then swap without animation.
-      const transition = document.startViewTransition(runRefresh);
-      await transition.finished;
-      return loaded;
-    } finally {
-      transitionStyle.remove();
-    }
   };
 
   try {
@@ -146,25 +44,53 @@
     }
   } catch { /* 세션 저장이 막혀도 새로고침 기능은 유지 */ }
 
+  const updateServiceWorker = async () => {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) return;
+      await registration.update();
+      registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+    } catch (error) {
+      console.debug('서비스 워커 확인을 건너뛰었어요', error);
+    }
+  };
+
+  const deepReload = async () => {
+    // Give an updated worker a brief chance to activate, but never make the
+    // refresh button feel stuck when the network is slow or unavailable.
+    await Promise.race([
+      updateServiceWorker(),
+      new Promise((resolve) => window.setTimeout(resolve, 900)),
+    ]);
+
+    try {
+      sessionStorage.setItem('family-refresh-complete-v1', '1');
+    } catch { /* 세션 저장이 막혀도 페이지는 다시 읽기 */ }
+
+    // A unique navigation URL bypasses the page cache on iOS standalone mode.
+    // config.js is additionally served network-only by the service worker, so
+    // the newly loaded page receives the latest module version manifest.
+    const target = new URL(window.location.href);
+    target.searchParams.delete('__appv');
+    target.searchParams.set('__refresh', `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+    window.location.replace(target.href);
+  };
+
   button.addEventListener('click', async () => {
     if (button.disabled) return;
-    const scrollCheckpoint = createScrollCheckpoint();
     button.disabled = true;
     button.classList.add('refreshing');
     button.setAttribute('aria-busy', 'true');
+
     try {
-      if (typeof bootstrapData !== 'function') throw new Error('refresh unavailable');
-      const loaded = await refreshWithStableViewport(scrollCheckpoint);
-      if (!loaded) throw new Error('refresh failed');
-      showCompleteToast();
+      await deepReload();
     } catch (error) {
-      console.error('최신 기록 갱신 실패', error);
-      if (typeof toast === 'function') toast('새로고침하지 못했어요. 다시 시도해 주세요');
-    } finally {
-      scrollCheckpoint.restore();
+      console.error('페이지 완전 새로고침 실패', error);
       button.disabled = false;
       button.classList.remove('refreshing');
       button.removeAttribute('aria-busy');
+      if (typeof toast === 'function') toast('새로고침하지 못했어요. 다시 시도해 주세요');
     }
   });
 })();
