@@ -111,6 +111,33 @@ Deno.serve(async (request: Request) => {
     return json({ sent });
   }
 
+  if (body.action === "event-change") {
+    if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
+    const change = normalizeEventChange(body.change);
+    if (!change) return json({ error: "INVALID_EVENT_CHANGE" }, 400);
+
+    const { data: subscriptions, error } = await serviceClient.from("push_subscriptions")
+      .select("id,user_id,household_id,endpoint,p256dh,auth,timezone,briefing_time")
+      .eq("household_id", householdId)
+      .eq("enabled", true)
+      .neq("user_id", user.id)
+      .order("created_at")
+      .limit(100);
+    if (error) return json({ error: "SUBSCRIPTION_LOAD_FAILED" }, 500);
+
+    const payload = buildEventChangePayload(change);
+    let sent = 0;
+    let expired = 0;
+    let failed = 0;
+    for (const subscription of subscriptions || []) {
+      const result = await sendPush(serviceClient, subscription, payload, { markSent: false });
+      if (result === "sent") sent += 1;
+      else if (result === "expired") expired += 1;
+      else failed += 1;
+    }
+    return json({ scanned: subscriptions?.length || 0, sent, expired, failed });
+  }
+
   return json({ error: "UNKNOWN_ACTION" }, 400);
 });
 
@@ -204,6 +231,40 @@ function buildPayload(localDate: string, events: unknown[], test: boolean) {
   };
 }
 
+function buildEventChangePayload(change) {
+  const titles = {
+    created: "가족 일정이 추가됐어요",
+    updated: "가족 일정이 수정됐어요",
+    moved: "가족 일정 날짜가 바뀌었어요",
+    deleted: "가족 일정이 삭제됐어요",
+    "bulk-created": `가족 일정 ${change.count}개가 추가됐어요`,
+  };
+  const when = formatEventWhen(change);
+  const member = change.member && change.member !== "가족" ? ` · ${change.member}` : "";
+  return {
+    title: titles[change.kind] || "가족 일정이 변경됐어요",
+    body: `${when} · ${change.title}${member}`,
+    tag: `family-event-change-${change.id || change.date}-${change.kind}`,
+    url: `./?eventDate=${encodeURIComponent(change.date)}`,
+    date: change.date,
+    eventId: change.id,
+    renotify: true,
+  };
+}
+
+function formatEventWhen(change) {
+  const start = shortKoreanDate(change.date);
+  const end = change.endDate && change.endDate !== change.date ? shortKoreanDate(change.endDate) : "";
+  const date = end ? `${start}–${end}` : start;
+  return change.time ? `${date} ${change.time}` : `${date} 종일`;
+}
+
+function shortKoreanDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  if (!match) return "일정 날짜";
+  return `${Number(match[2])}월 ${Number(match[3])}일`;
+}
+
 async function sendPush(serviceClient, subscription, payload, options) {
   try {
     await webpush.sendNotification({
@@ -218,14 +279,15 @@ async function sendPush(serviceClient, subscription, payload, options) {
       },
     });
 
+    const updates: Record<string, unknown> = {
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    };
     if (options.markSent) {
-      await serviceClient.from("push_subscriptions").update({
-        last_sent_on: options.localDate,
-        last_sent_at: new Date().toISOString(),
-        last_error: null,
-        updated_at: new Date().toISOString(),
-      }).eq("id", subscription.id);
+      updates.last_sent_on = options.localDate;
+      updates.last_sent_at = new Date().toISOString();
     }
+    await serviceClient.from("push_subscriptions").update(updates).eq("id", subscription.id);
     return "sent";
   } catch (error) {
     const statusCode = Number(error?.statusCode || 0);
@@ -242,6 +304,28 @@ async function sendPush(serviceClient, subscription, payload, options) {
   }
 }
 
+function normalizeEventChange(value: unknown) {
+  const change = value && typeof value === "object" ? value as Record<string, unknown> : null;
+  if (!change) return null;
+  const kinds = new Set(["created", "updated", "moved", "deleted", "bulk-created"]);
+  const kind = typeof change.kind === "string" && kinds.has(change.kind) ? change.kind : "";
+  const date = normalizeDate(change.date);
+  if (!kind || !date) return null;
+  const endDate = normalizeDate(change.endDate) || date;
+  if (endDate < date) return null;
+  const time = typeof change.time === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(change.time) ? change.time : "";
+  return {
+    kind,
+    id: typeof change.id === "string" ? change.id.slice(0, 80) : "",
+    title: cleanText(change.title, 80) || "가족 일정",
+    date,
+    endDate,
+    time,
+    member: cleanText(change.member, 40) || "가족",
+    count: Math.min(Math.max(Number(change.count) || 1, 1), 50),
+  };
+}
+
 function normalizeSubscription(value: unknown) {
   const subscription = value && typeof value === "object" ? value as Record<string, unknown> : null;
   const keys = subscription?.keys && typeof subscription.keys === "object" ? subscription.keys as Record<string, unknown> : null;
@@ -255,6 +339,18 @@ function normalizeSubscription(value: unknown) {
 function normalizeTime(value: unknown) {
   const text = typeof value === "string" ? value : "";
   return /^([01]\d|2[0-3]):([0-5]\d)$/.test(text) ? text : "09:00";
+}
+
+function normalizeDate(value: unknown) {
+  const text = typeof value === "string" ? value : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return "";
+  const [year, month, day] = text.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? text : "";
+}
+
+function cleanText(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, maxLength) : "";
 }
 
 function normalizeTimezone(value: unknown) {
