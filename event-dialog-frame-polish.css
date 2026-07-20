@@ -1,0 +1,112 @@
+/* Keep the complete event editor inside one rounded frame. */
+#eventDialog {
+  --event-frame-line: color-mix(in srgb, var(--label) 18%, transparent);
+  --event-frame-line-soft: color-mix(in srgb, var(--label) 11%, transparent);
+  --event-frame-footer: color-mix(in srgb, var(--event-sheet-bg) 96%, transparent);
+  box-sizing: border-box;
+  width: min(calc(100% - 28px), 560px);
+  max-height: calc(100dvh - 32px);
+  margin: auto auto 16px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--event-frame-line);
+  border-radius: 30px;
+  box-shadow:
+    0 28px 84px rgba(22, 32, 46, .28),
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+#eventDialog #eventForm {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 32px);
+  padding: 12px 20px max(18px, env(safe-area-inset-bottom));
+  scroll-padding-top: 12px;
+  scroll-padding-bottom: 136px;
+}
+
+#eventDialog .sheet-handle,
+#eventDialog .dialog-header {
+  position: relative;
+  z-index: 1;
+}
+
+#eventDialog .dialog-header {
+  margin: 0 0 18px;
+  padding: 0 2px;
+}
+
+#eventDialog .dialog-header > div {
+  min-width: 0;
+}
+
+#eventDialog .dialog-actions {
+  position: sticky;
+  z-index: 6;
+  bottom: 0;
+  margin: 18px -20px calc(-1 * max(18px, env(safe-area-inset-bottom)));
+  padding: 14px 20px max(18px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--event-frame-line-soft);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--event-frame-footer) 82%, transparent), var(--event-frame-footer) 28%);
+  box-shadow: 0 -14px 30px color-mix(in srgb, var(--event-sheet-bg) 90%, transparent);
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+}
+
+#eventDialog .dialog-actions button {
+  min-height: 56px;
+  border-radius: 18px;
+}
+
+html[data-family-theme="night"] #eventDialog {
+  --event-frame-line: rgba(148, 190, 247, .34);
+  --event-frame-line-soft: rgba(148, 190, 247, .18);
+  --event-frame-footer: rgba(9, 25, 44, .98);
+  border-color: var(--event-frame-line);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, .58),
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    inset 0 0 0 1px rgba(99, 150, 224, .04);
+}
+
+@media (max-width: 520px) {
+  #eventDialog {
+    width: calc(100% - 28px);
+    max-height: calc(100dvh - 32px);
+    margin-bottom: 16px;
+  }
+
+  #eventDialog #eventForm {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  #eventDialog .dialog-actions {
+    margin-right: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  #eventDialog {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+    margin-bottom: 10px;
+    border-radius: 26px;
+  }
+
+  #eventDialog #eventForm {
+    max-height: calc(100dvh - 20px);
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  #eventDialog .dialog-actions {
+    margin-right: -15px;
+    margin-left: -15px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+}
