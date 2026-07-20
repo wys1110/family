@@ -1,112 +1,564 @@
-/* Keep the complete event editor inside one rounded frame. */
+/* Event editor aligned with the canonical new-growth-record sheet. */
 #eventDialog {
-  --event-frame-line: color-mix(in srgb, var(--label) 18%, transparent);
-  --event-frame-line-soft: color-mix(in srgb, var(--label) 11%, transparent);
-  --event-frame-footer: color-mix(in srgb, var(--event-sheet-bg) 96%, transparent);
+  --event-sheet-bg: color-mix(in srgb, var(--surface-2) 58%, var(--surface));
+  --event-panel: var(--surface);
+  --event-panel-soft: color-mix(in srgb, var(--surface) 92%, transparent);
+  --event-line: color-mix(in srgb, var(--label) 10%, transparent);
+  --event-line-strong: color-mix(in srgb, var(--label) 17%, transparent);
+  --event-action-bg: var(--event-sheet-bg);
   box-sizing: border-box;
-  width: min(calc(100% - 28px), 560px);
-  max-height: calc(100dvh - 32px);
-  margin: auto auto 16px;
+  width: min(calc(100% - 16px), 500px);
+  height: auto;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(6px, env(safe-area-inset-bottom)));
+  margin: auto auto max(6px, env(safe-area-inset-bottom));
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--event-frame-line);
-  border-radius: 30px;
-  box-shadow:
-    0 28px 84px rgba(22, 32, 46, .28),
-    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  border: 1px solid color-mix(in srgb, white 36%, transparent);
+  border-radius: 28px;
+  color: var(--label);
+  background: var(--event-sheet-bg);
+  box-shadow: 0 24px 68px rgba(42, 39, 37, .22);
 }
 
 #eventDialog #eventForm {
   box-sizing: border-box;
-  max-height: calc(100dvh - 32px);
-  padding: 12px 20px max(18px, env(safe-area-inset-bottom));
+  width: 100%;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(6px, env(safe-area-inset-bottom)));
+  padding: 11px 18px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   scroll-padding-top: 12px;
-  scroll-padding-bottom: 136px;
+  scroll-padding-bottom: 94px;
+  scrollbar-width: none;
 }
 
-#eventDialog .sheet-handle,
+#eventDialog #eventForm::-webkit-scrollbar { display: none; }
+
+#eventDialog .sheet-handle {
+  position: relative;
+  top: auto;
+  z-index: 1;
+  display: block;
+  width: 38px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary) 25%, transparent);
+}
+
 #eventDialog .dialog-header {
   position: relative;
   z-index: 1;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 17px;
+  padding: 0;
 }
 
-#eventDialog .dialog-header {
-  margin: 0 0 18px;
-  padding: 0 2px;
+#eventDialog .dialog-header > div { min-width: 0; }
+
+#eventDialog .dialog-header .eyebrow {
+  margin: 0 0 3px;
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 720;
+  letter-spacing: .01em;
 }
 
-#eventDialog .dialog-header > div {
+#eventDialog .dialog-header h2 {
+  overflow: visible;
+  color: var(--label);
+  font-size: clamp(27px, 7vw, 31px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.05em;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+#eventDialog .close-button {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0 0 2px;
+  border: 1px solid color-mix(in srgb, var(--label) 11%, transparent);
+  border-radius: 50%;
+  outline: none;
+  color: color-mix(in srgb, var(--secondary) 88%, var(--label));
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  font-size: 26px;
+  font-weight: 330;
+  line-height: 1;
+  box-shadow: none;
+}
+
+#eventDialog .close-button:active { transform: scale(.95); }
+#eventDialog .close-button:focus { outline: none; box-shadow: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  #eventDialog .close-button:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--blue) 38%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+#eventDialog label,
+#eventDialog legend {
+  color: color-mix(in srgb, var(--secondary) 90%, var(--label));
+  font-size: 11.5px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+#eventDialog label { margin-bottom: 13px; }
+
+#eventDialog input,
+#eventDialog select,
+#eventDialog textarea {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
+  min-height: 52px;
+  margin: 6px 0 0;
+  padding: 0 14px;
+  border: 1px solid var(--event-line);
+  border-radius: 14px;
+  outline: none;
+  color: var(--label);
+  background: var(--event-panel);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+  box-shadow: none;
 }
 
+#eventDialog input:focus,
+#eventDialog select:focus,
+#eventDialog textarea:focus {
+  border-color: color-mix(in srgb, var(--blue) 52%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+
+#eventDialog .title-field {
+  margin: 0 0 13px;
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+#eventDialog #eventTitle {
+  min-height: 56px;
+  margin-top: 6px;
+  padding-inline: 14px;
+  border-color: var(--event-line);
+  border-radius: 14px;
+  background: var(--event-panel);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  box-shadow: none;
+}
+
+#eventDialog .date-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0 0 14px;
+  padding: 4px;
+  border: 1px solid var(--event-line);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--surface) 78%, var(--surface-2));
+}
+
+#eventDialog .date-shortcuts button {
+  min-height: 40px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 11px;
+  color: var(--secondary);
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 740;
+  box-shadow: none;
+}
+
+#eventDialog .date-shortcuts button.active {
+  color: var(--label);
+  background: var(--surface);
+  box-shadow: 0 3px 10px rgba(48, 44, 41, .07);
+}
+
+#eventDialog .event-date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+#eventDialog .event-date-fields > label {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+#eventDialog .event-date-fields input[type="date"],
+#eventDialog #eventTimeField input[type="time"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 52px;
+  min-height: 52px;
+  margin: 6px 0 0;
+  padding: 0 13px;
+  overflow: hidden;
+  border-color: var(--event-line);
+  border-radius: 14px;
+  background: var(--event-panel);
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: light;
+  font-size: var(--type-body-size, 15px);
+  font-weight: var(--type-weight-medium, 650);
+  font-variant-numeric: tabular-nums;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+#eventDialog .event-date-fields input[type="date"]::-webkit-date-and-time-value,
+#eventDialog #eventTimeField input[type="time"]::-webkit-date-and-time-value {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+#eventDialog .event-date-fields input[type="date"]::-webkit-calendar-picker-indicator,
+#eventDialog #eventTimeField input[type="time"]::-webkit-calendar-picker-indicator {
+  width: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+#eventDialog .all-day-row,
+#eventDialog .notification-reminder-field {
+  margin: 0 0 14px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--label) 9%, transparent);
+  border-radius: 19px;
+  background: var(--event-panel-soft);
+  box-shadow: 0 5px 18px rgba(49, 44, 41, .03);
+}
+
+#eventDialog .all-day-row {
+  min-height: 64px;
+}
+
+#eventDialog .all-day-row strong {
+  font-size: 13px;
+  font-weight: 780;
+}
+
+#eventDialog .all-day-row small {
+  margin-top: 3px;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+#eventDialog .ios-switch {
+  transform: none;
+  transform-origin: center;
+}
+
+#eventDialog #eventTimeField {
+  margin: 0 0 14px;
+}
+
+#eventDialog .notification-reminder-field {
+  gap: 8px;
+}
+
+#eventDialog .notification-reminder-field::before {
+  top: 17px;
+  left: 14px;
+  width: 29px;
+  height: 29px;
+  border: 1px solid color-mix(in srgb, var(--blue) 17%, transparent);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--blue) 10%, var(--surface));
+}
+
+#eventDialog .notification-reminder-field > label:first-child {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 43%);
+  gap: 9px;
+  min-height: 40px;
+  margin: 0;
+  padding-left: 39px;
+}
+
+#eventDialog .notification-reminder-field > label > span {
+  font-size: 12px;
+  font-weight: 780;
+}
+
+#eventDialog .notification-reminder-field select,
+#eventDialog .notification-reminder-field input {
+  min-height: 42px;
+  margin: 0;
+  padding-inline: 11px;
+  border-color: var(--event-line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 690;
+}
+
+#eventDialog .notification-reminder-field > small {
+  padding-left: 39px;
+  font-size: 8.5px;
+  line-height: 1.45;
+}
+
+#eventDialog .notification-reminder-field .notification-custom-time {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 50%);
+  padding-top: 10px;
+  border-top: 1px solid var(--event-line-strong);
+}
+
+#eventDialog .member-fieldset {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+#eventDialog .member-fieldset legend {
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 780;
+}
+
+#eventDialog .member-selector {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#eventDialog .member-selector button {
+  justify-content: center;
+  gap: 6px;
+  min-height: 46px;
+  padding-inline: 6px;
+  border: 1px solid var(--event-line);
+  border-radius: 14px;
+  color: var(--secondary);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 720;
+  box-shadow: none;
+}
+
+#eventDialog .member-selector button.selected {
+  border-color: color-mix(in srgb, var(--member-color, var(--blue)) 52%, transparent);
+  color: color-mix(in srgb, var(--member-color, var(--blue)) 82%, var(--label));
+  background: color-mix(in srgb, var(--member-color, var(--blue)) 10%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--member-color, var(--blue)) 7%, transparent);
+}
+
+#eventDialog .member-selector .member-selector-add {
+  grid-column: span 2;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--blue) 30%, transparent);
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 6%, var(--surface));
+}
+
+#eventDialog .member-selector .member-selector-add i {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(145deg, var(--blue), color-mix(in srgb, var(--green) 90%, var(--blue)));
+  font-size: 13px;
+}
+
+#eventDialog label:has(#eventNote) {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+#eventDialog #eventNote {
+  min-height: 104px;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-color: var(--event-line);
+  border-radius: 14px;
+  background: var(--event-panel);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+/* Same in-sheet action treatment as the new growth-record editor.
+   It participates in the form flow instead of using a detached fixed footer. */
 #eventDialog .dialog-actions {
   position: sticky;
-  z-index: 6;
-  bottom: 0;
-  margin: 18px -20px calc(-1 * max(18px, env(safe-area-inset-bottom)));
-  padding: 14px 20px max(18px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--event-frame-line-soft);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--event-frame-footer) 82%, transparent), var(--event-frame-footer) 28%);
-  box-shadow: 0 -14px 30px color-mix(in srgb, var(--event-sheet-bg) 90%, transparent);
-  backdrop-filter: blur(22px) saturate(130%);
-  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  z-index: 8;
+  bottom: -1px;
+  display: flex;
+  gap: 10px;
+  margin: 16px -18px 0;
+  padding: 12px 18px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid color-mix(in srgb, var(--label) 16%, transparent);
+  background: var(--event-action-bg);
+  box-shadow: 0 -8px 20px rgba(48, 44, 41, .055);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
 }
 
 #eventDialog .dialog-actions button {
-  min-height: 56px;
-  border-radius: 18px;
+  min-height: 52px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 780;
+}
+
+#eventDialog .danger-button {
+  flex: 0 0 86px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 0;
+  color: color-mix(in srgb, var(--red) 92%, #8f4f4b);
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+  box-shadow: none;
+}
+
+#eventDialog .primary-button {
+  flex: 1 1 auto;
+  border: 0;
+  color: white;
+  background: color-mix(in srgb, var(--green) 88%, #5d7b69);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--green) 16%, transparent);
 }
 
 html[data-family-theme="night"] #eventDialog {
-  --event-frame-line: rgba(148, 190, 247, .34);
-  --event-frame-line-soft: rgba(148, 190, 247, .18);
-  --event-frame-footer: rgba(9, 25, 44, .98);
-  border-color: var(--event-frame-line);
-  box-shadow:
-    0 30px 90px rgba(0, 0, 0, .58),
-    inset 0 1px 0 rgba(255, 255, 255, .06),
-    inset 0 0 0 1px rgba(99, 150, 224, .04);
+  --event-sheet-bg: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  --event-panel: var(--surface);
+  --event-panel-soft: color-mix(in srgb, var(--surface) 94%, transparent);
+  --event-line: rgba(255,255,255,.09);
+  --event-line-strong: rgba(255,255,255,.16);
+  --event-action-bg: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  border-color: rgba(255,255,255,.09);
+  background: var(--event-sheet-bg);
+  box-shadow: 0 28px 78px rgba(0,0,0,.45);
+}
+
+html[data-family-theme="night"] #eventDialog .event-date-fields input[type="date"],
+html[data-family-theme="night"] #eventDialog #eventTimeField input[type="time"] {
+  color-scheme: dark;
+}
+
+html[data-family-theme="night"] #eventDialog .all-day-row,
+html[data-family-theme="night"] #eventDialog .notification-reminder-field {
+  border-color: rgba(255,255,255,.08);
+  background: var(--event-panel-soft);
+}
+
+html[data-family-theme="night"] #eventDialog .date-shortcuts {
+  border-color: rgba(255,255,255,.08);
+  background: color-mix(in srgb, var(--surface-2) 80%, var(--surface));
+}
+
+html[data-family-theme="night"] #eventDialog .date-shortcuts button.active {
+  color: var(--label);
+  background: var(--surface);
+}
+
+html[data-family-theme="night"] #eventDialog .notification-reminder-field::before {
+  border-color: rgba(142,185,255,.24);
+  background-color: color-mix(in srgb, var(--blue) 18%, var(--surface));
+  filter: none;
+}
+
+html[data-family-theme="night"] #eventDialog .member-selector button.selected {
+  color: color-mix(in srgb, var(--member-color, var(--blue)) 78%, white);
+  background: color-mix(in srgb, var(--member-color, var(--blue)) 16%, var(--surface));
+}
+
+html[data-family-theme="night"] #eventDialog .dialog-actions {
+  border-color: rgba(255,255,255,.16);
+  background: var(--event-action-bg);
+}
+
+html[data-family-theme="night"] #eventDialog .danger-button {
+  color: #ffadb0;
+  background: rgba(128,50,63,.20);
+}
+
+html[data-family-theme="night"] #eventDialog .primary-button {
+  color: white;
+  background: color-mix(in srgb, var(--green) 88%, #5d7b69);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--green) 18%, transparent);
 }
 
 @media (max-width: 520px) {
   #eventDialog {
-    width: calc(100% - 28px);
-    max-height: calc(100dvh - 32px);
-    margin-bottom: 16px;
+    position: fixed;
+    inset: auto 0 max(4px, env(safe-area-inset-bottom));
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - max(10px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
+    margin: 0 auto;
+    border-radius: 28px;
   }
 
   #eventDialog #eventForm {
-    padding-right: 18px;
-    padding-left: 18px;
+    max-height: calc(100dvh - max(10px, env(safe-area-inset-top)) - max(4px, env(safe-area-inset-bottom)));
+    padding: 10px 17px 0;
   }
 
+  #eventDialog .dialog-header { margin-bottom: 16px; }
+  #eventDialog .dialog-header h2 { font-size: clamp(27px, 7.4vw, 30px); }
+
   #eventDialog .dialog-actions {
-    margin-right: -18px;
-    margin-left: -18px;
-    padding-right: 18px;
-    padding-left: 18px;
+    margin-right: -17px;
+    margin-left: -17px;
+    padding-right: 17px;
+    padding-left: 17px;
   }
 }
 
 @media (max-width: 360px) {
-  #eventDialog {
-    width: calc(100% - 20px);
-    max-height: calc(100dvh - 20px);
-    margin-bottom: 10px;
-    border-radius: 26px;
+  #eventDialog .event-date-fields.has-range,
+  #eventDialog .notification-reminder-field > label:first-child,
+  #eventDialog .notification-reminder-field .notification-custom-time {
+    grid-template-columns: 1fr;
   }
 
-  #eventDialog #eventForm {
-    max-height: calc(100dvh - 20px);
-    padding-right: 15px;
-    padding-left: 15px;
+  #eventDialog .notification-reminder-field > label:first-child {
+    padding-left: 39px;
   }
 
-  #eventDialog .dialog-actions {
-    margin-right: -15px;
-    margin-left: -15px;
-    padding-right: 15px;
-    padding-left: 15px;
+  #eventDialog .member-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  #eventDialog .member-selector .member-selector-add {
+    grid-column: span 2;
+  }
+
+  #eventDialog .danger-button { flex-basis: 76px; }
 }
