@@ -47,11 +47,10 @@
   const updateServiceWorker = async () => {
     if (!('serviceWorker' in navigator)) return;
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.allSettled(registrations.map(async (registration) => {
-        await registration.update();
-        registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
-      }));
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) return;
+      await registration.update();
+      registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
     } catch (error) {
       console.debug('서비스 워커 확인을 건너뛰었어요', error);
     }
