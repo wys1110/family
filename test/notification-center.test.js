@@ -7,7 +7,7 @@ const style = readFileSync('notification-center.css', 'utf8');
 const packageJson = readFileSync('package.json', 'utf8');
 
 test('상단 알림 버튼과 새 알림·예정·지난 알림 목록을 설치한다', () => {
-  expect(config).toContain('{ name: "notification-center", version: "20260720-v1" }');
+  expect(config).toContain('{ name: "notification-center", version: "20260720-mobile-width-v3" }');
   expect(client).toContain("button.id = 'notificationCenterButton'");
   expect(client).toContain('data-notification-filter="new"');
   expect(client).toContain('data-notification-filter="upcoming"');
