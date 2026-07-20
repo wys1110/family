@@ -24,12 +24,13 @@ self.addEventListener("push", (event) => {
   const options = {
     body: payload.body || "오늘 일정을 확인해 주세요.",
     tag: payload.tag || "family-daily-briefing",
-    renotify: false,
+    renotify: Boolean(payload.renotify),
     icon: "assets/family-mascots.webp",
     badge: "assets/family-mascots.webp",
     data: {
       url: payload.url || DEFAULT_URL,
       date: payload.date || "",
+      eventId: payload.eventId || "",
     },
   };
   event.waitUntil(self.registration.showNotification(title, options));
