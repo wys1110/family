@@ -53,6 +53,7 @@ window.FAMILY_CONFIG = {
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260720-push-diagnostics-v2" },
+    { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260718-baseline-v2" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
