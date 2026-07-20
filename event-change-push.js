@@ -2,6 +2,7 @@
   const FUNCTION_NAME = "daily-briefing-push";
   const MUTATIONS = new Set(["insert", "upsert", "update", "delete"]);
   const patchedClients = new WeakSet();
+  let notificationDateHandled = false;
 
   const cloneEvents = () => {
     if (typeof state === "undefined" || !Array.isArray(state.events)) return [];
@@ -145,6 +146,44 @@
     return true;
   };
 
+  const validNotificationDate = (value) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+    if (!match) return "";
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? value : "";
+  };
+
+  const clearNotificationDate = (params) => {
+    params.delete("eventDate");
+    const query = params.toString();
+    history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
+  };
+
+  const openNotificationDate = () => {
+    if (notificationDateHandled) return true;
+    const params = new URLSearchParams(location.search);
+    if (!params.has("eventDate")) {
+      notificationDateHandled = true;
+      return true;
+    }
+    const date = validNotificationDate(params.get("eventDate"));
+    if (!date) {
+      clearNotificationDate(params);
+      notificationDateHandled = true;
+      return true;
+    }
+    if (typeof state === "undefined" || typeof parseDate !== "function" || typeof startOfMonth !== "function" || typeof switchView !== "function") return false;
+    state.selectedDate = date;
+    state.viewDate = startOfMonth(parseDate(date));
+    switchView("calendar");
+    clearNotificationDate(params);
+    notificationDateHandled = true;
+    return true;
+  };
+
   const updateSettingsCopy = () => {
     const card = document.querySelector("#dailyBriefingSettings");
     if (!card) return false;
@@ -164,8 +203,9 @@
 
   const install = (attempt = 0) => {
     const patched = patchClient();
+    const dateReady = openNotificationDate();
     const copyReady = updateSettingsCopy();
-    if ((!patched || !copyReady) && attempt < 50) setTimeout(() => install(attempt + 1), 100);
+    if ((!patched || !dateReady || !copyReady) && attempt < 50) setTimeout(() => install(attempt + 1), 100);
   };
 
   window.addEventListener("familycontextchange", () => install());
