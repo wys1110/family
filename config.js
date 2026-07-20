@@ -41,7 +41,7 @@ window.FAMILY_CONFIG = {
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
-    { name: "care-ring-timeline", version: "20260718-logic-audit-v1" },
+    { name: "care-ring-timeline", version: "20260720-care-emojis-v1" },
     { name: "care-date-nav-position", version: "20260718-above-timeline-v1", style: false },
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
     { name: "growth-dedup", version: "20260718-hide-timer-starts-v2" },
