@@ -56,7 +56,7 @@ window.FAMILY_CONFIG = {
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
-    { name: "notification-center", version: "20260720-header-tabs-v2" },
+    { name: "notification-center", version: "20260720-mobile-width-v3" },
     { name: "adaptive-feeding", version: "20260718-logic-audit-v1" },
     { name: "feeding-quick-unified", version: "20260717-unified-v1" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
