@@ -94,7 +94,7 @@ window.FAMILY_CONFIG = {
     { name: "page-header-spacing", version: "20260720-v1", script: false },
     { name: "event-dialog-polish", version: "20260720-v1", script: false },
     { name: "care-timeline-contrast", version: "20260720-night-legibility-v1", script: false },
-    { name: "night-theme-polish", version: "20260720-starry-palette-v1" },
+    { name: "night-theme-polish", version: "20260720-growth-colors-v2" },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
