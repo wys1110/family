@@ -3,9 +3,10 @@
   --event-frame-line: color-mix(in srgb, var(--label) 18%, transparent);
   --event-frame-line-soft: color-mix(in srgb, var(--label) 11%, transparent);
   --event-frame-footer: color-mix(in srgb, var(--event-sheet-bg) 96%, transparent);
+  --event-dialog-max-height: calc(100dvh - 32px);
   box-sizing: border-box;
   width: min(calc(100% - 28px), 560px);
-  max-height: calc(100dvh - 32px);
+  max-height: var(--event-dialog-max-height);
   margin: auto auto 16px;
   padding: 0;
   overflow: hidden;
@@ -18,7 +19,7 @@
 
 #eventDialog #eventForm {
   box-sizing: border-box;
-  max-height: calc(100dvh - 32px);
+  max-height: var(--event-dialog-max-height);
   padding: 12px 20px max(18px, env(safe-area-inset-bottom));
   scroll-padding-top: 12px;
   scroll-padding-bottom: 136px;
@@ -69,11 +70,21 @@ html[data-family-theme="night"] #eventDialog {
     inset 0 0 0 1px rgba(99, 150, 224, .04);
 }
 
+/* The base mobile sheet is bottom-positioned. Reserve both safe areas so its
+   calculated top never slides under the status bar or Dynamic Island. */
+@media (max-width: 620px) {
+  #eventDialog {
+    --event-dialog-top-gap: max(12px, env(safe-area-inset-top));
+    --event-dialog-bottom-gap: max(8px, env(safe-area-inset-bottom));
+    --event-dialog-max-height: calc(100dvh - var(--event-dialog-top-gap) - var(--event-dialog-bottom-gap));
+    inset: auto 0 var(--event-dialog-bottom-gap);
+    margin: 0 auto;
+  }
+}
+
 @media (max-width: 520px) {
   #eventDialog {
     width: calc(100% - 28px);
-    max-height: calc(100dvh - 32px);
-    margin-bottom: 16px;
   }
 
   #eventDialog #eventForm {
@@ -92,13 +103,10 @@ html[data-family-theme="night"] #eventDialog {
 @media (max-width: 360px) {
   #eventDialog {
     width: calc(100% - 20px);
-    max-height: calc(100dvh - 20px);
-    margin-bottom: 10px;
     border-radius: 26px;
   }
 
   #eventDialog #eventForm {
-    max-height: calc(100dvh - 20px);
     padding-right: 15px;
     padding-left: 15px;
   }
