@@ -1,0 +1,212 @@
+/* Night-theme palette refinement for English stories. */
+
+html[data-family-theme="night"] #englishView {
+  --english-panel: rgba(12, 31, 53, .97);
+  --english-panel-strong: rgba(17, 40, 68, .98);
+  --english-panel-soft: rgba(25, 51, 83, .82);
+  --english-border: rgba(157, 187, 232, .17);
+  --english-text: #f7f9ff;
+  --english-muted: #b8c5d9;
+  --english-subtle: #91a2ba;
+  --english-accent: #8eb9ff;
+  --english-accent-strong: #5f8fe8;
+}
+
+html[data-family-theme="night"] .english-page-header h2 {
+  color: var(--english-text);
+}
+
+html[data-family-theme="night"] .english-page-header > div > span {
+  color: var(--english-muted);
+}
+
+html[data-family-theme="night"] .english-book-mark {
+  color: #eef5ff;
+  border: 1px solid var(--english-border);
+  background:
+    radial-gradient(circle at 35% 24%, rgba(142, 185, 255, .20), transparent 52%),
+    linear-gradient(145deg, #18375d, #102945);
+  box-shadow:
+    0 9px 22px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+
+html[data-family-theme="night"] .english-today-card {
+  color: var(--english-text);
+  border: 1px solid rgba(142, 185, 255, .24);
+  background:
+    radial-gradient(circle at 88% 10%, rgba(137, 170, 235, .18), transparent 44%),
+    linear-gradient(135deg, #17345a, #244b7d);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+
+html[data-family-theme="night"] .english-today-label {
+  color: #a9c9f7;
+}
+
+html[data-family-theme="night"] .english-today-card h3 {
+  color: #ffffff;
+}
+
+html[data-family-theme="night"] .english-today-card p {
+  color: #c5d1e4;
+}
+
+html[data-family-theme="night"] .english-today-card button {
+  color: #ffffff;
+  border: 1px solid rgba(166, 197, 247, .32);
+  background: linear-gradient(145deg, #315fa7, #244d8e);
+  box-shadow:
+    0 7px 18px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+
+html[data-family-theme="night"] .english-today-card button:active {
+  background: linear-gradient(145deg, #285493, #1f447d);
+}
+
+html[data-family-theme="night"] .english-story-player {
+  color: var(--english-text);
+  border-color: var(--english-border);
+  background:
+    radial-gradient(circle at 94% 2%, rgba(94, 133, 210, .09), transparent 34%),
+    linear-gradient(155deg, var(--english-panel-strong), var(--english-panel));
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, .32),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] .english-story-cover {
+  border: 1px solid rgba(157, 187, 232, .10);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(142, 185, 255, .12), transparent 38%),
+    linear-gradient(145deg, #173251, #132b49);
+}
+
+html[data-family-theme="night"] .english-cover-emoji {
+  border: 1px solid rgba(190, 211, 245, .24);
+  background: linear-gradient(145deg, #8ca8d4, #718cb8);
+  box-shadow:
+    0 9px 22px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+
+html[data-family-theme="night"] .english-story-cover p {
+  color: #91a9ca;
+}
+
+html[data-family-theme="night"] .english-story-cover h2 {
+  color: #ffffff;
+}
+
+html[data-family-theme="night"] .english-story-cover div > span,
+html[data-family-theme="night"] .english-story-summary {
+  color: var(--english-muted);
+}
+
+html[data-family-theme="night"] .english-player-actions button {
+  color: #d8e3f3;
+  border-color: rgba(157, 187, 232, .18);
+  background: linear-gradient(145deg, #1b3c64, #153253);
+  box-shadow:
+    0 7px 18px rgba(0, 0, 0, .19),
+    inset 0 1px 0 rgba(255, 255, 255, .055);
+}
+
+html[data-family-theme="night"] .english-player-actions .english-play-main {
+  color: #ffffff;
+  border-color: rgba(135, 173, 245, .58);
+  background: linear-gradient(145deg, #4b7ad5, #3564bd);
+  box-shadow:
+    0 9px 22px rgba(18, 53, 112, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .13);
+}
+
+html[data-family-theme="night"] .english-player-actions button.active:not(.english-play-main) {
+  color: #ffffff;
+  border-color: rgba(142, 185, 255, .40);
+  background: linear-gradient(145deg, #28527f, #1d4169);
+}
+
+html[data-family-theme="night"] .english-player-actions button:active {
+  filter: brightness(.94);
+}
+
+html[data-family-theme="night"] .english-progress {
+  background: rgba(157, 187, 232, .13);
+}
+
+html[data-family-theme="night"] .english-progress i {
+  background: linear-gradient(90deg, #6f9ff0, #9bc2ff);
+}
+
+html[data-family-theme="night"] .english-sentence {
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(18, 40, 67, .80);
+}
+
+html[data-family-theme="night"] .english-sentence.active {
+  border-color: rgba(142, 185, 255, .42);
+  background: rgba(31, 66, 107, .90);
+}
+
+html[data-family-theme="night"] .english-sentence > button {
+  color: #dceaff;
+  background: rgba(54, 92, 142, .62);
+}
+
+html[data-family-theme="night"] .english-sentence p {
+  color: #f4f7fc;
+}
+
+html[data-family-theme="night"] .english-sentence small {
+  color: #afbdd1;
+}
+
+html[data-family-theme="night"] .english-story-footer button {
+  color: #d6e2f2;
+  border: 1px solid rgba(157, 187, 232, .15);
+  background: linear-gradient(145deg, #1b3b61, #15304f);
+}
+
+html[data-family-theme="night"] .english-story-footer #englishMarkRead {
+  color: #ffffff;
+  background: linear-gradient(145deg, #416fae, #2e598f);
+}
+
+html[data-family-theme="night"] .english-story-footer #englishMarkRead.done {
+  color: #cbd6e6;
+  background: #263c57;
+}
+
+html[data-family-theme="night"] .english-library-card {
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(17, 38, 64, .86);
+  box-shadow:
+    0 7px 20px rgba(0, 0, 0, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] .english-library-card.active {
+  border-color: rgba(142, 185, 255, .40);
+  background: rgba(30, 62, 100, .92);
+}
+
+html[data-family-theme="night"] .english-library-card > span {
+  background: rgba(55, 83, 119, .68);
+}
+
+html[data-family-theme="night"] .english-library-card small {
+  color: #90a8c8;
+}
+
+html[data-family-theme="night"] .english-library-card strong {
+  color: #f4f7fc;
+}
+
+html[data-family-theme="night"] .english-library-card em,
+html[data-family-theme="night"] .english-library-card > i {
+  color: #aebbd0;
+}
