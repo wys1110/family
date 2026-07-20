@@ -18,5 +18,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
-      - run: npm run check
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.log
+      - name: Run checks
+        if: always()
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run check 2>&1 | tee check-output.log
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-logs
+          path: |
+            test-output.log
+            check-output.log
