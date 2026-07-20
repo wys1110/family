@@ -19,11 +19,11 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-inline: 4px;
-  font-size: 9px;
+  padding-inline: 2px;
+  font-size: 8px;
   font-weight: 700;
   line-height: 16px;
-  letter-spacing: -.02em;
+  letter-spacing: -.04em;
 }
 
 #calendarView .calendar-event-bar > span {
@@ -58,8 +58,10 @@
 @media (min-width: 700px) and (max-width: 767.98px) {
   #calendarView .calendar-event-bar {
     height: 18px;
-    font-size: 10px;
+    padding-inline: 3px;
+    font-size: 9px;
     line-height: 18px;
+    letter-spacing: -.03em;
   }
 
   #calendarView .calendar-event-bar[style*="34px"] { margin-top: 34px; }
@@ -72,10 +74,10 @@
 @media (min-width: 768px) {
   #calendarView .calendar-event-bar {
     height: 22px;
-    padding-inline: 6px;
-    font-size: 11px;
+    padding-inline: 5px;
+    font-size: 10px;
     line-height: 22px;
-    letter-spacing: 0;
+    letter-spacing: -.01em;
   }
 
   #calendarView .calendar-event-bar[style*="34px"] { margin-top: 44px; }
