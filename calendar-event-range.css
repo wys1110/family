@@ -38,7 +38,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: inherit;
+  font-weight: inherit;
   line-height: 1;
+  letter-spacing: inherit;
   text-align: left;
 }
 
