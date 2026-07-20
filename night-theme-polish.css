@@ -168,6 +168,309 @@ html[data-family-theme="night"] .care-linear-empty {
   background: rgba(24, 48, 78, .48);
 }
 
+/* Growth quick-record cards: remove the light-theme gray cast. */
+html[data-family-theme="night"] .growth-quick-section {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .15);
+  background:
+    radial-gradient(circle at 94% 8%, rgba(120, 151, 224, .12), transparent 42%),
+    linear-gradient(155deg, rgba(15, 34, 58, .98), rgba(8, 23, 41, .98));
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, .31),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] .growth-quick-section .section-heading h2 {
+  color: #f7f9ff;
+}
+
+html[data-family-theme="night"] .growth-quick-section .section-heading small {
+  color: #bac6d9;
+}
+
+html[data-family-theme="night"] .quick-now-badge {
+  color: #dce8fb;
+  border: 1px solid rgba(142, 185, 255, .18);
+  background: rgba(35, 68, 111, .72);
+}
+
+html[data-family-theme="night"] .growth-quick-section .growth-quick-grid button,
+html[data-family-theme="night"] .growth-quick-section .growth-quick-grid button:nth-child(n) {
+  color: #f6f8fd;
+  border-color: rgba(157, 187, 232, .15);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(142, 185, 255, .10), transparent 48%),
+    linear-gradient(145deg, rgba(28, 54, 88, .96), rgba(17, 39, 67, .98));
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .055);
+}
+
+html[data-family-theme="night"] .growth-quick-section .growth-quick-grid button:active {
+  background: linear-gradient(145deg, #294d80, #1d3a65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] .growth-quick-section .quick-symbol {
+  color: #f8fbff;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(121, 161, 220, .20);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+/* Care pattern panel and controls: dark surfaces must never pair with white pills. */
+html[data-family-theme="night"] .care-pattern-section {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .16);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(134, 110, 211, .10), transparent 38%),
+    linear-gradient(155deg, rgba(14, 33, 56, .99), rgba(8, 23, 41, .99));
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, .32),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] .care-pattern-heading h2,
+html[data-family-theme="night"] .care-pattern-section .care-rhythm-empty strong,
+html[data-family-theme="night"] .care-pattern-section .care-interval-card strong {
+  color: #f6f8fd;
+}
+
+html[data-family-theme="night"] .care-pattern-heading .eyebrow {
+  color: #91b9fa;
+}
+
+html[data-family-theme="night"] .care-pattern-heading small,
+html[data-family-theme="night"] .care-rhythm-legend span,
+html[data-family-theme="night"] .care-pattern-note,
+html[data-family-theme="night"] .care-rhythm-day strong,
+html[data-family-theme="night"] .care-rhythm-day span,
+html[data-family-theme="night"] .care-interval-card span,
+html[data-family-theme="night"] .care-interval-card small {
+  color: #bbc7d9;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .formula,
+html[data-family-theme="night"] .care-pattern-categories button.formula {
+  --legend: #f2b663;
+  --category-color: #f2b663;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .pumped,
+html[data-family-theme="night"] .care-pattern-categories button.pumped {
+  --legend: #62bfdc;
+  --category-color: #62bfdc;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .breast,
+html[data-family-theme="night"] .care-pattern-categories button.breast {
+  --legend: #e98bad;
+  --category-color: #e98bad;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .solid,
+html[data-family-theme="night"] .care-pattern-categories button.solid {
+  --legend: #72c88d;
+  --category-color: #72c88d;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .sleep,
+html[data-family-theme="night"] .care-pattern-categories button.sleep {
+  --legend: #aa8bea;
+  --category-color: #aa8bea;
+}
+
+html[data-family-theme="night"] .care-rhythm-legend .diaper,
+html[data-family-theme="night"] .care-pattern-categories button.diaper {
+  --legend: #6fa9f7;
+  --category-color: #6fa9f7;
+}
+
+html[data-family-theme="night"] .care-pattern-tabs {
+  border: 1px solid rgba(157, 187, 232, .09);
+  background: rgba(23, 47, 78, .74);
+}
+
+html[data-family-theme="night"] .care-pattern-tabs button {
+  color: #c4cfdf;
+}
+
+html[data-family-theme="night"] .care-pattern-tabs button.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #2b5288, #1f416f);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+
+html[data-family-theme="night"] .care-day-mode-control {
+  border-color: rgba(157, 187, 232, .14);
+  background: rgba(14, 34, 58, .86);
+}
+
+html[data-family-theme="night"] .care-day-mode-control > span,
+html[data-family-theme="night"] .care-day-mode-control button {
+  color: #c4cfdf;
+}
+
+html[data-family-theme="night"] .care-day-mode-control > div {
+  background: rgba(35, 68, 111, .50);
+}
+
+html[data-family-theme="night"] .care-day-mode-control button.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #254a7c, #19375f);
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] .care-pattern-categories button {
+  color: #aebbd0;
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(17, 39, 67, .86);
+  opacity: .62;
+}
+
+html[data-family-theme="night"] .care-pattern-categories button.active {
+  color: #f9fbff;
+  border-color: color-mix(in srgb, var(--category-color) 58%, rgba(255, 255, 255, .08));
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--category-color) 23%, #17304f),
+      color-mix(in srgb, var(--category-color) 12%, #0f263f));
+  opacity: 1;
+  box-shadow:
+    0 7px 18px rgba(0, 0, 0, .25),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] .care-pattern-categories button i {
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
+html[data-family-theme="night"] .care-pattern-date {
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(13, 33, 57, .88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+
+html[data-family-theme="night"] .care-pattern-date button {
+  color: #b8d3ff;
+  background: rgba(35, 68, 111, .58);
+}
+
+html[data-family-theme="night"] .care-pattern-date strong {
+  color: #8fc5ff;
+}
+
+html[data-family-theme="night"] .care-clock-outer,
+html[data-family-theme="night"] .care-clock-center {
+  fill: #10243d;
+  stroke: rgba(157, 187, 232, .13);
+}
+
+html[data-family-theme="night"] .care-clock-face {
+  stroke: #183351;
+}
+
+html[data-family-theme="night"] .care-clock-night {
+  stroke: #202d4d;
+}
+
+html[data-family-theme="night"] .care-clock-hour,
+html[data-family-theme="night"] .care-clock-center-kicker,
+html[data-family-theme="night"] .care-clock-center-caption {
+  fill: #9eacc1;
+}
+
+html[data-family-theme="night"] .care-clock-center-day {
+  fill: #f4f8ff;
+}
+
+html[data-family-theme="night"] .care-clock-tick {
+  stroke: #415674;
+}
+
+html[data-family-theme="night"] .care-clock-tick.major {
+  stroke: #70829c;
+}
+
+html[data-family-theme="night"] .care-clock-periods span,
+html[data-family-theme="night"] .care-clock-summary,
+html[data-family-theme="night"] .care-rhythm-bars,
+html[data-family-theme="night"] .care-interval-card {
+  border-color: rgba(157, 187, 232, .12);
+  background: rgba(17, 39, 67, .82);
+}
+
+html[data-family-theme="night"] .care-clock-summary article + article {
+  border-color: rgba(157, 187, 232, .11);
+}
+
+html[data-family-theme="night"] .care-clock-summary span {
+  color: #afbdd1;
+}
+
+html[data-family-theme="night"] .care-clock-summary strong {
+  color: #f5f8ff;
+}
+
+html[data-family-theme="night"] .care-rhythm-day.today .care-rhythm-bars {
+  background: rgba(31, 66, 107, .88);
+  box-shadow: inset 0 0 0 1px rgba(142, 185, 255, .34);
+}
+
+html[data-family-theme="night"] .care-rhythm-day.today strong {
+  color: #9ec6ff;
+}
+
+html[data-family-theme="night"] .care-rhythm-empty {
+  color: #b9c5d7;
+  border-color: rgba(157, 187, 232, .16);
+  background: rgba(17, 39, 67, .46);
+}
+
+html[data-family-theme="night"] .care-interval-card > div {
+  background: rgba(157, 187, 232, .11);
+}
+
+/* Daily feeding card should read as part of the same navy system. */
+html[data-family-theme="night"] .daily-intake-summary {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .15);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(233, 139, 173, .10), transparent 35%),
+    linear-gradient(145deg, rgba(18, 41, 69, .98), rgba(10, 27, 48, .98));
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] .daily-intake-summary header > div > span,
+html[data-family-theme="night"] .daily-intake-breakdown span,
+html[data-family-theme="night"] .daily-intake-breakdown small,
+html[data-family-theme="night"] .daily-intake-note {
+  color: #b9c5d7;
+}
+
+html[data-family-theme="night"] .daily-intake-summary header > div > strong,
+html[data-family-theme="night"] .daily-intake-breakdown strong {
+  color: #f6f8fd;
+}
+
+html[data-family-theme="night"] .daily-intake-summary header > p {
+  color: #75d4c4;
+}
+
+html[data-family-theme="night"] .daily-intake-breakdown article {
+  border-color: color-mix(in srgb, currentColor 26%, transparent);
+  background: rgba(18, 43, 72, .84);
+}
+
 @media (max-width: 520px) {
   html[data-family-theme="night"] #growthView .care-split-entry strong {
     font-size: 11px;
