@@ -146,7 +146,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-verse-typography", version: "20260718-font-v2", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
     { name: "growth-inline-chart", version: "20260718-inline-v2" },
-    { name: "growth-inline-icon-cleanup", version: "20260718-v1", style: false },
+    { name: "growth-inline-icon-cleanup", version: "20260718-v1", script: false },
     { name: "growth-inline-visual-polish", version: "20260718-v1", script: false },
     { name: "growth-inline-approved-polish", version: "20260718-v3", script: false },
     { name: "invite-link", version: "20260718-v1" },
@@ -163,7 +163,7 @@ window.FAMILY_CONFIG = {
     { name: "night-baby-ai-polish", version: "20260720-v1", script: false },
     { name: "night-english-story-polish", version: "20260720-v1", script: false },
     { name: "event-dialog-layout-polish", version: "20260720-v2", script: false },
-    { name: "event-dialog-frame-polish", version: "20260721-v1", script: false },
+    { name: "event-dialog-frame-polish", version: "20260721-v2", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
