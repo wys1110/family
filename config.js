@@ -90,6 +90,7 @@ window.FAMILY_CONFIG = {
     { name: "baby-ai-core", version: "20260719-v1", style: false, script: false },
     { name: "baby-ai", version: "20260720-refresh-recovery-v1" },
     { name: "baby-ai-time-fields", version: "20260719-v1", script: false },
+    { name: "page-header-spacing", version: "20260720-v1", script: false },
   ];
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {

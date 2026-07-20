@@ -1,0 +1,27 @@
+/* Keep the first content block aligned across every top-level tab. */
+:root {
+  --view-content-top-gap: 20px;
+}
+
+.app-shell .view-tabs {
+  margin-bottom: var(--view-content-top-gap);
+}
+
+#growthView > .growth-page-header {
+  margin-top: 0;
+}
+
+#englishView > .english-page-header {
+  padding-top: 0;
+}
+
+#featureRequestView > .feature-request-card,
+#settingsView > .settings-card {
+  margin-top: 0;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --view-content-top-gap: 24px;
+  }
+}
