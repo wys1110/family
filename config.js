@@ -34,6 +34,64 @@ window.FAMILY_CONFIG = {
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) themeMeta.content = themeColors[initialTheme];
 
+  // Render the refresh action synchronously from config.js so it cannot disappear
+  // when a versioned module is delayed, stale, or temporarily fails to load on iOS.
+  const installRefreshFallback = () => {
+    const pageBody = document.body;
+    if (!pageBody) return;
+
+    let button = document.querySelector('[data-refresh-module]');
+    if (!button) {
+      button = document.createElement("button");
+      button.id = "refreshButton";
+      button.className = "refresh-button";
+      button.type = "button";
+      button.dataset.refreshModule = "";
+      button.setAttribute("aria-label", "페이지 완전 새로고침");
+      button.setAttribute("title", "완전 새로고침");
+      button.innerHTML = '<span aria-hidden="true">↻</span>';
+    }
+
+    if (button.parentElement !== pageBody) pageBody.appendChild(button);
+    button.hidden = false;
+    button.removeAttribute("aria-hidden");
+    if (button.dataset.refreshFallbackBound === "true") return;
+    button.dataset.refreshFallbackBound = "true";
+
+    button.addEventListener("click", async () => {
+      // refresh-button.js owns the click after it hydrates the fallback shell.
+      if (button.dataset.refreshHydrated === "true" || button.disabled) return;
+      button.disabled = true;
+      button.classList.add("refreshing");
+      button.setAttribute("aria-busy", "true");
+
+      try {
+        if ("serviceWorker" in navigator) {
+          await Promise.race([
+            navigator.serviceWorker.getRegistration().then(async (registration) => {
+              if (!registration) return;
+              await registration.update();
+              registration.waiting?.postMessage({ type: "SKIP_WAITING" });
+            }),
+            new Promise((resolve) => window.setTimeout(resolve, 900)),
+          ]);
+        }
+
+        try { sessionStorage.setItem("family-refresh-complete-v1", "1"); }
+        catch { /* 세션 저장이 막혀도 페이지는 다시 읽기 */ }
+
+        const target = new URL(window.location.href);
+        target.searchParams.delete("__appv");
+        target.searchParams.set("__refresh", `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        window.location.replace(target.href);
+      } catch (error) {
+        console.error("페이지 완전 새로고침 fallback 실패", error);
+        window.location.reload();
+      }
+    });
+  };
+  installRefreshFallback();
+
   const modules = [
     { name: "growth-delete-sync", version: "20260717-delete-refresh-v1" },
     { name: "calendar-swipe", version: "20260716-fast-swipe" },
