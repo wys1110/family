@@ -36,13 +36,15 @@
   };
 
   const labelOf = (type) => (type === "formula" ? "분유" : type === "breast" ? "모유" : "기저귀");
+  const emojiOf = (type) => (type === "formula" ? "🍼" : type === "breast" ? "🤱" : "🧷");
 
   const entryCard = (entry, type) => {
     const label = labelOf(type);
+    const emoji = emojiOf(type);
     const detail = detailOf(entry, type);
     return `
       <button type="button" class="care-split-entry ${type}" data-care-entry-id="${escapeHtml(String(entry.id || ""))}" aria-label="${escapeHtml(`${label} ${detail} 기록 수정`)}" aria-haspopup="dialog">
-        <span><i aria-hidden="true"></i><strong>${label}</strong></span>
+        <span class="care-split-entry-label"><span class="care-entry-emoji" aria-hidden="true">${emoji}</span><strong>${label}</strong></span>
         <small>${escapeHtml(detail)}</small>
         <span class="care-split-edit" aria-hidden="true">✎</span>
       </button>`;
@@ -183,9 +185,9 @@
     document.querySelector("#carePatternContent").innerHTML = `
       <section class="care-linear-card">
         <div class="care-linear-summary">
-          <article class="formula"><span>분유</span><strong>${formulaMl}mL</strong><small>${formulaEntries.length}회</small></article>
-          <article class="breast"><span>모유</span><strong>${formatDuration(breastMinutes)}</strong><small>${breastEntries.length}회</small></article>
-          <article class="diaper"><span>기저귀</span><strong>${diaperEntries.length}회</strong><small>오늘 기록</small></article>
+          <article class="formula"><span class="care-summary-label"><span class="care-summary-emoji" aria-hidden="true">🍼</span>분유</span><strong>${formulaMl}mL</strong><small>${formulaEntries.length}회</small></article>
+          <article class="breast"><span class="care-summary-label"><span class="care-summary-emoji" aria-hidden="true">🤱</span>모유</span><strong>${formatDuration(breastMinutes)}</strong><small>${breastEntries.length}회</small></article>
+          <article class="diaper"><span class="care-summary-label"><span class="care-summary-emoji" aria-hidden="true">🧷</span>기저귀</span><strong>${diaperEntries.length}회</strong><small>오늘 기록</small></article>
         </div>
         <div class="care-linear-legend" aria-label="돌봄 색상 구분"><span class="formula">분유</span><span class="breast">모유</span><span class="diaper">기저귀</span></div>
         <div class="care-split-heading" aria-hidden="true"><span>모유 · 분유</span><span>시간</span><span>기저귀</span></div>
