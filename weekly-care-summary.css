@@ -169,7 +169,139 @@
   line-height: 1.45;
 }
 
-.weekly-care-summary + .care-rhythm-chart {
+.weekly-rhythm-map {
+  display: grid;
+  gap: 10px;
+  margin-top: 3px;
+  padding: 13px 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--separator) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+.weekly-rhythm-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.weekly-rhythm-heading strong {
+  color: var(--label);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.weekly-rhythm-heading span {
+  color: var(--tertiary, var(--secondary));
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.weekly-rhythm-grid {
+  display: grid;
+  grid-template-columns: 46px repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  align-items: stretch;
+}
+
+.weekly-rhythm-corner,
+.weekly-rhythm-day,
+.weekly-rhythm-label,
+.weekly-rhythm-cell {
+  min-width: 0;
+}
+
+.weekly-rhythm-day {
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  min-height: 30px;
+  color: var(--tertiary, var(--secondary));
+  text-align: center;
+}
+
+.weekly-rhythm-day strong,
+.weekly-rhythm-day small,
+.weekly-rhythm-label strong,
+.weekly-rhythm-label small {
+  display: block;
+}
+
+.weekly-rhythm-day strong {
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.weekly-rhythm-day small {
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.weekly-rhythm-day.today {
+  color: color-mix(in srgb, var(--blue) 82%, var(--label));
+}
+
+.weekly-rhythm-label {
+  --rhythm-accent: var(--secondary);
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding-left: 2px;
+  color: color-mix(in srgb, var(--rhythm-accent) 82%, var(--label));
+}
+
+.weekly-rhythm-label.feed,
+.weekly-rhythm-cell.feed { --rhythm-accent: var(--growth-formula, #d69a55); }
+.weekly-rhythm-label.sleep,
+.weekly-rhythm-cell.sleep { --rhythm-accent: #8179a2; }
+.weekly-rhythm-label.diaper,
+.weekly-rhythm-cell.diaper { --rhythm-accent: #638c78; }
+
+.weekly-rhythm-label strong {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.weekly-rhythm-label small {
+  color: var(--tertiary, var(--secondary));
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.weekly-rhythm-cell {
+  --rhythm-accent: var(--secondary);
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 3px 1px;
+  border: 1px solid color-mix(in srgb, var(--rhythm-accent) 13%, transparent);
+  border-radius: 10px;
+  color: color-mix(in srgb, var(--rhythm-accent) 88%, var(--label));
+  background: color-mix(in srgb, var(--rhythm-accent) var(--cell-strength), var(--surface));
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  line-height: 1;
+  text-align: center;
+}
+
+.weekly-rhythm-cell.empty {
+  color: var(--tertiary, var(--secondary));
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+  font-weight: 650;
+}
+
+.weekly-rhythm-cell.today {
+  border-color: color-mix(in srgb, var(--blue) 48%, var(--rhythm-accent));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 14%, transparent);
+}
+
+.weekly-care-summary + .care-rhythm-chart,
+.weekly-care-summary + .weekly-rhythm-map {
   margin-top: 3px;
 }
 
@@ -192,10 +324,26 @@
   .weekly-care-metric-heading span { font-size: 13px; }
   .weekly-care-metric-heading em { font-size: 11px; }
   .weekly-care-metric > strong small { font-size: 15px; }
+
+  .weekly-rhythm-map { gap: 13px; padding: 17px 15px 15px; border-radius: 21px; }
+  .weekly-rhythm-heading strong { font-size: 15px; }
+  .weekly-rhythm-heading span { font-size: 11px; }
+  .weekly-rhythm-grid { grid-template-columns: 62px repeat(7, minmax(0, 1fr)); gap: 8px; }
+  .weekly-rhythm-day { min-height: 38px; }
+  .weekly-rhythm-day strong,
+  .weekly-rhythm-day small { font-size: 11px; }
+  .weekly-rhythm-label strong { font-size: 12px; }
+  .weekly-rhythm-label small { font-size: 10px; }
+  .weekly-rhythm-cell { min-height: 52px; border-radius: 13px; font-size: 12px; }
 }
 
 @media (max-width: 350px) {
   .weekly-care-metric-grid { grid-template-columns: 1fr; }
   .weekly-care-metric { grid-column: 1 / -1; min-height: 102px; }
   .weekly-care-summary > header { align-items: flex-start; }
+  .weekly-rhythm-map { padding-inline: 8px; }
+  .weekly-rhythm-grid { grid-template-columns: 39px repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .weekly-rhythm-cell { min-height: 36px; border-radius: 8px; font-size: 8px; }
+  .weekly-rhythm-label strong { font-size: 8px; }
+  .weekly-rhythm-heading span { display: none; }
 }
