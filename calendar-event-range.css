@@ -11,20 +11,33 @@
 }
 
 /*
- * The core renderer writes compact mobile lane offsets inline (34px base,
- * 18px steps). Tablet styles enlarge both date numbers and event bars, so
- * re-space those known lanes after the responsive rules have loaded.
- * Dense weeks then grow naturally through the grid's auto row sizing.
+ * Event lanes are rendered with compact inline offsets (34px + 18px per lane).
+ * At wider widths the bars become taller, so keep a real 4px gap between lanes.
+ * Match the stable pixel value rather than cssText punctuation/whitespace, which
+ * browsers normalize differently when serializing the inline custom property.
  */
-@media (min-width: 768px) {
+@media (min-width: 700px) and (max-width: 767.98px) {
   #calendarView .calendar-event-bar {
-    height: 20px;
-    line-height: 20px;
+    height: 18px;
+    line-height: 18px;
   }
 
-  #calendarView .calendar-event-bar[style*="--event-top:34px"] { margin-top: 44px; }
-  #calendarView .calendar-event-bar[style*="--event-top:52px"] { margin-top: 68px; }
-  #calendarView .calendar-event-bar[style*="--event-top:70px"] { margin-top: 92px; }
-  #calendarView .calendar-event-bar[style*="--event-top:88px"] { margin-top: 116px; }
-  #calendarView .calendar-overflow-badge[style*="--event-top:106px"] { margin-top: 140px; }
+  #calendarView .calendar-event-bar[style*="34px"] { margin-top: 34px; }
+  #calendarView .calendar-event-bar[style*="52px"] { margin-top: 56px; }
+  #calendarView .calendar-event-bar[style*="70px"] { margin-top: 78px; }
+  #calendarView .calendar-event-bar[style*="88px"] { margin-top: 100px; }
+  #calendarView .calendar-overflow-badge[style*="106px"] { margin-top: 122px; }
+}
+
+@media (min-width: 768px) {
+  #calendarView .calendar-event-bar {
+    height: 22px;
+    line-height: 22px;
+  }
+
+  #calendarView .calendar-event-bar[style*="34px"] { margin-top: 44px; }
+  #calendarView .calendar-event-bar[style*="52px"] { margin-top: 70px; }
+  #calendarView .calendar-event-bar[style*="70px"] { margin-top: 96px; }
+  #calendarView .calendar-event-bar[style*="88px"] { margin-top: 122px; }
+  #calendarView .calendar-overflow-badge[style*="106px"] { margin-top: 148px; }
 }
