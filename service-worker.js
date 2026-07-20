@@ -1,48 +1,43 @@
 const DEFAULT_URL = "./";
 const CACHE_PREFIX = "family-app-";
-const CACHE_NAME = `${CACHE_PREFIX}20260720-galaxy-v1`;
-const APP_SHELL = [
-  "./",
-  "index.html",
-  "styles.css",
-  "config.js",
-  "app.js",
-  "manifest.webmanifest",
-  "galaxy-install.css",
-  "galaxy-install.js",
-  "assets/app-icon-192.svg",
-  "assets/app-icon-512.svg",
-  "assets/family-mascots.webp",
-];
+const CACHE_NAME = `${CACHE_PREFIX}20260720-galaxy-v2`;
+const APP_SHELL = ["./", "index.html", "styles.css", "config.js", "app.js", "manifest.webmanifest", "galaxy-install.css", "galaxy-install.js", "assets/app-icon-192.svg", "assets/app-icon-512.svg", "assets/family-mascots.webp"];
 
-const cacheResponse = async (request, response) => {
+async function cacheResponse(request, response) {
   if (!response || !response.ok || response.type === "opaque") return response;
   const cache = await caches.open(CACHE_NAME);
   await cache.put(request, response.clone());
   return response;
-};
+}
 
-const networkFirst = async (request) => {
+function offlineResponse(request) {
+  return new Response(request.destination === "image" ? "" : "오프라인에서 아직 저장되지 않은 항목입니다.", {
+    status: 503,
+    statusText: "Offline",
+    headers: { "Content-Type": request.destination === "image" ? "image/svg+xml" : "text/plain; charset=utf-8" },
+  });
+}
+
+async function networkFirst(request) {
   try {
-    const response = await fetch(request);
-    return cacheResponse(request, response);
+    return await cacheResponse(request, await fetch(request));
   } catch {
     const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
-    if (request.mode === "navigate") {
-      return (await caches.match("./")) || (await caches.match("index.html"));
-    }
-    throw new Error("OFFLINE_RESOURCE_MISSING");
+    if (request.mode === "navigate") return (await caches.match("./")) || (await caches.match("index.html")) || offlineResponse(request);
+    return offlineResponse(request);
   }
-};
+}
 
-const staleWhileRevalidate = async (request) => {
+async function staleWhileRevalidate(request) {
   const cached = await caches.match(request, { ignoreSearch: true });
-  const refresh = fetch(request)
-    .then((response) => cacheResponse(request, response))
-    .catch(() => null);
-  return cached || refresh;
-};
+  const refresh = fetch(request).then((response) => cacheResponse(request, response)).catch(() => null);
+  if (cached) {
+    refresh.catch(() => null);
+    return cached;
+  }
+  return (await refresh) || offlineResponse(request);
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -65,38 +60,26 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
+  const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-
-  if (request.mode === "navigate" || ["script", "style", "manifest"].includes(request.destination)) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  event.respondWith(staleWhileRevalidate(request));
+  if (request.mode === "navigate" || ["script", "style", "manifest"].includes(request.destination)) event.respondWith(networkFirst(request));
+  else event.respondWith(staleWhileRevalidate(request));
 });
 
 self.addEventListener("push", (event) => {
   let payload = {};
   try { payload = event.data?.json() || {}; }
   catch { payload = { body: event.data?.text() || "오늘 일정을 확인해 주세요." }; }
-
-  const title = payload.title || "우리 가족 일정 브리핑";
-  const options = {
+  event.waitUntil(self.registration.showNotification(payload.title || "우리 가족 일정 브리핑", {
     body: payload.body || "오늘 일정을 확인해 주세요.",
     tag: payload.tag || "family-daily-briefing",
     renotify: false,
     icon: "assets/family-mascots.webp",
     badge: "assets/family-mascots.webp",
-    data: {
-      url: payload.url || DEFAULT_URL,
-      date: payload.date || "",
-    },
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
+    data: { url: payload.url || DEFAULT_URL, date: payload.date || "" },
+  }));
 });
 
 self.addEventListener("notificationclick", (event) => {
