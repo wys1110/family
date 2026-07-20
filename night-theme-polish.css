@@ -1,0 +1,179 @@
+/* Refined starry-night palette: deep navy surfaces with readable, muted category colors. */
+
+html[data-family-theme="night"] {
+  --bg: #071425;
+  --surface: #0f2138;
+  --surface-2: #162b46;
+  --label: #f5f7fc;
+  --secondary: #c0cadb;
+  --tertiary: #8797b0;
+  --separator: rgba(166, 191, 231, .16);
+  --blue: #8eb9ff;
+  --green: #79d5c1;
+  --orange: #f1c37a;
+  --red: #ff9d9f;
+  --pink: #eda5c7;
+  --indigo: #b7a9ff;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .36);
+  --theme-accent-rgb: 142, 185, 255;
+  --theme-hero-start: #102b52;
+  --theme-hero-end: #294a78;
+  --theme-verse-start: #0d2038;
+  --theme-verse-end: #171f3c;
+  --theme-tab-bg: rgba(8, 25, 45, .94);
+  --theme-tab-active: #23446f;
+  color-scheme: dark;
+}
+
+html[data-family-theme="night"],
+html[data-family-theme="night"] body {
+  background-color: var(--bg);
+}
+
+html[data-family-theme="night"] body {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(93, 139, 220, .15), transparent 28rem),
+    radial-gradient(circle at 88% 22%, rgba(153, 112, 216, .10), transparent 24rem),
+    linear-gradient(180deg, #071425 0%, #09182a 52%, #06111f 100%);
+  background-attachment: fixed;
+}
+
+html[data-family-theme="night"] .app-shell {
+  background: transparent;
+}
+
+html[data-family-theme="night"] .view-tabs {
+  border: 1px solid rgba(157, 187, 232, .14);
+  background: rgba(8, 25, 45, .90) !important;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+html[data-family-theme="night"] .view-tab {
+  color: #c8d2e4;
+}
+
+html[data-family-theme="night"] .view-tab.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #294d80, #1d3a65);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .11);
+}
+
+html[data-family-theme="night"] .daily-verse-card,
+html[data-family-theme="night"] .hero-card {
+  border: 1px solid rgba(157, 187, 232, .12);
+}
+
+html[data-family-theme="night"] .care-linear-card {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .15);
+  background: linear-gradient(180deg, rgba(14, 33, 56, .98), rgba(8, 23, 41, .98));
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] .care-linear-summary {
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(24, 48, 78, .68);
+}
+
+html[data-family-theme="night"] .care-linear-summary article {
+  border-color: rgba(157, 187, 232, .11);
+}
+
+html[data-family-theme="night"] .care-linear-summary span,
+html[data-family-theme="night"] .care-linear-summary small,
+html[data-family-theme="night"] .care-linear-legend span,
+html[data-family-theme="night"] .care-split-heading {
+  color: #c6d0e1;
+}
+
+html[data-family-theme="night"] .care-linear-summary .formula strong {
+  color: #f4c878;
+}
+
+html[data-family-theme="night"] .care-linear-summary .breast strong {
+  color: #f0a8c7;
+}
+
+html[data-family-theme="night"] .care-linear-summary .diaper strong {
+  color: #e2c5a1;
+}
+
+html[data-family-theme="night"] .care-split-timeline::before {
+  background: linear-gradient(180deg, transparent, rgba(142, 185, 255, .38) 8%, rgba(142, 185, 255, .38) 92%, transparent);
+}
+
+html[data-family-theme="night"] #growthView .care-split-time {
+  color: #f5f8ff;
+  border-color: rgba(142, 185, 255, .34);
+  background: linear-gradient(145deg, #1d3b65, #142c4d);
+  box-shadow:
+    0 7px 18px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .42);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry {
+  color: #f8f9ff;
+  box-shadow:
+    0 9px 24px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry strong {
+  color: #f8f9ff;
+  font-weight: 700;
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry small {
+  color: #d8e1ef;
+  font-weight: 500;
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.formula {
+  --entry-color: #f4c878;
+  --entry-border: rgba(244, 200, 120, .42);
+  --entry-bg: linear-gradient(145deg, #5a472d, #3a2f22);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.breast {
+  --entry-color: #f0a8c7;
+  --entry-border: rgba(240, 168, 199, .42);
+  --entry-bg: linear-gradient(145deg, #5b3956, #3d2a40);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.diaper {
+  --entry-color: #e2c5a1;
+  --entry-border: rgba(226, 197, 161, .38);
+  --entry-bg: linear-gradient(145deg, #51463b, #372f29);
+}
+
+html[data-family-theme="night"] #growthView .care-split-edit {
+  color: var(--entry-color);
+  border-color: color-mix(in srgb, var(--entry-color) 45%, transparent);
+  background: rgba(5, 17, 31, .52);
+  opacity: .94;
+}
+
+html[data-family-theme="night"] .care-linear-empty {
+  color: #cbd5e6;
+  border: 1px solid rgba(157, 187, 232, .12);
+  background: rgba(24, 48, 78, .48);
+}
+
+@media (max-width: 520px) {
+  html[data-family-theme="night"] #growthView .care-split-entry strong {
+    font-size: 11px;
+  }
+
+  html[data-family-theme="night"] #growthView .care-split-entry small {
+    font-size: 9px;
+  }
+}
