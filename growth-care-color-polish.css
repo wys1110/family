@@ -1,62 +1,61 @@
-/* Starry-night quick care cards: warm feeding and cool diaper accents. */
+/* Starry-night quick care cards: warm feeding and cool diaper accents.
+ *
+ * growth-dedup.js moves these buttons out of .growth-quick-section and into
+ * #careTimerCard. Target the stable data attributes directly so the palette
+ * survives that DOM move and any future layout reordering.
+ */
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="수유·이유식"],
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:first-child {
-  color: #20344d;
-  border-color: rgba(248, 218, 165, .78);
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"] {
+  color: #1b3048 !important;
+  border-color: rgba(255, 220, 159, .82) !important;
   background:
     radial-gradient(circle at 82% 12%, rgba(255, 255, 255, .72), transparent 46%),
-    linear-gradient(145deg, #fff3dc 0%, #f1d39b 100%);
+    linear-gradient(145deg, #ffeabd 0%, #d9aa62 100%) !important;
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, .24),
-    0 0 0 1px rgba(255, 244, 220, .18),
-    inset 0 1px 0 rgba(255, 255, 255, .72);
+    0 12px 28px rgba(0, 0, 0, .25),
+    0 0 0 1px rgba(255, 238, 202, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .76) !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="기저귀"],
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:nth-child(2) {
-  color: #193653;
-  border-color: rgba(178, 219, 247, .78);
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"] {
+  color: #17344f !important;
+  border-color: rgba(162, 211, 245, .84) !important;
   background:
-    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, .68), transparent 46%),
-    linear-gradient(145deg, #e7f5ff 0%, #afd5ef 100%);
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, .70), transparent 46%),
+    linear-gradient(145deg, #dff2ff 0%, #82badf 100%) !important;
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, .24),
-    0 0 0 1px rgba(220, 242, 255, .18),
-    inset 0 1px 0 rgba(255, 255, 255, .70);
+    0 12px 28px rgba(0, 0, 0, .25),
+    0 0 0 1px rgba(215, 241, 255, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .74) !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="수유·이유식"] > *,
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="기저귀"] > * {
-  color: inherit;
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"] > *,
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"] > * {
+  color: inherit !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="수유·이유식"] .quick-symbol,
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:first-child .quick-symbol {
-  color: #29435b;
-  border-color: rgba(255, 255, 255, .72);
-  background: rgba(255, 255, 255, .78);
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"] .quick-symbol {
+  color: #29435b !important;
+  border-color: rgba(255, 255, 255, .76) !important;
+  background: rgba(255, 255, 255, .84) !important;
   box-shadow:
-    0 7px 16px rgba(91, 62, 20, .16),
-    inset 0 1px 0 rgba(255, 255, 255, .94);
+    0 7px 16px rgba(91, 62, 20, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .96) !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="기저귀"] .quick-symbol,
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:nth-child(2) .quick-symbol {
-  color: #245274;
-  border-color: rgba(255, 255, 255, .72);
-  background: rgba(255, 255, 255, .80);
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"] .quick-symbol {
+  color: #245274 !important;
+  border-color: rgba(255, 255, 255, .76) !important;
+  background: rgba(255, 255, 255, .86) !important;
   box-shadow:
-    0 7px 16px rgba(28, 80, 118, .16),
-    inset 0 1px 0 rgba(255, 255, 255, .94);
+    0 7px 16px rgba(28, 80, 118, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .96) !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="수유·이유식"]:active,
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:first-child:active {
-  background: linear-gradient(145deg, #f6e7ca, #e6c17e);
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"]:active {
+  background: linear-gradient(145deg, #f5dca8, #ca9650) !important;
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button[data-growth-quick="기저귀"]:active,
-html[data-family-theme="night"] #growthView .growth-quick-section .growth-quick-grid button:nth-child(2):active {
-  background: linear-gradient(145deg, #d9edf9, #98c7e7);
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"]:active {
+  background: linear-gradient(145deg, #d2ebfa, #6da9d2) !important;
 }
