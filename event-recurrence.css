@@ -1,0 +1,20 @@
+.event-recurrence-field{
+  display:grid;
+  gap:8px;
+  padding:14px;
+  border:1px solid color-mix(in srgb,var(--separator) 76%,transparent);
+  border-radius:18px;
+  background:color-mix(in srgb,var(--surface) 74%,var(--bg));
+}
+.event-recurrence-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.event-recurrence-field label{margin:0;min-width:0}
+.event-recurrence-field label>span{display:block;margin:0 0 7px;color:var(--secondary);font-size:10px;font-weight:750}
+.event-recurrence-field select,
+.event-recurrence-field input{box-sizing:border-box;width:100%;min-height:43px}
+.event-recurrence-field p{margin:0;color:var(--label);font-size:11px;font-weight:750;line-height:1.45}
+.event-recurrence-field>small{color:var(--secondary);font-size:9px;line-height:1.55}
+.event-recurrence-field [hidden]{display:none!important}
+@media(max-width:520px){
+  .event-recurrence-field{padding:12px}
+  .event-recurrence-grid{grid-template-columns:1fr}
+}
