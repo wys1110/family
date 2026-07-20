@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="우리 가족 앱 아이콘">
+  <rect width="192" height="192" fill="#F5EFE5"/>
+  <circle cx="96" cy="96" r="76" fill="#E8F0E8"/>
+  <path d="M44 137c7-27 27-43 52-43s45 16 52 43v17H44z" fill="#6C8F7E"/>
+  <circle cx="67" cy="82" r="20" fill="#5B786A" stroke="#F5EFE5" stroke-width="8"/>
+  <circle cx="101" cy="72" r="24" fill="#4F6C5F" stroke="#F5EFE5" stroke-width="8"/>
+  <circle cx="133" cy="89" r="15" fill="#7CA08E" stroke="#F5EFE5" stroke-width="8"/>
+  <path d="M82 120c9 8 19 8 28 0" fill="none" stroke="#F5EFE5" stroke-width="7" stroke-linecap="round"/>
+  <path d="M96 40l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z" fill="#D7A96B"/>
+</svg>
