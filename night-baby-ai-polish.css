@@ -1,0 +1,187 @@
+/* Starry-night AI guide: keep every surface and control inside the navy palette. */
+html[data-family-theme="night"] .baby-ai-assistant {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .16);
+  background:
+    radial-gradient(circle at 94% 2%, rgba(121, 161, 220, .14), transparent 15rem),
+    radial-gradient(circle at 6% 96%, rgba(121, 213, 193, .08), transparent 14rem),
+    linear-gradient(155deg, rgba(15, 34, 58, .99), rgba(8, 23, 41, .99));
+  box-shadow:
+    0 22px 54px rgba(0, 0, 0, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] .baby-ai-heading .eyebrow {
+  color: #91b9fa;
+}
+
+html[data-family-theme="night"] .baby-ai-heading h2 {
+  color: #f7f9ff;
+}
+
+html[data-family-theme="night"] .baby-ai-heading small {
+  color: #bac6d9;
+}
+
+html[data-family-theme="night"] .baby-ai-mark {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, .10);
+  background: linear-gradient(145deg, #3768a7, #4f8e83);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+html[data-family-theme="night"] .baby-ai-status {
+  color: #9bdaca;
+  border: 1px solid rgba(121, 213, 193, .14);
+  background: rgba(29, 70, 75, .52);
+}
+
+html[data-family-theme="night"] .baby-ai-status.pending {
+  color: #f2c982;
+  border-color: rgba(242, 201, 130, .16);
+  background: rgba(91, 65, 29, .48);
+}
+
+html[data-family-theme="night"] .baby-ai-status.error {
+  color: #ffadb3;
+  border-color: rgba(255, 157, 159, .17);
+  background: rgba(88, 38, 51, .52);
+}
+
+html[data-family-theme="night"] .baby-ai-status-action {
+  color: inherit;
+  border-color: color-mix(in srgb, currentColor 42%, transparent);
+  background: rgba(9, 26, 45, .72);
+}
+
+html[data-family-theme="night"] .baby-ai-tabs {
+  border: 1px solid rgba(157, 187, 232, .10);
+  background: rgba(23, 47, 78, .76);
+}
+
+html[data-family-theme="night"] .baby-ai-tabs button {
+  color: #aebbd0;
+}
+
+html[data-family-theme="night"] .baby-ai-tabs button.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #2b5288, #1f416f);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, .25),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form fieldset,
+html[data-family-theme="night"] .baby-ai-chat-log,
+html[data-family-theme="night"] .baby-ai-strategy-card {
+  color: var(--label);
+  border-color: rgba(157, 187, 232, .13);
+  background: rgba(17, 39, 67, .84);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form legend,
+html[data-family-theme="night"] .baby-ai-strategy-card h3,
+html[data-family-theme="night"] .baby-ai-strategy-summary,
+html[data-family-theme="night"] .baby-ai-strategy-section ul {
+  color: #f5f8ff;
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form label,
+html[data-family-theme="night"] .baby-ai-chat-form label,
+html[data-family-theme="night"] .baby-ai-strategy-section strong,
+html[data-family-theme="night"] .baby-ai-sources strong {
+  color: #bec9da;
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form input,
+html[data-family-theme="night"] .baby-ai-profile-form textarea,
+html[data-family-theme="night"] .baby-ai-chat-form textarea {
+  color: #f8faff;
+  border-color: rgba(157, 187, 232, .15);
+  background: rgba(8, 24, 43, .88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+  color-scheme: dark;
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form input::placeholder,
+html[data-family-theme="night"] .baby-ai-profile-form textarea::placeholder,
+html[data-family-theme="night"] .baby-ai-chat-form textarea::placeholder {
+  color: #7587a1;
+  opacity: 1;
+}
+
+html[data-family-theme="night"] .baby-ai-profile-form input:focus,
+html[data-family-theme="night"] .baby-ai-profile-form textarea:focus,
+html[data-family-theme="night"] .baby-ai-chat-form textarea:focus {
+  border-color: rgba(142, 185, 255, .58);
+  box-shadow: 0 0 0 3px rgba(83, 137, 214, .16);
+}
+
+html[data-family-theme="night"] .baby-ai-primary,
+html[data-family-theme="night"] .baby-ai-strategy-actions button,
+html[data-family-theme="night"] .baby-ai-confirm {
+  color: #ffffff;
+  background: linear-gradient(145deg, #315d99, #244877);
+  box-shadow:
+    0 9px 20px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+
+html[data-family-theme="night"] .baby-ai-strategy-actions button:last-child {
+  background: linear-gradient(145deg, #514781, #3c3768);
+}
+
+html[data-family-theme="night"] .baby-ai-confirm {
+  color: #b8d3ff;
+  border: 1px solid rgba(142, 185, 255, .18);
+  background: rgba(35, 68, 111, .58);
+  box-shadow: none;
+}
+
+html[data-family-theme="night"] .baby-ai-message.user {
+  color: #ffffff;
+  background: linear-gradient(145deg, #315d99, #244877);
+}
+
+html[data-family-theme="night"] .baby-ai-message.assistant {
+  color: #f5f8ff;
+  border: 1px solid rgba(157, 187, 232, .11);
+  background: rgba(28, 54, 88, .92);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, .22);
+}
+
+html[data-family-theme="night"] .baby-ai-message.urgent {
+  color: #ffbdc2;
+  border-color: rgba(255, 157, 159, .20);
+  background: rgba(88, 38, 51, .72);
+}
+
+html[data-family-theme="night"] .baby-ai-empty,
+html[data-family-theme="night"] .baby-ai-privacy,
+html[data-family-theme="night"] .baby-ai-safety,
+html[data-family-theme="night"] .baby-ai-source-legacy,
+html[data-family-theme="night"] .baby-ai-strategy-card header small,
+html[data-family-theme="night"] .baby-ai-strategy-meta {
+  color: #8797b0;
+}
+
+html[data-family-theme="night"] .baby-ai-sources {
+  border-color: rgba(157, 187, 232, .12);
+}
+
+html[data-family-theme="night"] .baby-ai-sources li > span {
+  color: #8fa0b8;
+}
+
+html[data-family-theme="night"] .baby-ai-sources a {
+  color: #9ec6ff;
+}
+
+html[data-family-theme="night"] .baby-ai-strategy-card header > span {
+  color: #b8d3ff;
+  border: 1px solid rgba(142, 185, 255, .15);
+  background: rgba(35, 68, 111, .58);
+}
