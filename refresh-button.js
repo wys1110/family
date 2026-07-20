@@ -38,10 +38,28 @@
   };
 
   const createScrollCheckpoint = () => {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    const root = document.documentElement;
+    const scrollTop = window.scrollY || root.scrollTop || 0;
+    const preservedHeight = Math.max(root.scrollHeight, pageBody.scrollHeight);
+    const previousMinHeight = pageBody.style.minHeight;
+    const previousScrollBehavior = root.style.scrollBehavior;
     let cancelled = false;
+    let restoring = false;
     let completed = false;
+    let stylesReleased = false;
     const passiveOptions = { passive: true };
+
+    // Prevent the temporary empty render from shortening the document and
+    // clamping Safari to the top while remote data is still loading.
+    pageBody.style.minHeight = `${preservedHeight}px`;
+    root.style.scrollBehavior = 'auto';
+
+    const releaseTemporaryStyles = () => {
+      if (stylesReleased) return;
+      stylesReleased = true;
+      pageBody.style.minHeight = previousMinHeight;
+      root.style.scrollBehavior = previousScrollBehavior;
+    };
 
     const removeInteractionListeners = () => {
       window.removeEventListener('touchstart', cancelRestore, passiveOptions);
@@ -52,6 +70,7 @@
 
     const cancelRestore = () => {
       cancelled = true;
+      releaseTemporaryStyles();
       removeInteractionListeners();
     };
 
@@ -62,24 +81,62 @@
 
     const apply = () => {
       if (cancelled || completed) return;
-      const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const maxScrollTop = Math.max(0, root.scrollHeight - window.innerHeight);
       window.scrollTo(0, Math.min(scrollTop, maxScrollTop));
     };
 
     return {
       restore() {
-        if (cancelled || completed) return removeInteractionListeners();
+        if (completed || restoring) return;
+        if (cancelled) {
+          releaseTemporaryStyles();
+          return removeInteractionListeners();
+        }
+        restoring = true;
+        releaseTemporaryStyles();
+        // Restore before the next paint, then verify once on the following frame.
+        apply();
         window.requestAnimationFrame(() => {
           apply();
-          window.setTimeout(apply, 120);
-          window.setTimeout(() => {
-            apply();
-            completed = true;
-            removeInteractionListeners();
-          }, 450);
+          completed = true;
+          removeInteractionListeners();
         });
       },
     };
+  };
+
+  const refreshWithStableViewport = async (scrollCheckpoint) => {
+    let loaded = false;
+    const runRefresh = async () => {
+      try {
+        loaded = await bootstrapData();
+        return loaded;
+      } finally {
+        scrollCheckpoint.restore();
+      }
+    };
+
+    if (typeof document.startViewTransition !== 'function') return runRefresh();
+
+    const transitionStyle = document.createElement('style');
+    transitionStyle.dataset.refreshTransition = '';
+    transitionStyle.textContent = `
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation: none !important;
+      }
+    `;
+    document.head.appendChild(transitionStyle);
+
+    try {
+      // Keep the current viewport snapshot visible until the refreshed DOM and
+      // original scroll position are both ready, then swap without animation.
+      const transition = document.startViewTransition(runRefresh);
+      await transition.finished;
+      return loaded;
+    } finally {
+      transitionStyle.remove();
+    }
   };
 
   try {
@@ -97,7 +154,7 @@
     button.setAttribute('aria-busy', 'true');
     try {
       if (typeof bootstrapData !== 'function') throw new Error('refresh unavailable');
-      const loaded = await bootstrapData();
+      const loaded = await refreshWithStableViewport(scrollCheckpoint);
       if (!loaded) throw new Error('refresh failed');
       showCompleteToast();
     } catch (error) {

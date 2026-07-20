@@ -47,7 +47,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-dedup", version: "20260718-hide-timer-starts-v2" },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260718-logic-audit-v1" },
-    { name: "refresh-button", version: "20260719-preserve-scroll-v1" },
+    { name: "refresh-button", version: "20260720-stable-viewport-v2" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
     { name: "settings", version: "20260718-logic-audit-v1" },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
