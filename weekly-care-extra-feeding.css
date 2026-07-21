@@ -1,0 +1,24 @@
+.weekly-trend-chart {
+  --pumped-line: var(--growth-pumped, #5f9faa);
+  --solid-line: var(--growth-solid, #6f9d72);
+}
+
+.weekly-trend-line.pumped { stroke: var(--pumped-line); }
+.weekly-trend-line.solid { stroke: var(--solid-line); }
+
+.weekly-trend-dot.pumped { fill: var(--pumped-line); }
+.weekly-trend-dot.solid { fill: var(--solid-line); }
+
+.weekly-trend-legend-item.pumped { --legend-color: var(--pumped-line); }
+.weekly-trend-legend-item.solid { --legend-color: var(--solid-line); }
+
+@media (max-width: 390px) {
+  .weekly-trend-legend-item {
+    grid-template-columns: 7px auto minmax(0, 1fr);
+    gap: 5px;
+    padding-inline: 7px;
+  }
+
+  .weekly-trend-legend-item strong { font-size: 8px; }
+  .weekly-trend-legend-item small { font-size: 7px; }
+}
