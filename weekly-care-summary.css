@@ -169,140 +169,181 @@
   line-height: 1.45;
 }
 
-.weekly-rhythm-map {
+.weekly-trend-chart {
+  --formula-line: var(--growth-formula, #d69a55);
+  --breast-line: var(--growth-breast, #c97f96);
+  --sleep-line: #8179a2;
+  --diaper-line: #638c78;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: 3px;
-  padding: 13px 11px 12px;
+  padding: 14px 12px 13px;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--separator) 82%, transparent);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--surface-2) 36%, var(--surface)));
 }
 
-.weekly-rhythm-heading {
+.weekly-trend-heading {
   display: flex;
-  align-items: baseline;
+  align-items: end;
   justify-content: space-between;
   gap: 10px;
   padding: 0 2px;
 }
 
-.weekly-rhythm-heading strong {
-  color: var(--label);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: -.02em;
+.weekly-trend-heading > div {
+  display: grid;
+  gap: 2px;
 }
 
-.weekly-rhythm-heading span {
+.weekly-trend-heading span {
+  color: var(--secondary);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.weekly-trend-heading strong {
+  color: var(--label);
+  font-size: 13px;
+  font-weight: 820;
+  letter-spacing: -.025em;
+}
+
+.weekly-trend-heading > small {
   color: var(--tertiary, var(--secondary));
   font-size: 8px;
   font-weight: 700;
 }
 
-.weekly-rhythm-grid {
+.weekly-trend-canvas {
   display: grid;
-  grid-template-columns: 46px repeat(7, minmax(0, 1fr));
   gap: 5px;
-  align-items: stretch;
-}
-
-.weekly-rhythm-corner,
-.weekly-rhythm-day,
-.weekly-rhythm-label,
-.weekly-rhythm-cell {
   min-width: 0;
 }
 
-.weekly-rhythm-day {
+.weekly-trend-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.weekly-trend-grid line {
+  stroke: color-mix(in srgb, var(--separator) 76%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.weekly-trend-line {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.weekly-trend-line.formula { stroke: var(--formula-line); }
+.weekly-trend-line.breast { stroke: var(--breast-line); }
+.weekly-trend-line.sleep { stroke: var(--sleep-line); }
+.weekly-trend-line.diaper { stroke: var(--diaper-line); }
+
+.weekly-trend-dot {
+  stroke: color-mix(in srgb, var(--surface) 92%, #fff 8%);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.weekly-trend-dot.formula { fill: var(--formula-line); }
+.weekly-trend-dot.breast { fill: var(--breast-line); }
+.weekly-trend-dot.sleep { fill: var(--sleep-line); }
+.weekly-trend-dot.diaper { fill: var(--diaper-line); }
+
+.weekly-trend-axis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 0 1px;
+}
+
+.weekly-trend-axis span {
   display: grid;
   place-items: center;
-  gap: 1px;
-  min-height: 30px;
+  gap: 2px;
+  min-width: 0;
   color: var(--tertiary, var(--secondary));
   text-align: center;
 }
 
-.weekly-rhythm-day strong,
-.weekly-rhythm-day small,
-.weekly-rhythm-label strong,
-.weekly-rhythm-label small {
+.weekly-trend-axis strong,
+.weekly-trend-axis small {
   display: block;
+  line-height: 1;
 }
 
-.weekly-rhythm-day strong {
+.weekly-trend-axis strong {
   font-size: 8px;
   font-weight: 800;
 }
 
-.weekly-rhythm-day small {
+.weekly-trend-axis small {
   font-size: 8px;
   font-weight: 650;
 }
 
-.weekly-rhythm-day.today {
+.weekly-trend-axis .today {
   color: color-mix(in srgb, var(--blue) 82%, var(--label));
 }
 
-.weekly-rhythm-label {
-  --rhythm-accent: var(--secondary);
+.weekly-trend-legend {
   display: grid;
-  align-content: center;
-  gap: 2px;
-  padding-left: 2px;
-  color: color-mix(in srgb, var(--rhythm-accent) 82%, var(--label));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
 }
 
-.weekly-rhythm-label.feed,
-.weekly-rhythm-cell.feed { --rhythm-accent: var(--growth-formula, #d69a55); }
-.weekly-rhythm-label.sleep,
-.weekly-rhythm-cell.sleep { --rhythm-accent: #8179a2; }
-.weekly-rhythm-label.diaper,
-.weekly-rhythm-cell.diaper { --rhythm-accent: #638c78; }
-
-.weekly-rhythm-label strong {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: -.02em;
-}
-
-.weekly-rhythm-label small {
-  color: var(--tertiary, var(--secondary));
-  font-size: 7px;
-  font-weight: 700;
-}
-
-.weekly-rhythm-cell {
-  --rhythm-accent: var(--secondary);
+.weekly-trend-legend-item {
+  --legend-color: var(--secondary);
   display: grid;
-  place-items: center;
-  min-height: 40px;
-  padding: 3px 1px;
-  border: 1px solid color-mix(in srgb, var(--rhythm-accent) 13%, transparent);
-  border-radius: 10px;
-  color: color-mix(in srgb, var(--rhythm-accent) 88%, var(--label));
-  background: color-mix(in srgb, var(--rhythm-accent) var(--cell-strength), var(--surface));
+  grid-template-columns: 8px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--legend-color) 12%, transparent);
+  border-radius: 11px;
+  color: var(--label);
+  background: color-mix(in srgb, var(--legend-color) 6%, var(--surface));
+}
+
+.weekly-trend-legend-item.formula { --legend-color: var(--formula-line); }
+.weekly-trend-legend-item.breast { --legend-color: var(--breast-line); }
+.weekly-trend-legend-item.sleep { --legend-color: var(--sleep-line); }
+.weekly-trend-legend-item.diaper { --legend-color: var(--diaper-line); }
+
+.weekly-trend-legend-item i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--legend-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--legend-color) 12%, transparent);
+}
+
+.weekly-trend-legend-item strong {
   font-size: 9px;
-  font-weight: 850;
-  letter-spacing: -.035em;
-  line-height: 1;
-  text-align: center;
+  font-weight: 820;
+  white-space: nowrap;
 }
 
-.weekly-rhythm-cell.empty {
-  color: var(--tertiary, var(--secondary));
-  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
-  font-weight: 650;
-}
-
-.weekly-rhythm-cell.today {
-  border-color: color-mix(in srgb, var(--blue) 48%, var(--rhythm-accent));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 14%, transparent);
-}
-
-.weekly-care-summary + .care-rhythm-chart,
-.weekly-care-summary + .weekly-rhythm-map {
-  margin-top: 3px;
+.weekly-trend-legend-item small {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--legend-color) 78%, var(--label));
+  font-size: 8px;
+  font-weight: 720;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (min-width: 768px) {
@@ -325,25 +366,23 @@
   .weekly-care-metric-heading em { font-size: 11px; }
   .weekly-care-metric > strong small { font-size: 15px; }
 
-  .weekly-rhythm-map { gap: 13px; padding: 17px 15px 15px; border-radius: 21px; }
-  .weekly-rhythm-heading strong { font-size: 15px; }
-  .weekly-rhythm-heading span { font-size: 11px; }
-  .weekly-rhythm-grid { grid-template-columns: 62px repeat(7, minmax(0, 1fr)); gap: 8px; }
-  .weekly-rhythm-day { min-height: 38px; }
-  .weekly-rhythm-day strong,
-  .weekly-rhythm-day small { font-size: 11px; }
-  .weekly-rhythm-label strong { font-size: 12px; }
-  .weekly-rhythm-label small { font-size: 10px; }
-  .weekly-rhythm-cell { min-height: 52px; border-radius: 13px; font-size: 12px; }
+  .weekly-trend-chart { gap: 15px; padding: 18px 16px 16px; border-radius: 22px; }
+  .weekly-trend-heading span,
+  .weekly-trend-heading > small { font-size: 11px; }
+  .weekly-trend-heading strong { font-size: 17px; }
+  .weekly-trend-axis strong,
+  .weekly-trend-axis small { font-size: 11px; }
+  .weekly-trend-legend { gap: 10px; }
+  .weekly-trend-legend-item { min-height: 43px; padding: 9px 11px; border-radius: 13px; }
+  .weekly-trend-legend-item strong { font-size: 12px; }
+  .weekly-trend-legend-item small { font-size: 11px; }
 }
 
 @media (max-width: 350px) {
   .weekly-care-metric-grid { grid-template-columns: 1fr; }
   .weekly-care-metric { grid-column: 1 / -1; min-height: 102px; }
   .weekly-care-summary > header { align-items: flex-start; }
-  .weekly-rhythm-map { padding-inline: 8px; }
-  .weekly-rhythm-grid { grid-template-columns: 39px repeat(7, minmax(0, 1fr)); gap: 3px; }
-  .weekly-rhythm-cell { min-height: 36px; border-radius: 8px; font-size: 8px; }
-  .weekly-rhythm-label strong { font-size: 8px; }
-  .weekly-rhythm-heading span { display: none; }
+  .weekly-trend-chart { padding-inline: 9px; }
+  .weekly-trend-heading > small { display: none; }
+  .weekly-trend-legend { grid-template-columns: 1fr; }
 }
