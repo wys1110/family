@@ -22,18 +22,7 @@
   function formatRange(startKey, endKey) {
     const start = parseDate(startKey);
     const end = parseDate(endKey);
-    const startText = `${start.getMonth() + 1}.${start.getDate()}`;
-    const endText = `${end.getMonth() + 1}.${end.getDate()}`;
-    return `${startText}–${endText}`;
-  }
-
-  function compactDuration(value) {
-    const minutes = Math.round(positiveNumber(value));
-    if (!minutes) return "–";
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const remainder = minutes % 60;
-    return `${hours}h${remainder || ""}`;
+    return `${start.getMonth() + 1}.${start.getDate()}–${end.getMonth() + 1}.${end.getDate()}`;
   }
 
   function weeklyTotals(entries) {
@@ -49,15 +38,18 @@
     const sum = (list, field) => list.reduce((total, entry) => total + positiveNumber(entry[field]), 0);
     const formulaMl = sum(formula, "feedingMl");
     const pumpedMl = sum(pumped, "feedingMl");
+    const breastMinutes = sum(breast, "feedingMinutes");
     const sleepMinutes = sum(sleep, "sleepMinutes");
     const days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
     const daily = days.map((day) => {
       const dayItems = items.filter((entry) => entry.date === day);
+      const dayFeedings = dayItems.filter((entry) => entry.category === "수유·이유식");
       return {
         day,
-        feed: dayItems.filter((entry) => entry.category === "수유·이유식").length,
-        sleep: dayItems.filter((entry) => entry.category === "수면").reduce((total, entry) => total + positiveNumber(entry.sleepMinutes), 0),
-        diaper: dayItems.filter((entry) => entry.category === "기저귀").length,
+        formulaMl: sum(dayFeedings.filter((entry) => feedingKind(entry) === "formula"), "feedingMl"),
+        breastMinutes: sum(dayFeedings.filter((entry) => feedingKind(entry) === "breast"), "feedingMinutes"),
+        sleepMinutes: sum(dayItems.filter((entry) => entry.category === "수면"), "sleepMinutes"),
+        diaperCount: dayItems.filter((entry) => entry.category === "기저귀").length,
       };
     });
 
@@ -69,7 +61,7 @@
       formulaMl,
       pumpedMl,
       bottleMl: formulaMl + pumpedMl,
-      breastMinutes: sum(breast, "feedingMinutes"),
+      breastMinutes,
       sleep,
       sleepMinutes,
       diapers,
@@ -87,7 +79,7 @@
         <div class="weekly-care-details">
           <span>분유 ${formatMl(totals.formulaMl)}mL</span>
           <span>유축 ${formatMl(totals.pumpedMl)}mL</span>
-          <span>직수 ${totals.breastMinutes ? formatDuration(totals.breastMinutes) : "0분"}</span>
+          <span>모유 ${totals.breastMinutes ? formatDuration(totals.breastMinutes) : "0분"}</span>
         </div>
       </article>`;
   }
@@ -113,38 +105,96 @@
       </article>`;
   }
 
-  function rhythmCell(metric, item, maxValue, isToday) {
-    const value = positiveNumber(item[metric.type]);
-    const strength = value ? Math.round(10 + (value / maxValue) * 30) : 4;
-    const visibleValue = metric.format(value);
-    const spokenValue = metric.spoken(value);
-    return `<span class="weekly-rhythm-cell ${metric.type} ${value ? "has-value" : "empty"} ${isToday ? "today" : ""}" style="--cell-strength:${strength}%" aria-label="${metric.label} ${spokenValue}">${visibleValue}</span>`;
+  function formatSeriesValue(series, value) {
+    const rounded = Math.round(positiveNumber(value));
+    if (series.unit === "mL") return `${formatMl(rounded)}mL`;
+    if (series.unit === "분") return rounded ? formatDuration(rounded) : "0분";
+    return `${rounded}회`;
   }
 
-  function weeklyRhythmMap(totals) {
-    const metrics = [
-      { type: "feed", label: "수유", unit: "회", format: (value) => value ? Math.round(value) : "–", spoken: (value) => `${Math.round(value)}회` },
-      { type: "sleep", label: "수면", unit: "시간", format: compactDuration, spoken: (value) => value ? formatDuration(Math.round(value)) : "0분" },
-      { type: "diaper", label: "기저귀", unit: "회", format: (value) => value ? Math.round(value) : "–", spoken: (value) => `${Math.round(value)}회` },
-    ].filter((metric) => carePatternCategories.has(metric.type));
+  function chartSeries(totals) {
+    const series = [];
+    if (carePatternCategories.has("feed")) {
+      series.push({ key: "formulaMl", label: "분유", unit: "mL", className: "formula", total: totals.formulaMl });
+      series.push({ key: "breastMinutes", label: "모유", unit: "분", className: "breast", total: totals.breastMinutes });
+    }
+    if (carePatternCategories.has("sleep")) {
+      series.push({ key: "sleepMinutes", label: "수면", unit: "분", className: "sleep", total: totals.sleepMinutes });
+    }
+    if (carePatternCategories.has("diaper")) {
+      series.push({ key: "diaperCount", label: "기저귀", unit: "회", className: "diaper", total: totals.diapers.length });
+    }
+    return series;
+  }
+
+  function chartPoint(index, value, maxValue, dataLength, width, height, padding) {
+    const innerWidth = width - padding.left - padding.right;
+    const innerHeight = height - padding.top - padding.bottom;
+    const x = padding.left + innerWidth * (index / Math.max(1, dataLength - 1));
+    const ratio = maxValue ? positiveNumber(value) / maxValue : 0;
+    const y = padding.top + innerHeight * (1 - ratio);
+    return { x, y };
+  }
+
+  function renderLineSeries(series, totals, dimensions) {
+    const values = totals.daily.map((item) => positiveNumber(item[series.key]));
+    const maxValue = Math.max(1, ...values);
+    const points = values.map((value, index) => chartPoint(index, value, maxValue, values.length, dimensions.width, dimensions.height, dimensions.padding));
+    const polyline = points.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+    const dots = points.map(({ x, y }, index) => {
+      const item = totals.daily[index];
+      const date = parseDate(item.day);
+      const label = `${date.getMonth() + 1}월 ${date.getDate()}일 ${series.label} ${formatSeriesValue(series, values[index])}`;
+      return `<circle class="weekly-trend-dot ${series.className}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5"><title>${label}</title></circle>`;
+    }).join("");
+    return `<polyline class="weekly-trend-line ${series.className}" points="${polyline}"></polyline>${dots}`;
+  }
+
+  function weeklyTrendChart(totals) {
+    const series = chartSeries(totals);
+    if (!series.length) return "";
+
+    const dimensions = {
+      width: 360,
+      height: 176,
+      padding: { top: 16, right: 18, bottom: 18, left: 18 },
+    };
+    const innerHeight = dimensions.height - dimensions.padding.top - dimensions.padding.bottom;
+    const grid = [0, .25, .5, .75, 1].map((ratio) => {
+      const y = dimensions.padding.top + innerHeight * (1 - ratio);
+      return `<line x1="${dimensions.padding.left}" y1="${y.toFixed(1)}" x2="${dimensions.width - dimensions.padding.right}" y2="${y.toFixed(1)}"></line>`;
+    }).join("");
+    const plot = series.map((item) => renderLineSeries(item, totals, dimensions)).join("");
     const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const headers = totals.daily.map((item) => {
+    const axis = totals.daily.map((item) => {
       const date = parseDate(item.day);
       const isToday = item.day === totals.end;
-      return `<span class="weekly-rhythm-day ${isToday ? "today" : ""}"><strong>${isToday ? "오늘" : weekdays[date.getDay()]}</strong><small>${date.getDate()}</small></span>`;
+      return `<span class="${isToday ? "today" : ""}"><strong>${isToday ? "오늘" : weekdays[date.getDay()]}</strong><small>${date.getDate()}</small></span>`;
     }).join("");
-    const rows = metrics.map((metric) => {
-      const maxValue = Math.max(1, ...totals.daily.map((item) => positiveNumber(item[metric.type])));
-      const cells = totals.daily.map((item) => rhythmCell(metric, item, maxValue, item.day === totals.end)).join("");
-      return `<div class="weekly-rhythm-label ${metric.type}"><strong>${metric.label}</strong><small>${metric.unit}</small></div>${cells}`;
-    }).join("");
+    const today = totals.daily[totals.daily.length - 1] || {};
+    const legend = series.map((item) => `
+      <span class="weekly-trend-legend-item ${item.className}">
+        <i aria-hidden="true"></i>
+        <strong>${item.label}</strong>
+        <small>오늘 ${formatSeriesValue(item, today[item.key])}</small>
+      </span>`).join("");
 
     return `
-      <section class="weekly-rhythm-map" aria-label="최근 7일 돌봄 흐름">
-        <div class="weekly-rhythm-heading"><strong>7일 돌봄 흐름</strong><span>진할수록 많은 날</span></div>
-        <div class="weekly-rhythm-grid">
-          <span class="weekly-rhythm-corner" aria-hidden="true"></span>${headers}${rows}
+      <section class="weekly-trend-chart" aria-label="최근 7일 돌봄 라인 차트">
+        <div class="weekly-trend-heading">
+          <div><span>WEEKLY TREND</span><strong>7일 돌봄 추이</strong></div>
+          <small>각 항목 내부 기준</small>
         </div>
+        <div class="weekly-trend-canvas">
+          <svg viewBox="0 0 ${dimensions.width} ${dimensions.height}" role="img" aria-labelledby="weeklyTrendTitle weeklyTrendDescription">
+            <title id="weeklyTrendTitle">최근 7일 돌봄 추이</title>
+            <desc id="weeklyTrendDescription">분유, 모유, 수면, 기저귀 기록을 항목별 최대값 기준으로 비교한 라인 차트</desc>
+            <g class="weekly-trend-grid">${grid}</g>
+            <g class="weekly-trend-lines">${plot}</g>
+          </svg>
+          <div class="weekly-trend-axis" aria-hidden="true">${axis}</div>
+        </div>
+        <div class="weekly-trend-legend">${legend}</div>
       </section>`;
   }
 
@@ -153,6 +203,7 @@
     if (!content) return;
     content.querySelector(".weekly-care-summary")?.remove();
     content.querySelector(".weekly-rhythm-map")?.remove();
+    content.querySelector(".weekly-trend-chart")?.remove();
     content.querySelector(".care-rhythm-chart")?.remove();
 
     const totals = weeklyTotals(entries);
@@ -170,9 +221,9 @@
           <time>${formatRange(totals.start, totals.end)}</time>
         </header>
         <div class="weekly-care-metric-grid ${cards.length === 1 ? "single" : ""}">${cards.join("")}</div>
-        ${carePatternCategories.has("feed") ? '<p class="weekly-care-note">총 mL는 분유와 유축모유 합계이며, 직수는 시간으로 표시해요.</p>' : ""}
+        ${carePatternCategories.has("feed") ? '<p class="weekly-care-note">분유·유축은 mL, 모유는 수유 시간으로 표시해요.</p>' : ""}
       </section>
-      ${weeklyRhythmMap(totals)}`);
+      ${weeklyTrendChart(totals)}`);
   }
 
   renderWeeklyCarePattern = function renderWeeklyCarePatternWithTotals(entries) {
