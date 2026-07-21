@@ -15,6 +15,7 @@
     const feedingType = String(entry.feedingType || "");
     const title = String(entry.title || "");
     if (feedingType === "유축모유" || title.includes("유축")) return "pumped";
+    if (feedingType === "이유식" || title.includes("이유식")) return "solid";
     if (feedingType === "모유" || title.includes("모유")) return "breast";
     return "formula";
   }
@@ -33,12 +34,14 @@
     const formula = feedings.filter((entry) => feedingKind(entry) === "formula");
     const pumped = feedings.filter((entry) => feedingKind(entry) === "pumped");
     const breast = feedings.filter((entry) => feedingKind(entry) === "breast");
+    const solid = feedings.filter((entry) => feedingKind(entry) === "solid");
     const sleep = items.filter((entry) => entry.category === "수면");
     const diapers = items.filter((entry) => entry.category === "기저귀");
     const sum = (list, field) => list.reduce((total, entry) => total + positiveNumber(entry[field]), 0);
     const formulaMl = sum(formula, "feedingMl");
     const pumpedMl = sum(pumped, "feedingMl");
     const breastMinutes = sum(breast, "feedingMinutes");
+    const solidMl = sum(solid, "feedingMl");
     const sleepMinutes = sum(sleep, "sleepMinutes");
     const days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
     const daily = days.map((day) => {
@@ -47,7 +50,9 @@
       return {
         day,
         formulaMl: sum(dayFeedings.filter((entry) => feedingKind(entry) === "formula"), "feedingMl"),
+        pumpedMl: sum(dayFeedings.filter((entry) => feedingKind(entry) === "pumped"), "feedingMl"),
         breastMinutes: sum(dayFeedings.filter((entry) => feedingKind(entry) === "breast"), "feedingMinutes"),
+        solidMl: sum(dayFeedings.filter((entry) => feedingKind(entry) === "solid"), "feedingMl"),
         sleepMinutes: sum(dayItems.filter((entry) => entry.category === "수면"), "sleepMinutes"),
         diaperCount: dayItems.filter((entry) => entry.category === "기저귀").length,
       };
@@ -62,6 +67,7 @@
       pumpedMl,
       bottleMl: formulaMl + pumpedMl,
       breastMinutes,
+      solidMl,
       sleep,
       sleepMinutes,
       diapers,
@@ -80,6 +86,7 @@
           <span>분유 ${formatMl(totals.formulaMl)}mL</span>
           <span>유축 ${formatMl(totals.pumpedMl)}mL</span>
           <span>모유 ${totals.breastMinutes ? formatDuration(totals.breastMinutes) : "0분"}</span>
+          <span>이유식 ${formatMl(totals.solidMl)}mL</span>
         </div>
       </article>`;
   }
@@ -114,9 +121,17 @@
 
   function chartSeries(totals) {
     const series = [];
-    if (carePatternCategories.has("feed")) {
+    if (carePatternCategories.has("formula")) {
       series.push({ key: "formulaMl", label: "분유", unit: "mL", className: "formula", total: totals.formulaMl });
+    }
+    if (carePatternCategories.has("pumped")) {
+      series.push({ key: "pumpedMl", label: "유축", unit: "mL", className: "pumped", total: totals.pumpedMl });
+    }
+    if (carePatternCategories.has("breast")) {
       series.push({ key: "breastMinutes", label: "모유", unit: "분", className: "breast", total: totals.breastMinutes });
+    }
+    if (carePatternCategories.has("solid")) {
+      series.push({ key: "solidMl", label: "이유식", unit: "mL", className: "solid", total: totals.solidMl });
     }
     if (carePatternCategories.has("sleep")) {
       series.push({ key: "sleepMinutes", label: "수면", unit: "분", className: "sleep", total: totals.sleepMinutes });
@@ -188,7 +203,7 @@
         <div class="weekly-trend-canvas">
           <svg viewBox="0 0 ${dimensions.width} ${dimensions.height}" role="img" aria-labelledby="weeklyTrendTitle weeklyTrendDescription">
             <title id="weeklyTrendTitle">최근 7일 돌봄 추이</title>
-            <desc id="weeklyTrendDescription">분유, 모유, 수면, 기저귀 기록을 항목별 최대값 기준으로 비교한 라인 차트</desc>
+            <desc id="weeklyTrendDescription">분유, 유축, 모유, 이유식, 수면, 기저귀 기록을 항목별 최대값 기준으로 비교한 라인 차트</desc>
             <g class="weekly-trend-grid">${grid}</g>
             <g class="weekly-trend-lines">${plot}</g>
           </svg>
@@ -210,7 +225,7 @@
     if (!totals.items.some((entry) => ["수유·이유식", "수면", "기저귀"].includes(entry.category))) return;
 
     const cards = [];
-    if (carePatternCategories.has("feed")) cards.push(feedCard(totals));
+    if (["formula", "pumped", "breast", "solid"].some((kind) => carePatternCategories.has(kind))) cards.push(feedCard(totals));
     if (carePatternCategories.has("sleep")) cards.push(sleepCard(totals));
     if (carePatternCategories.has("diaper")) cards.push(diaperCard(totals));
 
@@ -221,7 +236,7 @@
           <time>${formatRange(totals.start, totals.end)}</time>
         </header>
         <div class="weekly-care-metric-grid ${cards.length === 1 ? "single" : ""}">${cards.join("")}</div>
-        ${carePatternCategories.has("feed") ? '<p class="weekly-care-note">분유·유축은 mL, 모유는 수유 시간으로 표시해요.</p>' : ""}
+        ${cards.includes(feedCard(totals)) ? '<p class="weekly-care-note">분유·유축·이유식은 mL, 모유는 수유 시간으로 표시해요.</p>' : ""}
       </section>
       ${weeklyTrendChart(totals)}`);
   }
