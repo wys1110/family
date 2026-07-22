@@ -1,5 +1,5 @@
 .notification-center-installed .topbar h1{max-width:calc(100vw - 154px)}
-.notification-center-button{position:relative;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--separator);border-radius:50%;color:var(--label);background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:0 8px 22px rgba(38,63,52,.09);cursor:pointer;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.notification-center-button{position:relative;display:grid;place-items:center;flex:0 0 44px;width:44px;min-width:44px;max-width:44px;height:44px;min-height:44px;max-height:44px;padding:0;border:1px solid var(--separator);border-radius:50%;color:var(--label);background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:0 8px 22px rgba(38,63,52,.09);cursor:pointer;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .notification-center-button>span{display:block;width:20px;height:20px;font-size:0;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E") center/contain no-repeat}
 .notification-center-button:active{transform:scale(.96)}
 .notification-center-button.has-unread{border-color:rgba(201,130,145,.35);background:color-mix(in srgb,var(--surface) 80%,rgba(201,130,145,.18))}
@@ -59,8 +59,11 @@
   .notification-item-main{padding-right:13px}
   .notification-reminder-field>label{grid-template-columns:1fr}
 }
+@media(max-width:380px){
+  .notification-center-button{flex-basis:42px;width:42px;min-width:42px;max-width:42px;height:42px;min-height:42px;max-height:42px}
+}
 @media(min-width:768px){
-  .notification-center-button{width:46px;height:46px}
+  .notification-center-button{flex-basis:46px;width:46px;min-width:46px;max-width:46px;height:46px;min-height:46px;max-height:46px}
   .notification-center-button>span{width:21px;height:21px}
   .notification-center-list{padding-inline:18px}
   .notification-center-tabs{margin-inline:20px}
