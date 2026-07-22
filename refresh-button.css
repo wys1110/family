@@ -32,6 +32,13 @@ body > #addEventButton.fab {
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
+body.floating-actions-safe-zone-active > #addEventButton.fab,
+body.floating-actions-safe-zone-active > .refresh-button {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .refresh-button span {
   display: block;
   font-size: 25px;

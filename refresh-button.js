@@ -10,6 +10,14 @@
     pageBody.appendChild(addEventButton);
   }
 
+  const aiAssistant = document.querySelector('#babyAiAssistant');
+  if (aiAssistant && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(([entry]) => {
+      pageBody.classList.toggle('floating-actions-safe-zone-active', entry.isIntersecting);
+    });
+    observer.observe(aiAssistant);
+  }
+
   const existingButton = document.querySelector('[data-refresh-module]');
   if (existingButton) {
     if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
