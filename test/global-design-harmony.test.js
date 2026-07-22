@@ -11,6 +11,7 @@ const refreshCss = readFileSync("refresh-button.css", "utf8");
 const refreshScript = readFileSync("refresh-button.js", "utf8");
 const requestScript = readFileSync("feature-request.js", "utf8");
 const settingsScript = readFileSync("settings.js", "utf8");
+const typographyCss = readFileSync("typography-system.css", "utf8");
 
 describe("global design harmony", () => {
   test("keeps refresh in the topbar and restores the contextual action to the bottom center", () => {
@@ -55,6 +56,15 @@ describe("global design harmony", () => {
     expect(settingsScript).not.toContain("APPEARANCE");
   });
 
+  test("keeps compact utility controls on one 44px touch target", () => {
+    expect(typographyCss).toContain("--control-touch-min: 44px");
+    expect(typographyCss).toMatch(/#calendarView :is\(\.icon-button, \.today-button\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
+    expect(typographyCss).toMatch(/#growthView :is\(\.baby-care-card \.baby-edit-button, \.care-day-mode-control button, \.baby-ai-status-action, \.recent-photo-actions button\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
+    expect(typographyCss).toMatch(/#englishView \.english-sentence > button[^{]*\{[^}]*min-width:\s*var\(--control-touch-min\);[^}]*min-height:\s*var\(--control-touch-min\);/s);
+    expect(typographyCss).toMatch(/#settingsView :is\(\.feeding-reminder-presets button, \.feeding-reminder-permission\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
+    expect(typographyCss).toMatch(/#settingsView #dailyBriefingSettings \.daily-briefing-actions button[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
+  });
+
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260722-motion-v1');
     expect(index).toContain('<script src="app.js?v=20260722-growth-actions-v3"></script>');
@@ -63,5 +73,6 @@ describe("global design harmony", () => {
     expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-bookmark-v2", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
+    expect(config).toContain('{ name: "typography-system", version: "20260722-touch-target-v2", script: false }');
   });
 });

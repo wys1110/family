@@ -41,6 +41,7 @@
   --type-icon-small: 16px;
   --type-icon-medium: 22px;
   --type-icon-large: 26px;
+  --control-touch-min: 44px;
 
   --type-color-strong: var(--label, #38443e);
   --type-color-body: var(--label, #38443e);
@@ -478,6 +479,23 @@ input[type="datetime-local"],
 
 #settingsView .theme-option {
   min-height: 90px;
+}
+
+/* Shared compact utility controls keep one accessible touch target. */
+#calendarView :is(.icon-button, .today-button),
+#growthView :is(.baby-care-card .baby-edit-button, .care-day-mode-control button, .baby-ai-status-action, .recent-photo-actions button),
+#settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission) {
+  min-height: var(--control-touch-min);
+}
+
+#settingsView #dailyBriefingSettings .daily-briefing-actions button {
+  min-height: var(--control-touch-min);
+}
+
+#calendarView .icon-button,
+#englishView .english-sentence > button {
+  min-width: var(--control-touch-min);
+  min-height: var(--control-touch-min);
 }
 
 /* Identical title rhythm even when a page uses a plain header or a card header. */

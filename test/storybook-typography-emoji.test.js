@@ -30,7 +30,7 @@ describe('storybook typography and emoji system', () => {
     const config = read('config.js');
     expect(config).toContain('{ name: "growth-dedup", version: "20260722-heading-icon-v1" }');
     expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v2" }');
-    expect(config).toContain('{ name: "typography-system", version: "20260722-suit-only-v1", script: false }');
+    expect(config).toContain('{ name: "typography-system", version: "20260722-touch-target-v2", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
   });
 
