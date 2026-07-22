@@ -209,6 +209,20 @@ window.FAMILY_CONFIG = {
     document.head.appendChild(calendarDateSelectionStyle);
   }
 
+  if (!document.querySelector('style[data-module="growth-history-add-hide"]')) {
+    const growthHistoryAddHideStyle = document.createElement("style");
+    growthHistoryAddHideStyle.dataset.module = "growth-history-add-hide";
+    growthHistoryAddHideStyle.textContent = `
+      .growth-inline-history-footer > [data-growth-inline-action="add"] {
+        display: none !important;
+      }
+      .growth-inline-history-footer:not(:has([data-growth-inline-history-toggle])) {
+        display: none;
+      }
+    `;
+    document.head.appendChild(growthHistoryAddHideStyle);
+  }
+
   const loadScript = ({ name, version }) => new Promise((resolve) => {
     if (document.querySelector(`script[data-module="${name}"]`)) return resolve();
     const script = document.createElement("script");
