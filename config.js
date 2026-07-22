@@ -4,6 +4,8 @@ window.FAMILY_CONFIG = {
 };
 
 (() => {
+  // 제품 결정: 앱처럼 고정된 화면 비율을 유지하도록 사용자가 확대 차단을 요청했다.
+  // 접근성 개선 작업에서도 명시적인 변경 요청 없이는 이 동작을 제거하지 않는다.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
   if (viewportMeta) {
     viewportMeta.content = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
