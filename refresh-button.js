@@ -4,13 +4,12 @@
 
   const topbarActions = document.querySelector('.topbar-account-actions');
   const accountButton = topbarActions?.querySelector('#accountButton');
-  const viewTabs = document.querySelector('.view-tabs');
 
-  // Keep the primary calendar action in the document flow so it never obscures
-  // long content or mobile form controls.
+  // Keep the contextual action as a direct body child so position: fixed stays
+  // anchored to the viewport in mobile Safari.
   const addEventButton = document.querySelector('#addEventButton');
-  if (addEventButton && viewTabs) {
-    viewTabs.insertAdjacentElement('afterend', addEventButton);
+  if (addEventButton && addEventButton.parentElement !== pageBody) {
+    pageBody.appendChild(addEventButton);
   }
 
   const aiAssistant = document.querySelector('#babyAiAssistant');

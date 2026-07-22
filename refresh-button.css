@@ -20,24 +20,28 @@
   transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
 }
 
-/* The calendar action belongs to the page hierarchy instead of the viewport. */
-main > #addEventButton.fab {
-  position: relative !important;
-  z-index: 5;
-  left: auto;
+/* Keep the primary action in the familiar bottom-center position. */
+body > #addEventButton.fab {
+  position: fixed !important;
+  z-index: 999;
+  left: 50%;
   right: auto;
-  bottom: auto;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex;
   width: max-content;
   min-width: 0;
   min-height: 48px;
-  margin: -8px 0 14px auto;
+  margin: 0;
   padding: 0 18px;
-  transform: none;
+  transform: translateX(-50%);
   animation: none;
 }
 
-body.floating-actions-safe-zone-active main > #addEventButton.fab {
+body:has(> #addEventButton.fab) main {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+body.floating-actions-safe-zone-active > #addEventButton.fab {
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -81,6 +85,10 @@ body.floating-actions-safe-zone-active main > #addEventButton.fab {
     width: 46px;
     height: 46px;
   }
+
+  body > #addEventButton.fab {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 380px) {
@@ -89,7 +97,8 @@ body.floating-actions-safe-zone-active main > #addEventButton.fab {
     height: 42px;
   }
 
-  main > #addEventButton.fab {
+  body > #addEventButton.fab {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     min-height: 46px;
     padding-inline: 16px;
   }

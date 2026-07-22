@@ -12,13 +12,16 @@ const requestScript = readFileSync("feature-request.js", "utf8");
 const settingsScript = readFileSync("settings.js", "utf8");
 
 describe("global design harmony", () => {
-  test("moves refresh into the topbar and the contextual action into document flow", () => {
+  test("keeps refresh in the topbar and restores the contextual action to the bottom center", () => {
     expect(refreshScript).toContain("const topbarActions = document.querySelector('.topbar-account-actions')");
     expect(refreshScript).toContain("topbarActions.insertBefore(button, accountButton)");
-    expect(refreshScript).toContain("viewTabs.insertAdjacentElement('afterend', addEventButton)");
+    expect(refreshScript).toContain("pageBody.appendChild(addEventButton)");
+    expect(refreshScript).not.toContain("viewTabs.insertAdjacentElement('afterend', addEventButton)");
     expect(refreshCss).toContain(".topbar-account-actions > .refresh-button");
-    expect(refreshCss).toContain("main > #addEventButton.fab");
-    expect(refreshCss).not.toContain("body > #addEventButton.fab");
+    expect(refreshCss).toContain("body > #addEventButton.fab");
+    expect(refreshCss).toMatch(/body > #addEventButton\.fab\s*\{[^}]*position:\s*fixed\s*!important;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\);/s);
+    expect(refreshCss).toContain("body:has(> #addEventButton.fab) main");
+    expect(refreshCss).toContain("env(safe-area-inset-bottom, 0px)");
     expect(refreshCss).not.toContain("body.floating-actions-safe-zone-active > .refresh-button");
   });
 
@@ -52,7 +55,7 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260722-motion-v1');
-    expect(config).toContain('{ name: "refresh-button", version: "20260722-topbar-actions-v3" }');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-center-v4" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-bookmark-v2", script: false }');

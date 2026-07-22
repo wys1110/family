@@ -14,7 +14,7 @@ describe('growth AI floating action safe zone', () => {
   });
 
   it('removes only the contextual action from sight and interaction in the safe zone', () => {
-    expect(css).toContain('body.floating-actions-safe-zone-active main > #addEventButton.fab');
+    expect(css).toContain('body.floating-actions-safe-zone-active > #addEventButton.fab');
     expect(css).not.toContain('body.floating-actions-safe-zone-active > .refresh-button');
     expect(css).toContain('visibility: hidden;');
     expect(css).toContain('opacity: 0;');
@@ -22,6 +22,6 @@ describe('growth AI floating action safe zone', () => {
   });
 
   it('loads the updated JavaScript and CSS instead of the previous cached module', () => {
-    expect(config).toContain('{ name: "refresh-button", version: "20260722-topbar-actions-v3" }');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-center-v4" }');
   });
 });
