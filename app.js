@@ -408,7 +408,8 @@ async function hydrateGrowthPhotoUrls(entries) {
 
 function releaseTouchTabFocus(event) {
   if (!["touch", "pen"].includes(event.pointerType)) return;
-  requestAnimationFrame(() => event.currentTarget.blur());
+  const button = event.currentTarget;
+  requestAnimationFrame(() => button.blur());
 }
 
 function bindUi() {
