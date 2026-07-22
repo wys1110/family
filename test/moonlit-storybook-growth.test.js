@@ -39,7 +39,6 @@ describe('moonlit storybook growth surface', () => {
       'html[data-family-theme="night"] #growthView #careTimerCard.care-timer-card',
       'html[data-family-theme="night"] #growthView .growth-quick-section',
       'html[data-family-theme="night"] #growthView .care-pattern-section',
-      'html[data-family-theme="night"] #growthView .baby-ai-assistant',
       'html[data-family-theme="night"] #growthView .recent-photo-featured',
     ];
 

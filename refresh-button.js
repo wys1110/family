@@ -12,12 +12,12 @@
     pageBody.appendChild(addEventButton);
   }
 
-  const aiAssistant = document.querySelector('#babyAiAssistant');
-  if (aiAssistant && 'IntersectionObserver' in window) {
+  const growthInsight = document.querySelector('#growthInsightRow');
+  if (growthInsight && 'IntersectionObserver' in window) {
     const observer = new IntersectionObserver(([entry]) => {
       pageBody.classList.toggle('floating-actions-safe-zone-active', entry.isIntersecting);
     });
-    observer.observe(aiAssistant);
+    observer.observe(growthInsight);
   }
 
   const existingButton = document.querySelector('[data-refresh-module]');

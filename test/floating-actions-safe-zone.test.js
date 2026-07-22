@@ -5,12 +5,13 @@ const script = readFileSync(new URL('../refresh-button.js', import.meta.url), 'u
 const css = readFileSync(new URL('../refresh-button.css', import.meta.url), 'utf8');
 const config = readFileSync(new URL('../config.js', import.meta.url), 'utf8');
 
-describe('growth AI floating action safe zone', () => {
-  it('observes the AI assistant and exposes one shared body state', () => {
-    expect(script).toContain("document.querySelector('#babyAiAssistant')");
+describe('growth measurement floating action safe zone', () => {
+  it('observes the measurement card and exposes one shared body state', () => {
+    expect(script).toContain("document.querySelector('#growthInsightRow')");
+    expect(script).not.toContain("document.querySelector('#babyAiAssistant')");
     expect(script).toContain('new IntersectionObserver');
     expect(script).toContain("pageBody.classList.toggle('floating-actions-safe-zone-active', entry.isIntersecting)");
-    expect(script).toContain('observer.observe(aiAssistant)');
+    expect(script).toContain('observer.observe(growthInsight)');
   });
 
   it('removes only the contextual action from sight and interaction in the safe zone', () => {
@@ -22,6 +23,6 @@ describe('growth AI floating action safe zone', () => {
   });
 
   it('loads the updated JavaScript and CSS instead of the previous cached module', () => {
-    expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-center-v4" }');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-floating-utilities-v5" }');
   });
 });

@@ -1,3 +1,19 @@
+.topbar-account-actions {
+  position: fixed;
+  z-index: 1000;
+  top: calc(max(12px, env(safe-area-inset-top, 0px)) + 4px);
+  right: max(16px, calc((100vw - 820px) / 2 + 16px));
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--label) 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  box-shadow: 0 12px 34px rgba(5, 17, 31, .16), inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+}
+
 .topbar-account-actions > .refresh-button {
   position: relative;
   z-index: 1;
@@ -28,6 +44,9 @@ body > #addEventButton.fab {
   right: auto;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: max-content;
   min-width: 0;
   min-height: 48px;
@@ -35,6 +54,15 @@ body > #addEventButton.fab {
   padding: 0 18px;
   transform: translateX(-50%);
   animation: none;
+  line-height: 1;
+}
+
+body > #addEventButton.fab > span {
+  display: inline-grid;
+  place-items: center;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1;
 }
 
 body:has(> #addEventButton.fab) main {
@@ -81,6 +109,7 @@ body.floating-actions-safe-zone-active > #addEventButton.fab {
 }
 
 @media (min-width: 768px) {
+  .topbar-account-actions { top: calc(max(18px, env(safe-area-inset-top, 0px)) + 2px); }
   .topbar-account-actions > .refresh-button {
     width: 46px;
     height: 46px;

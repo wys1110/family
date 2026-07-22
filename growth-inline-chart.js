@@ -254,7 +254,6 @@
           </div>
           <div class="growth-inline-actions" aria-label="성장 기록 관리">
             <button type="button" class="primary" data-growth-inline-action="add"><span aria-hidden="true">＋</span> 기록 추가</button>
-            <button type="button" data-growth-inline-action="edit"><span aria-hidden="true">✎</span> 기록 수정</button>
           </div>
         </header>
         <section class="growth-inline-chart" aria-label="성장 변화">
@@ -300,10 +299,6 @@
     if (action) {
       if (typeof openGrowthDialog !== "function") return;
       if (action.dataset.growthInlineAction === "add") openGrowthDialog(null, "성장");
-      if (action.dataset.growthInlineAction === "edit") {
-        const latest = measurementEntries().at(-1);
-        if (latest) openGrowthDialog(latest);
-      }
       return;
     }
 

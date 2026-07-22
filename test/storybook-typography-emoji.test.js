@@ -45,7 +45,6 @@ describe('storybook typography and emoji system', () => {
 
   it('keeps section emoji decorative and text headings intact', () => {
     const html = read('index.html');
-    expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">✨</span>AI 육아 도우미');
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">🌱</span>성장일기');
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">📷</span>최근 사진');
   });

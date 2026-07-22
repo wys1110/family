@@ -23,7 +23,6 @@ function extractFunction(source, name) {
 
 describe("growth quick record harmony", () => {
   test("saves the exact direct-feeding preset immediately through the existing grid handler", async () => {
-    const saved = [];
     const closed = [];
     const presets = [
       { label: "왼쪽 10분", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 10 },
@@ -37,10 +36,10 @@ describe("growth quick record harmony", () => {
       dateKey: () => "2026-07-22",
       localStorage: { setItem() {} },
       GROWTH_STORAGE_KEY: "growth",
-      dispatchGrowthEntrySaved: (entry) => saved.push(entry),
       $: () => ({ close: () => closed.push(true) }),
       renderGrowth() {},
       showGrowthComplete() {},
+      dispatchGrowthEntrySaved() {},
       toGrowthRemote: (entry) => entry,
       toast() {},
     };
@@ -59,7 +58,6 @@ describe("growth quick record harmony", () => {
       feedingSide: "오른쪽",
       feedingMinutes: 10,
     });
-    expect(saved).toHaveLength(1);
     expect(closed).toEqual([true]);
     expect(button.disabled).toBe(true);
     expect(adaptive).toContain('data-preset-index="${index}"');

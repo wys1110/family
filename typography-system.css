@@ -483,7 +483,7 @@ input[type="datetime-local"],
 
 /* Shared compact utility controls keep one accessible touch target. */
 #calendarView :is(.icon-button, .today-button),
-#growthView :is(.baby-care-card .baby-edit-button, .care-day-mode-control button, .baby-ai-status-action, .recent-photo-actions button),
+#growthView :is(.baby-care-card .baby-edit-button, .care-day-mode-control button, .recent-photo-actions button),
 #settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission) {
   min-height: var(--control-touch-min);
 }
@@ -557,7 +557,6 @@ input[type="datetime-local"],
 #growthView .baby-profile-copy h2,
 #growthView .photo-album-header h2,
 #growthView :is(.section-heading, .care-timer-heading, .care-pattern-heading, .growth-summary-header, .growth-chart-heading) h2,
-#growthView .baby-ai-heading h2,
 #englishView .english-page-header h2,
 #englishView .english-story-cover h2,
 #englishView .english-library-section h2,

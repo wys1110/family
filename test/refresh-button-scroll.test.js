@@ -34,7 +34,7 @@ test("재로딩 완료 후 사용자에게 완료 안내를 표시한다", () =>
 test("변경된 새로고침 모듈을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
   const config = readFileSync("config.js", "utf8");
 
-  expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-center-v4" }');
+  expect(config).toContain('{ name: "refresh-button", version: "20260722-floating-utilities-v5" }');
 });
 
 test("config fallback 버튼을 발견하면 fallback 클릭 핸들러를 비활성화하지 않는다", () => {

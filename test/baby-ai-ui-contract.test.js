@@ -1,57 +1,26 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
-test("AI 카드와 접근 가능한 상태 영역을 제공한다", () => {
-  const html = readFileSync("index.html", "utf8");
-  expect(html).toContain('id="babyAiAssistant"');
-  expect(html).toContain('id="babyAiStatus"');
-  expect(html).toContain('aria-live="polite"');
-  expect(html).toContain('id="babyAiProfileForm"');
-  expect(html).toContain('id="babyAiChatForm"');
+const html = readFileSync("index.html", "utf8");
+const config = readFileSync("config.js", "utf8");
+const packageJson = readFileSync("package.json", "utf8");
+
+test("사용하지 않는 AI 육아 도우미 UI와 브라우저 코드를 제공하지 않는다", () => {
+  expect(html).not.toContain('id="babyAiAssistant"');
+  expect(html).not.toContain('id="babyAiStatus"');
+  expect(config).not.toContain('{ name: "baby-ai"');
+  expect(config).not.toContain('{ name: "baby-ai-core"');
+  expect(config).not.toContain('{ name: "baby-ai-time-fields"');
+  expect(config).not.toContain('{ name: "night-baby-ai-polish"');
+  expect(packageJson).not.toContain("node --check baby-ai.js");
+  expect(existsSync("baby-ai.js")).toBe(false);
+  expect(existsSync("baby-ai-core.js")).toBe(false);
+  expect(existsSync("baby-ai.css")).toBe(false);
 });
 
-test("AI core와 UI 모듈을 core 이후 순서대로 로드한다", () => {
-  const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "baby-ai-core",');
-  expect(config).toContain('{ name: "baby-ai", version: "20260720-refresh-recovery-v1"');
-  expect(config.indexOf('{ name: "baby-ai-core",')).toBeLessThan(config.indexOf('{ name: "baby-ai",'));
-});
-
-test("UI 모듈은 프로필, 질문, 전략 확정 동작을 연결한다", () => {
-  const source = readFileSync("baby-ai.js", "utf8");
-  expect(source).toContain('from("baby_ai_profiles")');
-  expect(source).toContain('functions.invoke("baby-ai"');
-  expect(source).toContain('rpc("confirm_baby_ai_strategy"');
-  expect(source).toContain("familybabychange");
-});
-
-test("실패한 자동 갱신은 상태 영역에서 바로 재시도할 수 있다", () => {
-  const source = readFileSync("baby-ai.js", "utf8");
-  const style = readFileSync("baby-ai.css", "utf8");
-  expect(source).toContain('action: "retry-refresh"');
-  expect(source).toContain('data-baby-ai-status-action="retry-refresh"');
-  expect(source).toContain("schedule_baby_ai_refresh");
-  expect(source).toContain("보통 5분 안에 새 전략이 만들어져요");
-  expect(style).toContain(".baby-ai-status-action");
-});
-
-test("AI 답변과 전략은 안전한 실제 출처 링크를 표시한다", () => {
-  const source = readFileSync("baby-ai.js", "utf8");
-  const style = readFileSync("baby-ai.css", "utf8");
-  expect(source).toContain("renderBabyAiSources");
-  expect(source).toContain('rel="noopener noreferrer"');
-  expect(source).toContain("출처 표시 기능 적용 전에 생성된 전략이에요");
-  expect(style).toContain(".baby-ai-sources");
-  expect(style).toContain("overflow-wrap: anywhere");
-});
-
-test("Function 오류를 로그인, 네트워크, 할당량, 구조, 검색 실패로 나눈다", () => {
-  const source = readFileSync("baby-ai.js", "utf8");
-  expect(source).toContain("readFunctionErrorCode");
-  expect(source).toContain("babyAiErrorMessage");
-  expect(source).toContain("로그인이 만료됐어요");
-  expect(source).toContain("인터넷 연결을 확인해 주세요");
-  expect(source).toContain("AI 사용량이 잠시 많아요");
-  expect(source).toContain("AI 답변 형식을 확인하지 못했어요");
-  expect(source).toContain("믿을 만한 인터넷 자료를 찾지 못했어요");
+test("AI 서버와 기존 데이터 마이그레이션은 복구 가능하게 보존한다", () => {
+  expect(existsSync("supabase/functions/baby-ai/index.ts")).toBe(true);
+  expect(existsSync("supabase/functions/baby-ai/handler.ts")).toBe(true);
+  expect(existsSync("supabase/migrations/20260719_baby_ai_assistant.sql")).toBe(true);
+  expect(readFileSync("supabase/config.toml", "utf8")).toContain("[functions.baby-ai]");
 });

@@ -142,11 +142,13 @@ describe("inline growth measurement history", () => {
 
   test("keeps accessible touch styling, form emphasis, and cache versions", () => {
     expect(css).toContain(".growth-inline-history-list");
-    expect(css).toContain("min-height: 56px");
-    expect(css).toContain(".growth-inline-history-values");
+    expect(css).toMatch(/min-height:\s*72px/);
+    expect(css).toContain("#growthInsightRow .growth-inline-history-values");
+    expect(css).toMatch(/#growthInsightRow \.growth-inline-history-values\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\);[^}]*margin:\s*0;/s);
+    expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20260722-history-v2" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20260722-clean-history-v3" }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-history-v1", script: false }');
   });
 });
