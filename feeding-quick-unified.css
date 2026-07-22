@@ -70,23 +70,47 @@
   gap: 10px;
 }
 
+#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(1) {
+  --direct-preset-accent: var(--blue);
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(2) {
+  --direct-preset-accent: var(--indigo);
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(3) {
+  --direct-preset-accent: color-mix(in srgb, var(--blue) 42%, var(--pink));
+}
+
 #quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button {
   min-height: 82px;
   border: 1px solid var(--sheet-border);
+  border-color: color-mix(in srgb, var(--direct-preset-accent) 34%, var(--sheet-border));
   border-radius: 18px;
-  color: var(--label);
-  background: var(--sheet-panel-strong);
-  box-shadow: none;
+  color: color-mix(in srgb, var(--direct-preset-accent) 22%, var(--label));
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--direct-preset-accent) 17%, transparent), transparent 52%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--direct-preset-accent) 16%, var(--sheet-panel-strong)),
+      color-mix(in srgb, var(--direct-preset-accent) 7%, var(--sheet-panel-strong)));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
+    0 8px 22px color-mix(in srgb, var(--direct-preset-accent) 8%, transparent);
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button small {
+  color: color-mix(in srgb, var(--direct-preset-accent) 20%, var(--secondary));
 }
 
 #quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:active {
   color: white;
-  background: var(--blue);
+  background: color-mix(in srgb, var(--direct-preset-accent) 72%, var(--surface));
   transform: scale(.98);
 }
 
 #quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--blue) 32%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--direct-preset-accent) 38%, transparent);
   outline-offset: 2px;
 }
 

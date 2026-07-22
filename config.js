@@ -129,7 +129,7 @@ window.FAMILY_CONFIG = {
     { name: "family-todo", version: "20260718-logic-audit-v1" },
     { name: "notification-center", version: "20260720-mobile-width-v3" },
     { name: "adaptive-feeding", version: "20260722-diaper-harmony-v2" },
-    { name: "feeding-quick-unified", version: "20260722-instant-direct-v3" },
+    { name: "feeding-quick-unified", version: "20260722-themed-presets-v4" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
     { name: "feeding-stepper-fix", version: "20260717-button-handler-v1", style: false },
     { name: "feeding-db-compat", version: "20260717-db-check-fix-v1", style: false },

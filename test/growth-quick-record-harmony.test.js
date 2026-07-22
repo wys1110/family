@@ -77,13 +77,21 @@ describe("growth quick record harmony", () => {
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.dialog-header h2\s*\{[^}]*font-size:\s*18px;[^}]*font-weight:\s*700;/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.quick-log-copy\s*\{[^}]*font-size:\s*11px;[^}]*line-height:\s*1\.6;/s);
     expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*min-height:\s*82px;[^}]*border:\s*1px solid var\(--sheet-border\);[^}]*background:\s*var\(--sheet-panel-strong\);/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*min-height:\s*82px;[^}]*border:\s*1px solid var\(--sheet-border\);[^}]*background:/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.quick-detail-button\s*\{[^}]*min-height:\s*54px;[^}]*font-size:\s*15px;/s);
     expect(unifiedCss).toMatch(/@media \(max-width: 520px\)\s*\{[^}]*#quickLogDialog\.feeding-quick-active \.sheet-panel\s*\{[^}]*padding:\s*11px 17px max\(18px, env\(safe-area-inset-bottom\)\);/s);
   });
 
+  test("colors direct-feeding presets with theme-aware role accents", () => {
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(1\)\s*\{[^}]*--direct-preset-accent:\s*var\(--blue\);/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(2\)\s*\{[^}]*--direct-preset-accent:\s*var\(--indigo\);/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(3\)\s*\{[^}]*--direct-preset-accent:\s*color-mix\(in srgb, var\(--blue\) 42%, var\(--pink\)\);/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*border-color:\s*color-mix\(in srgb, var\(--direct-preset-accent\) 34%, var\(--sheet-border\)\);[^}]*background:[^}]*color-mix\(in srgb, var\(--direct-preset-accent\) 16%, var\(--sheet-panel-strong\)\),/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:active\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--direct-preset-accent\) 72%, var\(--surface\)\);/s);
+  });
+
   test("bumps both feeding module cache versions", () => {
     expect(config).toContain('{ name: "adaptive-feeding", version: "20260722-diaper-harmony-v2" }');
-    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260722-instant-direct-v3" }');
+    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260722-themed-presets-v4" }');
   });
 });
