@@ -17,21 +17,47 @@ function loadUpcomingEvents() {
   return context.upcomingEvents;
 }
 
-function renderEmptyUpcomingEvents() {
+function renderUpcomingEventsInVm(events) {
   const start = app.indexOf("function upcomingEvents(");
   const end = app.indexOf("function openBulkEventDialog(");
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);
   const count = { textContent: "기존 값" };
-  const list = { innerHTML: "기존 목록", querySelectorAll: () => [] };
+  const buttons = [];
+  let markup = "기존 목록";
+  let openedEvent = null;
+  const list = {
+    get innerHTML() { return markup; },
+    set innerHTML(value) {
+      markup = value;
+      buttons.length = 0;
+      for (const match of value.matchAll(/data-id="([^"]*)"/g)) {
+        const listeners = {};
+        buttons.push({
+          dataset: { id: match[1] },
+          addEventListener: (type, listener) => { listeners[type] = listener; },
+          click: () => listeners.click?.(),
+        });
+      }
+    },
+    querySelectorAll: () => buttons,
+  };
   const nodes = { "#upcomingEventsCount": count, "#upcomingEventsList": list };
   const context = {
-    state: { events: [] },
+    state: { events },
     dateKey: () => "2026-07-22",
+    parseDate: (key) => {
+      const [year, month, day] = key.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    },
+    formatEventRange: (event) => event.endDate && event.endDate !== event.date ? `${event.date}–${event.endDate}` : "",
+    escapeHtml: (value) => String(value),
+    memberStyle: () => "",
+    openEventDialog: (event) => { openedEvent = event; },
     $: (selector) => nodes[selector],
   };
   vm.runInNewContext(`${app.slice(start, end)}; renderUpcomingEvents();`, context);
-  return { count, list };
+  return { count, list, buttons, openedEvent: () => openedEvent };
 }
 
 describe("upcoming family events", () => {
@@ -80,10 +106,22 @@ describe("upcoming family events", () => {
   });
 
   test("renders the empty projection with a zero count and guidance", () => {
-    const { count, list } = renderEmptyUpcomingEvents();
+    const { count, list } = renderUpcomingEventsInVm([]);
 
     expect(count.textContent).toBe("0개 일정");
     expect(list.innerHTML).toBe('<div class="empty-state"><strong>다가오는 일정이 없어요</strong><span>새 일정을 추가하면 가까운 순서로 표시돼요.</span></div>');
+  });
+
+  test("renders an ongoing event from its actual start date and opens that exact event", () => {
+    const event = { id: "ongoing", title: "여행", date: "2026-07-20", endDate: "2026-07-23", time: "", member: "가족" };
+    const { list, buttons, openedEvent } = renderUpcomingEventsInVm([event]);
+    const startLabel = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", weekday: "short" }).format(new Date(2026, 6, 20));
+
+    expect(list.innerHTML).toContain(`<time datetime="2026-07-20">${startLabel}<small>종일</small></time>`);
+    expect(list.innerHTML).toContain(`aria-label="${startLabel} 여행 종일 일정 수정"`);
+    expect(buttons).toHaveLength(1);
+    buttons[0].click();
+    expect(openedEvent()).toBe(event);
   });
 
   test("renders an accessible section that reuses the event editor", () => {
@@ -105,7 +143,7 @@ describe("upcoming family events", () => {
   });
 
   test("loads the core app with the growth and upcoming delivery version", () => {
-    expect(index).toContain('<script src="app.js?v=20260722-growth-upcoming-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20260722-growth-upcoming-v2"></script>');
     expect(index).not.toContain('app.js?v=20260718-logic-audit-v1');
   });
 });

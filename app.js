@@ -735,8 +735,7 @@ function renderUpcomingEvents() {
     return;
   }
   list.innerHTML = events.map((event) => {
-    const displayDate = event.date < todayKey ? todayKey : event.date;
-    const day = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", weekday: "short" }).format(parseDate(displayDate));
+    const day = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", weekday: "short" }).format(parseDate(event.date));
     const range = formatEventRange(event);
     const when = event.time || "종일";
     const title = String(event.title || "일정");
