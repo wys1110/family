@@ -170,6 +170,7 @@ window.FAMILY_CONFIG = {
     { name: "night-english-story-polish", version: "20260720-v1", script: false },
     { name: "event-dialog-layout-polish", version: "20260720-v2", script: false },
     { name: "event-dialog-frame-polish", version: "20260721-v2", script: false },
+    { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
