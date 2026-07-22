@@ -406,12 +406,20 @@ async function hydrateGrowthPhotoUrls(entries) {
   entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
 }
 
+function releaseTouchTabFocus(event) {
+  if (!["touch", "pen"].includes(event.pointerType)) return;
+  requestAnimationFrame(() => event.currentTarget.blur());
+}
+
 function bindUi() {
   $("#prevMonth").addEventListener("click", () => slideMonth(-1));
   $("#nextMonth").addEventListener("click", () => slideMonth(1));
   $("#todayButton").addEventListener("click", () => { state.viewDate = startOfMonth(new Date()); state.selectedDate = dateKey(new Date()); render(); });
   $("#addEventButton").addEventListener("click", () => state.activeView === "calendar" ? openEventDialog() : openGrowthDialog());
-  document.querySelectorAll(".view-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
+  document.querySelectorAll(".view-tab").forEach((button) => {
+    button.addEventListener("click", () => switchView(button.dataset.view));
+    button.addEventListener("pointerup", releaseTouchTabFocus);
+  });
   $("#accountButton").addEventListener("click", openAccountDialog);
   $("#desktopLogoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
