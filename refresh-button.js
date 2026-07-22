@@ -2,64 +2,95 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Keep the top-right utilities as a direct body child and freeze their
-  // viewport coordinates. Mobile Safari changes visualViewport values while
-  // its browser chrome opens/closes; recalculating during that cycle made the
-  // notification/account buttons visibly jump between views.
+  // Do not keep the top-right controls on Safari's viewport-fixed layer.
+  // The browser chrome moves that layer while tabs and the address bar change,
+  // so the controls are docked in the header's normal layout instead.
+  const topbar = document.querySelector('.topbar');
   const topbarActions = document.querySelector('.topbar-account-actions');
-  let lockedTop = null;
-  let lockedRight = null;
+
+  const actionRailWidth = () => {
+    if (window.matchMedia('(min-width: 768px)').matches) return 100;
+    if (window.matchMedia('(max-width: 380px)').matches) return 91;
+    return 96;
+  };
 
   const installTopbarLockStyle = () => {
     if (document.querySelector('style[data-topbar-position-lock]')) return;
     const style = document.createElement('style');
     style.dataset.topbarPositionLock = '';
     style.textContent = `
-      body > .topbar-account-actions,
-      body > .topbar-account-actions > button {
+      .topbar {
+        position: relative !important;
+      }
+      .topbar > .topbar-account-actions {
+        position: static !important;
+        z-index: auto !important;
+        display: flex !important;
+        flex: 0 0 96px !important;
+        width: 96px !important;
+        min-width: 96px !important;
+        max-width: 96px !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        inset: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        translate: none !important;
+        animation: none !important;
+        transition: none !important;
+        will-change: auto !important;
+      }
+      .topbar > .topbar-account-actions > button,
+      .topbar > .topbar-account-actions > button:active {
+        transform: none !important;
+        translate: none !important;
         animation: none !important;
         transition: none !important;
       }
-      body > .topbar-account-actions > button:active {
-        transform: none !important;
+      @media (min-width: 768px) {
+        .topbar > .topbar-account-actions {
+          flex-basis: 100px !important;
+          width: 100px !important;
+          min-width: 100px !important;
+          max-width: 100px !important;
+        }
+      }
+      @media (max-width: 380px) {
+        .topbar > .topbar-account-actions {
+          flex-basis: 91px !important;
+          width: 91px !important;
+          min-width: 91px !important;
+          max-width: 91px !important;
+          gap: 7px !important;
+        }
       }
     `;
     document.head.appendChild(style);
   };
 
-  const defaultAnchor = () => {
-    const desktop = window.matchMedia('(min-width: 768px)').matches;
-    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-    return {
-      top: desktop ? 20 : 16,
-      right: desktop ? Math.max(16, Math.round((viewportWidth - 820) / 2 + 16)) : 16,
-    };
-  };
+  const dockTopbarActions = () => {
+    if (!topbar || !topbarActions) return;
+    if (topbarActions.parentElement !== topbar) topbar.appendChild(topbarActions);
 
-  const pinTopbarActions = ({ reset = false } = {}) => {
-    if (!topbarActions) return;
-
-    const beforeMove = topbarActions.getBoundingClientRect();
-    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-    if (topbarActions.parentElement !== pageBody) pageBody.appendChild(topbarActions);
-
-    if (reset || lockedTop === null || lockedRight === null) {
-      const fallback = defaultAnchor();
-      const measuredRight = viewportWidth - beforeMove.right;
-      lockedTop = reset || !Number.isFinite(beforeMove.top) || beforeMove.top < 0
-        ? fallback.top
-        : Math.round(beforeMove.top);
-      lockedRight = reset || !Number.isFinite(measuredRight) || measuredRight < 0
-        ? fallback.right
-        : Math.round(measuredRight);
-    }
-
-    topbarActions.style.setProperty('position', 'fixed', 'important');
-    topbarActions.style.setProperty('z-index', '1100', 'important');
-    topbarActions.style.setProperty('top', `${lockedTop}px`, 'important');
-    topbarActions.style.setProperty('right', `${lockedRight}px`, 'important');
+    const width = actionRailWidth();
+    topbar.style.setProperty('position', 'relative', 'important');
+    topbarActions.style.setProperty('position', 'static', 'important');
+    topbarActions.style.setProperty('z-index', 'auto', 'important');
+    topbarActions.style.setProperty('display', 'flex', 'important');
+    topbarActions.style.setProperty('flex', `0 0 ${width}px`, 'important');
+    topbarActions.style.setProperty('width', `${width}px`, 'important');
+    topbarActions.style.setProperty('min-width', `${width}px`, 'important');
+    topbarActions.style.setProperty('max-width', `${width}px`, 'important');
+    topbarActions.style.setProperty('align-items', 'center', 'important');
+    topbarActions.style.setProperty('justify-content', 'flex-end', 'important');
+    topbarActions.style.setProperty('gap', width === 91 ? '7px' : '8px', 'important');
+    topbarActions.style.setProperty('top', 'auto', 'important');
+    topbarActions.style.setProperty('right', 'auto', 'important');
     topbarActions.style.setProperty('bottom', 'auto', 'important');
     topbarActions.style.setProperty('left', 'auto', 'important');
+    topbarActions.style.setProperty('inset', 'auto', 'important');
     topbarActions.style.setProperty('margin', '0', 'important');
     topbarActions.style.setProperty('transform', 'none', 'important');
     topbarActions.style.setProperty('translate', 'none', 'important');
@@ -69,27 +100,25 @@
   };
 
   installTopbarLockStyle();
-  pinTopbarActions();
+  dockTopbarActions();
 
-  let pinFrame = 0;
-  const scheduleTopbarPin = (options) => {
-    if (pinFrame) return;
-    pinFrame = window.requestAnimationFrame(() => {
-      pinFrame = 0;
-      pinTopbarActions(options);
+  let dockFrame = 0;
+  const scheduleTopbarDock = () => {
+    if (dockFrame) return;
+    dockFrame = window.requestAnimationFrame(() => {
+      dockFrame = 0;
+      dockTopbarActions();
     });
   };
 
-  // Do not listen to visualViewport scroll/resize. Those events are caused by
-  // Safari's address bar and keyboard and must not move these controls.
-  window.addEventListener('pageshow', () => scheduleTopbarPin());
+  window.addEventListener('pageshow', scheduleTopbarDock);
   window.addEventListener('orientationchange', () => {
-    window.setTimeout(() => scheduleTopbarPin({ reset: true }), 220);
+    window.setTimeout(scheduleTopbarDock, 220);
   }, { passive: true });
 
-  if (topbarActions) {
+  if (topbarActions && topbar) {
     const topbarParentObserver = new MutationObserver(() => {
-      if (topbarActions.parentElement !== pageBody) scheduleTopbarPin();
+      if (topbarActions.parentElement !== topbar) scheduleTopbarDock();
     });
     topbarParentObserver.observe(pageBody, { childList: true, subtree: true });
     window.addEventListener('pagehide', () => topbarParentObserver.disconnect(), { once: true });
