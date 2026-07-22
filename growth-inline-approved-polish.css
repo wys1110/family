@@ -39,8 +39,24 @@
   content: none !important;
 }
 
+/* Keep all three metrics equal-sized and centered in both orientations. */
+.growth-inline-legend {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 7px;
+  margin: 0 0 10px;
+}
+
 .growth-inline-legend span {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 8px;
+  line-height: 1.2;
   text-align: center;
 }
 
@@ -83,14 +99,15 @@
   }
 
   .growth-inline-legend {
-    grid-template-columns: 1fr;
-    gap: 7px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
     margin-bottom: 10px;
   }
 
   .growth-inline-legend span {
     width: 100%;
-    min-height: 34px;
+    min-height: 36px;
+    padding-inline: 6px;
   }
 
   .growth-inline-grid text,
@@ -104,6 +121,16 @@
 }
 
 @media (max-width: 380px) {
+  .growth-inline-legend {
+    gap: 5px;
+  }
+
+  .growth-inline-legend span {
+    min-height: 34px;
+    padding-inline: 4px;
+    font-size: 9px;
+  }
+
   .growth-inline-grid text,
   .growth-inline-date {
     font-size: 10.5px;
