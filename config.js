@@ -115,7 +115,7 @@ window.FAMILY_CONFIG = {
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260722-floating-utilities-v5" },
-    { name: "sticky-tabs", version: "20260716-sticky-v1" },
+    { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260722-korean-labels-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
     { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
