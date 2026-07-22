@@ -23,6 +23,6 @@ describe('growth measurement floating action safe zone', () => {
   });
 
   it('loads the updated JavaScript and CSS instead of the previous cached module', () => {
-    expect(config).toContain('{ name: "refresh-button", version: "20260722-fixed-top-utilities-v2" }');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }');
   });
 });
