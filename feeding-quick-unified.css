@@ -104,9 +104,8 @@
   font-weight: 780;
 }
 
-@media (max-width: 390px) {
+@media (max-width: 520px) {
   #quickLogDialog.feeding-quick-active .sheet-panel {
-    padding-right: 18px;
-    padding-left: 18px;
+    padding: 11px 17px max(18px, env(safe-area-inset-bottom));
   }
 }

@@ -79,10 +79,11 @@ describe("growth quick record harmony", () => {
     expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
     expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*min-height:\s*82px;[^}]*border:\s*1px solid var\(--sheet-border\);[^}]*background:\s*var\(--sheet-panel-strong\);/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.quick-detail-button\s*\{[^}]*min-height:\s*54px;[^}]*font-size:\s*15px;/s);
+    expect(unifiedCss).toMatch(/@media \(max-width: 520px\)\s*\{[^}]*#quickLogDialog\.feeding-quick-active \.sheet-panel\s*\{[^}]*padding:\s*11px 17px max\(18px, env\(safe-area-inset-bottom\)\);/s);
   });
 
   test("bumps both feeding module cache versions", () => {
     expect(config).toContain('{ name: "adaptive-feeding", version: "20260722-diaper-harmony-v2" }');
-    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260722-instant-direct-v2" }');
+    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260722-instant-direct-v3" }');
   });
 });
