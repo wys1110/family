@@ -6,12 +6,18 @@ self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Installed iOS apps can keep the old config.js even after the page reloads.
-// Always request the module manifest from the network so CSS version bumps apply.
+// Installed iOS apps can keep old versioned assets even after the page reloads.
+// Always request the module manifest and the settings polish stylesheet from the network.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || !url.pathname.endsWith("/config.js")) return;
+  if (url.origin !== self.location.origin) return;
+
+  const forceNetwork =
+    url.pathname.endsWith("/config.js") ||
+    url.pathname.endsWith("/settings-layout-polish.css");
+  if (!forceNetwork) return;
+
   event.respondWith(fetch(event.request, { cache: "no-store" }));
 });
 
