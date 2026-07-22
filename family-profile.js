@@ -98,8 +98,9 @@
     const count = childCount();
     fieldRoot.replaceChildren(...Array.from({ length: count }, (_, index) => {
       const label = document.createElement('label');
+      const fieldLabel = count === 1 ? '아이' : `아이 ${index + 1}`;
       label.className = 'family-profile-field';
-      label.innerHTML = `<span>${count === 1 ? '아이' : `아이 ${index + 1}`}</span><input type="text" maxlength="${MAX_NAME_LENGTH}" autocomplete="off" data-family-child-name="${index}" />`;
+      label.innerHTML = `${count === 1 ? '' : `<span>${fieldLabel}</span>`}<input type="text" maxlength="${MAX_NAME_LENGTH}" autocomplete="off" aria-label="${fieldLabel}" data-family-child-name="${index}" />`;
       const input = label.querySelector('input');
       input.value = normalizeName(profile.childNames[index], defaultChildName(index, count));
       input.placeholder = defaultChildName(index, count);
