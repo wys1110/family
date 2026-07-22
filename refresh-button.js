@@ -2,10 +2,7 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  const topbarActions = document.querySelector('.topbar-account-actions');
-  const accountButton = topbarActions?.querySelector('#accountButton');
-
-  // Keep the contextual action as a direct body child so position: fixed stays
+  // Keep both floating actions as direct body children so position: fixed stays
   // anchored to the viewport in mobile Safari.
   const addEventButton = document.querySelector('#addEventButton');
   if (addEventButton && addEventButton.parentElement !== pageBody) {
@@ -22,9 +19,7 @@
 
   const existingButton = document.querySelector('[data-refresh-module]');
   if (existingButton) {
-    if (topbarActions && accountButton) {
-      topbarActions.insertBefore(existingButton, accountButton);
-    }
+    if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
     return;
   }
 
@@ -35,12 +30,8 @@
   button.dataset.refreshModule = '';
   button.setAttribute('aria-label', '페이지 완전 새로고침');
   button.setAttribute('title', '완전 새로고침');
-  button.innerHTML = '<span aria-hidden="true">↻</span>';
-  if (topbarActions && accountButton) {
-    topbarActions.insertBefore(button, accountButton);
-  } else {
-    pageBody.appendChild(button);
-  }
+  button.innerHTML = '<span aria-hidden="true"></span>';
+  pageBody.appendChild(button);
   button.dataset.refreshHydrated = 'true';
 
   const showCompleteToast = () => {
