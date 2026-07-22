@@ -40,19 +40,18 @@ test("새로고침 버튼은 상단 캡슐이 아니라 우측 하단 플로팅 
   expect(style).toContain("bottom: calc(16px + env(safe-area-inset-bottom, 0px))")
 });
 
-test("상단 우측 알림과 계정 버튼은 body 직계 요소로 이동해 화면 위에 고정한다", () => {
-  expect(source).toContain("const topbarActions = document.querySelector('.topbar-account-actions')")
-  expect(source).toContain("pageBody.appendChild(topbarActions)")
-  expect(style).toContain("body > .topbar-account-actions {")
-  expect(style).toContain("position: fixed !important")
-  expect(style).toContain("body.auth-required > .topbar-account-actions")
-  expect(style).toContain("gap: 8px")
+test("상단 우측 알림과 계정 버튼은 헤더의 정상 레이아웃에 고정한다", () => {
+  expect(source).toContain("const topbar = document.querySelector('.topbar')")
+  expect(source).toContain("topbar.appendChild(topbarActions)")
+  expect(source).toContain("topbarActions.style.setProperty('position', 'static', 'important')")
+  expect(source).toContain("topbarActions.style.setProperty('justify-content', 'flex-end', 'important')")
+  expect(source).not.toContain("window.visualViewport?.addEventListener")
 });
 
 test("변경된 새로고침 모듈을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
   const config = readFileSync("config.js", "utf8")
 
-  expect(config).toContain('{ name: "refresh-button", version: "20260722-fixed-top-utilities-v2" }')
+  expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }')
 });
 
 test("config fallback 버튼을 발견하면 fallback 클릭 핸들러를 비활성화하지 않는다", () => {
