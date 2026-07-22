@@ -51,16 +51,10 @@ window.FAMILY_CONFIG = {
       button.dataset.refreshModule = "";
       button.setAttribute("aria-label", "페이지 완전 새로고침");
       button.setAttribute("title", "완전 새로고침");
-      button.innerHTML = '<span aria-hidden="true">↻</span>';
+      button.innerHTML = '<span aria-hidden="true"></span>';
     }
 
-    const topbarActions = document.querySelector(".topbar-account-actions");
-    const accountButton = topbarActions?.querySelector("#accountButton");
-    if (topbarActions && accountButton) {
-      topbarActions.insertBefore(button, accountButton);
-    } else if (button.parentElement !== pageBody) {
-      pageBody.appendChild(button);
-    }
+    if (button.parentElement !== pageBody) pageBody.appendChild(button);
     button.hidden = false;
     button.removeAttribute("aria-hidden");
     if (button.dataset.refreshFallbackBound === "true") return;
@@ -114,7 +108,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260722-korean-labels-v2" },
-    { name: "refresh-button", version: "20260722-floating-utilities-v5" },
+    { name: "refresh-button", version: "20260722-bottom-right-header-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260722-korean-labels-v2" },
     { name: "family-profile", version: "20260722-dynamic-members-v1" },
