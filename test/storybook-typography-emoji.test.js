@@ -9,6 +9,11 @@ describe('storybook typography and emoji system', () => {
     expect(existsSync(new URL('../assets/fonts/SUIT-Variable.woff2', import.meta.url))).toBe(true);
     expect(existsSync(new URL('../assets/fonts/LICENSE-MaruBuri.md', import.meta.url))).toBe(true);
     expect(existsSync(new URL('../assets/fonts/LICENSE-SUIT.txt', import.meta.url))).toBe(true);
+
+    const maruLicense = read('assets/fonts/LICENSE-MaruBuri.md');
+    expect(maruLicense).toContain('Reserved Font Name');
+    expect(maruLicense).toContain('PERMISSION & CONDITIONS');
+    expect(maruLicense).toContain('DISCLAIMER');
   });
 
   it('assigns separate storybook display and UI font roles', () => {
