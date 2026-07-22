@@ -25,6 +25,12 @@ describe('storybook typography and emoji system', () => {
     expect(script).toContain("settings: ['🎨', '설정']");
   });
 
+  it('bumps the dynamic module versions so browsers receive the new design', () => {
+    const config = read('config.js');
+    expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v1" }');
+    expect(config).toContain('{ name: "typography-system", version: "20260722-storybook-v1", script: false }');
+  });
+
   it('keeps section emoji decorative and text headings intact', () => {
     const html = read('index.html');
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">✨</span>AI 육아 도우미');
