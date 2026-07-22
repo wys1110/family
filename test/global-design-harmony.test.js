@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 const config = readFileSync("config.js", "utf8");
+const app = readFileSync("app.js", "utf8");
 const index = readFileSync("index.html", "utf8");
 const baseCss = readFileSync("styles.css", "utf8");
 const headerCss = readFileSync("page-header-spacing.css", "utf8");
@@ -23,6 +24,7 @@ describe("global design harmony", () => {
     expect(refreshCss).toContain("body:has(> #addEventButton.fab) main");
     expect(refreshCss).toContain("env(safe-area-inset-bottom, 0px)");
     expect(refreshCss).not.toContain("body.floating-actions-safe-zone-active > .refresh-button");
+    expect(app).toContain('setAttribute("aria-label", nextView === "calendar" ? "새 일정 추가" : "새 성장 기록")');
   });
 
   test("uses a compact daily-verse bookmark outside the calendar", () => {
@@ -55,6 +57,7 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260722-motion-v1');
+    expect(index).toContain('<script src="app.js?v=20260722-growth-actions-v3"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-center-v4" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');

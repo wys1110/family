@@ -572,8 +572,10 @@ function switchView(view) {
     button.setAttribute("role", "tab");
     button.setAttribute("aria-selected", String(active));
   });
-  $("#addEventButton").hidden = false;
-  $("#addEventButton").innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
+  const addButton = $("#addEventButton");
+  addButton.hidden = false;
+  addButton.innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
+  addButton.setAttribute("aria-label", nextView === "calendar" ? "새 일정 추가" : "새 성장 기록");
 }
 
 function publicHolidayEvent(key) {
