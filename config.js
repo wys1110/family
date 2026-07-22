@@ -175,7 +175,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false },
     { name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false },
     { name: "invite-link", version: "20260718-v1" },
-    { name: "page-header-spacing", version: "20260722-verse-bookmark-v2", script: false },
+    { name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false },
     { name: "event-dialog-polish", version: "20260720-v1", script: false },
     { name: "care-timeline-contrast", version: "20260720-night-legibility-v1", script: false },
     { name: "night-theme-polish", version: "20260722-growth-restraint-v1" },
