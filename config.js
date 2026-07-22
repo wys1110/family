@@ -54,7 +54,13 @@ window.FAMILY_CONFIG = {
       button.innerHTML = '<span aria-hidden="true">↻</span>';
     }
 
-    if (button.parentElement !== pageBody) pageBody.appendChild(button);
+    const topbarActions = document.querySelector(".topbar-account-actions");
+    const accountButton = topbarActions?.querySelector("#accountButton");
+    if (topbarActions && accountButton) {
+      topbarActions.insertBefore(button, accountButton);
+    } else if (button.parentElement !== pageBody) {
+      pageBody.appendChild(button);
+    }
     button.hidden = false;
     button.removeAttribute("aria-hidden");
     if (button.dataset.refreshFallbackBound === "true") return;
@@ -107,10 +113,10 @@ window.FAMILY_CONFIG = {
     { name: "growth-dedup", version: "20260722-heading-icon-v1" },
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
-    { name: "feature-request", version: "20260722-layout-harmony-v1" },
-    { name: "refresh-button", version: "20260722-growth-safe-zone-v1" },
+    { name: "feature-request", version: "20260722-korean-labels-v2" },
+    { name: "refresh-button", version: "20260722-topbar-actions-v3" },
     { name: "sticky-tabs", version: "20260716-sticky-v1" },
-    { name: "settings", version: "20260718-logic-audit-v1" },
+    { name: "settings", version: "20260722-korean-labels-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
     { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
@@ -156,10 +162,10 @@ window.FAMILY_CONFIG = {
     { name: "baby-ai-core", version: "20260719-v1", style: false, script: false },
     { name: "baby-ai", version: "20260720-refresh-recovery-v1" },
     { name: "baby-ai-time-fields", version: "20260719-v1", script: false },
-    { name: "page-header-spacing", version: "20260720-v1", script: false },
+    { name: "page-header-spacing", version: "20260722-verse-bookmark-v2", script: false },
     { name: "event-dialog-polish", version: "20260720-v1", script: false },
     { name: "care-timeline-contrast", version: "20260720-night-legibility-v1", script: false },
-    { name: "night-theme-polish", version: "20260722-moonlit-v2" },
+    { name: "night-theme-polish", version: "20260722-growth-restraint-v1" },
     { name: "growth-care-color-polish", version: "20260720-feeding-diaper-v2", script: false },
     { name: "night-care-pattern-polish", version: "20260720-v1", script: false },
     { name: "night-feature-request-polish", version: "20260722-layout-harmony-v1", script: false },

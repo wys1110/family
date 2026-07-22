@@ -2,12 +2,15 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Keep both floating actions as direct body children. A transformed or filtered
-  // app container can otherwise make position: fixed behave like position: absolute
-  // on mobile Safari and leave the buttons halfway down the document.
+  const topbarActions = document.querySelector('.topbar-account-actions');
+  const accountButton = topbarActions?.querySelector('#accountButton');
+  const viewTabs = document.querySelector('.view-tabs');
+
+  // Keep the primary calendar action in the document flow so it never obscures
+  // long content or mobile form controls.
   const addEventButton = document.querySelector('#addEventButton');
-  if (addEventButton && addEventButton.parentElement !== pageBody) {
-    pageBody.appendChild(addEventButton);
+  if (addEventButton && viewTabs) {
+    viewTabs.insertAdjacentElement('afterend', addEventButton);
   }
 
   const aiAssistant = document.querySelector('#babyAiAssistant');
@@ -20,7 +23,9 @@
 
   const existingButton = document.querySelector('[data-refresh-module]');
   if (existingButton) {
-    if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
+    if (topbarActions && accountButton) {
+      topbarActions.insertBefore(existingButton, accountButton);
+    }
     return;
   }
 
@@ -32,7 +37,12 @@
   button.setAttribute('aria-label', '페이지 완전 새로고침');
   button.setAttribute('title', '완전 새로고침');
   button.innerHTML = '<span aria-hidden="true">↻</span>';
-  pageBody.appendChild(button);
+  if (topbarActions && accountButton) {
+    topbarActions.insertBefore(button, accountButton);
+  } else {
+    pageBody.appendChild(button);
+  }
+  button.dataset.refreshHydrated = 'true';
 
   const showCompleteToast = () => {
     const toast = document.querySelector('#toast');

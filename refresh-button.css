@@ -1,39 +1,43 @@
-.refresh-button {
-  position: fixed !important;
-  z-index: 1000;
-  right: calc(16px + env(safe-area-inset-right, 0px));
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+.topbar-account-actions > .refresh-button {
+  position: relative;
+  z-index: 1;
   display: grid;
+  flex: 0 0 auto;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, .52);
+  border: 1px solid rgba(255, 255, 255, .46);
   border-radius: 50%;
   color: white;
   background: linear-gradient(135deg, var(--theme-hero-start, #56796a), var(--theme-hero-end, #7e9e82));
   box-shadow:
-    0 14px 34px rgba(var(--theme-accent-rgb, 86, 121, 106), .28),
+    0 8px 22px rgba(var(--theme-accent-rgb, 86, 121, 106), .22),
     inset 0 1px 0 rgba(255, 255, 255, .28);
-  backdrop-filter: saturate(145%) blur(14px);
-  -webkit-backdrop-filter: saturate(145%) blur(14px);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
 }
 
-/* The main action is moved to body by refresh-button.js for the same iOS fix. */
-body > #addEventButton.fab {
-  position: fixed !important;
-  z-index: 999;
-  left: 50%;
+/* The calendar action belongs to the page hierarchy instead of the viewport. */
+main > #addEventButton.fab {
+  position: relative !important;
+  z-index: 5;
+  left: auto;
   right: auto;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: auto;
+  display: flex;
+  width: max-content;
+  min-width: 0;
+  min-height: 48px;
+  margin: -8px 0 14px auto;
+  padding: 0 18px;
+  transform: none;
+  animation: none;
 }
 
-body.floating-actions-safe-zone-active > #addEventButton.fab,
-body.floating-actions-safe-zone-active > .refresh-button {
+body.floating-actions-safe-zone-active main > #addEventButton.fab {
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -41,7 +45,7 @@ body.floating-actions-safe-zone-active > .refresh-button {
 
 .refresh-button span {
   display: block;
-  font-size: 25px;
+  font-size: 22px;
   font-weight: 500;
   line-height: 1;
   transform: translateY(-1px);
@@ -50,7 +54,7 @@ body.floating-actions-safe-zone-active > .refresh-button {
 .refresh-button:active {
   transform: scale(.92);
   box-shadow:
-    0 8px 22px rgba(var(--theme-accent-rgb, 86, 121, 106), .22),
+    0 5px 16px rgba(var(--theme-accent-rgb, 86, 121, 106), .2),
     inset 0 1px 0 rgba(255, 255, 255, .24);
 }
 
@@ -73,29 +77,22 @@ body.floating-actions-safe-zone-active > .refresh-button {
 }
 
 @media (min-width: 768px) {
-  .refresh-button {
-    right: calc(24px + env(safe-area-inset-right, 0px));
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  }
-
-  body > #addEventButton.fab {
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  .topbar-account-actions > .refresh-button {
+    width: 46px;
+    height: 46px;
   }
 }
 
 @media (max-width: 380px) {
-  .refresh-button {
-    right: calc(12px + env(safe-area-inset-right, 0px));
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    width: 48px;
-    height: 48px;
+  .topbar-account-actions > .refresh-button {
+    width: 42px;
+    height: 42px;
   }
 
-  body > #addEventButton.fab {
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  main > #addEventButton.fab {
+    min-height: 46px;
+    padding-inline: 16px;
   }
-
-  .refresh-button span { font-size: 23px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

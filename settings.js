@@ -73,7 +73,7 @@
       <div class="settings-heading">
         <span class="settings-mark" aria-hidden="true">◐</span>
         <div>
-          <p class="eyebrow">APPEARANCE</p>
+          <p class="eyebrow">화면 꾸미기</p>
           <h2 id="themeSettingsTitle">화면 테마</h2>
           <span>가족 공간의 분위기를 취향에 맞게 바꿔보세요.</span>
         </div>

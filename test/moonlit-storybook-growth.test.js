@@ -63,23 +63,10 @@ describe('moonlit storybook growth surface', () => {
     });
   });
 
-  it('draws the decorative growth divider with gradients and no text glyph', () => {
+  it('removes the decorative growth divider so content sections stay restrained', () => {
     expectDeclarations('html[data-family-theme="night"] #growthView #babyJournalContent > section::before', {
-      'content': '""',
-      'position': 'static',
-      'inset': 'auto',
-      'z-index': 'auto',
-      'display': 'block',
-      'width': 'auto',
-      'height': '9px',
-      'margin': '-9px 18% 16px',
-      'background': 'linear-gradient(90deg, transparent 0, var(--moonlit-gold) 18%, var(--moonlit-gold) 46%, transparent 46%, transparent 54%, var(--moonlit-gold) 54%, var(--moonlit-gold) 82%, transparent 100%), linear-gradient(45deg, transparent 42%, var(--moonlit-gold) 42%, var(--moonlit-gold) 58%, transparent 58%), linear-gradient(-45deg, transparent 42%, var(--moonlit-gold) 42%, var(--moonlit-gold) 58%, transparent 58%)',
-      'background-size': '100% 1px, 9px 9px, 9px 9px',
-      'background-position': 'center',
-      'background-repeat': 'no-repeat',
-      'pointer-events': 'none',
-      'animation': 'none',
-      'transform': 'none',
+      'content': 'none',
+      'display': 'none',
     });
   });
 });

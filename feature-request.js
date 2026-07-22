@@ -37,7 +37,7 @@
       <div class="feature-request-heading">
         <span class="feature-request-mark" aria-hidden="true">✦</span>
         <div>
-          <p class="eyebrow">FAMILY LAB</p>
+          <p class="eyebrow">가족 기능 제안</p>
           <h2 id="featureRequestTitle">필요한 기능 요청</h2>
           <span>불편한 점이나 새로 필요한 기능을 편하게 남겨주세요.</span>
         </div>
@@ -56,7 +56,7 @@
     <section class="feature-request-admin" id="featureRequestAdmin" aria-labelledby="featureRequestAdminTitle" hidden>
       <div class="feature-request-admin-heading">
         <div>
-          <p class="eyebrow">ADMIN ONLY</p>
+          <p class="eyebrow">관리자 전용</p>
           <h2 id="featureRequestAdminTitle">요청 관리</h2>
           <span id="featureRequestAdminCount">등록된 요청을 불러오는 중이에요.</span>
         </div>
