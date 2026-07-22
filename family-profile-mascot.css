@@ -1,0 +1,53 @@
+.family-profile-heading .family-profile-mascot {
+  position: relative;
+  overflow: visible;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, .32), transparent 34%),
+    linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));
+}
+
+.family-profile-mascot-family {
+  display: block;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  transform-origin: 50% 72%;
+  filter: drop-shadow(0 3px 4px rgba(5, 17, 31, .18));
+  animation: family-profile-mascot-bob 2.8s ease-in-out infinite;
+}
+
+.family-profile-mascot-heart {
+  position: absolute;
+  top: -4px;
+  right: -3px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  color: #fff;
+  background: #e6788e;
+  box-shadow: 0 4px 10px rgba(126, 43, 65, .24);
+  font-size: 8px;
+  line-height: 1;
+  transform-origin: center;
+  animation: family-profile-heart-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes family-profile-mascot-bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-2px) rotate(1deg); }
+}
+
+@keyframes family-profile-heart-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.13); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .family-profile-mascot-family,
+  .family-profile-mascot-heart {
+    animation: none;
+  }
+}
