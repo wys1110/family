@@ -145,7 +145,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-measurements", version: "20260718-combined-growth-v2" },
     { name: "growth-chart-polish", version: "20260718-premium-chart-v1" },
     { name: "growth-history-edit", version: "20260718-history-edit-v1", style: false, script: false },
-    { name: "premium-ui", version: "20260718-premium-v1", script: false },
+    { name: "premium-ui", version: "20260722-upcoming-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false },
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },

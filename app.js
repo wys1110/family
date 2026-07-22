@@ -528,7 +528,7 @@ function finishCalendarSwipe(event) {
   slideMonth(dx < 0 ? 1 : -1);
 }
 function cancelCalendarSwipe() { calendarSwipeState = null; }
-function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
+function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
   const selector = $("#eventMemberSelector");
   const selected = $("#eventMember").value || state.familyMembers[0]?.name || "가족";
@@ -690,6 +690,62 @@ function renderAgenda() {
     item.querySelector(".agenda-main").addEventListener("click", () => openEventDialog(event));
     item.querySelector(".edit-event-button").addEventListener("click", () => openEventDialog(event));
     bindDragHandle(item.querySelector(".drag-handle"), event);
+  });
+}
+
+function upcomingEvents(events, todayKey, limit = 20) {
+  const validDateKey = (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  };
+  const normalized = events.filter((event) => {
+    const endDate = event.endDate || event.date;
+    const syntheticHoliday = event.isPublicHoliday || String(event.id || "").startsWith("public-holiday-");
+    return !syntheticHoliday
+      && validDateKey(event.date)
+      && validDateKey(endDate)
+      && endDate >= event.date
+      && endDate >= todayKey;
+  });
+  return normalized.sort((left, right) => {
+    const leftEnd = left.endDate || left.date;
+    const rightEnd = right.endDate || right.date;
+    const leftSortDate = left.date < todayKey && leftEnd >= todayKey ? todayKey : left.date;
+    const rightSortDate = right.date < todayKey && rightEnd >= todayKey ? todayKey : right.date;
+    const leftOngoing = left.date < todayKey && leftEnd >= todayKey;
+    const rightOngoing = right.date < todayKey && rightEnd >= todayKey;
+    return leftSortDate.localeCompare(rightSortDate)
+      || Number(rightOngoing) - Number(leftOngoing)
+      || left.date.localeCompare(right.date)
+      || (left.time || "99:99").localeCompare(right.time || "99:99")
+      || String(left.title || "").localeCompare(String(right.title || ""), "ko")
+      || String(left.id || "").localeCompare(String(right.id || ""));
+  }).slice(0, Math.max(0, limit));
+}
+
+function renderUpcomingEvents() {
+  const todayKey = dateKey(new Date());
+  const events = upcomingEvents(state.events, todayKey, 20);
+  const list = $("#upcomingEventsList");
+  $("#upcomingEventsCount").textContent = `${events.length}개 일정`;
+  if (!events.length) {
+    list.innerHTML = '<div class="empty-state"><strong>다가오는 일정이 없어요</strong><span>새 일정을 추가하면 가까운 순서로 표시돼요.</span></div>';
+    return;
+  }
+  list.innerHTML = events.map((event) => {
+    const displayDate = event.date < todayKey ? todayKey : event.date;
+    const day = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", weekday: "short" }).format(parseDate(displayDate));
+    const range = formatEventRange(event);
+    const when = event.time || "종일";
+    const title = String(event.title || "일정");
+    const member = String(event.member || "가족");
+    return `<button class="upcoming-event-item" type="button" data-id="${escapeHtml(String(event.id || ""))}" style="${memberStyle(event.member)}" aria-label="${escapeHtml(`${day} ${title} ${when} 일정 수정`)}"><i class="bar" aria-hidden="true"></i><time datetime="${escapeHtml(event.date)}">${escapeHtml(day)}<small>${escapeHtml(when)}</small></time><span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(member)}${range ? ` · ${escapeHtml(range)}` : ""}</small></span><b aria-hidden="true">수정</b></button>`;
+  }).join("");
+  list.querySelectorAll(".upcoming-event-item").forEach((button) => {
+    const event = state.events.find((entry) => String(entry.id || "") === button.dataset.id);
+    button.addEventListener("click", () => openEventDialog(event));
   });
 }
 

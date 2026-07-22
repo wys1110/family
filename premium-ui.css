@@ -137,6 +137,38 @@ html .view-tab.active {
 }
 .agenda-item:active { transform: scale(.992); }
 
+.upcoming-events-section { padding: 28px 2px 0; }
+.upcoming-events-list { display: grid; gap: 8px; }
+.upcoming-event-item {
+  display: grid;
+  grid-template-columns: 4px 78px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 9px 11px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 17px;
+  color: var(--label);
+  background: var(--ui-card);
+  box-shadow: var(--ui-shadow-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.upcoming-event-item:hover { background: var(--ui-card-muted); }
+.upcoming-event-item:focus-visible { border-color: color-mix(in srgb, var(--blue) 35%, var(--ui-border)); }
+.upcoming-event-item:active { transform: scale(.992); }
+.upcoming-event-item > .bar { align-self: stretch; border-radius: 999px; background: var(--member-color, var(--blue)); }
+.upcoming-event-item time { display: grid; gap: 2px; font-size: 11px; font-weight: 760; font-variant-numeric: tabular-nums; }
+.upcoming-event-item time small,
+.upcoming-event-item > span small { color: var(--secondary); font-size: 9px; font-weight: 650; }
+.upcoming-event-item > span { display: grid; min-width: 0; gap: 3px; }
+.upcoming-event-item > span strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-event-item > span small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-event-item > b { color: var(--blue); font-size: 10px; font-weight: 760; }
+html[data-family-theme="night"] .upcoming-event-item { color: var(--label); background: var(--ui-card); }
+
 /* Growth journal: one card language and readable controls. */
 #growthView { --growth-shadow: var(--ui-shadow-sm); --growth-border: var(--ui-border); }
 .growth-page-header { margin-bottom: 18px; }
@@ -338,6 +370,11 @@ html[data-family-theme="night"] #quickLogDialog.feeding-quick-active .feeding-di
   html .view-tab { padding-inline: 2px !important; font-size: var(--type-control-size); }
   .daily-verse-card { padding-right: 15px; padding-left: 15px; }
   .calendar-help { align-items: flex-start; padding-right: 8px; padding-left: 8px; text-align: left; }
+}
+
+@media (max-width: 380px) {
+  .upcoming-event-item { grid-template-columns: 4px 70px minmax(0, 1fr); }
+  .upcoming-event-item > b { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
