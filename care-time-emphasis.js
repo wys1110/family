@@ -54,11 +54,12 @@
       <div class="care-time-list-items">
         ${items.map(({ entry, type }) => {
           const [label, detail] = careCopy(entry, type);
-          return `<article class="care-time-row ${type}">
+          const editLabel = `${entry.time} ${label} ${String(detail || "")} 기록 수정`;
+          return `<button type="button" class="care-time-row ${type}" data-care-entry-id="${escapeHtml(String(entry.id || ""))}" aria-label="${escapeHtml(editLabel)}" aria-haspopup="dialog">
             <time datetime="${escapeHtml(`${entry.date}T${entry.time}`)}">${escapeHtml(entry.time)}</time>
             <i aria-hidden="true"></i>
             <span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(String(detail || ""))}</small></span>
-          </article>`;
+          </button>`;
         }).join("")}
       </div>
     `;
