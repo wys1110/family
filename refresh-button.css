@@ -1,17 +1,26 @@
-.topbar-account-actions {
-  position: fixed;
-  z-index: 1000;
+body > .topbar-account-actions {
+  position: fixed !important;
+  z-index: 1100;
   top: calc(max(12px, env(safe-area-inset-top, 0px)) + 4px);
   right: max(16px, calc((100vw - 820px) / 2 + 16px));
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+body.auth-required > .topbar-account-actions {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 body.notification-center-installed .topbar h1 {
@@ -180,7 +189,7 @@ html[data-family-theme="night"] body > .refresh-button {
 }
 
 @media (min-width: 768px) {
-  .topbar-account-actions {
+  body > .topbar-account-actions {
     top: calc(max(18px, env(safe-area-inset-top, 0px)) + 2px);
   }
 
@@ -206,7 +215,7 @@ html[data-family-theme="night"] body > .refresh-button {
     max-width: calc(100vw - 126px);
   }
 
-  .topbar-account-actions {
+  body > .topbar-account-actions {
     gap: 7px;
   }
 
