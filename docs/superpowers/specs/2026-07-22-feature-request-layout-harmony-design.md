@@ -108,4 +108,3 @@
 - 별빛 밤과 포근한 숲에서 390×844, 430×932, 768×1024, 1440×900 실제 로그인 화면 확인
 - 각 해상도에서 카드·textarea·상태 선택창 computed width와 font 값을 확인
 - `documentElement.scrollWidth <= documentElement.clientWidth` 확인
-
