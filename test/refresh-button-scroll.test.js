@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
 const source = readFileSync("refresh-button.js", "utf8");
+const style = readFileSync("refresh-button.css", "utf8");
 
 test("새로고침 버튼은 데이터만 갱신하지 않고 페이지를 완전히 다시 읽는다", () => {
   expect(source).toContain("button.setAttribute('aria-label', '페이지 완전 새로고침')");
@@ -31,10 +32,25 @@ test("재로딩 완료 후 사용자에게 완료 안내를 표시한다", () =>
   expect(source).toContain("message.textContent = '페이지를 새로 읽어왔어요'");
 });
 
+test("새로고침 버튼은 상단 캡슐이 아니라 우측 하단 플로팅 액션으로 둔다", () => {
+  expect(source).toContain("pageBody.appendChild(button)");
+  expect(source).not.toContain("topbarActions.insertBefore(button");
+  expect(style).toContain("body > .refresh-button {");
+  expect(style).toContain("right: max(16px, calc((100vw - 820px) / 2 + 16px))");
+  expect(style).toContain("bottom: calc(16px + env(safe-area-inset-bottom, 0px))");
+});
+
+test("상단 우측은 알림과 계정 버튼 두 개를 독립된 원형 버튼으로 정리한다", () => {
+  expect(style).toContain(".topbar-account-actions > .notification-center-button,");
+  expect(style).toContain(".topbar-account-actions > .avatar-button");
+  expect(style).toContain("background: transparent");
+  expect(style).toContain("gap: 8px");
+});
+
 test("변경된 새로고침 모듈을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
   const config = readFileSync("config.js", "utf8");
 
-  expect(config).toContain('{ name: "refresh-button", version: "20260722-floating-utilities-v5" }');
+  expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-right-header-v1" }');
 });
 
 test("config fallback 버튼을 발견하면 fallback 클릭 핸들러를 비활성화하지 않는다", () => {
