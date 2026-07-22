@@ -17,6 +17,23 @@ function loadUpcomingEvents() {
   return context.upcomingEvents;
 }
 
+function renderEmptyUpcomingEvents() {
+  const start = app.indexOf("function upcomingEvents(");
+  const end = app.indexOf("function openBulkEventDialog(");
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  const count = { textContent: "기존 값" };
+  const list = { innerHTML: "기존 목록", querySelectorAll: () => [] };
+  const nodes = { "#upcomingEventsCount": count, "#upcomingEventsList": list };
+  const context = {
+    state: { events: [] },
+    dateKey: () => "2026-07-22",
+    $: (selector) => nodes[selector],
+  };
+  vm.runInNewContext(`${app.slice(start, end)}; renderUpcomingEvents();`, context);
+  return { count, list };
+}
+
 describe("upcoming family events", () => {
   test("includes ongoing, today, and future events but excludes expired and invalid events", () => {
     const select = loadUpcomingEvents();
@@ -60,6 +77,13 @@ describe("upcoming family events", () => {
     const result = select(events, "2026-07-22");
     expect(result).toHaveLength(20);
     expect(result.slice(0, 3).map((event) => event.id)).toEqual(["a", "b", "all-day"]);
+  });
+
+  test("renders the empty projection with a zero count and guidance", () => {
+    const { count, list } = renderEmptyUpcomingEvents();
+
+    expect(count.textContent).toBe("0개 일정");
+    expect(list.innerHTML).toBe('<div class="empty-state"><strong>다가오는 일정이 없어요</strong><span>새 일정을 추가하면 가까운 순서로 표시돼요.</span></div>');
   });
 
   test("renders an accessible section that reuses the event editor", () => {
