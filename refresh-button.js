@@ -2,12 +2,56 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Keep the top-right utilities as a direct body child. Mobile Safari can
-  // otherwise treat position: fixed as scroll-bound when an ancestor creates
-  // a containing block through transforms, filters, or animated view changes.
+  // Keep the top-right utilities as a direct body child and re-assert the
+  // viewport anchor. iOS can otherwise reattach a fixed element to a scrolling
+  // containing block while views, filters, or the visual viewport are changing.
   const topbarActions = document.querySelector('.topbar-account-actions');
-  if (topbarActions && topbarActions.parentElement !== pageBody) {
-    pageBody.appendChild(topbarActions);
+  const pinTopbarActions = () => {
+    if (!topbarActions) return;
+    if (topbarActions.parentElement !== pageBody) pageBody.appendChild(topbarActions);
+
+    const desktop = window.matchMedia('(min-width: 768px)').matches;
+    topbarActions.style.setProperty('position', 'fixed', 'important');
+    topbarActions.style.setProperty('z-index', '1100', 'important');
+    topbarActions.style.setProperty(
+      'top',
+      desktop
+        ? 'calc(max(18px, env(safe-area-inset-top, 0px)) + 2px)'
+        : 'calc(max(12px, env(safe-area-inset-top, 0px)) + 4px)',
+      'important',
+    );
+    topbarActions.style.setProperty('right', 'max(16px, calc((100vw - 820px) / 2 + 16px))', 'important');
+    topbarActions.style.setProperty('bottom', 'auto', 'important');
+    topbarActions.style.setProperty('left', 'auto', 'important');
+    topbarActions.style.setProperty('margin', '0', 'important');
+    topbarActions.style.setProperty('transform', 'none', 'important');
+    topbarActions.style.setProperty('translate', 'none', 'important');
+    topbarActions.style.setProperty('animation', 'none', 'important');
+    topbarActions.style.setProperty('transition', 'none', 'important');
+  };
+
+  pinTopbarActions();
+  let pinFrame = 0;
+  const scheduleTopbarPin = () => {
+    if (pinFrame) return;
+    pinFrame = window.requestAnimationFrame(() => {
+      pinFrame = 0;
+      pinTopbarActions();
+    });
+  };
+
+  window.addEventListener('pageshow', scheduleTopbarPin);
+  window.addEventListener('resize', scheduleTopbarPin, { passive: true });
+  window.addEventListener('orientationchange', scheduleTopbarPin, { passive: true });
+  window.visualViewport?.addEventListener('resize', scheduleTopbarPin, { passive: true });
+  window.visualViewport?.addEventListener('scroll', scheduleTopbarPin, { passive: true });
+
+  if (topbarActions) {
+    const topbarParentObserver = new MutationObserver(() => {
+      if (topbarActions.parentElement !== pageBody) scheduleTopbarPin();
+    });
+    topbarParentObserver.observe(pageBody, { childList: true, subtree: true });
+    window.addEventListener('pagehide', () => topbarParentObserver.disconnect(), { once: true });
   }
 
   // Keep both lower floating actions as direct body children so position: fixed
@@ -25,21 +69,21 @@
     observer.observe(growthInsight);
   }
 
-  const existingButton = document.querySelector('[data-refresh-module]');
-  if (existingButton) {
-    if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
-    return;
+  let button = document.querySelector('[data-refresh-module]');
+  if (!button) {
+    button = document.createElement('button');
+    button.id = 'refreshButton';
+    button.className = 'refresh-button';
+    button.type = 'button';
+    button.dataset.refreshModule = '';
+    button.setAttribute('aria-label', '페이지 완전 새로고침');
+    button.setAttribute('title', '완전 새로고침');
+    button.innerHTML = '<span aria-hidden="true"></span>';
   }
 
-  const button = document.createElement('button');
-  button.id = 'refreshButton';
-  button.className = 'refresh-button';
-  button.type = 'button';
-  button.dataset.refreshModule = '';
-  button.setAttribute('aria-label', '페이지 완전 새로고침');
-  button.setAttribute('title', '완전 새로고침');
-  button.innerHTML = '<span aria-hidden="true"></span>';
-  pageBody.appendChild(button);
+  if (button.parentElement !== pageBody) pageBody.appendChild(button);
+  button.hidden = false;
+  button.removeAttribute('aria-hidden');
   button.dataset.refreshHydrated = 'true';
 
   const showCompleteToast = () => {
@@ -93,6 +137,8 @@
     window.location.replace(target.href);
   };
 
+  if (button.dataset.refreshHandlerBound === 'true') return;
+  button.dataset.refreshHandlerBound = 'true';
   button.addEventListener('click', async () => {
     if (button.disabled) return;
     button.disabled = true;
