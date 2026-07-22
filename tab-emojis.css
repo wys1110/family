@@ -26,3 +26,21 @@
   letter-spacing: inherit;
   white-space: nowrap;
 }
+
+/* Small illustrated seals make section openings feel like a family storybook. */
+.app-shell .storybook-heading-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.65em;
+  height: 1.65em;
+  margin-right: 0.34em;
+  border: 1px solid color-mix(in srgb, var(--blue) 24%, transparent);
+  border-radius: 42% 58% 54% 46%;
+  background: color-mix(in srgb, var(--blue) 13%, var(--surface));
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--blue) 12%, transparent);
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 0.72em;
+  font-weight: 400;
+  line-height: 1;
+  vertical-align: -0.25em;
+}
