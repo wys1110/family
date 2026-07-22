@@ -120,7 +120,7 @@ window.FAMILY_CONFIG = {
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
     { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
-    { name: "daily-briefing", version: "20260720-push-diagnostics-v2" },
+    { name: "daily-briefing", version: "20260722-notification-channels-v3" },
     { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260722-storybook-v2" },

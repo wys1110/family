@@ -130,12 +130,13 @@
     return registration.pushManager.getSubscription();
   };
 
-  const syncSubscription = async (subscription, { enabled = briefing.enabled } = {}) => {
+  const syncSubscription = async (subscription, { briefingEnabled = briefing.enabled } = {}) => {
     const payload = {
       action: "subscribe",
       householdId: state.household.id,
       subscription: subscription.toJSON(),
-      enabled,
+      pushEnabled: true,
+      briefingEnabled,
       time: briefing.time,
       timezone: briefing.timezone,
     };
@@ -212,7 +213,7 @@
       }
 
       briefing.timezone = resolvedTimezone();
-      await syncSubscription(subscription, { enabled: true });
+      await syncSubscription(subscription, { briefingEnabled: true });
       briefing.enabled = true;
       briefing.pushReady = true;
       persist();
@@ -252,9 +253,9 @@
     try {
       const subscription = await currentSubscription();
       if (subscription && state?.session && state?.household) {
-        await syncSubscription(subscription, { enabled: false });
+        await syncSubscription(subscription, { briefingEnabled: false });
       }
-      if (typeof toast === "function") toast("일정 브리핑 알림을 껐어요");
+      if (typeof toast === "function") toast("아침 브리핑은 끄고, 가족 일정 변경 알림은 계속 받아요");
     } catch (error) {
       console.warn("일정 브리핑 비활성화 동기화 실패", error);
     } finally {
@@ -284,6 +285,9 @@
     } else if (briefing.enabled && briefing.pushReady) {
       status.textContent = `매일 ${briefing.time} · 오늘 일정 요약을 이 기기로 보내요.`;
       status.classList.add("active");
+    } else if (briefing.pushReady) {
+      status.textContent = "가족 일정 변경 알림은 연결됐어요. 아침 브리핑은 꺼져 있어요.";
+      status.classList.add("active");
     } else if (briefing.enabled) {
       status.textContent = "알림 서버 연결을 확인하고 있어요.";
     } else {
@@ -298,7 +302,7 @@
     const permission = card.querySelector("#dailyBriefingPermission");
     if (enabled) enabled.checked = briefing.enabled;
     if (time) time.value = briefing.time;
-    if (permission) permission.textContent = briefing.enabled && briefing.pushReady ? "알림 연결됨 ✓" : "앱 알림 켜기";
+    if (permission) permission.textContent = briefing.pushReady ? "알림 연결됨 ✓" : "앱 알림 켜기";
     updateStatus();
   }
 
@@ -361,7 +365,7 @@
       if (!briefing.enabled || !briefing.pushReady) return;
       try {
         const subscription = await currentSubscription();
-        if (subscription) await syncSubscription(subscription, { enabled: true });
+        if (subscription) await syncSubscription(subscription, { briefingEnabled: true });
         if (typeof toast === "function") toast(`일정 브리핑을 ${nextTime}로 바꿨어요`);
       } catch (error) {
         briefing.pushReady = false;

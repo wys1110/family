@@ -5,11 +5,12 @@ const client = readFileSync("daily-briefing.js", "utf8");
 const worker = readFileSync("service-worker.js", "utf8");
 const edge = readFileSync("supabase/functions/daily-briefing-push/index.ts", "utf8");
 const migration = readFileSync("supabase/migrations/20260719_daily_briefing_push.sql", "utf8");
+const notificationChannelsMigration = readFileSync("supabase/migrations/202607220001_schedule_notification_channels.sql", "utf8");
 const cron = readFileSync("supabase/daily-briefing-cron.sql", "utf8");
 
 test("매일 오전 9시 일정 브리핑 모듈을 설정 화면에 연결한다", () => {
   const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "daily-briefing", version: "20260720-push-diagnostics-v2" }');
+  expect(config).toContain('{ name: "daily-briefing", version: "20260722-notification-channels-v3" }');
   expect(client).toContain('const DEFAULT_TIME = "09:00"');
   expect(client).toContain('card.id = "dailyBriefingSettings"');
   expect(client).toContain('Notification.requestPermission()');
@@ -30,7 +31,9 @@ test("Edge Function의 실제 오류 코드를 읽어 원인별로 안내한다"
 });
 
 test("구독 저장 실패 시 켜짐 상태를 남기지 않고 테스트 실패는 연결 상태와 분리한다", () => {
-  expect(client).toContain("await syncSubscription(subscription, { enabled: true })");
+  expect(client).toContain("await syncSubscription(subscription, { briefingEnabled: true })");
+  expect(client).toContain("pushEnabled: true");
+  expect(client).toContain("briefingEnabled");
   expect(client).toContain("briefing.enabled = false;");
   expect(client).toContain("await sendTest(subscription);");
   expect(client).toContain("일정 브리핑 테스트 발송 실패");
@@ -47,6 +50,8 @@ test("구독 정보는 RLS가 켜진 전용 테이블에 저장한다", () => {
   expect(migration).toContain("create table if not exists public.push_subscriptions");
   expect(migration).toContain("alter table public.push_subscriptions enable row level security");
   expect(migration).toContain("briefing_time time not null default '09:00'");
+  expect(migration).toContain("briefing_enabled boolean not null default true");
+  expect(notificationChannelsMigration).toContain("add column if not exists briefing_enabled boolean not null default true");
   expect(migration).not.toMatch(/create policy/i);
 });
 
@@ -55,7 +60,14 @@ test("서버는 가족 구성원만 등록하고 오늘 범위 일정을 브리�
   expect(edge).toContain('.lte("event_date", localDate)');
   expect(edge).toContain('.gte("event_end_date", localDate)');
   expect(edge).toContain("subscription.last_sent_on === local.date");
+  expect(edge).toContain('.eq("briefing_enabled", true)');
   expect(edge).toContain("x-daily-briefing-cron");
+});
+
+test("아침 브리핑을 꺼도 가족 일정 변경 알림 구독은 유지한다", () => {
+  expect(client).toContain("await syncSubscription(subscription, { briefingEnabled: false })");
+  expect(client).toContain("가족 일정 변경 알림은 계속 받아요");
+  expect(edge).toContain("briefing_enabled: briefingEnabled");
 });
 
 test("5분 크론이 비밀 헤더로 푸시 디스패처를 호출한다", () => {

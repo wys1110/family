@@ -20,6 +20,7 @@ test("일정 변경 알림은 변경한 사람을 제외한 같은 가족의 구
   expect(edge).toContain('if (body.action === "event-change")');
   expect(edge).toContain('.eq("household_id", householdId)');
   expect(edge).toContain('.eq("enabled", true)');
+  expect(edge).not.toContain('.eq("briefing_enabled", true)\n      .neq("user_id", user.id)');
   expect(edge).toContain('.neq("user_id", user.id)');
   expect(edge).toContain("buildEventChangePayload(change)");
 });

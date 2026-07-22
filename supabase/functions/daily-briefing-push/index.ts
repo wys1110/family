@@ -67,7 +67,10 @@ Deno.serve(async (request: Request) => {
     if (!subscription) return json({ error: "INVALID_SUBSCRIPTION" }, 400);
     const timezone = normalizeTimezone(body.timezone);
     const briefingTime = normalizeTime(body.time);
-    const enabled = body.enabled !== false;
+    const pushEnabled = body.pushEnabled !== false;
+    const briefingEnabled = typeof body.briefingEnabled === "boolean"
+      ? body.briefingEnabled
+      : body.enabled !== false;
 
     const { error } = await serviceClient.from("push_subscriptions").upsert({
       user_id: user.id,
@@ -77,7 +80,8 @@ Deno.serve(async (request: Request) => {
       auth: subscription.keys.auth,
       timezone,
       briefing_time: `${briefingTime}:00`,
-      enabled,
+      enabled: pushEnabled,
+      briefing_enabled: briefingEnabled,
       updated_at: new Date().toISOString(),
       last_error: null,
     }, { onConflict: "endpoint" });
@@ -85,7 +89,7 @@ Deno.serve(async (request: Request) => {
       console.error("DAILY_BRIEFING_SUBSCRIBE_FAILED", error.code);
       return json({ error: "SUBSCRIBE_FAILED" }, 500);
     }
-    return json({ ok: true, enabled, time: briefingTime, timezone });
+    return json({ ok: true, enabled: pushEnabled, briefingEnabled, time: briefingTime, timezone });
   }
 
   if (body.action === "test") {
@@ -158,6 +162,7 @@ async function dispatchDueBriefings(serviceClient) {
   const { data: subscriptions, error } = await serviceClient.from("push_subscriptions")
     .select("id,user_id,household_id,endpoint,p256dh,auth,timezone,briefing_time,last_sent_on")
     .eq("enabled", true)
+    .eq("briefing_enabled", true)
     .order("created_at")
     .limit(1000);
   if (error) throw error;

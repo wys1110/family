@@ -8,6 +8,7 @@ create table if not exists public.push_subscriptions (
   timezone text not null default 'Asia/Seoul' check (char_length(timezone) between 1 and 80),
   briefing_time time not null default '09:00',
   enabled boolean not null default true,
+  briefing_enabled boolean not null default true,
   last_sent_on date,
   last_sent_at timestamptz,
   last_error text check (last_error is null or char_length(last_error) <= 200),
@@ -16,13 +17,15 @@ create table if not exists public.push_subscriptions (
 );
 
 create index if not exists push_subscriptions_dispatch_idx
-  on public.push_subscriptions(enabled, briefing_time, last_sent_on);
+  on public.push_subscriptions(enabled, briefing_enabled, briefing_time, last_sent_on);
 create index if not exists push_subscriptions_user_household_idx
   on public.push_subscriptions(user_id, household_id);
 
 alter table public.push_subscriptions enable row level security;
 
 comment on table public.push_subscriptions is
-  'Service-role-only Web Push subscriptions for daily family schedule briefings.';
+  'Service-role-only Web Push subscriptions for family schedule changes and daily briefings.';
 comment on column public.push_subscriptions.briefing_time is
   'Local wall-clock time interpreted in the subscription timezone.';
+comment on column public.push_subscriptions.briefing_enabled is
+  'Controls the daily briefing independently from immediate family event notifications.';
