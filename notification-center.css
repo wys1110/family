@@ -68,3 +68,16 @@
   .notification-center-list{padding-inline:18px}
   .notification-center-tabs{margin-inline:20px}
 }
+
+/* Match the Family Space typography scale instead of the compact legacy scale. */
+.notification-center-panel{font-family:var(--font-family-sans,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif)}
+.notification-center-header-actions>button:first-child{min-height:40px;font-size:var(--type-label-size,13px)}
+.notification-center-tabs button{min-height:44px;font-size:var(--type-control-size,14px)}
+.notification-delete-backdrop{font-size:var(--type-label-size,13px)}
+.notification-item-copy strong{font-size:var(--type-card-size,16px);line-height:var(--type-leading-card,1.35)}
+.notification-item-copy small,.notification-item-copy em{font-size:var(--type-label-size,13px);line-height:var(--type-leading-label,1.4)}
+.notification-item-actions button{min-width:76px;min-height:38px;font-size:var(--type-label-size,13px)}
+.notification-empty small,.notification-center-guide,.notification-reminder-field small{font-size:var(--type-label-size,13px);line-height:var(--type-leading-label,1.4)}
+.notification-reminder-field>label>span{font-size:var(--type-control-size,14px)}
+.notification-reminder-field select,.notification-reminder-field input{min-height:44px;font-size:var(--type-body-size,15px)}
+@media(max-width:560px){.notification-item-actions button{min-height:40px}}
