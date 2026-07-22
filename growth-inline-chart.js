@@ -13,6 +13,7 @@
   let renderQueued = false;
   let rendering = false;
   let lastSignature = "";
+  let historyExpanded = false;
 
   const escapeText = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;",
@@ -51,6 +52,35 @@
       maximumFractionDigits: metric.decimals,
     });
     return withUnit ? `${text}${metric.unit}` : text;
+  };
+
+  const historyRows = (entries) => {
+    const ordered = [...entries].reverse();
+    const visibleEntries = historyExpanded ? ordered : ordered.slice(0, 5);
+    const rows = visibleEntries.map((entry) => {
+      const accessibleValues = Object.keys(metrics)
+        .map((key) => `${metrics[key].label} ${formatValue(entry[key], key)}`)
+        .join(", ");
+      return `
+        <button type="button" class="growth-inline-history-row"
+          data-growth-inline-entry="${escapeText(entry.id)}"
+          aria-label="${escapeText(formatDate(entry.date, true))} ${escapeText(accessibleValues)} 기록 수정">
+          <time datetime="${escapeText(entry.date)}">${escapeText(formatDate(entry.date, true))}${entry.time ? `<small>${escapeText(entry.time)}</small>` : ""}</time>
+          <span class="growth-inline-history-values">
+            ${Object.keys(metrics).map((key) => `<b><small>${escapeText(metrics[key].label)}</small>${escapeText(formatValue(entry[key], key))}</b>`).join("")}
+          </span>
+          <i>수정</i>
+        </button>`;
+    }).join("");
+    const toggle = ordered.length > 5
+      ? `<button type="button" class="growth-inline-history-toggle" data-growth-inline-history-toggle aria-expanded="${historyExpanded}">${historyExpanded ? "최근 기록만 보기" : `전체 기록 보기 (${ordered.length})`}</button>`
+      : "";
+    return `
+      <section class="growth-inline-history" aria-labelledby="growthInlineHistoryTitle">
+        <header><div><h4 id="growthInlineHistoryTitle">측정 기록</h4><p>최근 기록부터 확인하고 수정할 수 있어요.</p></div><span>${ordered.length}개</span></header>
+        <div class="growth-inline-history-list">${rows}</div>
+        <div class="growth-inline-history-footer">${toggle}<button type="button" data-growth-inline-action="add">새 측정 기록</button></div>
+      </section>`;
   };
 
   const smoothPath = (points) => {
@@ -231,6 +261,7 @@
           ${chartSvg(entries)}
           <p>그래프의 점을 누르면 해당 날짜의 기록을 바로 수정할 수 있어요.</p>
         </section>
+        ${historyRows(entries)}
       </article>
     `;
 
@@ -249,6 +280,14 @@
   };
 
   insightRow.addEventListener("click", (event) => {
+    const historyToggle = event.target.closest("[data-growth-inline-history-toggle]");
+    if (historyToggle) {
+      historyExpanded = !historyExpanded;
+      lastSignature = "";
+      queueRender();
+      return;
+    }
+
     const action = event.target.closest("[data-growth-inline-action]");
     if (action) {
       if (typeof openGrowthDialog !== "function") return;
@@ -266,7 +305,7 @@
 
   insightRow.addEventListener("keydown", (event) => {
     const point = event.target.closest("[data-growth-inline-entry]");
-    if (!point || !["Enter", " "].includes(event.key)) return;
+    if (!point || point.matches("button") || !["Enter", " "].includes(event.key)) return;
     event.preventDefault();
     openEntry(point.dataset.growthInlineEntry);
   });

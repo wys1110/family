@@ -279,6 +279,13 @@
   background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 
+#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"] {
+  border-color: color-mix(in srgb, var(--blue) 24%, transparent);
+  background: color-mix(in srgb, var(--blue) 5%, var(--surface));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--blue) 7%, transparent);
+}
+#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"] .field-group-title { color:var(--blue); }
+
 #growthDialog .photo-fieldset legend { width: 100%; margin-bottom: 9px; }
 #growthDialog .photo-help { display: none; }
 
