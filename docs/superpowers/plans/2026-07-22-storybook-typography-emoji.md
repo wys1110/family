@@ -1,5 +1,7 @@
 # Family Storybook Typography and Emoji Implementation Plan
 
+> Superseded by: [Moonlit Storybook Growth Implementation Plan](./2026-07-22-moonlit-storybook-growth.md) — Follow the SUIT-only moonlit plan for the current implementation decision.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship a first visible storybook-design slice by self-hosting MaruBuri and SUIT, applying clear display/body roles, and enriching the growth/AI screen and global navigation with consistent semantic emoji.

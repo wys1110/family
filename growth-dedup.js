@@ -101,7 +101,13 @@
     quickSection?.remove();
 
     const title = document.querySelector("#careTimerTitle");
-    if (title) title.textContent = "기록하기";
+    if (title) {
+      const icon = document.createElement("span");
+      icon.className = "storybook-heading-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "⏱️";
+      title.replaceChildren(icon, document.createTextNode("기록하기"));
+    }
     timerCard.querySelector(".care-timer-heading .eyebrow")?.remove();
     timerCard.querySelector(".care-timer-heading small")?.remove();
     timerCard.querySelector(".care-live-badge")?.remove();

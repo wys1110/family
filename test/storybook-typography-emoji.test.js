@@ -28,9 +28,19 @@ describe('storybook typography and emoji system', () => {
 
   it('bumps the dynamic module versions so browsers receive the new design', () => {
     const config = read('config.js');
-    expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v1" }');
+    expect(config).toContain('{ name: "growth-dedup", version: "20260722-heading-icon-v1" }');
+    expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v2" }');
     expect(config).toContain('{ name: "typography-system", version: "20260722-suit-only-v1", script: false }');
-    expect(config).toContain('{ name: "night-theme-polish", version: "20260722-moonlit-v1" }');
+    expect(config).toContain('{ name: "night-theme-polish", version: "20260722-moonlit-v2" }');
+  });
+
+  it('keeps growth heading emoji above the ID-scoped SUIT span rule in the cascade', () => {
+    const emojiCss = read('tab-emojis.css');
+    const typographyCss = read('typography-system.css');
+
+    expect(typographyCss).toMatch(/#growthView :is\([^)]*span[^)]*\) \{[\s\S]*?font-family: var\(--font-family-sans\);/);
+    expect(emojiCss).toMatch(/\.app-shell #growthView \.storybook-heading-icon \{[\s\S]*?font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;[\s\S]*?font-size: 0\.72em;[\s\S]*?font-weight: 400;[\s\S]*?line-height: 1;/);
+    expect(emojiCss).not.toContain('!important');
   });
 
   it('keeps section emoji decorative and text headings intact', () => {
@@ -38,5 +48,13 @@ describe('storybook typography and emoji system', () => {
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">✨</span>AI 육아 도우미');
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">🌱</span>성장일기');
     expect(html).toContain('class="storybook-heading-icon" aria-hidden="true">📷</span>최근 사진');
+  });
+
+  it('marks the replaced typography documents as superseded by the SUIT-only moonlit decision', () => {
+    const oldSpecTop = read('docs/superpowers/specs/2026-07-22-storybook-typography-emoji-design.md').split('\n').slice(0, 6).join('\n');
+    const oldPlanTop = read('docs/superpowers/plans/2026-07-22-storybook-typography-emoji.md').split('\n').slice(0, 6).join('\n');
+
+    expect(oldSpecTop).toContain('Superseded by: [Family 별빛 동화책 성장 화면 설계](./2026-07-22-moonlit-storybook-growth-design.md)');
+    expect(oldPlanTop).toContain('Superseded by: [Moonlit Storybook Growth Implementation Plan](./2026-07-22-moonlit-storybook-growth.md)');
   });
 });
