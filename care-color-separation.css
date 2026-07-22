@@ -1,0 +1,234 @@
+/* Clear category palette for the daily care clock and its chronological list. */
+#growthView .care-pattern-section {
+  --care-formula-strong: #ee971f;
+  --care-breast-strong: #d9507d;
+  --care-sleep-strong: #7668dc;
+  --care-diaper-strong: #29966d;
+}
+
+html[data-family-theme="night"] #growthView .care-pattern-section {
+  --care-formula: #ffb43f;
+  --care-pumped: #55cbe6;
+  --care-breast: #ff6f9d;
+  --care-solid: #8bd16d;
+  --care-sleep: #a08cff;
+  --care-diaper: #58d49e;
+  --care-formula-strong: var(--care-formula);
+  --care-breast-strong: var(--care-breast);
+  --care-sleep-strong: var(--care-sleep);
+  --care-diaper-strong: var(--care-diaper);
+}
+
+/* One palette across legend, filters, clock, summaries, and list rows. */
+#growthView .care-rhythm-legend .formula,
+#growthView .care-pattern-categories .formula {
+  --legend: var(--care-formula-strong);
+  --category-color: var(--care-formula-strong);
+}
+
+#growthView .care-rhythm-legend .breast,
+#growthView .care-pattern-categories .breast {
+  --legend: var(--care-breast-strong);
+  --category-color: var(--care-breast-strong);
+}
+
+#growthView .care-rhythm-legend .sleep,
+#growthView .care-pattern-categories .sleep {
+  --legend: var(--care-sleep-strong);
+  --category-color: var(--care-sleep-strong);
+}
+
+#growthView .care-rhythm-legend .diaper,
+#growthView .care-pattern-categories .diaper {
+  --legend: var(--care-diaper-strong);
+  --category-color: var(--care-diaper-strong);
+}
+
+#growthView .care-clock-mark {
+  stroke-width: 9px;
+  stroke-linecap: round;
+  opacity: .98;
+}
+
+#growthView .care-clock-mark.formula { stroke: var(--care-formula-strong); }
+#growthView .care-clock-mark.breast { stroke: var(--care-breast-strong); }
+#growthView .care-clock-mark.diaper { stroke: var(--care-diaper-strong); }
+
+#growthView .care-clock-dot.formula { fill: var(--care-formula-strong); }
+#growthView .care-clock-dot.breast { fill: var(--care-breast-strong); }
+#growthView .care-clock-dot.diaper { fill: var(--care-diaper-strong); }
+
+#growthView .care-clock-sleep {
+  stroke: var(--care-sleep-strong);
+  stroke-width: 13px;
+  stroke-linecap: round;
+  opacity: .84;
+}
+
+#growthView .care-clock-summary .formula { --summary-color: var(--care-formula-strong); }
+#growthView .care-clock-summary .breast { --summary-color: var(--care-breast-strong); }
+#growthView .care-clock-summary .sleep { --summary-color: var(--care-sleep-strong); }
+#growthView .care-clock-summary .diaper { --summary-color: var(--care-diaper-strong); }
+
+#growthView .care-time-list {
+  border-color: rgba(47, 78, 111, .13);
+  background: rgba(249, 251, 253, .92);
+}
+
+#growthView .care-time-list-heading strong {
+  color: var(--label);
+  font-weight: 800;
+}
+
+#growthView .care-time-list-heading span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #427ac0;
+  background: rgba(73, 126, 192, .10);
+}
+
+#growthView .care-time-row {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--care-time-color) 28%, transparent);
+  background: color-mix(in srgb, var(--care-time-color) 9%, #ffffff);
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--care-time-color) 8%, transparent);
+}
+
+#growthView .care-time-row::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 4px;
+  border-radius: 0 6px 6px 0;
+  background: var(--care-time-color);
+}
+
+#growthView .care-time-row.formula { --care-time-color: var(--care-formula-strong); }
+#growthView .care-time-row.breast { --care-time-color: var(--care-breast-strong); }
+#growthView .care-time-row.sleep { --care-time-color: var(--care-sleep-strong); }
+#growthView .care-time-row.diaper { --care-time-color: var(--care-diaper-strong); }
+
+#growthView .care-time-row time,
+#growthView .care-time-row > span strong {
+  color: var(--care-time-color);
+}
+
+#growthView .care-time-row > span strong {
+  font-weight: 800;
+}
+
+#growthView .care-time-row > span small {
+  color: #627087;
+  font-weight: 600;
+}
+
+#growthView .care-time-row > i {
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--care-time-color) 19%, transparent);
+}
+
+html[data-family-theme="night"] #growthView .care-time-list {
+  border-color: rgba(142, 185, 255, .19);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(108, 151, 220, .10), transparent 44%),
+    linear-gradient(155deg, rgba(16, 38, 64, .97), rgba(8, 24, 43, .98));
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] #growthView .care-time-list-heading strong {
+  color: #f8fbff;
+}
+
+html[data-family-theme="night"] #growthView .care-time-list-heading span {
+  color: #9bc7ff;
+  border: 1px solid rgba(108, 168, 242, .19);
+  background: rgba(41, 83, 135, .42);
+}
+
+html[data-family-theme="night"] #growthView .care-time-row {
+  border-color: color-mix(in srgb, var(--care-time-color) 42%, rgba(255, 255, 255, .05));
+  background:
+    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--care-time-color) 13%, transparent), transparent 45%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--care-time-color) 20%, #193452),
+      color-mix(in srgb, var(--care-time-color) 6%, #0b1e34));
+  box-shadow:
+    0 9px 24px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .055);
+}
+
+html[data-family-theme="night"] #growthView .care-time-row::before {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--care-time-color) 48%, transparent);
+}
+
+html[data-family-theme="night"] #growthView .care-time-row time,
+html[data-family-theme="night"] #growthView .care-time-row > span strong {
+  color: var(--care-time-color);
+  text-shadow: 0 1px 12px color-mix(in srgb, var(--care-time-color) 18%, transparent);
+}
+
+html[data-family-theme="night"] #growthView .care-time-row > span small {
+  color: #c3d0e3;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-hour {
+  fill: #afc0d9 !important;
+  opacity: 1;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-tick {
+  stroke: #526b8c;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-tick.major {
+  stroke: #91a6c3;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-mark,
+html[data-family-theme="night"] #growthView .care-clock-sleep {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .32));
+}
+
+html[data-family-theme="night"] #growthView .care-clock-dot {
+  stroke: #0b1d32;
+  stroke-width: 1.5px;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-periods span {
+  color: #d8e4f5;
+  border: 1px solid rgba(148, 184, 232, .16);
+  background: rgba(12, 31, 54, .88);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
+}
+
+html[data-family-theme="night"] #growthView .care-clock-summary article {
+  --summary-color: #8eb9ff;
+  border-color: color-mix(in srgb, var(--summary-color) 24%, rgba(255, 255, 255, .04));
+  background: color-mix(in srgb, var(--summary-color) 11%, #10243d);
+}
+
+html[data-family-theme="night"] #growthView .care-clock-summary article span {
+  color: #bdcbe0;
+}
+
+html[data-family-theme="night"] #growthView .care-clock-summary article strong,
+html[data-family-theme="night"] #growthView .care-clock-summary article i {
+  color: var(--summary-color);
+  background-color: var(--summary-color);
+}
+
+@media (max-width: 520px) {
+  #growthView .care-time-row {
+    min-height: 64px;
+  }
+
+  #growthView .care-time-row time {
+    font-size: 25px;
+  }
+}
