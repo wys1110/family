@@ -2,25 +2,62 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Keep the top-right utilities as a direct body child and re-assert the
-  // viewport anchor. iOS can otherwise reattach a fixed element to a scrolling
-  // containing block while views, filters, or the visual viewport are changing.
+  // Keep the top-right utilities as a direct body child and freeze their
+  // viewport coordinates. Mobile Safari changes visualViewport values while
+  // its browser chrome opens/closes; recalculating during that cycle made the
+  // notification/account buttons visibly jump between views.
   const topbarActions = document.querySelector('.topbar-account-actions');
-  const pinTopbarActions = () => {
+  let lockedTop = null;
+  let lockedRight = null;
+
+  const installTopbarLockStyle = () => {
+    if (document.querySelector('style[data-topbar-position-lock]')) return;
+    const style = document.createElement('style');
+    style.dataset.topbarPositionLock = '';
+    style.textContent = `
+      body > .topbar-account-actions,
+      body > .topbar-account-actions > button {
+        animation: none !important;
+        transition: none !important;
+      }
+      body > .topbar-account-actions > button:active {
+        transform: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  const defaultAnchor = () => {
+    const desktop = window.matchMedia('(min-width: 768px)').matches;
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    return {
+      top: desktop ? 20 : 16,
+      right: desktop ? Math.max(16, Math.round((viewportWidth - 820) / 2 + 16)) : 16,
+    };
+  };
+
+  const pinTopbarActions = ({ reset = false } = {}) => {
     if (!topbarActions) return;
+
+    const beforeMove = topbarActions.getBoundingClientRect();
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     if (topbarActions.parentElement !== pageBody) pageBody.appendChild(topbarActions);
 
-    const desktop = window.matchMedia('(min-width: 768px)').matches;
+    if (reset || lockedTop === null || lockedRight === null) {
+      const fallback = defaultAnchor();
+      const measuredRight = viewportWidth - beforeMove.right;
+      lockedTop = reset || !Number.isFinite(beforeMove.top) || beforeMove.top < 0
+        ? fallback.top
+        : Math.round(beforeMove.top);
+      lockedRight = reset || !Number.isFinite(measuredRight) || measuredRight < 0
+        ? fallback.right
+        : Math.round(measuredRight);
+    }
+
     topbarActions.style.setProperty('position', 'fixed', 'important');
     topbarActions.style.setProperty('z-index', '1100', 'important');
-    topbarActions.style.setProperty(
-      'top',
-      desktop
-        ? 'calc(max(18px, env(safe-area-inset-top, 0px)) + 2px)'
-        : 'calc(max(12px, env(safe-area-inset-top, 0px)) + 4px)',
-      'important',
-    );
-    topbarActions.style.setProperty('right', 'max(16px, calc((100vw - 820px) / 2 + 16px))', 'important');
+    topbarActions.style.setProperty('top', `${lockedTop}px`, 'important');
+    topbarActions.style.setProperty('right', `${lockedRight}px`, 'important');
     topbarActions.style.setProperty('bottom', 'auto', 'important');
     topbarActions.style.setProperty('left', 'auto', 'important');
     topbarActions.style.setProperty('margin', '0', 'important');
@@ -28,23 +65,27 @@
     topbarActions.style.setProperty('translate', 'none', 'important');
     topbarActions.style.setProperty('animation', 'none', 'important');
     topbarActions.style.setProperty('transition', 'none', 'important');
+    topbarActions.style.setProperty('will-change', 'auto', 'important');
   };
 
+  installTopbarLockStyle();
   pinTopbarActions();
+
   let pinFrame = 0;
-  const scheduleTopbarPin = () => {
+  const scheduleTopbarPin = (options) => {
     if (pinFrame) return;
     pinFrame = window.requestAnimationFrame(() => {
       pinFrame = 0;
-      pinTopbarActions();
+      pinTopbarActions(options);
     });
   };
 
-  window.addEventListener('pageshow', scheduleTopbarPin);
-  window.addEventListener('resize', scheduleTopbarPin, { passive: true });
-  window.addEventListener('orientationchange', scheduleTopbarPin, { passive: true });
-  window.visualViewport?.addEventListener('resize', scheduleTopbarPin, { passive: true });
-  window.visualViewport?.addEventListener('scroll', scheduleTopbarPin, { passive: true });
+  // Do not listen to visualViewport scroll/resize. Those events are caused by
+  // Safari's address bar and keyboard and must not move these controls.
+  window.addEventListener('pageshow', () => scheduleTopbarPin());
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(() => scheduleTopbarPin({ reset: true }), 220);
+  }, { passive: true });
 
   if (topbarActions) {
     const topbarParentObserver = new MutationObserver(() => {
