@@ -1,0 +1,96 @@
+.settings-refresh-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-refresh-settings .settings-heading {
+  margin-bottom: 0;
+}
+
+.settings-refresh-mark {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-refresh-mark::before {
+  content: "";
+  display: block;
+  width: 23px;
+  height: 23px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.settings-refresh-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 132px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));
+  box-shadow: 0 9px 24px rgba(var(--theme-accent-rgb), .20);
+  font-size: 12px;
+  font-weight: 760;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+}
+
+.settings-refresh-action > span {
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.settings-refresh-action:active {
+  transform: scale(.975);
+}
+
+.settings-refresh-action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 34%, transparent);
+  outline-offset: 3px;
+}
+
+.settings-refresh-action:disabled {
+  cursor: default;
+  opacity: .72;
+}
+
+.settings-refresh-action.refreshing > span {
+  animation: settings-refresh-spin .65s linear infinite;
+}
+
+@keyframes settings-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 430px) {
+  .settings-refresh-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-refresh-action {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-refresh-action {
+    transition: none;
+  }
+
+  .settings-refresh-action.refreshing > span {
+    animation-duration: 1.4s;
+  }
+}
