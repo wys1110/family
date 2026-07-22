@@ -493,7 +493,7 @@ html[data-family-theme="night"] #growthView {
 }
 
 html[data-family-theme="night"] #growthView .baby-care-card,
-html[data-family-theme="night"] #growthView .care-timer-card,
+html[data-family-theme="night"] #growthView #careTimerCard.care-timer-card,
 html[data-family-theme="night"] #growthView .growth-quick-section,
 html[data-family-theme="night"] #growthView .care-pattern-section,
 html[data-family-theme="night"] #growthView .baby-ai-assistant,
@@ -503,12 +503,25 @@ html[data-family-theme="night"] #growthView .recent-photo-featured {
   box-shadow: 0 20px 48px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 245, 216, .08);
 }
 
-html[data-family-theme="night"] #growthView .growth-quick-grid button {
+html[data-family-theme="night"] #growthView #careTimerCard .growth-quick-grid button {
+  position: relative;
+  isolation: isolate;
   border-color: color-mix(in srgb, var(--moonlit-teal) 30%, transparent);
   box-shadow: 3px 4px 0 rgba(4, 14, 27, .34), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
-html[data-family-theme="night"] #babyJournalContent > section::before {
+html[data-family-theme="night"] #growthView #careTimerCard .growth-quick-grid button::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid;
+  border-color: color-mix(in srgb, var(--moonlit-teal) 30%, transparent);
+  border-radius: inherit;
+  box-shadow: 3px 4px 0 rgba(4, 14, 27, .34), inset 0 1px 0 rgba(255, 255, 255, .08);
+  pointer-events: none;
+}
+
+html[data-family-theme="night"] #growthView #babyJournalContent > section::before {
   content: "✦";
   position: static;
   inset: auto;
