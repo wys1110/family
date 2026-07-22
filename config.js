@@ -42,6 +42,11 @@ window.FAMILY_CONFIG = {
     const pageBody = document.body;
     if (!pageBody) return;
 
+    const topbarActions = document.querySelector(".topbar-account-actions");
+    if (topbarActions && topbarActions.parentElement !== pageBody) {
+      pageBody.appendChild(topbarActions);
+    }
+
     let button = document.querySelector('[data-refresh-module]');
     if (!button) {
       button = document.createElement("button");
@@ -108,7 +113,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260722-korean-labels-v2" },
-    { name: "refresh-button", version: "20260722-bottom-right-header-v1" },
+    { name: "refresh-button", version: "20260722-fixed-top-utilities-v2" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260722-korean-labels-v2" },
     { name: "family-profile", version: "20260722-dynamic-members-v1" },
