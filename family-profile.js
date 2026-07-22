@@ -3,7 +3,9 @@
 
   const STORAGE_KEY = 'family-profile-display-v1';
   const MAX_NAME_LENGTH = 20;
-  const DEFAULT_PROFILE = Object.freeze({ dadName: '아빠', momName: '엄마', childNames: [] });
+  const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
+  const PHOTO_SIZE = 360;
+  const DEFAULT_PROFILE = Object.freeze({ dadName: '아빠', momName: '엄마', childNames: [], photoDataUrl: '' });
 
   const heroStack = document.querySelector('.hero-card .family-stack');
   if (!heroStack) return;
@@ -24,6 +26,11 @@
     return name || fallback;
   };
 
+  const normalizePhoto = (value) => {
+    const photo = String(value || '');
+    return /^data:image\/(?:jpeg|png|webp);base64,/i.test(photo) ? photo : '';
+  };
+
   const readProfiles = () => {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -41,6 +48,7 @@
       childNames: Array.isArray(stored.childNames)
         ? stored.childNames.map((name) => String(name || '').trim().slice(0, MAX_NAME_LENGTH))
         : [],
+      photoDataUrl: normalizePhoto(stored.photoDataUrl),
     };
   };
 
@@ -91,6 +99,28 @@
 
   let settingsView = document.querySelector('#settingsView');
   let settingsCard = null;
+  let draftPhotoDataUrl = '';
+
+  const renderPhoto = (profile = readProfile()) => {
+    if (!settingsCard) return;
+    const photo = normalizePhoto(profile.photoDataUrl);
+    const image = settingsCard.querySelector('[data-family-profile-photo]');
+    const placeholder = settingsCard.querySelector('[data-family-profile-photo-placeholder]');
+    const removeButton = settingsCard.querySelector('[data-family-photo-remove]');
+    if (!image || !placeholder || !removeButton) return;
+
+    if (photo) {
+      image.src = photo;
+      image.hidden = false;
+      placeholder.hidden = true;
+      removeButton.hidden = false;
+    } else {
+      image.removeAttribute('src');
+      image.hidden = true;
+      placeholder.hidden = false;
+      removeButton.hidden = true;
+    }
+  };
 
   const renderChildFields = (profile = readProfile()) => {
     const fieldRoot = settingsCard?.querySelector('[data-family-child-fields]');
@@ -118,7 +148,55 @@
       childNames: Array.from({ length: count }, (_, index) => (
         normalizeName(childInputs[index]?.value, defaultChildName(index, count))
       )),
+      photoDataUrl: normalizePhoto(draftPhotoDataUrl),
     };
+  };
+
+  const loadImage = (file) => new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('선택한 사진을 열 수 없습니다.'));
+    };
+    image.src = objectUrl;
+  });
+
+  const compressSquarePhoto = async (file) => {
+    if (!file?.type?.startsWith('image/')) throw new Error('사진 파일만 선택해 주세요.');
+    if (file.size > MAX_PHOTO_BYTES) throw new Error('12MB 이하 사진을 선택해 주세요.');
+
+    const image = await loadImage(file);
+    const width = image.naturalWidth || image.width;
+    const height = image.naturalHeight || image.height;
+    if (!width || !height) throw new Error('사진 크기를 확인할 수 없습니다.');
+
+    const sourceSize = Math.min(width, height);
+    const sourceX = Math.max(0, (width - sourceSize) / 2);
+    const sourceY = Math.max(0, (height - sourceSize) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = PHOTO_SIZE;
+    canvas.height = PHOTO_SIZE;
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) throw new Error('사진을 처리할 수 없습니다.');
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, PHOTO_SIZE, PHOTO_SIZE);
+    context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+    const webp = canvas.toDataURL('image/webp', .82);
+    if (webp.startsWith('data:image/webp')) return webp;
+    return canvas.toDataURL('image/jpeg', .84);
+  };
+
+  const savePhoto = (photoDataUrl) => {
+    const profile = { ...readProfile(), photoDataUrl: normalizePhoto(photoDataUrl) };
+    writeProfile(profile);
+    draftPhotoDataUrl = profile.photoDataUrl;
+    renderPhoto(profile);
   };
 
   const installSettingsCard = () => {
@@ -129,14 +207,29 @@
     settingsCard.setAttribute('aria-labelledby', 'familyProfileSettingsTitle');
     settingsCard.innerHTML = `
       <div class="settings-heading family-profile-heading">
-        <span class="settings-mark" aria-hidden="true">家</span>
+        <button class="settings-mark family-profile-photo-button" type="button" data-family-photo-trigger aria-label="가족 사진 선택">
+          <img data-family-profile-photo alt="" hidden />
+          <span class="family-profile-photo-placeholder" data-family-profile-photo-placeholder aria-hidden="true"></span>
+          <i class="family-profile-photo-edit" aria-hidden="true"></i>
+        </button>
         <div>
           <p class="eyebrow">가족 정보</p>
           <h2 id="familyProfileSettingsTitle">가족 이름</h2>
-          <span>홈 카드에 표시할 이름을 입력하세요.</span>
+          <span>홈 카드에 표시할 이름과 사진을 설정하세요.</span>
         </div>
       </div>
       <form class="family-profile-form">
+        <div class="family-profile-photo-control">
+          <div>
+            <strong>가족 사진</strong>
+            <small>선택한 사진은 정사각형으로 자동 맞춤돼요.</small>
+          </div>
+          <div class="family-profile-photo-actions">
+            <button type="button" data-family-photo-select>사진 선택</button>
+            <button type="button" data-family-photo-remove hidden>사진 삭제</button>
+          </div>
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" data-family-photo-input hidden />
+        </div>
         <div class="family-profile-grid">
           <label class="family-profile-field"><span>아빠</span><input name="familyDadName" type="text" maxlength="${MAX_NAME_LENGTH}" autocomplete="off" placeholder="아빠" /></label>
           <label class="family-profile-field"><span>엄마</span><input name="familyMomName" type="text" maxlength="${MAX_NAME_LENGTH}" autocomplete="off" placeholder="엄마" /></label>
@@ -153,7 +246,47 @@
     settingsView.insertBefore(settingsCard, settingsView.firstElementChild);
 
     const form = settingsCard.querySelector('form');
-    form.addEventListener('input', () => {
+    const photoInput = settingsCard.querySelector('[data-family-photo-input]');
+    const selectPhotoButton = settingsCard.querySelector('[data-family-photo-select]');
+    const photoTrigger = settingsCard.querySelector('[data-family-photo-trigger]');
+    const removePhotoButton = settingsCard.querySelector('[data-family-photo-remove]');
+    const openPhotoPicker = () => photoInput?.click();
+
+    photoTrigger.addEventListener('click', openPhotoPicker);
+    selectPhotoButton.addEventListener('click', openPhotoPicker);
+    photoInput.addEventListener('change', async () => {
+      const [file] = photoInput.files || [];
+      photoInput.value = '';
+      if (!file) return;
+
+      selectPhotoButton.disabled = true;
+      selectPhotoButton.setAttribute('aria-busy', 'true');
+      try {
+        const photoDataUrl = await compressSquarePhoto(file);
+        savePhoto(photoDataUrl);
+        if (typeof toast === 'function') toast('가족 사진을 저장했어요');
+      } catch (error) {
+        console.error('가족 사진 저장 실패', error);
+        if (typeof toast === 'function') toast(error?.message || '가족 사진을 저장하지 못했어요');
+      } finally {
+        selectPhotoButton.disabled = false;
+        selectPhotoButton.removeAttribute('aria-busy');
+      }
+    });
+
+    removePhotoButton.addEventListener('click', () => {
+      if (!window.confirm('가족 사진을 삭제할까요?')) return;
+      try {
+        savePhoto('');
+        if (typeof toast === 'function') toast('가족 사진을 삭제했어요');
+      } catch (error) {
+        console.error('가족 사진 삭제 실패', error);
+        if (typeof toast === 'function') toast('가족 사진을 삭제하지 못했어요');
+      }
+    });
+
+    form.addEventListener('input', (event) => {
+      if (event.target === photoInput) return;
       const draft = draftFromForm();
       renderHero(draft);
       renderPreview(draft);
@@ -165,7 +298,8 @@
         writeProfile(profile);
         renderHero(profile);
         renderPreview(profile);
-        if (typeof toast === 'function') toast('가족 이름을 저장했어요 👨‍👩‍👧');
+        renderPhoto(profile);
+        if (typeof toast === 'function') toast('가족 이름을 저장했어요');
       } catch (error) {
         console.error('가족 이름 저장 실패', error);
         if (typeof toast === 'function') toast('가족 이름을 저장하지 못했어요');
@@ -192,10 +326,12 @@
     installSettingsCard();
     if (!settingsCard) return;
     const profile = readProfile();
+    draftPhotoDataUrl = profile.photoDataUrl;
     settingsCard.querySelector('[name="familyDadName"]').value = profile.dadName;
     settingsCard.querySelector('[name="familyMomName"]').value = profile.momName;
     renderChildFields(profile);
     renderPreview(profile);
+    renderPhoto(profile);
   };
 
   const sync = () => {

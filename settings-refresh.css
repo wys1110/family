@@ -1,3 +1,10 @@
+body.settings-refresh-active > .refresh-button {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
 .settings-refresh-settings {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

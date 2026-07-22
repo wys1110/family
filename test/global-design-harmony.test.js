@@ -14,18 +14,14 @@ const settingsScript = readFileSync("settings.js", "utf8");
 const typographyCss = readFileSync("typography-system.css", "utf8");
 
 describe("global design harmony", () => {
-  test("pins account utilities to the viewport top and separates the lower floating actions", () => {
+  test("docks account utilities in the header and separates the lower floating actions", () => {
+    expect(refreshScript).toContain("const topbar = document.querySelector('.topbar')");
     expect(refreshScript).toContain("const topbarActions = document.querySelector('.topbar-account-actions')");
-    expect(refreshScript).toContain("pageBody.appendChild(topbarActions)");
-    expect(refreshScript).not.toContain("topbarActions.insertBefore(button, accountButton)");
+    expect(refreshScript).toContain("topbar.appendChild(topbarActions)");
+    expect(refreshScript).toContain("topbarActions.style.setProperty('position', 'static', 'important')");
     expect(refreshScript).toContain("pageBody.appendChild(addEventButton)");
     expect(refreshScript).toContain("pageBody.appendChild(button)");
     expect(refreshScript).not.toContain("viewTabs.insertAdjacentElement('afterend', addEventButton)");
-    expect(refreshCss).toContain(".topbar-account-actions > .notification-center-button,");
-    expect(refreshCss).toContain(".topbar-account-actions > .avatar-button");
-    expect(refreshCss).toMatch(/body > \.topbar-account-actions\s*\{[^}]*position:\s*fixed\s*!important;[^}]*top:[^;]+;[^}]*right:[^;]+;[^}]*gap:\s*8px;[^}]*background:\s*transparent;/s);
-    expect(refreshCss).toContain("body.auth-required > .topbar-account-actions");
-    expect(refreshCss).toContain("backdrop-filter: blur(18px)");
     expect(refreshCss).toContain("body > #addEventButton.fab");
     expect(refreshCss).toMatch(/body > #addEventButton\.fab\s*\{[^}]*position:\s*fixed\s*!important;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\);/s);
     expect(refreshCss).toMatch(/body > #addEventButton\.fab\s*\{[^}]*align-items:\s*center;[^}]*justify-content:\s*center;[^}]*gap:\s*6px;/s);
@@ -76,10 +72,10 @@ describe("global design harmony", () => {
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260722-motion-v1');
     expect(index).toContain('<script src="app.js?v=20260722-growth-actions-v3"></script>');
-    expect(config).toContain('{ name: "refresh-button", version: "20260722-fixed-top-utilities-v2" }');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');
-    expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-bookmark-v2", script: false }');
+    expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
     expect(config).toContain('{ name: "typography-system", version: "20260722-touch-target-v2", script: false }');
   });
