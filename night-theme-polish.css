@@ -480,3 +480,50 @@ html[data-family-theme="night"] .daily-intake-breakdown article {
     font-size: 9px;
   }
 }
+
+/* Moonlit storybook surfaces for the authenticated growth journal. */
+html[data-family-theme="night"] #growthView {
+  --moonlit-gold: #e8c77a;
+  --moonlit-teal: #78b7b2;
+  --moonlit-paper: rgba(14, 34, 57, .88);
+  --moonlit-border: color-mix(in srgb, var(--moonlit-gold) 28%, rgba(138, 180, 222, .18));
+  background:
+    radial-gradient(circle at 92% 4%, rgba(232, 199, 122, .10) 0 2px, transparent 3px),
+    radial-gradient(ellipse at 8% 18%, rgba(120, 183, 178, .10), transparent 34%);
+}
+
+html[data-family-theme="night"] #growthView .baby-care-card,
+html[data-family-theme="night"] #growthView .care-timer-card,
+html[data-family-theme="night"] #growthView .growth-quick-section,
+html[data-family-theme="night"] #growthView .care-pattern-section,
+html[data-family-theme="night"] #growthView .baby-ai-assistant,
+html[data-family-theme="night"] #growthView .recent-photo-featured {
+  border-color: var(--moonlit-border);
+  background: linear-gradient(145deg, rgba(24, 52, 83, .92), var(--moonlit-paper));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 245, 216, .08);
+}
+
+html[data-family-theme="night"] #growthView .growth-quick-grid button {
+  border-color: color-mix(in srgb, var(--moonlit-teal) 30%, transparent);
+  box-shadow: 3px 4px 0 rgba(4, 14, 27, .34), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] #babyJournalContent > section::before {
+  content: "✦";
+  position: static;
+  inset: auto;
+  z-index: auto;
+  display: block;
+  width: auto;
+  height: 1px;
+  margin: -9px 18% 16px;
+  color: var(--moonlit-gold);
+  background: linear-gradient(90deg, transparent, var(--moonlit-gold), transparent);
+  font-size: 12px;
+  line-height: 1px;
+  letter-spacing: normal;
+  text-align: center;
+  pointer-events: none;
+  animation: none;
+  transform: none;
+}
