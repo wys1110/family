@@ -7,7 +7,7 @@
     growth: ['🌱', '성장'],
     english: ['📖', '동화'],
     'feature-request': ['💡', '요청'],
-    settings: ['🎨', '설정'],
+    settings: ['⚙️', '설정'],
   };
 
   const navigation = document.querySelector('.view-tabs');

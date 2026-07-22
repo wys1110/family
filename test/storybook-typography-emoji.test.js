@@ -23,13 +23,13 @@ describe('storybook typography and emoji system', () => {
   it('uses the approved navigation emoji', () => {
     const script = read('tab-emojis.js');
     expect(script).toContain("growth: ['🌱', '성장']");
-    expect(script).toContain("settings: ['🎨', '설정']");
+    expect(script).toContain("settings: ['⚙️', '설정']");
   });
 
   it('bumps the dynamic module versions so browsers receive the new design', () => {
     const config = read('config.js');
     expect(config).toContain('{ name: "growth-dedup", version: "20260722-heading-icon-v1" }');
-    expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v2" }');
+    expect(config).toContain('{ name: "tab-emojis", version: "20260722-settings-gear-v3" }');
     expect(config).toContain('{ name: "typography-system", version: "20260722-touch-target-v2", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
   });

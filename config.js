@@ -123,7 +123,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-briefing", version: "20260722-notification-channels-v3" },
     { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
-    { name: "tab-emojis", version: "20260722-storybook-v2" },
+    { name: "tab-emojis", version: "20260722-settings-gear-v3" },
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
