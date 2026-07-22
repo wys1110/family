@@ -116,7 +116,7 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260722-fixed-top-utilities-v2" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260722-korean-labels-v2" },
-    { name: "family-profile", version: "20260722-dynamic-members-v1" },
+    { name: "family-profile", version: "20260722-child-label-dedup-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
     { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
