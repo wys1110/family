@@ -31,6 +31,12 @@ body.auth-required > .topbar-account-actions {
   pointer-events: none;
 }
 
+/* Account management stays inside the avatar dialog. */
+.desktop-logout-button,
+.desktop-logout-button:not([hidden]) {
+  display: none !important;
+}
+
 body.notification-center-installed .topbar h1 {
   max-width: calc(100vw - 132px);
 }
