@@ -2,8 +2,16 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Keep both floating actions as direct body children so position: fixed stays
-  // anchored to the viewport in mobile Safari.
+  // Keep the top-right utilities as a direct body child. Mobile Safari can
+  // otherwise treat position: fixed as scroll-bound when an ancestor creates
+  // a containing block through transforms, filters, or animated view changes.
+  const topbarActions = document.querySelector('.topbar-account-actions');
+  if (topbarActions && topbarActions.parentElement !== pageBody) {
+    pageBody.appendChild(topbarActions);
+  }
+
+  // Keep both lower floating actions as direct body children so position: fixed
+  // stays anchored to the viewport in mobile Safari.
   const addEventButton = document.querySelector('#addEventButton');
   if (addEventButton && addEventButton.parentElement !== pageBody) {
     pageBody.appendChild(addEventButton);
