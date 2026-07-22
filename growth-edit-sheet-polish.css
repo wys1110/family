@@ -102,6 +102,13 @@
 
 #growthDialog label { margin-bottom: 13px; }
 #growthDialog .field-optional { display: none; }
+#growthDialog .growth-title-optional {
+  display: inline;
+  margin-left: 4px;
+  color: var(--secondary);
+  font-size: 10px;
+  font-weight: 620;
+}
 
 #growthDialog input,
 #growthDialog select,

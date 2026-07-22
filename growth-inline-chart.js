@@ -14,6 +14,7 @@
   let rendering = false;
   let lastSignature = "";
   let historyExpanded = false;
+  let historyToggleFocusPending = false;
 
   const escapeText = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;",
@@ -224,6 +225,8 @@
     const signature = signatureFor(entries);
     if (insightRow.querySelector(".growth-inline-card") && signature === lastSignature) return;
 
+    const restoreHistoryToggleFocus = historyToggleFocusPending;
+    historyToggleFocusPending = false;
     rendering = true;
     lastSignature = signature;
 
@@ -265,6 +268,10 @@
       </article>
     `;
 
+    if (restoreHistoryToggleFocus) {
+      insightRow.querySelector("[data-growth-inline-history-toggle]")?.focus({ preventScroll: true });
+    }
+
     rendering = false;
   };
 
@@ -283,6 +290,7 @@
     const historyToggle = event.target.closest("[data-growth-inline-history-toggle]");
     if (historyToggle) {
       historyExpanded = !historyExpanded;
+      historyToggleFocusPending = true;
       lastSignature = "";
       queueRender();
       return;
