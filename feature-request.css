@@ -26,15 +26,14 @@
 }
 
 .feature-request-card::after {
-  content: "?";
+  content: "";
   position: absolute;
-  right: 16px;
-  top: -26px;
-  color: rgba(86, 121, 106, .055);
-  font-family: Georgia, serif;
-  font-size: 132px;
-  font-weight: 700;
-  line-height: 1;
+  right: -20px;
+  top: -36px;
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(86, 121, 106, .12), transparent 68%);
   pointer-events: none;
 }
 
@@ -326,5 +325,76 @@
   .feature-request-message {
     grid-column: 1 / -1;
     margin-top: 0;
+  }
+}
+
+/* Request-tab layout contract: keep generic form and shell rules from distorting this page. */
+#featureRequestView.feature-request-view {
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+  padding-bottom: 0;
+}
+
+#featureRequestView .feature-request-form {
+  display: block;
+}
+
+#featureRequestView .feature-request-form textarea {
+  width: 100%;
+  min-height: 120px;
+}
+
+#featureRequestView .feature-request-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#featureRequestView .feature-request-actions span {
+  text-align: left;
+}
+
+#featureRequestView .feature-request-actions button {
+  min-width: 112px;
+  min-height: 48px;
+}
+
+#featureRequestView .feature-request-note,
+#featureRequestView .feature-request-message {
+  margin-top: 10px;
+}
+
+#featureRequestView .feature-request-admin-heading button {
+  min-height: 44px;
+}
+
+#featureRequestView .feature-request-item p {
+  max-width: 68ch;
+}
+
+#featureRequestView .feature-request-item label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 220px);
+  justify-content: end;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+#featureRequestView .feature-request-item select {
+  width: 100%;
+  max-width: 220px;
+  min-height: 44px;
+  margin-top: 0;
+}
+
+@media (min-width: 768px) {
+  #featureRequestView .feature-request-form textarea {
+    min-height: 132px;
   }
 }
