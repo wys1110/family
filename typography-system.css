@@ -4,14 +4,6 @@
  */
 
 @font-face {
-  font-family: "Family Story Display";
-  src: url("assets/fonts/MaruBuri-SemiBold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Family UI";
   src: url("assets/fonts/SUIT-Variable.woff2") format("woff2");
   font-style: normal;
@@ -20,9 +12,9 @@
 }
 
 :root {
-  --font-family-display: "Family Story Display", "Apple SD Gothic Neo", serif;
   --font-family-sans: "Family UI", -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-family-display: var(--font-family-sans);
 
   --type-page-size: 24px;
   --type-section-size: 18px;
@@ -538,7 +530,7 @@ input[type="datetime-local"],
   }
 }
 
-/* Storybook display role stays intentionally narrow; data and controls remain UI sans. */
+/* Heading selectors retain their display-role hook while using the SUIT stack. */
 .topbar h1,
 .daily-verse-card blockquote,
 #calendarView .hero-card h2,
@@ -556,5 +548,5 @@ input[type="datetime-local"],
 #featureRequestView .feature-request-admin-heading h2,
 #settingsView .settings-heading h2 {
   font-family: var(--font-family-display);
-  font-weight: 600;
+  font-weight: 700;
 }

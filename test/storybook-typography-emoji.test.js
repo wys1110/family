@@ -4,23 +4,18 @@ import { existsSync, readFileSync } from 'node:fs';
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 describe('storybook typography and emoji system', () => {
-  it('self-hosts the approved font assets and notices', () => {
-    expect(existsSync(new URL('../assets/fonts/MaruBuri-SemiBold.woff2', import.meta.url))).toBe(true);
+  it('self-hosts only the approved SUIT font asset and notice', () => {
+    expect(existsSync(new URL('../assets/fonts/MaruBuri-SemiBold.woff2', import.meta.url))).toBe(false);
     expect(existsSync(new URL('../assets/fonts/SUIT-Variable.woff2', import.meta.url))).toBe(true);
-    expect(existsSync(new URL('../assets/fonts/LICENSE-MaruBuri.md', import.meta.url))).toBe(true);
+    expect(existsSync(new URL('../assets/fonts/LICENSE-MaruBuri.md', import.meta.url))).toBe(false);
     expect(existsSync(new URL('../assets/fonts/LICENSE-SUIT.txt', import.meta.url))).toBe(true);
-
-    const maruLicense = read('assets/fonts/LICENSE-MaruBuri.md');
-    expect(maruLicense).toContain('Reserved Font Name');
-    expect(maruLicense).toContain('PERMISSION & CONDITIONS');
-    expect(maruLicense).toContain('DISCLAIMER');
   });
 
-  it('assigns separate storybook display and UI font roles', () => {
+  it('aliases the display role to the SUIT UI font stack', () => {
     const css = read('typography-system.css');
-    expect(css).toContain('font-family: "Family Story Display"');
+    expect(css).not.toContain('font-family: "Family Story Display"');
     expect(css).toContain('font-family: "Family UI"');
-    expect(css).toContain('--font-family-display: "Family Story Display"');
+    expect(css).toContain('--font-family-display: var(--font-family-sans)');
     expect(css).toContain('--font-family-sans: "Family UI"');
   });
 
