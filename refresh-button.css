@@ -3,37 +3,72 @@
   z-index: 1000;
   top: calc(max(12px, env(safe-area-inset-top, 0px)) + 4px);
   right: max(16px, calc((100vw - 820px) / 2 + 16px));
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
-  border: 1px solid color-mix(in srgb, var(--label) 12%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 74%, transparent);
-  box-shadow: 0 12px 34px rgba(5, 17, 31, .16), inset 0 1px 0 rgba(255, 255, 255, .12);
-  backdrop-filter: blur(20px) saturate(145%);
-  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-.topbar-account-actions > .refresh-button {
-  position: relative;
-  z-index: 1;
-  display: grid;
+body.notification-center-installed .topbar h1 {
+  max-width: calc(100vw - 132px);
+}
+
+.topbar-account-actions > .notification-center-button,
+.topbar-account-actions > .avatar-button {
   flex: 0 0 auto;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, .46);
+  width: 44px;
+  height: 44px;
+  border: 1px solid color-mix(in srgb, var(--label) 16%, transparent);
   border-radius: 50%;
-  color: white;
-  background: linear-gradient(135deg, var(--theme-hero-start, #56796a), var(--theme-hero-end, #7e9e82));
   box-shadow:
-    0 8px 22px rgba(var(--theme-accent-rgb, 86, 121, 106), .22),
-    inset 0 1px 0 rgba(255, 255, 255, .28);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+    0 8px 22px rgba(5, 17, 31, .13),
+    inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+body .topbar-account-actions > .notification-center-button {
+  color: var(--label);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+
+.topbar-account-actions > .avatar-button {
+  color: white;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--theme-hero-start, #28483b) 88%, white),
+      color-mix(in srgb, var(--theme-hero-end, #708276) 90%, black)
+    );
+}
+
+.topbar-account-actions > .avatar-button i {
+  right: -1px;
+  bottom: -1px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 5px rgba(5, 17, 31, .28);
+}
+
+html[data-family-theme="night"] .topbar-account-actions > .notification-center-button {
+  border-color: rgba(146, 183, 235, .30);
+  color: #eef5ff;
+  background: rgba(15, 37, 64, .78);
+}
+
+html[data-family-theme="night"] .topbar-account-actions > .avatar-button {
+  border-color: rgba(157, 195, 246, .34);
+  background: linear-gradient(145deg, #244b7a, #315f97);
+}
+
+html[data-family-theme="night"] .topbar-account-actions > .avatar-button i {
+  border-color: #071425;
 }
 
 /* Keep the primary action in the familiar bottom-center position. */
@@ -75,18 +110,45 @@ body.floating-actions-safe-zone-active > #addEventButton.fab {
   pointer-events: none;
 }
 
-.refresh-button span {
-  display: block;
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1;
-  transform: translateY(-1px);
+/* Refresh is a separate floating utility at the lower-right edge. */
+body > .refresh-button {
+  position: fixed;
+  z-index: 1000;
+  right: max(16px, calc((100vw - 820px) / 2 + 16px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(145deg, var(--theme-hero-start, #56796a), var(--theme-hero-end, #7e9e82));
+  box-shadow:
+    0 12px 30px rgba(var(--theme-accent-rgb, 86, 121, 106), .30),
+    inset 0 1px 0 rgba(255, 255, 255, .30);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
 }
 
-.refresh-button:active {
+body > .refresh-button span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  font-size: 0;
+  line-height: 0;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-2.34 5.66'/%3E%3Cpath d='M20 4v7h-7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body > .refresh-button:active {
   transform: scale(.92);
   box-shadow:
-    0 5px 16px rgba(var(--theme-accent-rgb, 86, 121, 106), .2),
+    0 7px 20px rgba(var(--theme-accent-rgb, 86, 121, 106), .24),
     inset 0 1px 0 rgba(255, 255, 255, .24);
 }
 
@@ -104,37 +166,80 @@ body.floating-actions-safe-zone-active > #addEventButton.fab {
   animation: family-refresh-spin .65s linear infinite;
 }
 
+html[data-family-theme="night"] body > .refresh-button {
+  border-color: rgba(156, 197, 251, .50);
+  background: linear-gradient(145deg, #315f99, #214a7d);
+  box-shadow:
+    0 14px 34px rgba(30, 83, 145, .48),
+    0 0 0 1px rgba(122, 174, 240, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
 @keyframes family-refresh-spin {
-  to { transform: translateY(-1px) rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (min-width: 768px) {
-  .topbar-account-actions { top: calc(max(18px, env(safe-area-inset-top, 0px)) + 2px); }
-  .topbar-account-actions > .refresh-button {
+  .topbar-account-actions {
+    top: calc(max(18px, env(safe-area-inset-top, 0px)) + 2px);
+  }
+
+  .topbar-account-actions > .notification-center-button,
+  .topbar-account-actions > .avatar-button {
     width: 46px;
     height: 46px;
   }
 
-  body > #addEventButton.fab {
+  body > #addEventButton.fab,
+  body > .refresh-button {
     bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body > .refresh-button {
+    width: 54px;
+    height: 54px;
   }
 }
 
 @media (max-width: 380px) {
-  .topbar-account-actions > .refresh-button {
+  body.notification-center-installed .topbar h1 {
+    max-width: calc(100vw - 126px);
+  }
+
+  .topbar-account-actions {
+    gap: 7px;
+  }
+
+  .topbar-account-actions > .notification-center-button,
+  .topbar-account-actions > .avatar-button {
     width: 42px;
     height: 42px;
   }
 
-  body > #addEventButton.fab {
+  body > #addEventButton.fab,
+  body > .refresh-button {
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body > #addEventButton.fab {
     min-height: 46px;
     padding-inline: 16px;
+  }
+
+  body > .refresh-button {
+    right: 12px;
+    width: 48px;
+    height: 48px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .refresh-button,
-  .refresh-button span { transition: none; }
-  .refresh-button.refreshing span { animation-duration: 1.4s; }
+  .refresh-button span {
+    transition: none;
+  }
+
+  .refresh-button.refreshing span {
+    animation-duration: 1.4s;
+  }
 }
