@@ -1,0 +1,34 @@
+/*
+ * iOS Safari can leave a fragment of the previously active tab when a sticky,
+ * blurred navigation layer is repeatedly repainted. Keep the mobile tab bar on
+ * a normal paint layer and clip every tab state to the navigation capsule.
+ */
+@media (hover: none) and (pointer: coarse) {
+  html body .app-shell .view-tabs {
+    overflow: hidden;
+    isolation: isolate;
+    contain: paint;
+    transform: none;
+    -webkit-transform: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html body .app-shell .view-tab {
+    position: relative;
+    transform: none;
+    -webkit-transform: none;
+  }
+
+  html body .app-shell .view-tab:not(.active) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Touch focus must not look like a second selected destination. */
+  html body .app-shell .view-tab:focus,
+  html body .app-shell .view-tab:focus-visible {
+    outline: none;
+  }
+}
