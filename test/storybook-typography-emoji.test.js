@@ -17,6 +17,7 @@ describe('storybook typography and emoji system', () => {
     expect(css).toContain('font-family: "Family UI"');
     expect(css).toContain('--font-family-display: var(--font-family-sans)');
     expect(css).toContain('--font-family-sans: "Family UI"');
+    expect(css).toMatch(/#growthView \.growth-page-header h2,[\s\S]*?#settingsView \.settings-heading h2 \{\s*font-family: var\(--font-family-display\);\s*font-weight: 700;\s*\}/);
   });
 
   it('uses the approved navigation emoji', () => {
@@ -28,7 +29,8 @@ describe('storybook typography and emoji system', () => {
   it('bumps the dynamic module versions so browsers receive the new design', () => {
     const config = read('config.js');
     expect(config).toContain('{ name: "tab-emojis", version: "20260722-storybook-v1" }');
-    expect(config).toContain('{ name: "typography-system", version: "20260722-storybook-v1", script: false }');
+    expect(config).toContain('{ name: "typography-system", version: "20260722-suit-only-v1", script: false }');
+    expect(config).toContain('{ name: "night-theme-polish", version: "20260722-moonlit-v1" }');
   });
 
   it('keeps section emoji decorative and text headings intact', () => {
