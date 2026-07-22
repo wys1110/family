@@ -250,10 +250,12 @@
           <div class="growth-inline-title">
             <p class="eyebrow">LATEST GROWTH</p>
             <h3>${escapeText(babyName)}의 최근 성장</h3>
-            <time datetime="${escapeText(latest.date)}">${escapeText(formatDate(latest.date, true))}</time>
           </div>
-          <div class="growth-inline-actions" aria-label="성장 기록 관리">
-            <button type="button" class="primary" data-growth-inline-action="add"><span aria-hidden="true">＋</span> 기록 추가</button>
+          <div class="growth-inline-meta">
+            <time datetime="${escapeText(latest.date)}">${escapeText(formatDate(latest.date, true))}</time>
+            <div class="growth-inline-actions" aria-label="성장 기록 관리">
+              <button type="button" class="primary" data-growth-inline-action="add"><span aria-hidden="true">＋</span> 기록 추가</button>
+            </div>
           </div>
         </header>
         <section class="growth-inline-chart" aria-label="성장 변화">

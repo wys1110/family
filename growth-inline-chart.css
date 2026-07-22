@@ -21,23 +21,22 @@
 }
 
 .growth-inline-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 16px;
+  display: block;
   margin-bottom: 16px;
 }
 
 .growth-inline-title { min-width: 0; }
 .growth-inline-title .eyebrow { margin: 0 0 7px; color: var(--secondary); font-size: 10px; font-weight: 760; letter-spacing: .045em; }
 .growth-inline-title h3 { margin: 0; color: var(--label); font-size: clamp(22px, 5vw, 28px); font-weight: 810; line-height: 1.12; letter-spacing: -.05em; }
-.growth-inline-title time { display: block; margin-top: 10px; color: var(--secondary); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.growth-inline-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.growth-inline-meta time { display: block; color: var(--secondary); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .growth-inline-actions {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
-  width: 132px;
+  width: auto;
+  flex: 0 0 auto;
 }
 
 .growth-inline-actions button,
@@ -208,8 +207,8 @@ html[data-family-theme="night"] .growth-inline-chart { background: color-mix(in 
 
 @media (max-width: 620px) {
   #growthInsightRow .growth-inline-card { padding: 17px; border-radius: 25px; }
-  .growth-inline-header { grid-template-columns: 1fr; gap: 13px; }
-  .growth-inline-actions { grid-template-columns: 1fr; width: 100%; }
+  .growth-inline-header { margin-bottom: 13px; }
+  .growth-inline-actions { grid-template-columns: 1fr; width: auto; }
   .growth-inline-actions button { min-width: 0; }
   .growth-inline-chart { padding: 12px 8px 8px; border-radius: 20px; }
   .growth-inline-legend { gap: 6px; }

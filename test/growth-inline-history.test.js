@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 
 const script = readFileSync("growth-inline-chart.js", "utf8");
 const css = readFileSync("growth-inline-chart.css", "utf8");
+const visual = readFileSync("growth-inline-visual-polish.css", "utf8");
 const polish = readFileSync("growth-edit-sheet-polish.css", "utf8");
 const index = readFileSync("index.html", "utf8");
 const config = readFileSync("config.js", "utf8");
@@ -148,7 +149,18 @@ describe("inline growth measurement history", () => {
     expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20260722-clean-history-v3" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20260722-header-meta-v4" }');
+    expect(config).toContain('{ name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-history-v1", script: false }');
+  });
+
+  test("aligns the latest date and add action on one header row", () => {
+    const harness = createHarness([entry("latest", 18)]);
+    expect(harness.markup()).toMatch(/class="growth-inline-meta"[\s\S]*?<time[^>]*>[^<]+<\/time>[\s\S]*?class="growth-inline-actions"/);
+    expect(css).toMatch(/\.growth-inline-meta\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;[^}]*justify-content:\s*space-between;/s);
+    expect(css).toMatch(/\.growth-inline-actions\s*\{[^}]*width:\s*auto;/s);
+    expect(visual).toContain(".growth-inline-meta time");
+    expect(visual).not.toContain(".growth-inline-title time");
+    expect(visual).toMatch(/@media \(max-width: 620px\)[\s\S]*?\.growth-inline-actions\s*\{[^}]*width:\s*auto;/s);
   });
 });
