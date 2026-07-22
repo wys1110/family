@@ -3,9 +3,26 @@
  * One hierarchy for calendar, growth, stories, requests and settings.
  */
 
+@font-face {
+  font-family: "Family Story Display";
+  src: url("assets/fonts/MaruBuri-SemiBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Family UI";
+  src: url("assets/fonts/SUIT-Variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
-  --font-family-sans: "Pretendard", -apple-system, BlinkMacSystemFont,
-    "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-family-display: "Family Story Display", "Apple SD Gothic Neo", serif;
+  --font-family-sans: "Family UI", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 
   --type-page-size: 24px;
   --type-section-size: 18px;
@@ -519,4 +536,25 @@ input[type="datetime-local"],
   .app-shell .view-tab {
     min-height: 48px;
   }
+}
+
+/* Storybook display role stays intentionally narrow; data and controls remain UI sans. */
+.topbar h1,
+.daily-verse-card blockquote,
+#calendarView .hero-card h2,
+#calendarView :is(.calendar-toolbar, .section-heading) h2,
+#growthView .growth-page-header h2,
+#growthView .baby-profile-copy h2,
+#growthView .photo-album-header h2,
+#growthView :is(.section-heading, .care-timer-heading, .care-pattern-heading, .growth-summary-header, .growth-chart-heading) h2,
+#growthView .baby-ai-heading h2,
+#englishView .english-page-header h2,
+#englishView .english-story-cover h2,
+#englishView .english-library-section h2,
+#englishView .english-today-card h3,
+#featureRequestView .feature-request-heading h2,
+#featureRequestView .feature-request-admin-heading h2,
+#settingsView .settings-heading h2 {
+  font-family: var(--font-family-display);
+  font-weight: 600;
 }
