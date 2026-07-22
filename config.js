@@ -43,8 +43,24 @@ window.FAMILY_CONFIG = {
     if (!pageBody) return;
 
     const topbarActions = document.querySelector(".topbar-account-actions");
-    if (topbarActions && topbarActions.parentElement !== pageBody) {
-      pageBody.appendChild(topbarActions);
+    if (topbarActions) {
+      if (topbarActions.parentElement !== pageBody) pageBody.appendChild(topbarActions);
+      const desktop = window.matchMedia("(min-width: 768px)").matches;
+      topbarActions.style.setProperty("position", "fixed", "important");
+      topbarActions.style.setProperty("z-index", "1100", "important");
+      topbarActions.style.setProperty(
+        "top",
+        desktop
+          ? "calc(max(18px, env(safe-area-inset-top, 0px)) + 2px)"
+          : "calc(max(12px, env(safe-area-inset-top, 0px)) + 4px)",
+        "important",
+      );
+      topbarActions.style.setProperty("right", "max(16px, calc((100vw - 820px) / 2 + 16px))", "important");
+      topbarActions.style.setProperty("bottom", "auto", "important");
+      topbarActions.style.setProperty("left", "auto", "important");
+      topbarActions.style.setProperty("margin", "0", "important");
+      topbarActions.style.setProperty("transform", "none", "important");
+      topbarActions.style.setProperty("translate", "none", "important");
     }
 
     let button = document.querySelector('[data-refresh-module]');
@@ -113,7 +129,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260722-korean-labels-v2" },
-    { name: "refresh-button", version: "20260722-fixed-top-utilities-v2" },
+    { name: "refresh-button", version: "20260722-fixed-top-utilities-v3" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260722-korean-labels-v2" },
     { name: "family-profile", version: "20260722-child-label-dedup-v2" },
@@ -127,7 +143,7 @@ window.FAMILY_CONFIG = {
     { name: "storybook-theme", version: "20260716-storybook-v2" },
     { name: "ghibli-theme", version: "20260716-ghibli-v2" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
-    { name: "notification-center", version: "20260720-mobile-width-v3" },
+    { name: "notification-center", version: "20260722-fixed-top-size-v2" },
     { name: "adaptive-feeding", version: "20260722-diaper-harmony-v2" },
     { name: "feeding-quick-unified", version: "20260722-themed-presets-v4" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
