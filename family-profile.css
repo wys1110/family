@@ -19,15 +19,143 @@
   margin-top: 18px;
 }
 
-.family-profile-heading .settings-mark {
-  font-family: Georgia, "Apple Myungjo", serif;
-  font-size: 18px;
+.family-profile-photo-button {
+  position: relative;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.family-profile-photo-button img,
+.family-profile-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.family-profile-photo-button img {
+  display: block;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.family-profile-photo-button img[hidden],
+.family-profile-photo-placeholder[hidden] {
+  display: none !important;
+}
+
+.family-profile-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: white;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, .34), transparent 34%),
+    linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));
+}
+
+.family-profile-photo-placeholder::before {
+  content: "";
+  width: 23px;
+  height: 23px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='3'/%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Cpath d='M8 5l1.2-2h5.6L16 5'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='3'/%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Cpath d='M8 5l1.2-2h5.6L16 5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.family-profile-photo-edit {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  color: white;
+  background: var(--blue);
+  box-shadow: 0 4px 10px rgba(5, 17, 31, .20);
+}
+
+.family-profile-photo-edit::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.family-profile-photo-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 34%, transparent);
+  outline-offset: 4px;
 }
 
 .family-profile-form,
 .family-profile-children {
   display: grid;
   gap: 14px;
+}
+
+.family-profile-photo-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--blue) 14%, var(--separator));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--blue) 5%, var(--surface));
+}
+
+.family-profile-photo-control strong,
+.family-profile-photo-control small {
+  display: block;
+}
+
+.family-profile-photo-control strong {
+  color: var(--label);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.family-profile-photo-control small {
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.family-profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.family-profile-photo-actions button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--blue) 20%, var(--separator));
+  border-radius: 12px;
+  color: var(--blue);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 740;
+  cursor: pointer;
+}
+
+.family-profile-photo-actions button[data-family-photo-remove] {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 22%, var(--separator));
+}
+
+.family-profile-photo-actions button:disabled {
+  cursor: default;
+  opacity: .62;
 }
 
 .family-profile-grid {
@@ -133,9 +261,14 @@
   transform: scale(.985);
 }
 
-html[data-family-theme="night"] .family-profile-field input {
+html[data-family-theme="night"] .family-profile-field input,
+html[data-family-theme="night"] .family-profile-photo-actions button {
   color: var(--label);
   background: var(--surface);
+}
+
+html[data-family-theme="night"] .family-profile-photo-actions button[data-family-photo-remove] {
+  color: var(--red);
 }
 
 @media (max-width: 430px) {
@@ -149,7 +282,16 @@ html[data-family-theme="night"] .family-profile-field input {
     padding-inline: 8px;
   }
 
-  .family-profile-grid {
+  .family-profile-grid,
+  .family-profile-photo-control {
     grid-template-columns: 1fr;
+  }
+
+  .family-profile-photo-actions {
+    justify-content: stretch;
+  }
+
+  .family-profile-photo-actions button {
+    flex: 1 1 120px;
   }
 }
