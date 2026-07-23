@@ -20,7 +20,10 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/refresh-button.js") ||
     url.pathname.endsWith("/notification-center.css") ||
     url.pathname.endsWith("/settings-layout-polish.css") ||
-    url.pathname.endsWith("/growth-inline-approved-polish.css");
+    url.pathname.endsWith("/growth-inline-approved-polish.css") ||
+    url.pathname.endsWith("/tab-emojis.js") ||
+    url.pathname.endsWith("/language-practice.js") ||
+    url.pathname.endsWith("/language-practice.css");
   if (!forceNetwork) return;
 
   event.respondWith(fetch(event.request, { cache: "no-store" }));
