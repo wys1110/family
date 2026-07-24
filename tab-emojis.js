@@ -56,10 +56,10 @@
   };
 
   const installWritingModule = () => {
-    installStylesheet('language-writing', 'language-writing.css?v=20260724-writing-v1');
+    installStylesheet('language-writing', 'language-writing.css?v=20260724-writing-v2');
     if (document.querySelector('script[data-module="language-writing"]')) return;
     const script = document.createElement('script');
-    script.src = 'language-writing.js?v=20260724-writing-v1';
+    script.src = 'language-writing.js?v=20260724-writing-v2';
     script.dataset.module = 'language-writing';
     script.async = false;
     script.onerror = () => console.error('언어 쓰기 연습 모듈을 불러오지 못했어요');
