@@ -20,7 +20,7 @@
 .language-writing-feedback span { font-size:11px; line-height:1.5; }
 .language-writing-feedback.correct { color:#376a45; background:rgba(126,158,130,.16); }
 .language-writing-feedback.near { color:#90632f; background:rgba(207,147,103,.15); }
-.language-writing-feedback.wrong,.language-writing-fedback.empty { color:#9b5553; background:rgba(191,111,107,.13); }
+.language-writing-feedback.wrong,.language-writing-feedback.empty { color:#9b5553; background:rgba(191,111,107,.13); }
 .language-writing-feedback.answer { color:var(--blue); background:rgba(86,121,106,.11); }
 .language-writing-hint { display:grid; gap:6px; padding:12px 14px; border:1px dashed rgba(129,123,153,.35); border-radius:14px; background:rgba(129,123,153,.07); }
 .language-writing-hint span { color:var(--indigo); font-size:8px; font-weight:800; letter-spacing:.07em; }
@@ -32,11 +32,13 @@
 .language-writing-actions button:last-child { color:var(--indigo); background:rgba(129,123,153,.11); }
 .language-writing-actions button:disabled { opacity:.55; cursor:default; }
 .language-writing-reveal { justify-self:center; min-height:34px; padding:0 10px; border:0; color:var(--secondary); background:transparent; font-size:10px; font-weight:650; cursor:pointer; }
+
 [data-family-theme="night"] .language-writing-prompt { border-color:rgba(150,206,176,.13); background:linear-gradient(135deg,rgba(86,121,106,.27),rgba(126,158,130,.08)); }
 [data-family-theme="night"] .language-writing-field textarea { background:rgba(255,255,255,.055); }
 [data-family-theme="night"] .language-writing-feedback.correct { color:#bce3c4; }
 [data-family-theme="night"] .language-writing-feedback.near { color:#edc99a; }
 [data-family-theme="night"] .language-writing-feedback.wrong,[data-family-theme="night"] .language-writing-feedback.empty { color:#efb8b5; }
+
 @media (max-width:430px) {
   .language-mode-switch button { grid-template-columns:1fr; grid-template-rows:auto auto auto; justify-items:center; min-height:68px; padding:7px 5px; text-align:center; }
   .language-mode-switch button > span { grid-row:auto; }
