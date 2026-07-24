@@ -46,19 +46,37 @@
   applyLabels();
   new MutationObserver(applyLabels).observe(navigation, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
-  if (!document.querySelector('link[data-module="language-practice"]')) {
+  const installStylesheet = (name, href) => {
+    if (document.querySelector(`link[data-module="${name}"]`)) return;
     const stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = 'language-practice.css?v=20260724-multilingual-v1';
-    stylesheet.dataset.module = 'language-practice';
+    stylesheet.href = href;
+    stylesheet.dataset.module = name;
     document.head.appendChild(stylesheet);
-  }
+  };
 
-  if (!document.querySelector('script[data-module="language-practice"]')) {
+  const installWritingModule = () => {
+    installStylesheet('language-writing', 'language-writing.css?v=20260724-writing-v1');
+    if (document.querySelector('script[data-module="language-writing"]')) return;
+    const script = document.createElement('script');
+    script.src = 'language-writing.js?v=20260724-writing-v1';
+    script.dataset.module = 'language-writing';
+    script.async = false;
+    script.onerror = () => console.error('언어 쓰기 연습 모듈을 불러오지 못했어요');
+    document.body.appendChild(script);
+  };
+
+  installStylesheet('language-practice', 'language-practice.css?v=20260724-multilingual-v1');
+  const existingLanguageScript = document.querySelector('script[data-module="language-practice"]');
+  if (existingLanguageScript) {
+    if (document.documentElement.dataset.languagePracticeModule === 'ready') installWritingModule();
+    else existingLanguageScript.addEventListener('load', installWritingModule, { once: true });
+  } else {
     const script = document.createElement('script');
     script.src = 'language-practice.js?v=20260724-multilingual-v1';
     script.dataset.module = 'language-practice';
     script.async = false;
+    script.onload = installWritingModule;
     script.onerror = () => console.error('언어 연습 모듈을 불러오지 못했어요');
     document.body.appendChild(script);
   }
