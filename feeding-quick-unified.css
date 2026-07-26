@@ -59,6 +59,49 @@
 }
 #quickLogDialog.feeding-quick-active .feeding-quick-tabs button { border-radius: 13px; }
 
+/* Give each feeding source a persistent identity; the active tab is more saturated. */
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source] {
+  border: 1px solid color-mix(in srgb, var(--feeding-tab-accent) 28%, transparent);
+  color: color-mix(in srgb, var(--feeding-tab-accent) 72%, var(--label));
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--feeding-tab-accent) 19%, var(--sheet-panel-strong)),
+      color-mix(in srgb, var(--feeding-tab-accent) 9%, var(--sheet-panel-strong)));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
+    0 5px 13px color-mix(in srgb, var(--feeding-tab-accent) 8%, transparent);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source="breast"] {
+  --feeding-tab-accent: #63aaf3;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source="pumped"] {
+  --feeding-tab-accent: #a682e7;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source="formula"] {
+  --feeding-tab-accent: #ed9851;
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source].active {
+  border-color: color-mix(in srgb, var(--feeding-tab-accent) 72%, white 10%);
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(255, 255, 255, .22), transparent 48%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--feeding-tab-accent) 90%, white 10%),
+      color-mix(in srgb, var(--feeding-tab-accent) 76%, #263448));
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--feeding-tab-accent) 25%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .24);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+}
+
+#quickLogDialog.feeding-quick-active .feeding-quick-tabs button[data-feeding-source]:focus-visible {
+  outline-color: color-mix(in srgb, var(--feeding-tab-accent) 52%, transparent);
+}
+
 #quickLogDialog.feeding-quick-active .feeding-quick-meta {
   min-height: 30px;
   margin-top: 8px;
