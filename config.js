@@ -189,6 +189,7 @@ window.FAMILY_CONFIG = {
     { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
     { name: "care-color-separation", version: "20260722-night-contrast-v1", script: false },
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
+    { name: "mobile-layout-polish", version: "20260727-iphone-layout-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
