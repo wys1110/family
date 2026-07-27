@@ -37,9 +37,9 @@
     {
       id: 'night',
       name: '별빛 밤',
-      description: '눈부심을 줄인 짙은 다크 테마',
-      themeColor: '#151a20',
-      preview: ['#151a20', '#20262d', '#86b6a2', '#d38ca4', '#f1eee8'],
+      description: '깊은 네이비와 은은한 별빛 포인트',
+      themeColor: '#050d1c',
+      preview: ['#050d1c', '#142746', '#79aaff', '#f2c675', '#f4f7ff'],
     },
   ];
 
