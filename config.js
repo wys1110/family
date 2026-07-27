@@ -22,7 +22,7 @@ window.FAMILY_CONFIG = {
     sunshine: "#fffaf0",
     rose: "#fff5f7",
     ocean: "#f3f9fb",
-    night: "#071425",
+    night: "#050d1c",
     storybook: "#edf4e6",
     ghibli: "#eaf3df",
   };
@@ -188,6 +188,7 @@ window.FAMILY_CONFIG = {
     { name: "event-dialog-frame-polish", version: "20260721-v2", script: false },
     { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
     { name: "care-color-separation", version: "20260722-night-contrast-v1", script: false },
+    { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
