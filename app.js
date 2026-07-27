@@ -30,14 +30,16 @@ const KOREAN_PUBLIC_HOLIDAYS_2026 = Object.freeze({
   "2026-12-25": "성탄절",
 });
 const KOREAN_NATIONAL_OBSERVANCES_2026 = new Set(["2026-07-17"]);
-const STORAGE_KEY = "family-calendar-events-v1";
-const MEMBER_STORAGE_KEY = "family-calendar-members-v1";
-const GROWTH_STORAGE_KEY = "family-growth-entries-v1";
-const BABY_STORAGE_KEY = "family-babies-v1";
-const ACTIVE_BABY_KEY = "family-active-baby-v1";
-const ACTIVE_VIEW_KEY = "family-active-view-v1";
-const GROWTH_SUMMARY_PERIOD_KEY = "family-growth-summary-period-v1";
-const CARE_TIMER_KEY = "family-care-timer-v1";
+const DEMO_MODE = Boolean(window.FAMILY_DEMO?.active);
+const storageKey = (key) => window.FAMILY_DEMO?.storageKey(key) || key;
+const STORAGE_KEY = storageKey("family-calendar-events-v1");
+const MEMBER_STORAGE_KEY = storageKey("family-calendar-members-v1");
+const GROWTH_STORAGE_KEY = storageKey("family-growth-entries-v1");
+const BABY_STORAGE_KEY = storageKey("family-babies-v1");
+const ACTIVE_BABY_KEY = storageKey("family-active-baby-v1");
+const ACTIVE_VIEW_KEY = storageKey("family-active-view-v1");
+const GROWTH_SUMMARY_PERIOD_KEY = storageKey("family-growth-summary-period-v1");
+const CARE_TIMER_KEY = storageKey("family-care-timer-v1");
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -181,11 +183,23 @@ function toast(message, action = null) {
 async function init() {
   lockMobileZoom();
   bindUi();
+  document.body.classList.toggle("demo-mode", DEMO_MODE);
+  $("#demoModeBanner").hidden = !DEMO_MODE;
   renderDailyVerse();
   setInterval(renderDailyVerse, 60 * 1000);
   setInterval(updateCareTimerClock, 1000);
   try {
-    if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
+    if (DEMO_MODE) {
+      seedDemoData();
+      state.session = {
+        user: {
+          id: "demo-qa-user",
+          user_metadata: { full_name: "테스트 관리자", name: "테스트 관리자" },
+        },
+      };
+      state.household = demoHousehold();
+      lastAuthSessionKey = authSessionKey(state.session);
+    } else if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
       state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
       const { data, error } = await state.supabase.auth.getSession();
       if (error) throw error;
@@ -255,7 +269,7 @@ async function bootstrapData() {
       if (state.household) loaded = await loadRemoteData(requestId, sessionKey, state.household.id);
       else { state.babies = []; state.archivedBabies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
     } else {
-      state.household = null;
+      state.household = DEMO_MODE ? demoHousehold() : null;
       state.familyMembers = localMembers();
       const babies = readLocalJson(BABY_STORAGE_KEY, []);
       state.babies = babies.filter((baby) => !baby.archivedAt);
@@ -303,6 +317,72 @@ function readLocalJson(key, fallback) {
     return Array.isArray(value) ? value : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function demoHousehold() {
+  return {
+    id: "demo-qa-household",
+    name: "테스트 가족",
+    invite_code: "DEMO",
+    owner_id: "demo-qa-user",
+  };
+}
+
+function seedDemoData() {
+  if (!DEMO_MODE) return;
+  try {
+    if (!localStorage.getItem(MEMBER_STORAGE_KEY)) {
+      localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify([
+        { id: "demo-member-family", name: "가족", color: "#5F8069" },
+        { id: "demo-member-dad", name: "아빠", color: "#B57D4B" },
+        { id: "demo-member-mom", name: "엄마", color: "#A56D78" },
+        { id: "demo-member-baby", name: "도담", color: "#4B91A8" },
+      ]));
+    }
+
+    const today = dateKey(new Date());
+    const tomorrow = addDays(today, 1);
+    const yesterday = addDays(today, -1);
+    const twoDaysAgo = addDays(today, -2);
+    const birthDate = addDays(today, -72);
+    const babyId = "demo-baby-dodam";
+
+    if (!localStorage.getItem(BABY_STORAGE_KEY)) {
+      localStorage.setItem(BABY_STORAGE_KEY, JSON.stringify([
+        { id: babyId, name: "도담", birthDate, birthTime: "09:18", sex: "여아", birthWeight: 3.24, birthHeight: 49.8, archivedAt: null },
+      ]));
+    }
+
+    if (!localStorage.getItem(ACTIVE_BABY_KEY)) {
+      localStorage.setItem(ACTIVE_BABY_KEY, babyId);
+    }
+
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([
+        { id: "demo-event-checkup", title: "예방접종 진료", date: today, endDate: today, time: "14:30", member: "가족", note: "아기수첩 챙기기" },
+        { id: "demo-event-grocery", title: "기저귀·분유 주문", date: today, endDate: today, time: "", member: "아빠", note: "" },
+        { id: "demo-event-walk", title: "저녁 가족 산책", date: tomorrow, endDate: tomorrow, time: "18:30", member: "엄마", note: "유모차 준비" },
+        { id: "demo-event-visit", title: "할머니 댁 방문", date: addDays(today, 3), endDate: addDays(today, 4), time: "", member: "가족", note: "1박 2일" },
+      ]));
+    }
+
+    if (!localStorage.getItem(GROWTH_STORAGE_KEY)) {
+      const base = { babyId, height: null, weight: null, head: null, feedingMl: null, feedingType: "", feedingSide: "", feedingMinutes: null, sleepMinutes: null, temperature: null, diaperKind: "", note: "", photoPaths: [], photoUrls: [] };
+      localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify([
+        { ...base, id: "demo-growth-feed-1", title: "모유 수유", date: today, time: "07:20", category: "수유·이유식", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 36, note: "편안하게 잘 먹었어요" },
+        { ...base, id: "demo-growth-diaper-1", title: "기저귀 교체", date: today, time: "08:05", category: "기저귀", diaperKind: "소변" },
+        { ...base, id: "demo-growth-sleep-1", title: "오전 낮잠", date: today, time: "09:10", category: "수면", sleepMinutes: 82 },
+        { ...base, id: "demo-growth-feed-2", title: "젖병 수유", date: today, time: "11:05", category: "수유·이유식", feedingType: "분유", feedingMl: 100 },
+        { ...base, id: "demo-growth-diaper-2", title: "기저귀 교체", date: today, time: "12:15", category: "기저귀", diaperKind: "소변·대변" },
+        { ...base, id: "demo-growth-moment", title: "처음 소리 내어 웃은 날", date: yesterday, time: "16:40", category: "첫 순간", note: "엄마 얼굴을 보고 활짝 웃었어요" },
+        { ...base, id: "demo-growth-measure", title: "두 달 성장 측정", date: yesterday, time: "10:00", category: "성장", height: 57.6, weight: 5.28, head: 38.4 },
+        { ...base, id: "demo-growth-health", title: "아침 체온", date: twoDaysAgo, time: "08:10", category: "건강·병원", temperature: 36.7 },
+        { ...base, id: "demo-growth-sleep-2", title: "밤잠", date: twoDaysAgo, time: "22:10", category: "수면", sleepMinutes: 395 },
+      ]));
+    }
+  } catch (error) {
+    console.warn("테스트 데이터 준비 실패", error);
   }
 }
 
@@ -422,9 +502,11 @@ function bindUi() {
     button.addEventListener("pointerup", releaseTouchTabFocus);
   });
   $("#accountButton").addEventListener("click", openAccountDialog);
-  $("#desktopLogoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
+  $("#desktopLogoutButton").addEventListener("click", (event) => DEMO_MODE ? exitDemoMode() : signOutCurrentUser(event.currentTarget));
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
   $("#gateLoginForm").addEventListener("submit", sendMagicLink);
+  $("#demoLoginButton").addEventListener("click", enterDemoMode);
+  $("#exitDemoModeButton").addEventListener("click", exitDemoMode);
   $("#bulkAddButton").addEventListener("click", openBulkEventDialog);
   $("#bulkEventForm").addEventListener("submit", saveBulkEvents);
   $("#bulkEventText").addEventListener("input", renderBulkEventPreview);
@@ -547,10 +629,12 @@ function renderHeader() {
   const todayEvents = state.events.filter((event) => eventOccursOn(event, dateKey(today)));
   $("#todaySummary").textContent = todayEvents.length ? `오늘은 ${todayEvents.length}개의 약속이 있어요` : "오늘도 우리답게";
 }
-function updateSyncBadge() { $("#syncDot").classList.toggle("online", Boolean(state.session && state.household)); }
+function updateSyncBadge() { $("#syncDot").classList.toggle("online", Boolean(state.supabase && state.session && state.household)); }
 function updateDesktopLogoutVisibility() {
   const button = $("#desktopLogoutButton");
-  if (button) button.hidden = !(state.supabase && state.session);
+  if (!button) return;
+  button.hidden = !(DEMO_MODE || (state.supabase && state.session));
+  button.textContent = DEMO_MODE ? "테스트 종료" : "로그아웃";
 }
 function updateAuthGate() {
   const loginRequired = Boolean(state.authReady && state.supabase && !state.session);
@@ -558,6 +642,18 @@ function updateAuthGate() {
   $("#appShell").toggleAttribute("inert", loginRequired);
   document.body.classList.toggle("auth-required", loginRequired);
   updateDesktopLogoutVisibility();
+}
+
+function enterDemoMode() {
+  window.FAMILY_DEMO?.enter();
+}
+
+function exitDemoMode() {
+  window.FAMILY_DEMO?.exit();
+}
+
+function resetDemoMode() {
+  window.FAMILY_DEMO?.reset();
 }
 function switchView(view) {
   const nextView = view === "growth" ? "growth" : "calendar";
@@ -1962,6 +2058,12 @@ async function signOutCurrentUser(button = null) {
 }
 function renderAccount() {
   const root = $("#accountContent");
+  if (DEMO_MODE) {
+    root.innerHTML = `<div class="account-card"><strong>테스트 관리자 · 가상 로그인</strong><p>이 화면의 일정과 성장 기록은 테스트 전용 로컬 공간에만 저장됩니다. Supabase와 실제 가족 DB에는 연결하지 않습니다.</p></div><div class="account-demo-actions"><button class="demo-reset-button" id="resetDemoModeButton" type="button">가상 데이터 초기화</button><button class="demo-exit-button" id="accountExitDemoModeButton" type="button">테스트 종료</button></div>`;
+    $("#resetDemoModeButton").addEventListener("click", resetDemoMode);
+    $("#accountExitDemoModeButton").addEventListener("click", exitDemoMode);
+    return;
+  }
   if (!state.supabase) { root.innerHTML = `<div class="account-card"><strong>이 기기에 안전하게 저장 중</strong><p>현재 일정은 이 브라우저에만 저장됩니다. 가족과 함께 쓰려면 README의 Supabase 연결을 완료해 주세요.</p></div>`; return; }
   if (!state.session) {
     root.innerHTML = `<button class="oauth-button" id="accountGoogleSignIn" type="button"><span class="google-mark">G</span>Google로 계속하기</button><div class="auth-divider"><span>또는 이메일로</span></div><div class="account-card"><strong>이메일로 시작하기</strong><p>로그인 링크를 보내드려요. 비밀번호는 필요 없습니다.</p><form class="account-form" id="loginForm"><input type="email" name="email" autocomplete="email" placeholder="name@example.com" required /><button>로그인 링크 받기</button></form></div>`;
