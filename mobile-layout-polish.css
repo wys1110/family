@@ -1,0 +1,1115 @@
+/*
+ * Mobile layout finish.
+ * This file intentionally changes geometry only, so every visual theme keeps
+ * its own colors while sharing the same iPhone-safe layout.
+ */
+
+@media (max-width: 767.98px) {
+  :root {
+    --mobile-gutter: clamp(12px, 3.8vw, 17px);
+    --mobile-card-padding: clamp(14px, 4.2vw, 18px);
+    --mobile-section-gap: 16px;
+  }
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    min-width: 320px;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 100%;
+    padding:
+      max(16px, env(safe-area-inset-top, 0px))
+      var(--mobile-gutter)
+      calc(118px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.demo-mode .app-shell {
+    padding-top: calc(max(16px, env(safe-area-inset-top, 0px)) + 46px);
+  }
+
+  .app-shell main,
+  .app-shell main > div,
+  #calendarView,
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :is(button, input, select, textarea) {
+    min-width: 0;
+  }
+
+  :is(input, select, textarea) {
+    font-size: max(16px, var(--type-body-size, 15px));
+  }
+
+  .demo-mode-banner {
+    top: max(7px, env(safe-area-inset-top, 0px));
+    max-width: calc(100vw - 20px);
+    min-height: 36px;
+    gap: 7px;
+    padding-left: 9px;
+  }
+
+  .demo-mode-banner span {
+    min-width: 0;
+    font-size: 9px;
+  }
+
+  .demo-mode-banner button {
+    min-height: 27px;
+    padding-inline: 8px;
+  }
+
+  .topbar {
+    min-height: 54px;
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+
+  .topbar h1 {
+    max-width: calc(100vw - 126px);
+    font-size: clamp(23px, 6.8vw, 29px);
+    line-height: 1.18;
+  }
+
+  .topbar .eyebrow {
+    max-width: calc(100vw - 126px);
+    font-size: 10px;
+  }
+
+  body > .topbar-account-actions {
+    right: var(--mobile-gutter) !important;
+    gap: 6px;
+    height: 42px;
+  }
+
+  .topbar-account-actions > .notification-center-button,
+  .topbar-account-actions > .avatar-button {
+    flex-basis: 42px;
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+  }
+
+  .daily-verse-card {
+    min-height: 92px;
+    margin-bottom: 14px;
+    padding: 14px 15px 13px;
+    border-radius: 20px;
+  }
+
+  .daily-verse-heading {
+    min-width: 0;
+  }
+
+  .daily-verse-heading > span:last-child {
+    display: none;
+  }
+
+  .daily-verse-card blockquote {
+    margin-top: 9px;
+    font-size: clamp(16px, 4.5vw, 19px);
+    line-height: 1.42;
+  }
+
+  html .view-tabs {
+    top: calc(max(10px, env(safe-area-inset-top, 0px)) + 55px);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    width: 100%;
+    margin: 0 0 var(--mobile-section-gap);
+    padding: 3px;
+    border-radius: 16px;
+  }
+
+  html .view-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 2px !important;
+    overflow: hidden;
+    border-radius: 12px;
+    font-size: clamp(11px, 3.25vw, 13px);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  html .view-tab > span {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  .hero-card {
+    min-height: 142px;
+    margin-bottom: 14px;
+    padding: 20px 18px;
+    border-radius: 24px;
+  }
+
+  .hero-card > div:first-of-type {
+    max-width: 60%;
+  }
+
+  .hero-card h2 {
+    max-width: 100%;
+    font-size: clamp(22px, 6.5vw, 27px);
+  }
+
+  .family-mascot {
+    right: -8px;
+    width: min(43vw, 168px);
+  }
+
+  .calendar-subtabs {
+    gap: 3px;
+    margin-bottom: 14px;
+    padding: 3px;
+    border-radius: 15px;
+  }
+
+  .calendar-subtabs button {
+    min-height: 44px;
+    padding-inline: 6px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  #calendarView .calendar-card {
+    padding: 14px 5px 9px;
+    border-radius: 22px;
+  }
+
+  #calendarView .calendar-toolbar {
+    gap: 6px;
+    padding: 0 5px 10px;
+  }
+
+  #calendarView .month-nav {
+    gap: 2px;
+    min-width: 0;
+  }
+
+  #calendarView .month-nav h2 {
+    min-width: 104px;
+    font-size: clamp(17px, 5vw, 20px);
+  }
+
+  #calendarView :is(.icon-button, .today-button) {
+    min-height: 40px;
+  }
+
+  #calendarView .icon-button {
+    width: 40px;
+  }
+
+  #calendarView .today-button {
+    padding-inline: 10px;
+  }
+
+  #calendarView .weekdays span {
+    padding: 6px 0 8px;
+    font-size: 11px;
+  }
+
+  #calendarView .calendar-grid {
+    grid-auto-rows: minmax(59px, auto);
+  }
+
+  #calendarView .calendar-day {
+    min-height: 59px;
+    padding-inline: 1px;
+    border-radius: 10px;
+  }
+
+  #calendarView .day-number {
+    width: 25px;
+    height: 25px;
+    font-size: 11px;
+  }
+
+  #calendarView .calendar-event-bar {
+    height: 17px;
+    margin-right: 1px;
+    margin-left: 1px;
+    padding-inline: 3px;
+    border-radius: 5px;
+    line-height: 17px;
+  }
+
+  #calendarView .calendar-help {
+    min-height: 38px;
+    margin-top: 7px;
+    padding: 8px 7px 0;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  :is(.agenda-section, .upcoming-events-section, .growth-section) {
+    padding-top: 24px;
+  }
+
+  .section-heading {
+    gap: 9px;
+    margin-bottom: 11px;
+    padding-inline: 2px;
+  }
+
+  .section-heading h2 {
+    font-size: clamp(20px, 5.8vw, 23px);
+  }
+
+  .agenda-heading-actions {
+    flex: 0 0 auto;
+    gap: 5px;
+  }
+
+  .count-badge,
+  .bulk-add-button {
+    min-height: 34px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .quick-add-card {
+    padding: 11px;
+    border-radius: 18px;
+  }
+
+  .quick-add-heading {
+    grid-template-columns: 42px minmax(0, 1fr) 56px;
+    gap: 8px;
+  }
+
+  .quick-date-badge {
+    width: 42px;
+  }
+
+  .quick-add-submit {
+    width: 56px;
+    min-width: 56px;
+  }
+
+  .quick-options {
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .member-chips {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .agenda-item {
+    grid-template-columns: 4px minmax(0, 1fr) 42px;
+    grid-template-rows: auto auto;
+    min-height: 84px;
+    padding: 8px 5px 8px 10px;
+    border-radius: 17px;
+  }
+
+  .agenda-item > .bar {
+    grid-row: 1 / 3;
+  }
+
+  .agenda-item .agenda-main {
+    grid-column: 2;
+    min-height: 50px;
+    padding: 5px 8px;
+  }
+
+  .agenda-item .edit-event-button {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    min-height: 32px;
+    margin-left: 8px;
+  }
+
+  .agenda-item .drag-handle {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    width: 42px;
+  }
+
+  .upcoming-event-item {
+    grid-template-columns: 4px 63px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 64px;
+    padding: 9px;
+  }
+
+  .upcoming-event-item > b {
+    display: none;
+  }
+
+  .todo-overview-card,
+  .feature-request-card,
+  .feature-request-admin,
+  .settings-card {
+    padding: var(--mobile-card-padding);
+    border-radius: 22px;
+  }
+
+  .todo-overview-heading {
+    gap: 10px;
+  }
+
+  .todo-stats {
+    gap: 7px;
+  }
+
+  .todo-stats div {
+    min-width: 0;
+    min-height: 68px;
+    padding-inline: 5px;
+  }
+
+  .todo-quick-form {
+    padding: 13px;
+  }
+
+  .todo-quick-form > div {
+    grid-template-columns: minmax(0, 1fr) 74px;
+  }
+
+  .todo-filter-tabs {
+    gap: 6px;
+  }
+
+  .todo-filter-tabs button {
+    min-width: 0;
+    padding-inline: 6px;
+  }
+
+  .family-todo-item {
+    grid-template-columns: 36px minmax(0, 1fr) 34px;
+    gap: 8px;
+    padding: 12px 8px 12px 11px;
+  }
+
+  /* Growth */
+  .growth-page-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .growth-title-with-mascot {
+    flex: 1 1 190px;
+    min-width: 0;
+  }
+
+  .growth-page-header h2 {
+    font-size: clamp(25px, 7vw, 30px);
+  }
+
+  .growth-diary-mascot {
+    flex-basis: 64px;
+    width: 64px;
+    height: 50px;
+  }
+
+  .growth-diary-mascot img {
+    width: 78px;
+    height: 60px;
+  }
+
+  .baby-header-actions {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .baby-header-actions > button {
+    min-height: 42px;
+    padding-inline: 10px;
+    white-space: nowrap;
+  }
+
+  .baby-selector {
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .baby-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .baby-selector button {
+    flex: 0 0 auto;
+  }
+
+  .baby-care-card .baby-profile-main {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 10px;
+    padding: 18px 15px 0;
+  }
+
+  .baby-care-card .baby-monogram {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .baby-care-card .baby-profile-copy h2 {
+    font-size: 24px;
+  }
+
+  .baby-care-card .baby-dday {
+    grid-column: 2;
+    justify-self: start;
+    min-width: 0;
+    margin-top: 3px;
+    text-align: left;
+  }
+
+  .baby-care-card .baby-dday :is(small, strong) {
+    display: inline;
+  }
+
+  .baby-care-card .baby-dday strong {
+    margin-left: 5px;
+    font-size: 17px;
+  }
+
+  .baby-care-card .baby-edit-button {
+    margin: 10px 0 0 79px;
+  }
+
+  #growthView :is(.care-timer-card, .growth-quick-section, .care-pattern-section, .weekly-care-summary, .recent-photo-featured) {
+    padding-right: var(--mobile-card-padding);
+    padding-left: var(--mobile-card-padding);
+    border-radius: 22px;
+  }
+
+  #growthView #careTimerCard .care-quick-block .growth-quick-grid,
+  #growthView .growth-quick-section .growth-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #growthView #careTimerCard .care-quick-block .growth-quick-grid button,
+  #growthView .growth-quick-section .growth-quick-grid button {
+    min-height: 76px;
+    border-radius: 18px;
+  }
+
+  .care-timer-starts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .care-pattern-heading {
+    gap: 10px;
+  }
+
+  .care-rhythm-legend {
+    gap: 4px;
+  }
+
+  .care-rhythm-legend span {
+    font-size: 9px;
+  }
+
+  .care-pattern-tabs {
+    gap: 2px;
+  }
+
+  .care-pattern-tabs button {
+    min-width: 0;
+    padding-inline: 5px;
+    font-size: 12px;
+  }
+
+  .care-pattern-categories {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .care-pattern-categories button {
+    min-width: 0;
+    min-height: 46px;
+    padding-inline: 4px;
+  }
+
+  .care-day-mode-control {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .care-pattern-date {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    width: 100%;
+  }
+
+  .care-pattern-date strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .care-time-row {
+    grid-template-columns: 66px 9px minmax(0, 1fr);
+    gap: 7px;
+    padding-inline: 9px;
+  }
+
+  #growthInsightRow .growth-inline-history-row {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  #growthInsightRow .growth-inline-history-row > i {
+    display: none;
+  }
+
+  #growthInsightRow .growth-inline-history-values {
+    gap: 4px;
+  }
+
+  .growth-filter-bar {
+    width: calc(100% + 4px);
+    margin-right: -4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .growth-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .growth-filter-bar button {
+    flex: 0 0 auto;
+  }
+
+  .growth-entry {
+    min-width: 0;
+    padding: 13px;
+    border-radius: 17px;
+  }
+
+  /* English story */
+  .english-page-header {
+    gap: 10px;
+    padding: 0 2px 13px;
+  }
+
+  .english-page-header > div {
+    min-width: 0;
+  }
+
+  .english-page-header h2 {
+    font-size: clamp(27px, 8vw, 34px);
+  }
+
+  .english-page-header > div > span {
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .english-book-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
+  .english-today-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 20px;
+  }
+
+  .english-today-card > div {
+    min-width: 0;
+  }
+
+  .english-today-card h3 {
+    overflow: hidden;
+    font-size: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .english-today-card button {
+    min-height: 44px;
+    padding-inline: 12px;
+  }
+
+  .english-story-player {
+    padding: 13px;
+    border-radius: 22px;
+  }
+
+  .english-story-cover {
+    gap: 12px;
+    min-height: 116px;
+    padding: 14px;
+  }
+
+  .english-cover-emoji {
+    width: 58px;
+    height: 58px;
+    font-size: 30px;
+  }
+
+  .english-story-cover h2 {
+    font-size: clamp(20px, 6vw, 25px);
+  }
+
+  .english-player-actions {
+    grid-template-columns: 1.25fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .english-player-actions button {
+    min-width: 0;
+    min-height: 48px;
+    padding-inline: 5px;
+    font-size: 12px;
+  }
+
+  .english-sentence {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .english-sentence > button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .english-library-card {
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  /* Requests */
+  .feature-request-view {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .feature-request-heading {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .feature-request-mark {
+    width: 46px;
+    height: 46px;
+  }
+
+  .feature-request-heading h2,
+  .feature-request-admin-heading h2 {
+    font-size: 21px;
+  }
+
+  .feature-request-form textarea {
+    min-height: 128px;
+    padding: 13px;
+  }
+
+  .feature-request-actions {
+    align-items: flex-end;
+  }
+
+  .feature-request-actions button {
+    flex: 0 0 auto;
+    min-height: 46px;
+  }
+
+  .feature-request-note {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .feature-request-admin-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .feature-request-admin-heading button {
+    min-height: 40px;
+  }
+
+  .feature-request-item {
+    padding: 13px;
+  }
+
+  .feature-request-item-meta {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .feature-request-item p {
+    font-size: 14px;
+  }
+
+  .feature-request-item label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .feature-request-item select {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Settings */
+  .settings-view {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-card {
+    margin-top: 12px;
+  }
+
+  #settingsView > .settings-card:first-child {
+    margin-top: 0;
+  }
+
+  .settings-heading {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .settings-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+  }
+
+  .settings-heading h2 {
+    font-size: 21px;
+  }
+
+  .settings-heading > div > span {
+    font-size: 12px;
+  }
+
+  .theme-option-grid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .theme-option {
+    grid-template-columns: 76px minmax(0, 1fr) 24px;
+    gap: 10px;
+    min-height: 88px;
+    padding: 9px;
+    border-radius: 17px;
+  }
+
+  .theme-preview {
+    width: 76px;
+    height: 62px;
+  }
+
+  .theme-option-copy strong {
+    font-size: 15px;
+  }
+
+  .theme-option-copy small {
+    font-size: 12px;
+  }
+
+  .theme-save-note {
+    padding: 11px;
+  }
+
+  .family-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .family-profile-photo-control {
+    grid-template-columns: 1fr;
+  }
+
+  .family-profile-photo-actions {
+    justify-content: stretch;
+  }
+
+  .family-profile-photo-actions button {
+    flex: 1;
+  }
+
+  .settings-refresh-settings {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-refresh-action {
+    width: 100%;
+  }
+
+  #settingsView :is(.feeding-reminder-settings, .daily-briefing-settings) .settings-heading {
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+  }
+
+  #settingsView :is(.feeding-reminder-switch, .daily-briefing-switch) {
+    grid-column: 3;
+    margin: 0;
+  }
+
+  #settingsView .daily-briefing-time-field {
+    grid-template-columns: minmax(0, 1fr) 116px;
+  }
+
+  #settingsView .daily-briefing-actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* Dialogs, notifications and floating controls */
+  .sheet-dialog {
+    inset: auto 0 max(3px, env(safe-area-inset-bottom, 0px));
+    width: calc(100% - 8px);
+    max-width: 520px;
+    max-height: calc(100dvh - max(8px, env(safe-area-inset-top, 0px)));
+    border-radius: 27px 27px 23px 23px;
+  }
+
+  .sheet-dialog :is(form, .sheet-panel) {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .dialog-header {
+    gap: 10px;
+  }
+
+  .dialog-header > div {
+    min-width: 0;
+  }
+
+  .dialog-header h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .dialog-actions {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .notification-center-dialog {
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+
+  .notification-center-panel {
+    max-height: calc(100dvh - 12px);
+    border-radius: 26px;
+  }
+
+  .notification-center-header {
+    gap: 8px;
+    padding-inline: 13px;
+  }
+
+  .notification-center-header h2 {
+    font-size: 21px;
+  }
+
+  .notification-center-header-actions {
+    gap: 4px;
+  }
+
+  .notification-center-tabs {
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+
+  .notification-center-list {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  body > #addEventButton.fab {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    min-height: 48px;
+    padding-inline: 17px;
+  }
+
+  body > .refresh-button {
+    right: var(--mobile-gutter);
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: 48px;
+    height: 48px;
+  }
+
+  body:has(> #addEventButton.fab) main {
+    padding-bottom: calc(102px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --mobile-gutter: 11px;
+    --mobile-card-padding: 13px;
+  }
+
+  .topbar h1,
+  .topbar .eyebrow {
+    max-width: calc(100vw - 112px);
+  }
+
+  html .view-tab {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 50px;
+    font-size: 11px;
+  }
+
+  html .view-tabs {
+    top: calc(max(8px, env(safe-area-inset-top, 0px)) + 51px);
+  }
+
+  .hero-card > div:first-of-type {
+    max-width: 62%;
+  }
+
+  .quick-add-heading {
+    grid-template-columns: 39px minmax(0, 1fr) 52px;
+    gap: 6px;
+  }
+
+  .quick-date-badge {
+    width: 39px;
+  }
+
+  .quick-add-submit {
+    width: 52px;
+    min-width: 52px;
+  }
+
+  .agenda-main {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .agenda-main .event-when {
+    justify-items: start;
+  }
+
+  .growth-title-with-mascot {
+    flex-basis: 100%;
+  }
+
+  .baby-header-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .baby-header-actions > button {
+    width: 100%;
+  }
+
+  .care-pattern-categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .english-today-card {
+    grid-template-columns: 1fr;
+  }
+
+  .english-today-card button {
+    width: 100%;
+  }
+
+  .english-player-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .english-player-actions .english-play-main {
+    grid-column: 1 / -1;
+  }
+
+  .feature-request-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .feature-request-actions button {
+    min-width: 100px;
+  }
+
+  .feature-request-item label {
+    grid-template-columns: 1fr;
+  }
+
+  #settingsView :is(.feeding-reminder-settings, .daily-briefing-settings) .settings-heading {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  #settingsView :is(.feeding-reminder-switch, .daily-briefing-switch) {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  #settingsView .daily-briefing-time-field {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-center-header h2::before {
+    display: none;
+  }
+
+  .notification-center-header-actions > button:first-child {
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 340px) {
+  .topbar-account-actions > .notification-center-button,
+  .topbar-account-actions > .avatar-button {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+  }
+
+  #calendarView .month-nav h2 {
+    min-width: 92px;
+    font-size: 17px;
+  }
+
+  .theme-option {
+    grid-template-columns: 66px minmax(0, 1fr) 22px;
+  }
+
+  .theme-preview {
+    width: 66px;
+    height: 56px;
+  }
+}
