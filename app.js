@@ -1609,9 +1609,9 @@ function formatDuration(minutes) {
 
 function quickPresets(category) {
   if (category === "수유·이유식") return [
-    { label: "왼쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 10 },
-    { label: "오른쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 10 },
-    { label: "양쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 20 },
+    { label: "왼쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 20 },
+    { label: "오른쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 20 },
+    { label: "양쪽 40분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 40 },
     { label: "80 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 80 },
     { label: "100 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 100 },
     { label: "120 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 120 },

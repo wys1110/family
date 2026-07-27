@@ -109,51 +109,62 @@
 
 #quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 13px;
 }
 
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(1) {
-  --direct-preset-accent: var(--blue);
+#quickLogDialog.feeding-quick-active .direct-side-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(2) {
-  --direct-preset-accent: var(--indigo);
-}
-
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:nth-child(3) {
-  --direct-preset-accent: color-mix(in srgb, var(--blue) 42%, var(--pink));
-}
-
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button {
-  min-height: 82px;
+#quickLogDialog.feeding-quick-active .direct-side-options button {
+  min-height: 62px;
   border: 1px solid var(--sheet-border);
-  border-color: color-mix(in srgb, var(--direct-preset-accent) 34%, var(--sheet-border));
-  border-radius: 18px;
-  color: color-mix(in srgb, var(--direct-preset-accent) 22%, var(--label));
+  border-color: color-mix(in srgb, var(--blue) 30%, var(--sheet-border));
+  border-radius: 16px;
+  color: color-mix(in srgb, var(--blue) 20%, var(--label));
   background:
-    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--direct-preset-accent) 17%, transparent), transparent 52%),
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--blue) 15%, transparent), transparent 52%),
     linear-gradient(145deg,
-      color-mix(in srgb, var(--direct-preset-accent) 16%, var(--sheet-panel-strong)),
-      color-mix(in srgb, var(--direct-preset-accent) 7%, var(--sheet-panel-strong)));
+      color-mix(in srgb, var(--blue) 13%, var(--sheet-panel-strong)),
+      color-mix(in srgb, var(--blue) 6%, var(--sheet-panel-strong)));
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
-    0 8px 22px color-mix(in srgb, var(--direct-preset-accent) 8%, transparent);
+    0 8px 22px color-mix(in srgb, var(--blue) 7%, transparent);
   transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button small {
-  color: color-mix(in srgb, var(--direct-preset-accent) 20%, var(--secondary));
+#quickLogDialog.feeding-quick-active .direct-side-options button span,
+#quickLogDialog.feeding-quick-active .direct-side-options button small {
+  display: block;
 }
 
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:active {
+#quickLogDialog.feeding-quick-active .direct-side-options button span {
+  font-size: 14px;
+  font-weight: 760;
+}
+
+#quickLogDialog.feeding-quick-active .direct-side-options button small {
+  margin-top: 3px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+
+#quickLogDialog.feeding-quick-active .direct-side-options button.active {
+  border-color: color-mix(in srgb, var(--blue) 72%, white 10%);
   color: white;
-  background: color-mix(in srgb, var(--direct-preset-accent) 72%, var(--surface));
-  transform: scale(.98);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(255, 255, 255, .2), transparent 48%),
+    linear-gradient(145deg, color-mix(in srgb, var(--blue) 88%, white 12%), color-mix(in srgb, var(--blue) 74%, #263448));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--blue) 24%, transparent);
 }
 
-#quickLogDialog.feeding-quick-active .quick-preset-grid.direct-feeding > button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--direct-preset-accent) 38%, transparent);
+#quickLogDialog.feeding-quick-active .direct-side-options button.active small { color: rgba(255, 255, 255, .82); }
+#quickLogDialog.feeding-quick-active .direct-side-options button:active { transform: scale(.98); }
+#quickLogDialog.feeding-quick-active .direct-side-options button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 38%, transparent);
   outline-offset: 2px;
 }
 
