@@ -23,6 +23,7 @@ window.FAMILY_CONFIG = {
     rose: "#fff5f7",
     ocean: "#f3f9fb",
     night: "#071425",
+    black: "#000000",
     storybook: "#edf4e6",
     ghibli: "#eaf3df",
   };
@@ -32,7 +33,7 @@ window.FAMILY_CONFIG = {
     if (themeColors[storedTheme]) initialTheme = storedTheme;
   } catch { /* 기본 테마 사용 */ }
   document.documentElement.dataset.familyTheme = initialTheme;
-  document.documentElement.style.colorScheme = initialTheme === "night" ? "dark" : "light";
+  document.documentElement.style.colorScheme = ["night", "black"].includes(initialTheme) ? "dark" : "light";
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) themeMeta.content = themeColors[initialTheme];
 
@@ -131,7 +132,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260722-settings-visible-v4" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
-    { name: "settings", version: "20260722-korean-labels-v2" },
+    { name: "settings", version: "20260727-modern-black-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
@@ -188,6 +189,7 @@ window.FAMILY_CONFIG = {
     { name: "event-dialog-frame-polish", version: "20260721-v2", script: false },
     { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
     { name: "care-color-separation", version: "20260722-night-contrast-v1", script: false },
+    { name: "black-theme", version: "20260727-modern-black-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");

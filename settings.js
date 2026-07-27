@@ -41,6 +41,13 @@
       themeColor: '#151a20',
       preview: ['#151a20', '#20262d', '#86b6a2', '#d38ca4', '#f1eee8'],
     },
+    {
+      id: 'black',
+      name: '모던 블랙',
+      description: '순수한 블랙과 차콜, 절제된 화이트',
+      themeColor: '#000000',
+      preview: ['#000000', '#111113', '#9aa7b8', '#d0d3d8', '#f5f5f7'],
+    },
   ];
 
   const main = document.querySelector('.app-shell main');
@@ -123,7 +130,7 @@
     const selectedId = validTheme(themeId);
     const selected = THEMES.find((theme) => theme.id === selectedId) || THEMES[0];
     document.documentElement.dataset.familyTheme = selected.id;
-    document.documentElement.style.colorScheme = selected.id === 'night' ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = ['night', 'black'].includes(selected.id) ? 'dark' : 'light';
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) themeMeta.content = selected.themeColor;
     if (persist) {

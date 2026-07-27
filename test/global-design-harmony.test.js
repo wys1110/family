@@ -74,7 +74,7 @@ describe("global design harmony", () => {
     expect(index).toContain('<script src="app.js?v=20260722-growth-actions-v3"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
-    expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');
+    expect(config).toContain('{ name: "settings", version: "20260727-modern-black-v1" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
     expect(config).toContain('{ name: "typography-system", version: "20260722-touch-target-v2", script: false }');

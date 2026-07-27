@@ -1,0 +1,294 @@
+/* Modern Black: pure black canvas, restrained charcoal surfaces, crisp typography. */
+html[data-family-theme="black"] {
+  --bg: #000000;
+  --surface: #0d0d0f;
+  --surface-2: #17171a;
+  --label: #f5f5f7;
+  --secondary: #a5a5ad;
+  --tertiary: #707078;
+  --separator: rgba(255, 255, 255, .11);
+  --blue: #9aa7b8;
+  --green: #84a69a;
+  --orange: #c9a27d;
+  --red: #d98989;
+  --pink: #c99aaa;
+  --indigo: #aaa2c4;
+  --shadow: 0 18px 48px rgba(0, 0, 0, .5);
+  --theme-accent-rgb: 154, 167, 184;
+  --theme-hero-start: #101012;
+  --theme-hero-end: #242428;
+  --theme-verse-start: #0a0a0c;
+  --theme-verse-end: #151518;
+  --theme-tab-bg: rgba(13, 13, 15, .94);
+  --theme-tab-active: #29292e;
+  color-scheme: dark;
+}
+
+html[data-family-theme="black"],
+html[data-family-theme="black"] body {
+  background: #000000;
+}
+
+html[data-family-theme="black"] body::before,
+html[data-family-theme="black"] body::after,
+html[data-family-theme="black"] .topbar .eyebrow::before,
+html[data-family-theme="black"] .topbar .eyebrow::after,
+html[data-family-theme="black"] .daily-verse-card::after,
+html[data-family-theme="black"] .hero-card::before,
+html[data-family-theme="black"] .baby-profile-card::before {
+  content: none;
+  display: none;
+}
+
+html[data-family-theme="black"] .topbar h1 {
+  color: var(--label);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+}
+
+html[data-family-theme="black"] .avatar-button,
+html[data-family-theme="black"] .daily-verse-card,
+html[data-family-theme="black"] .view-tabs,
+html[data-family-theme="black"] .hero-card,
+html[data-family-theme="black"] .calendar-card {
+  animation: none;
+}
+
+html[data-family-theme="black"] .avatar-button {
+  border-color: rgba(255, 255, 255, .16);
+  background: linear-gradient(145deg, #34343a, #111114);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .55);
+}
+
+html[data-family-theme="black"] .view-tabs {
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(12, 12, 14, .94) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .36);
+}
+
+html[data-family-theme="black"] .view-tab {
+  color: #a8a8b0;
+}
+
+html[data-family-theme="black"] .view-tab.active {
+  color: #ffffff;
+  background: #29292e;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="black"] .hero-card,
+html[data-family-theme="black"] .baby-profile-card,
+html[data-family-theme="black"] .growth-hero {
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: linear-gradient(145deg, #202024, #0b0b0d);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .48);
+}
+
+html[data-family-theme="black"] .hero-card::after {
+  border-color: rgba(255, 255, 255, .045);
+}
+
+html[data-family-theme="black"] .daily-verse-card {
+  border-color: rgba(255, 255, 255, .08);
+  color: var(--label);
+  background: linear-gradient(145deg, #08080a, #151518);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .42);
+}
+
+html[data-family-theme="black"] .daily-verse-card::before {
+  color: rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="black"] .daily-verse-heading p,
+html[data-family-theme="black"] .daily-verse-card blockquote {
+  color: var(--label);
+}
+
+html[data-family-theme="black"] .daily-verse-card cite,
+html[data-family-theme="black"] .daily-verse-heading > span:last-child {
+  color: var(--secondary);
+}
+
+html[data-family-theme="black"] .daily-verse-heading .verse-cross {
+  color: #111114;
+  background: #d5d5da;
+  box-shadow: none;
+  animation: none;
+}
+
+html[data-family-theme="black"] .calendar-card,
+html[data-family-theme="black"] .quick-add-card,
+html[data-family-theme="black"] .agenda-item,
+html[data-family-theme="black"] .growth-entry,
+html[data-family-theme="black"] .growth-quick-section,
+html[data-family-theme="black"] .care-pattern-section,
+html[data-family-theme="black"] .care-linear-card,
+html[data-family-theme="black"] .daily-intake-summary,
+html[data-family-theme="black"] .weekly-care-summary,
+html[data-family-theme="black"] .settings-card,
+html[data-family-theme="black"] .feature-request-card,
+html[data-family-theme="black"] .feature-request-admin,
+html[data-family-theme="black"] .english-story-card,
+html[data-family-theme="black"] .family-todo-card,
+html[data-family-theme="black"] .recent-photo-featured {
+  border-color: rgba(255, 255, 255, .09);
+  background: #0d0d0f;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .38);
+}
+
+html[data-family-theme="black"] .growth-quick-grid button,
+html[data-family-theme="black"] .care-pattern-tabs,
+html[data-family-theme="black"] .care-day-mode-control > div,
+html[data-family-theme="black"] .care-pattern-categories button,
+html[data-family-theme="black"] .care-clock-summary,
+html[data-family-theme="black"] .care-rhythm-bars,
+html[data-family-theme="black"] .care-interval-card,
+html[data-family-theme="black"] .summary-card,
+html[data-family-theme="black"] .theme-option,
+html[data-family-theme="black"] .account-card,
+html[data-family-theme="black"] .range-toggle-row {
+  border-color: rgba(255, 255, 255, .09);
+  color: var(--label);
+  background: #151518;
+  box-shadow: none;
+}
+
+html[data-family-theme="black"] .calendar-day.selected {
+  color: #ffffff;
+  background: #242429;
+}
+
+html[data-family-theme="black"] .calendar-day.today .day-number {
+  color: #09090a;
+  background: #e2e2e6;
+  box-shadow: none;
+  animation: none;
+}
+
+html[data-family-theme="black"] input,
+html[data-family-theme="black"] select,
+html[data-family-theme="black"] textarea,
+html[data-family-theme="black"] .quick-time-input,
+html[data-family-theme="black"] .feature-request-form textarea {
+  color: var(--label);
+  border-color: rgba(255, 255, 255, .11);
+  background: #17171a;
+  box-shadow: none;
+}
+
+html[data-family-theme="black"] input::placeholder,
+html[data-family-theme="black"] textarea::placeholder {
+  color: #707078;
+}
+
+html[data-family-theme="black"] .auth-gate {
+  background: #000000;
+}
+
+html[data-family-theme="black"] .auth-panel,
+html[data-family-theme="black"] .sheet-dialog form,
+html[data-family-theme="black"] .sheet-panel,
+html[data-family-theme="black"] .completion-panel,
+html[data-family-theme="black"] .notification-center-panel,
+html[data-family-theme="black"] .photo-viewer-panel {
+  color: var(--label);
+  border-color: rgba(255, 255, 255, .1);
+  background: #0d0d0f;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .62);
+}
+
+html[data-family-theme="black"] .dialog-actions {
+  background: linear-gradient(transparent, #0d0d0f 20%);
+}
+
+html[data-family-theme="black"] .primary-button,
+html[data-family-theme="black"] .quick-add-submit,
+html[data-family-theme="black"] .oauth-button,
+html[data-family-theme="black"] .feeding-save-button {
+  color: #111114;
+  background: #eeeeF1;
+  box-shadow: none;
+}
+
+html[data-family-theme="black"] .today-button,
+html[data-family-theme="black"] .secondary-button,
+html[data-family-theme="black"] .edit-event-button,
+html[data-family-theme="black"] .quick-date-badge,
+html[data-family-theme="black"] .quick-time-button,
+html[data-family-theme="black"] .settings-current-theme {
+  color: #d5d5da;
+  background: rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="black"] .theme-option.active {
+  border-color: rgba(255, 255, 255, .42);
+  background: #1b1b1f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+
+html[data-family-theme="black"] .theme-check {
+  color: #111114;
+  background: #eeeeF1;
+}
+
+html[data-family-theme="black"] .settings-mark,
+html[data-family-theme="black"] .theme-save-note > span {
+  color: #111114;
+  background: #d5d5da;
+}
+
+html[data-family-theme="black"] .quick-now-badge,
+html[data-family-theme="black"] .count-badge,
+html[data-family-theme="black"] .feeding-meta-item,
+html[data-family-theme="black"] .care-pattern-date {
+  color: var(--secondary);
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .055);
+}
+
+html[data-family-theme="black"] .care-clock-face,
+html[data-family-theme="black"] .care-clock-center,
+html[data-family-theme="black"] .care-clock-outer {
+  fill: #101012;
+  stroke: rgba(255, 255, 255, .1);
+}
+
+html[data-family-theme="black"] .care-clock-night {
+  stroke: rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="black"] .care-clock-hour,
+html[data-family-theme="black"] .care-clock-center-kicker,
+html[data-family-theme="black"] .care-clock-center-caption,
+html[data-family-theme="black"] .care-clock-periods span {
+  fill: var(--secondary);
+  color: var(--secondary);
+}
+
+html[data-family-theme="black"] .care-clock-center-day {
+  fill: var(--label);
+}
+
+html[data-family-theme="black"] .refresh-button,
+html[data-family-theme="black"] .notification-center-button,
+html[data-family-theme="black"] .desktop-logout-button {
+  border-color: rgba(255, 255, 255, .12);
+  color: #f5f5f7;
+  background: rgba(20, 20, 23, .94);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .55);
+}
+
+html[data-family-theme="black"] .toast {
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(28, 28, 31, .96);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-family-theme="black"] .theme-option,
+  html[data-family-theme="black"] .view-tab,
+  html[data-family-theme="black"] button {
+    transition-duration: .16s;
+  }
+}
