@@ -32,12 +32,13 @@ describe("global design harmony", () => {
     expect(app).toContain('setAttribute("aria-label", nextView === "calendar" ? "새 일정 추가" : "새 성장 기록")');
   });
 
-  test("uses a compact daily-verse bookmark outside the calendar", () => {
-    expect(headerCss).toContain("body:has(#calendarView[hidden]) .daily-verse-card");
-    expect(headerCss).toContain("min-height: 68px");
-    expect(headerCss).toContain("min-height: 84px");
-    expect(headerCss).toContain("text-overflow: ellipsis");
-    expect(headerCss).toContain("white-space: nowrap");
+  test("keeps the first content block aligned across every top-level tab", () => {
+    expect(headerCss).toContain("--view-content-top-gap: 20px");
+    expect(headerCss).toContain(".app-shell .view-tabs");
+    expect(headerCss).toContain("#growthView > .growth-page-header");
+    expect(headerCss).toContain("#englishView > .english-page-header");
+    expect(headerCss).toContain("#featureRequestView > .feature-request-card");
+    expect(headerCss).toContain("--view-content-top-gap: 24px");
   });
 
   test("removes the cross-shaped growth divider and shortens entrance motion", () => {
@@ -70,8 +71,8 @@ describe("global design harmony", () => {
   });
 
   test("updates every affected stylesheet cache version", () => {
-    expect(index).toContain('styles.css?v=20260722-motion-v1');
-    expect(index).toContain('<script src="app.js?v=20260722-growth-actions-v3"></script>');
+    expect(index).toContain('styles.css?v=20260727-isolated-demo-v1');
+    expect(index).toContain('<script src="app.js?v=20260727-isolated-demo-v1"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260722-korean-labels-v2" }');
