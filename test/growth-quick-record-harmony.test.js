@@ -22,11 +22,11 @@ function extractFunction(source, name) {
 }
 
 describe("growth quick record harmony", () => {
-  test("saves the exact direct-feeding preset immediately through the existing grid handler", async () => {
+  test("saves the adjusted direct-feeding preset through the existing grid handler", async () => {
     const closed = [];
     const presets = [
-      { label: "왼쪽 10분", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 10 },
-      { label: "오른쪽 10분", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 10 },
+      { label: "왼쪽 20분", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 20 },
+      { label: "오른쪽 25분", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 25 },
     ];
     const context = {
       activeQuickPresets: presets,
@@ -56,40 +56,41 @@ describe("growth quick record harmony", () => {
     expect(context.state.growthEntries[0]).toMatchObject({
       babyId: "baby-1",
       feedingSide: "오른쪽",
-      feedingMinutes: 10,
+      feedingMinutes: 25,
     });
     expect(closed).toEqual([true]);
     expect(button.disabled).toBe(true);
-    expect(adaptive).toContain('data-preset-index="${index}"');
+    expect(adaptive).toContain('data-preset-index="0"');
     expect(app).toContain('$("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent)');
   });
 
-  test("does not replace direct presets with a selection step and confirmation button", () => {
+  test("uses 20, 20, and 40 minute defaults with five-minute adjustment", () => {
     expect(unified).not.toContain("data-direct-preset");
-    expect(unified).not.toContain("feedingQuickSave");
-    expect(unified).not.toContain("event.preventDefault()");
+    expect(adaptive).toContain("const DIRECT_DEFAULT_MINUTES = { 왼쪽: 20, 오른쪽: 20, 양쪽: 40 }");
+    expect(adaptive).toContain("const DIRECT_STEP_MINUTES = 5");
+    expect(adaptive).toContain('data-direct-adjust="-${DIRECT_STEP_MINUTES}"');
+    expect(adaptive).toContain('data-direct-adjust="${DIRECT_STEP_MINUTES}"');
+    expect(adaptive).toContain('data-preset-index="0"');
   });
 
-  test("matches the diaper quick sheet typography and two-column card layout", () => {
+  test("matches the quick sheet typography and provides a three-way direction selector", () => {
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active\s*\{[^}]*width:\s*min\(calc\(100% - 24px\), 500px\);/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.dialog-header h2\s*\{[^}]*font-size:\s*18px;[^}]*font-weight:\s*700;/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.quick-log-copy\s*\{[^}]*font-size:\s*11px;[^}]*line-height:\s*1\.6;/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*min-height:\s*82px;[^}]*border:\s*1px solid var\(--sheet-border\);[^}]*background:/s);
+    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding\s*\{[^}]*grid-template-columns:\s*1fr;/s);
+    expect(unifiedCss).toMatch(/\.direct-side-options\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
+    expect(unifiedCss).toMatch(/\.direct-side-options button\s*\{[^}]*min-height:\s*62px;[^}]*border:\s*1px solid var\(--sheet-border\);[^}]*background:/s);
     expect(unifiedCss).toMatch(/#quickLogDialog\.feeding-quick-active \.quick-detail-button\s*\{[^}]*min-height:\s*54px;[^}]*font-size:\s*15px;/s);
     expect(unifiedCss).toMatch(/@media \(max-width: 520px\)\s*\{[^}]*#quickLogDialog\.feeding-quick-active \.sheet-panel\s*\{[^}]*padding:\s*11px 17px max\(18px, env\(safe-area-inset-bottom\)\);/s);
   });
 
-  test("colors direct-feeding presets with theme-aware role accents", () => {
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(1\)\s*\{[^}]*--direct-preset-accent:\s*var\(--blue\);/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(2\)\s*\{[^}]*--direct-preset-accent:\s*var\(--indigo\);/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:nth-child\(3\)\s*\{[^}]*--direct-preset-accent:\s*color-mix\(in srgb, var\(--blue\) 42%, var\(--pink\)\);/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button\s*\{[^}]*border-color:\s*color-mix\(in srgb, var\(--direct-preset-accent\) 34%, var\(--sheet-border\)\);[^}]*background:[^}]*color-mix\(in srgb, var\(--direct-preset-accent\) 16%, var\(--sheet-panel-strong\)\),/s);
-    expect(unifiedCss).toMatch(/\.quick-preset-grid\.direct-feeding > button:active\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--direct-preset-accent\) 72%, var\(--surface\)\);/s);
+  test("makes the selected direct-feeding side visually clear", () => {
+    expect(unifiedCss).toMatch(/\.direct-side-options button\.active\s*\{[^}]*border-color:[^}]*color:\s*white;[^}]*background:/s);
+    expect(unifiedCss).toMatch(/\.direct-side-options button\.active small\s*\{[^}]*color:\s*rgba\(255, 255, 255, \.82\);/s);
   });
 
   test("bumps both feeding module cache versions", () => {
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20260722-diaper-harmony-v2" }');
-    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260722-themed-presets-v4" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20260727-direct-stepper-v1" }');
+    expect(config).toContain('{ name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" }');
   });
 });
