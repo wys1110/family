@@ -552,8 +552,13 @@
   }
 
   .care-day-mode-control {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
     gap: 7px;
+  }
+
+  .care-day-mode-control > div {
+    width: 100%;
   }
 
   .care-pattern-date {
