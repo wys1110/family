@@ -1,0 +1,556 @@
+/*
+ * Starry-night page palette.
+ * Loaded last so every top-level view shares one deep-navy system while
+ * care categories keep their own warm/cool meaning.
+ */
+
+html[data-family-theme="night"] {
+  --bg: #050d1c;
+  --surface: #0d1c33;
+  --surface-2: #142746;
+  --label: #f4f7ff;
+  --secondary: #b6c4da;
+  --tertiary: #7f91ad;
+  --separator: rgba(134, 175, 255, .18);
+  --blue: #79aaff;
+  --green: #74d9c7;
+  --orange: #f2c675;
+  --red: #ff9da5;
+  --pink: #f39ab7;
+  --indigo: #a99cf9;
+  --shadow: 0 20px 54px rgba(0, 0, 0, .38);
+  --theme-accent-rgb: 121, 170, 255;
+  --theme-hero-start: #102f5e;
+  --theme-hero-end: #2b4f88;
+  --theme-verse-start: #0d1d36;
+  --theme-verse-end: #181d42;
+  --theme-tab-bg: rgba(5, 17, 34, .94);
+  --theme-tab-active: #21497e;
+  --night-bg-deep: #050d1c;
+  --night-panel: #0d1c33;
+  --night-panel-raised: #142746;
+  --night-panel-soft: #172d4d;
+  --night-line: rgba(134, 175, 255, .18);
+  --night-blue: #79aaff;
+  --night-violet: #a99cf9;
+  --night-gold: #f2c675;
+  --night-rose: #f39ab7;
+  --night-teal: #74d9c7;
+  --night-diaper: #7ec8ff;
+  --ui-card: rgba(13, 28, 51, .96);
+  --ui-card-muted: rgba(20, 39, 70, .92);
+  --ui-border: var(--night-line);
+  --ui-accent-soft: rgba(121, 170, 255, .13);
+  color-scheme: dark;
+}
+
+html[data-family-theme="night"],
+html[data-family-theme="night"] body {
+  background-color: var(--night-bg-deep);
+}
+
+html[data-family-theme="night"] body {
+  background-image:
+    radial-gradient(circle at 10% 5%, rgba(80, 132, 227, .18), transparent 28rem),
+    radial-gradient(circle at 92% 24%, rgba(134, 96, 220, .13), transparent 26rem),
+    linear-gradient(180deg, #050d1c 0%, #071528 48%, #040b17 100%);
+}
+
+html[data-family-theme="night"] .topbar .eyebrow,
+html[data-family-theme="night"] :is(.section-heading, .settings-heading, .feature-request-heading, .feature-request-admin-heading) .eyebrow {
+  color: #93b8f4;
+}
+
+html[data-family-theme="night"] .view-tabs {
+  border-color: rgba(134, 175, 255, .16);
+  background: rgba(5, 17, 34, .91) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+html[data-family-theme="night"] .view-tab {
+  color: #aebdd3;
+}
+
+html[data-family-theme="night"] .view-tab.active {
+  color: #fff;
+  border-color: rgba(153, 191, 255, .28);
+  background: linear-gradient(145deg, #2c5a99, #1b3e70);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+html[data-family-theme="night"] .daily-verse-card {
+  border-color: rgba(169, 156, 249, .17);
+  background:
+    radial-gradient(circle at 91% 13%, rgba(242, 198, 117, .08), transparent 38%),
+    linear-gradient(145deg, #0d1d36, #171d40);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .25);
+}
+
+html[data-family-theme="night"] .daily-verse-heading .verse-cross {
+  color: #fff2c8;
+  border: 1px solid rgba(242, 198, 117, .22);
+  background: linear-gradient(145deg, #65542d, #27375d);
+}
+
+html[data-family-theme="night"] .hero-card {
+  border-color: rgba(151, 188, 250, .24);
+  background:
+    radial-gradient(circle at 82% 5%, rgba(242, 198, 117, .16), transparent 28%),
+    radial-gradient(circle at 98% 90%, rgba(169, 156, 249, .20), transparent 36%),
+    linear-gradient(135deg, #103368, #31588e);
+  box-shadow: 0 22px 52px rgba(2, 9, 22, .44), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] .family-chip {
+  color: #eef4ff;
+  border-color: rgba(255, 255, 255, .15);
+  background: rgba(5, 17, 34, .28);
+}
+
+/* Schedule */
+html[data-family-theme="night"] #calendarView .calendar-card {
+  border-color: rgba(134, 175, 255, .18);
+  background:
+    radial-gradient(circle at 91% 0%, rgba(121, 170, 255, .08), transparent 30%),
+    linear-gradient(180deg, rgba(15, 33, 59, .98), rgba(8, 23, 43, .98));
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] #calendarView :is(.icon-button, .today-button) {
+  color: #9fc4ff;
+  border-color: rgba(121, 170, 255, .20);
+  background: rgba(35, 75, 127, .54);
+}
+
+html[data-family-theme="night"] #calendarView .weekdays span {
+  color: #91a5c2;
+}
+
+html[data-family-theme="night"] #calendarView .weekdays span:first-child,
+html[data-family-theme="night"] #calendarView .calendar-day.public-holiday-day:not(.today) .day-number {
+  color: #ff9da5;
+}
+
+html[data-family-theme="night"] #calendarView .calendar-day {
+  color: #dbe5f5;
+}
+
+html[data-family-theme="night"] #calendarView .calendar-day:hover {
+  background: rgba(121, 170, 255, .06);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-day.selected {
+  color: #dceaff;
+  border-color: rgba(121, 170, 255, .24);
+  background: linear-gradient(145deg, rgba(41, 86, 146, .70), rgba(25, 56, 98, .66));
+  box-shadow: inset 0 0 0 1px rgba(170, 205, 255, .08);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-day.today .day-number {
+  color: #061124;
+  background: linear-gradient(145deg, #9ec6ff, #6e9ff2);
+  box-shadow: 0 4px 12px rgba(121, 170, 255, .28);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-event-bar {
+  color: #fff;
+  background-color: color-mix(in srgb, var(--member-color, var(--night-teal)) 74%, #172a48);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .17), 0 2px 7px rgba(0, 0, 0, .24);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-overflow-badge,
+html[data-family-theme="night"] #calendarView .count-badge {
+  color: #c4d4eb;
+  border-color: rgba(134, 175, 255, .15);
+  background: rgba(26, 52, 87, .86);
+}
+
+html[data-family-theme="night"] #calendarView :is(.quick-add-card, .agenda-item, .upcoming-event-item, .empty-state) {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .16);
+  background: linear-gradient(145deg, rgba(18, 39, 67, .96), rgba(11, 27, 49, .98));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] #calendarView :is(.quick-date-badge, .edit-event-button, .bulk-add-button) {
+  color: #a8caff;
+  border-color: rgba(121, 170, 255, .20);
+  background: rgba(37, 76, 127, .54);
+}
+
+html[data-family-theme="night"] #calendarView :is(.member-chip, .quick-time-button) {
+  color: #c0cee0;
+  background: rgba(25, 49, 81, .86);
+}
+
+html[data-family-theme="night"] #calendarView .member-chip.selected,
+html[data-family-theme="night"] #calendarView .quick-add-submit {
+  color: #061124;
+  background: linear-gradient(145deg, #9ec6ff, #6f9fe9);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-subtabs {
+  border-color: rgba(134, 175, 255, .14);
+  background: rgba(11, 27, 49, .86);
+}
+
+html[data-family-theme="night"] #calendarView .calendar-subtabs button {
+  color: #aebdd3;
+}
+
+html[data-family-theme="night"] #calendarView .calendar-subtabs button.active {
+  color: #fff;
+  border-color: rgba(121, 170, 255, .22);
+  background: linear-gradient(145deg, #264f87, #1a3965);
+}
+
+html[data-family-theme="night"] #calendarView :is(.todo-overview-card, .todo-quick-form, .family-todo-item, .todo-empty-state) {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .16);
+  background: linear-gradient(145deg, rgba(18, 39, 67, .96), rgba(11, 27, 49, .98));
+}
+
+html[data-family-theme="night"] #calendarView .todo-stats div,
+html[data-family-theme="night"] #calendarView .todo-filter-tabs button {
+  color: #b8c7dc;
+  border-color: rgba(134, 175, 255, .14);
+  background: rgba(23, 46, 78, .78);
+}
+
+html[data-family-theme="night"] #calendarView .todo-filter-tabs button.active {
+  color: #061124;
+  background: #79aaff;
+}
+
+/* Growth */
+html[data-family-theme="night"] #growthView {
+  --care-formula: #f2c675;
+  --care-pumped: #74d9c7;
+  --care-breast: #f39ab7;
+  --care-solid: #e7ad63;
+  --care-sleep: #a99cf9;
+  --care-diaper: #7ec8ff;
+}
+
+html[data-family-theme="night"] #growthView .growth-page-header h2,
+html[data-family-theme="night"] #growthView :is(.section-heading, .care-timer-heading, .care-pattern-heading) h2 {
+  color: #f7f9ff;
+}
+
+html[data-family-theme="night"] #growthView :is(.baby-header-actions > button, .baby-selector button) {
+  color: #b9c8dc;
+  border-color: rgba(134, 175, 255, .16);
+  background: rgba(16, 35, 61, .90);
+}
+
+html[data-family-theme="night"] #growthView .baby-selector button.active {
+  color: #fff;
+  border-color: rgba(121, 170, 255, .34);
+  background: linear-gradient(145deg, #2b568f, #1b3c69);
+}
+
+html[data-family-theme="night"] #growthView .baby-care-card {
+  border-color: rgba(156, 194, 255, .23);
+  background:
+    radial-gradient(circle at 88% 8%, rgba(242, 198, 117, .16), transparent 32%),
+    linear-gradient(145deg, #16396d, #273d72 58%, #443b74);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+
+html[data-family-theme="night"] #growthView .baby-care-card .today-care-grid article {
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(5, 17, 34, .24);
+}
+
+html[data-family-theme="night"] #growthView :is(#careTimerCard, .growth-quick-section, .care-pattern-section, .weekly-care-summary, .recent-photo-featured, .growth-entry, .growth-insight-row > article, .growth-insight-row > .insight-title) {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .17);
+  background:
+    radial-gradient(circle at 94% 2%, rgba(121, 170, 255, .07), transparent 38%),
+    linear-gradient(150deg, rgba(15, 33, 59, .98), rgba(8, 23, 43, .99));
+  box-shadow: 0 15px 40px rgba(0, 0, 0, .29), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"] {
+  color: #fff4dc;
+  border-color: rgba(242, 198, 117, .28);
+  background: linear-gradient(145deg, #554323, #2f2a28);
+}
+
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"] {
+  color: #eaf6ff;
+  border-color: rgba(126, 200, 255, .30);
+  background: linear-gradient(145deg, #1d4f7a, #173451);
+}
+
+html[data-family-theme="night"] #growthView button[data-growth-quick="수유·이유식"] .quick-symbol {
+  color: #3a2b14;
+  background: linear-gradient(145deg, #ffe1a4, #e5af55);
+}
+
+html[data-family-theme="night"] #growthView button[data-growth-quick="기저귀"] .quick-symbol {
+  color: #0c3151;
+  background: linear-gradient(145deg, #b9e2ff, #73bdf2);
+}
+
+html[data-family-theme="night"] #growthView :is(.growth-filter-bar button, .summary-period-tabs button, .growth-summary-toggle) {
+  color: #b7c6da;
+  border-color: rgba(134, 175, 255, .14);
+  background: rgba(20, 43, 73, .82);
+}
+
+html[data-family-theme="night"] #growthView :is(.growth-filter-bar button.active, .summary-period-tabs button.active) {
+  color: #fff;
+  border-color: rgba(121, 170, 255, .28);
+  background: linear-gradient(145deg, #285287, #1b3a66);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.formula { --entry-color: var(--care-formula); --entry-bg: linear-gradient(145deg, #594725, #342b20); }
+html[data-family-theme="night"] #growthView .care-split-entry.pumped { --entry-color: var(--care-pumped); --entry-bg: linear-gradient(145deg, #185a64, #123944); }
+html[data-family-theme="night"] #growthView .care-split-entry.breast { --entry-color: var(--care-breast); --entry-bg: linear-gradient(145deg, #60364f, #3b283c); }
+html[data-family-theme="night"] #growthView .care-split-entry.solid { --entry-color: var(--care-solid); --entry-bg: linear-gradient(145deg, #5c4325, #372d21); }
+html[data-family-theme="night"] #growthView .care-split-entry.sleep { --entry-color: var(--care-sleep); --entry-bg: linear-gradient(145deg, #493e7b, #2c2a50); }
+html[data-family-theme="night"] #growthView .care-split-entry.diaper { --entry-color: var(--care-diaper); --entry-bg: linear-gradient(145deg, #245c87, #193a57); }
+
+html[data-family-theme="night"] #growthView .care-time-row.formula { --care-time-color: var(--care-formula); }
+html[data-family-theme="night"] #growthView .care-time-row.pumped { --care-time-color: var(--care-pumped); }
+html[data-family-theme="night"] #growthView .care-time-row.breast { --care-time-color: var(--care-breast); }
+html[data-family-theme="night"] #growthView .care-time-row.solid { --care-time-color: var(--care-solid); }
+html[data-family-theme="night"] #growthView .care-time-row.sleep { --care-time-color: var(--care-sleep); }
+html[data-family-theme="night"] #growthView .care-time-row.diaper { --care-time-color: var(--care-diaper); }
+
+html[data-family-theme="night"] #growthView :is(.care-time-row, .summary-card, .growth-measure-history-list > button) {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .14);
+  background: rgba(19, 40, 68, .86);
+}
+
+/* English stories */
+html[data-family-theme="night"] #englishView {
+  --english-panel: rgba(11, 27, 49, .98);
+  --english-panel-strong: rgba(16, 35, 63, .98);
+  --english-panel-soft: rgba(23, 48, 82, .88);
+  --english-border: rgba(143, 181, 246, .19);
+  --english-text: #f7f9ff;
+  --english-muted: #bbc8dc;
+  --english-subtle: #8fa3c0;
+  --english-accent: #8cb7ff;
+  --english-accent-strong: #668fe6;
+}
+
+html[data-family-theme="night"] #englishView .english-book-mark {
+  color: #fff2c8;
+  border-color: rgba(242, 198, 117, .22);
+  background: linear-gradient(145deg, #51452e, #27355c);
+}
+
+html[data-family-theme="night"] #englishView .english-today-card {
+  border-color: rgba(169, 156, 249, .25);
+  background:
+    radial-gradient(circle at 88% 8%, rgba(242, 198, 117, .17), transparent 38%),
+    linear-gradient(135deg, #263e7a, #503f80);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+html[data-family-theme="night"] #englishView .english-today-label {
+  color: #f5d58e;
+}
+
+html[data-family-theme="night"] #englishView .english-story-player {
+  border-color: rgba(143, 181, 246, .18);
+  background:
+    radial-gradient(circle at 94% 2%, rgba(169, 156, 249, .10), transparent 35%),
+    linear-gradient(155deg, rgba(16, 35, 63, .98), rgba(7, 21, 40, .99));
+}
+
+html[data-family-theme="night"] #englishView .english-story-cover {
+  border-color: rgba(169, 156, 249, .17);
+  background:
+    radial-gradient(circle at 16% 16%, rgba(242, 198, 117, .11), transparent 31%),
+    linear-gradient(145deg, #1d3767, #302d62);
+}
+
+html[data-family-theme="night"] #englishView .english-cover-emoji {
+  border-color: rgba(255, 238, 193, .26);
+  background: linear-gradient(145deg, #dfc078, #7c72bf);
+}
+
+html[data-family-theme="night"] #englishView .english-player-actions .english-play-main {
+  background: linear-gradient(145deg, #6e94eb, #6258bc);
+}
+
+html[data-family-theme="night"] #englishView .english-sentence.active {
+  border-color: rgba(169, 156, 249, .42);
+  background: linear-gradient(145deg, rgba(61, 78, 139, .94), rgba(42, 52, 103, .94));
+}
+
+html[data-family-theme="night"] #englishView .english-progress i {
+  background: linear-gradient(90deg, #79aaff, #a99cf9, #f2c675);
+}
+
+html[data-family-theme="night"] #englishView .english-library-card.active {
+  border-color: rgba(169, 156, 249, .38);
+  background: linear-gradient(145deg, rgba(47, 65, 119, .94), rgba(29, 43, 82, .96));
+}
+
+/* Requests */
+html[data-family-theme="night"] #featureRequestView :is(.feature-request-card, .feature-request-admin) {
+  border-color: rgba(134, 175, 255, .17);
+  background:
+    radial-gradient(circle at 91% 0%, rgba(169, 156, 249, .10), transparent 39%),
+    linear-gradient(155deg, rgba(15, 33, 59, .98), rgba(8, 23, 43, .99));
+}
+
+html[data-family-theme="night"] #featureRequestView .feature-request-mark {
+  color: #fff2c8;
+  border: 1px solid rgba(242, 198, 117, .23);
+  background: linear-gradient(145deg, #594a2d, #2c3d68);
+}
+
+html[data-family-theme="night"] #featureRequestView .feature-request-form textarea,
+html[data-family-theme="night"] #featureRequestView .feature-request-item select {
+  color: #f7f9ff;
+  border-color: rgba(134, 175, 255, .20);
+  background: #102440;
+}
+
+html[data-family-theme="night"] #featureRequestView .feature-request-actions button {
+  color: #061124;
+  background: linear-gradient(145deg, #9ec6ff, #78a8f1);
+  box-shadow: 0 9px 24px rgba(73, 121, 204, .26);
+}
+
+html[data-family-theme="night"] #featureRequestView .feature-request-item {
+  border-color: rgba(134, 175, 255, .16);
+  background: linear-gradient(145deg, rgba(22, 45, 76, .98), rgba(13, 30, 54, .98));
+}
+
+html[data-family-theme="night"] #featureRequestView .feature-request-item[data-status="new"] { border-left-color: #f2c675; }
+html[data-family-theme="night"] #featureRequestView .feature-request-item[data-status="reviewing"] { border-left-color: #79aaff; }
+html[data-family-theme="night"] #featureRequestView .feature-request-item[data-status="planned"] { border-left-color: #a99cf9; }
+html[data-family-theme="night"] #featureRequestView .feature-request-item[data-status="done"] { border-left-color: #74d9c7; }
+html[data-family-theme="night"] #featureRequestView .feature-request-item[data-status="dismissed"] { border-left-color: #7f91ad; }
+
+/* Settings */
+html[data-family-theme="night"] #settingsView .settings-card {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .17);
+  background:
+    radial-gradient(circle at 94% 0%, rgba(121, 170, 255, .07), transparent 34%),
+    linear-gradient(150deg, rgba(15, 33, 59, .98), rgba(8, 23, 43, .99));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, .31), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"] #settingsView .settings-mark {
+  color: #eef5ff;
+  border: 1px solid rgba(143, 181, 246, .20);
+  background: linear-gradient(145deg, #2b568f, #283d72);
+}
+
+html[data-family-theme="night"] #settingsView .settings-current-theme {
+  color: #b8d3ff;
+  border: 1px solid rgba(121, 170, 255, .16);
+  background: rgba(38, 76, 126, .48);
+}
+
+html[data-family-theme="night"] #settingsView .theme-option {
+  color: #eef3fb;
+  border-color: rgba(134, 175, 255, .13);
+  background: rgba(16, 35, 61, .84);
+}
+
+html[data-family-theme="night"] #settingsView .theme-option:hover {
+  border-color: rgba(134, 175, 255, .25);
+  background: rgba(22, 45, 77, .92);
+}
+
+html[data-family-theme="night"] #settingsView .theme-option.active {
+  border-color: rgba(121, 170, 255, .55);
+  background: linear-gradient(145deg, rgba(39, 79, 133, .56), rgba(24, 50, 87, .72));
+  box-shadow: 0 0 0 3px rgba(121, 170, 255, .11), 0 10px 26px rgba(0, 0, 0, .22);
+}
+
+html[data-family-theme="night"] #settingsView .theme-option.active .theme-check {
+  color: #061124;
+  border-color: #9ec6ff;
+  background: #9ec6ff;
+}
+
+html[data-family-theme="night"] #settingsView .theme-preview {
+  border-color: rgba(180, 207, 250, .18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10), 0 6px 16px rgba(0, 0, 0, .24);
+}
+
+html[data-family-theme="night"] #settingsView .theme-save-note,
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-form, .daily-briefing-form, .family-profile-photo-control, .family-profile-preview) {
+  color: #b7c6da;
+  border-color: rgba(134, 175, 255, .14);
+  background: rgba(20, 43, 73, .76);
+}
+
+html[data-family-theme="night"] #settingsView :is(input, select, textarea) {
+  color: #f7f9ff;
+  border-color: rgba(134, 175, 255, .20);
+  background: #102440;
+}
+
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission, .daily-briefing-actions button, .family-profile-photo-actions button) {
+  color: #b8d3ff;
+  border-color: rgba(121, 170, 255, .20);
+  background: rgba(32, 67, 112, .62);
+}
+
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button.active, .daily-briefing-actions .primary-button) {
+  color: #061124;
+  border-color: transparent;
+  background: linear-gradient(145deg, #9ec6ff, #78a8f1);
+}
+
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-switch, .daily-briefing-switch) {
+  border-color: rgba(134, 175, 255, .16);
+  background: rgba(20, 43, 73, .78);
+}
+
+/* Shared overlays and utility controls */
+html[data-family-theme="night"] :is(.sheet-dialog form, .sheet-panel, .completion-panel, .account-dialog .sheet-panel, .notification-center-panel) {
+  color: var(--label);
+  border-color: rgba(134, 175, 255, .18);
+  background: linear-gradient(155deg, rgba(16, 35, 63, .99), rgba(7, 20, 38, .99));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .52);
+}
+
+html[data-family-theme="night"] :is(.fab, .refresh-button, .settings-refresh-action) {
+  color: #fff;
+  border-color: rgba(170, 205, 255, .25);
+  background: linear-gradient(145deg, #315f9e, #243f79);
+  box-shadow: 0 13px 32px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+
+html[data-family-theme="night"] .toast {
+  color: #f4f7ff;
+  border-color: rgba(134, 175, 255, .22);
+  background: rgba(12, 29, 53, .96);
+}
+
+html[data-family-theme="night"] .notification-center-dialog::backdrop,
+html[data-family-theme="night"] .sheet-dialog::backdrop {
+  background: rgba(2, 7, 16, .64);
+}
+
+html[data-family-theme="night"] .notification-center-tabs {
+  background: rgba(20, 43, 73, .82);
+}
+
+html[data-family-theme="night"] .notification-center-tabs button.active,
+html[data-family-theme="night"] .notification-item-foreground {
+  border-color: rgba(134, 175, 255, .15);
+  background: rgba(16, 35, 61, .94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-family-theme="night"] *,
+  html[data-family-theme="night"] *::before,
+  html[data-family-theme="night"] *::after {
+    transition-duration: .01ms !important;
+  }
+}
