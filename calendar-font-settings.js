@@ -32,132 +32,150 @@
         font-size: var(--calendar-event-user-font-size) !important;
       }
 
-      .calendar-font-number-control {
+      .calendar-font-slider-control {
         display: grid;
-        grid-template-columns: 52px minmax(0, 1fr) 52px;
-        gap: 10px;
+        grid-template-columns: 24px minmax(0, 1fr) 24px;
+        gap: 12px;
         align-items: center;
       }
 
-      .calendar-font-step-button,
-      .calendar-font-number-wrap {
-        min-height: 54px;
-        border: 1px solid var(--separator);
-        border-radius: 17px;
-        background: var(--surface);
-      }
-
-      .calendar-font-step-button {
-        display: grid;
-        place-items: center;
-        padding: 0;
-        color: var(--blue);
-        font: inherit;
-        font-size: 28px;
-        font-weight: 500;
+      .calendar-font-size-mark {
+        color: var(--secondary);
+        font-size: 15px;
+        font-weight: 750;
         line-height: 1;
-        cursor: pointer;
-        transition: transform .16s ease, border-color .16s ease, background .16s ease;
+        text-align: center;
+        user-select: none;
       }
 
-      .calendar-font-step-button:active {
-        transform: scale(.95);
-        background: rgba(var(--theme-accent-rgb), .08);
+      .calendar-font-size-mark.large {
+        font-size: 24px;
       }
 
-      .calendar-font-step-button:disabled {
-        opacity: .38;
-        cursor: default;
-      }
-
-      .calendar-font-number-wrap {
+      .calendar-font-slider-wrap {
+        --calendar-font-ratio: .25;
+        --calendar-font-progress: 25%;
         position: relative;
         display: flex;
         align-items: center;
-        overflow: hidden;
-        border-color: rgba(var(--theme-accent-rgb), .52);
-        background: rgba(var(--theme-accent-rgb), .055);
-        box-shadow: 0 8px 22px rgba(var(--theme-accent-rgb), .09);
-      }
-
-      .calendar-font-number-input {
-        width: 100%;
         min-width: 0;
         height: 52px;
-        padding: 0 45px 0 18px;
+      }
+
+      .calendar-font-slider-input {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 44px;
+        margin: 0;
+        padding: 0;
         border: 0;
         outline: 0;
-        color: var(--label);
         background: transparent;
-        font: inherit;
-        font-size: 20px;
-        font-weight: 800;
-        line-height: 1;
-        text-align: center;
-        appearance: textfield;
-      }
-
-      .calendar-font-number-input::-webkit-inner-spin-button,
-      .calendar-font-number-input::-webkit-outer-spin-button {
-        margin: 0;
         appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        touch-action: pan-y;
       }
 
-      .calendar-font-number-input:focus-visible {
-        box-shadow: inset 0 0 0 2px rgba(var(--theme-accent-rgb), .45);
+      .calendar-font-slider-input::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(
+          to right,
+          var(--blue) 0,
+          var(--blue) var(--calendar-font-progress),
+          rgba(var(--theme-accent-rgb), .22) var(--calendar-font-progress),
+          rgba(var(--theme-accent-rgb), .22) 100%
+        );
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .08);
       }
 
-      .calendar-font-number-unit {
+      .calendar-font-slider-input::-moz-range-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(var(--theme-accent-rgb), .22);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .08);
+      }
+
+      .calendar-font-slider-input::-moz-range-progress {
+        height: 6px;
+        border-radius: 999px;
+        background: var(--blue);
+      }
+
+      .calendar-font-slider-input::-webkit-slider-thumb {
+        width: 42px;
+        height: 42px;
+        margin-top: -18px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        box-shadow: none;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .calendar-font-slider-input::-moz-range-thumb {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .calendar-font-slider-input:focus-visible {
+        border-radius: 999px;
+        box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), .16);
+      }
+
+      .calendar-font-slider-value {
         position: absolute;
-        right: 16px;
-        color: var(--secondary);
-        font-size: 12px;
-        font-weight: 750;
+        z-index: 2;
+        top: 50%;
+        left: calc(21px + (100% - 42px) * var(--calendar-font-ratio));
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        transform: translate(-50%, -50%);
+        border: 3px solid rgba(255, 255, 255, .92);
+        border-radius: 50%;
+        color: #fff;
+        background: var(--blue);
+        box-shadow:
+          0 5px 16px rgba(var(--theme-accent-rgb), .32),
+          inset 0 1px 0 rgba(255, 255, 255, .24);
+        font-size: 16px;
+        font-weight: 820;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
         pointer-events: none;
       }
 
-      .calendar-font-preview {
-        display: grid;
-        place-items: center;
-        min-height: 66px;
-        margin-top: 10px;
-        padding: 10px 14px;
-        border: 1px solid var(--separator);
-        border-radius: 17px;
-        background: var(--surface);
-      }
-
-      .calendar-font-preview span {
-        max-width: 100%;
-        overflow: hidden;
-        color: var(--blue);
-        font-size: var(--calendar-event-user-font-size);
-        font-weight: 800;
-        line-height: 1.25;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .calendar-font-range-note {
-        display: block;
-        margin: 8px 2px 0;
+      .calendar-font-scale-labels {
+        display: flex;
+        justify-content: space-between;
+        margin: -2px 36px 0;
         color: var(--secondary);
         font-size: 10px;
-        line-height: 1.4;
-        text-align: center;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.3;
       }
 
       @media (min-width: 768px) {
-        .calendar-font-number-control {
-          grid-template-columns: 58px minmax(0, 1fr) 58px;
-          gap: 12px;
+        .calendar-font-slider-control {
+          grid-template-columns: 28px minmax(0, 1fr) 28px;
+          gap: 16px;
         }
 
-        .calendar-font-step-button,
-        .calendar-font-number-wrap { min-height: 58px; }
-        .calendar-font-number-input { height: 56px; font-size: 22px; }
-        .calendar-font-preview { min-height: 74px; }
-        .calendar-font-range-note { font-size: 11px; }
+        .calendar-font-slider-wrap { height: 58px; }
+        .calendar-font-slider-input { height: 50px; }
+        .calendar-font-size-mark { font-size: 17px; }
+        .calendar-font-size-mark.large { font-size: 27px; }
+        .calendar-font-scale-labels { margin-inline: 44px; font-size: 11px; }
       }
     `;
     document.head.appendChild(style);
@@ -166,15 +184,20 @@
   const updateControls = (size) => {
     const normalized = normalizeSize(size);
     const input = document.querySelector('[data-calendar-font-input]');
-    if (input && document.activeElement !== input) input.value = String(normalized);
+    if (input) {
+      input.value = String(normalized);
+      input.setAttribute('aria-valuetext', `${normalized}px`);
+    }
 
-    const current = document.querySelector('[data-calendar-font-current]');
-    if (current) current.textContent = `현재 · ${normalized}px`;
+    const value = document.querySelector('[data-calendar-font-value]');
+    if (value) value.textContent = String(normalized);
 
-    const decrease = document.querySelector('[data-calendar-font-step="-1"]');
-    const increase = document.querySelector('[data-calendar-font-step="1"]');
-    if (decrease) decrease.disabled = normalized <= MIN_SIZE;
-    if (increase) increase.disabled = normalized >= MAX_SIZE;
+    const ratio = (normalized - MIN_SIZE) / (MAX_SIZE - MIN_SIZE);
+    const sliderWrap = document.querySelector('[data-calendar-font-slider]');
+    if (sliderWrap) {
+      sliderWrap.style.setProperty('--calendar-font-ratio', String(ratio));
+      sliderWrap.style.setProperty('--calendar-font-progress', `${ratio * 100}%`);
+    }
   };
 
   const applySize = (value, { persist = true, announce = false } = {}) => {
@@ -208,50 +231,39 @@
         <div>
           <p class="eyebrow">CALENDAR</p>
           <h2 id="calendarFontSettingsTitle">일정 글자 크기</h2>
-          <span>캘린더 안 일정 제목의 크기를 숫자로 조절해요.</span>
+          <span>캘린더 안 일정 제목의 크기를 조절해요.</span>
         </div>
-        <span class="settings-current-theme" data-calendar-font-current aria-live="polite"></span>
       </div>
-      <div class="calendar-font-number-control" aria-label="캘린더 일정 글자 크기 입력">
-        <button class="calendar-font-step-button" type="button" data-calendar-font-step="-1" aria-label="글자 크기 1픽셀 줄이기">−</button>
-        <label class="calendar-font-number-wrap">
+      <div class="calendar-font-slider-control">
+        <span class="calendar-font-size-mark" aria-hidden="true">A</span>
+        <label class="calendar-font-slider-wrap" data-calendar-font-slider>
           <span class="sr-only">일정 글자 크기</span>
-          <input class="calendar-font-number-input" type="number" inputmode="numeric" min="${MIN_SIZE}" max="${MAX_SIZE}" step="1" data-calendar-font-input aria-describedby="calendarFontRangeNote">
-          <span class="calendar-font-number-unit" aria-hidden="true">px</span>
+          <input
+            class="calendar-font-slider-input"
+            type="range"
+            min="${MIN_SIZE}"
+            max="${MAX_SIZE}"
+            step="1"
+            data-calendar-font-input
+            aria-describedby="calendarFontRangeNote"
+          >
+          <output class="calendar-font-slider-value" data-calendar-font-value aria-hidden="true"></output>
         </label>
-        <button class="calendar-font-step-button" type="button" data-calendar-font-step="1" aria-label="글자 크기 1픽셀 키우기">＋</button>
+        <span class="calendar-font-size-mark large" aria-hidden="true">A</span>
       </div>
-      <div class="calendar-font-preview" aria-hidden="true"><span>일정 제목 미리보기</span></div>
-      <small class="calendar-font-range-note" id="calendarFontRangeNote">${MIN_SIZE}~${MAX_SIZE}px · 1px 단위</small>
-      <div class="theme-save-note">
+      <div class="calendar-font-scale-labels" id="calendarFontRangeNote">
+        <span>${MIN_SIZE}px</span><span>${MAX_SIZE}px</span>
+      </div>
+      <div class="theme-save-note calendar-font-save-note">
         <span aria-hidden="true">✓</span>
-        <p><strong>입력한 크기는 자동 저장돼요</strong><small>이 기기에서 다음 방문에도 그대로 적용됩니다.</small></p>
+        <p><strong>크기는 자동 저장돼요</strong><small>다음 방문에도 그대로 적용됩니다.</small></p>
       </div>
     `;
     view.appendChild(card);
 
     const input = card.querySelector('[data-calendar-font-input]');
-    input.addEventListener('input', () => {
-      if (input.value === '') return;
-      const parsed = Number.parseInt(input.value, 10);
-      if (!Number.isFinite(parsed) || parsed < MIN_SIZE || parsed > MAX_SIZE) return;
-      applySize(parsed);
-    });
-    input.addEventListener('change', () => {
-      const size = applySize(input.value, { announce: true });
-      input.value = String(size);
-    });
-    input.addEventListener('blur', () => {
-      input.value = String(applySize(input.value));
-    });
-
-    card.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-calendar-font-step]');
-      if (!button) return;
-      const current = normalizeSize(document.documentElement.dataset.calendarFontSize);
-      const size = applySize(current + Number(button.dataset.calendarFontStep), { announce: true });
-      input.value = String(size);
-    });
+    input.addEventListener('input', () => applySize(input.value));
+    input.addEventListener('change', () => applySize(input.value, { announce: true }));
 
     updateControls(normalizeSize(document.documentElement.dataset.calendarFontSize));
     return true;
