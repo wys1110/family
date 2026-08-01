@@ -26,6 +26,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/feeding-reminder.css") ||
     url.pathname.endsWith("/growth-inline-approved-polish.css") ||
     url.pathname.endsWith("/tab-emojis.js") ||
+    url.pathname.endsWith("/family-admin.js") ||
+    url.pathname.endsWith("/family-admin.css") ||
+    url.pathname.endsWith("/platform-request-admin.js") ||
     url.pathname.endsWith("/invite-link.css") ||
     url.pathname.endsWith("/invite-link.js") ||
     url.pathname.endsWith("/language-practice.js") ||
