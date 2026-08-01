@@ -43,5 +43,19 @@
   };
 
   applyLabels();
-  new MutationObserver(applyLabels).observe(navigation, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(applyLabels).observe(navigation, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+
+  if (!document.querySelector('script[data-module="english-story-name"]')) {
+    const script = document.createElement('script');
+    script.src = 'english-story-name.js?v=20260801-v1';
+    script.dataset.module = 'english-story-name';
+    script.async = false;
+    script.onerror = () => console.error('영어동화 이름 편집 모듈을 불러오지 못했어요.');
+    document.body.appendChild(script);
+  }
 })();
