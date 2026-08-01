@@ -20,6 +20,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/refresh-button.js") ||
     url.pathname.endsWith("/notification-center.css") ||
     url.pathname.endsWith("/settings-layout-polish.css") ||
+    url.pathname.endsWith("/settings-refresh.css") ||
+    url.pathname.endsWith("/settings-refresh.js") ||
+    url.pathname.endsWith("/feeding-reminder.css") ||
     url.pathname.endsWith("/growth-inline-approved-polish.css") ||
     url.pathname.endsWith("/tab-emojis.js") ||
     url.pathname.endsWith("/invite-link.css") ||
@@ -33,8 +36,11 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   let payload = {};
-  try { payload = event.data?.json() || {}; }
-  catch { payload = { body: event.data?.text() || "오늘 일정을 확인해 주세요." }; }
+  try {
+    payload = event.data?.json() || {};
+  } catch {
+    payload = { body: event.data?.text() || "오늘 일정을 확인해 주세요." };
+  }
 
   const title = payload.title || "우리 가족 일정 브리핑";
   const options = {
