@@ -18,6 +18,15 @@
     window.location.replace(target.href);
   };
 
+  const releaseFloatingRefreshOverride = () => {
+    const button = document.querySelector('[data-refresh-module]');
+    if (!button) return;
+    button.style.removeProperty('display');
+    button.style.removeProperty('visibility');
+    button.style.removeProperty('opacity');
+    button.style.removeProperty('pointer-events');
+  };
+
   const ensureFloatingRefreshButton = () => {
     const pageBody = document.body;
     if (!pageBody) return null;
@@ -37,10 +46,7 @@
     if (button.parentElement !== pageBody) pageBody.appendChild(button);
     button.hidden = false;
     button.removeAttribute('aria-hidden');
-    button.style.setProperty('display', 'grid', 'important');
-    button.style.setProperty('visibility', 'visible', 'important');
-    button.style.setProperty('opacity', '1', 'important');
-    button.style.setProperty('pointer-events', 'auto', 'important');
+    releaseFloatingRefreshOverride();
 
     if (button.dataset.refreshHydrated !== 'true' && button.dataset.settingsRefreshFallbackBound !== 'true') {
       button.dataset.settingsRefreshFallbackBound = 'true';
@@ -127,7 +133,7 @@
     const active = isSettingsVisible();
     document.body?.classList.toggle('settings-refresh-active', active);
     ensureRefreshCard();
-    if (active) ensureFloatingRefreshButton();
+    releaseFloatingRefreshOverride();
   };
 
   const scheduleMaintain = () => {
