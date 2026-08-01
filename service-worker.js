@@ -28,6 +28,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/tab-emojis.js") ||
     url.pathname.endsWith("/family-admin.js") ||
     url.pathname.endsWith("/family-admin.css") ||
+    url.pathname.endsWith("/admin-resource-usage.js") ||
     url.pathname.endsWith("/platform-request-admin.js") ||
     url.pathname.endsWith("/activity-log.js") ||
     url.pathname.endsWith("/admin-recent-activity.js") ||
