@@ -8,6 +8,7 @@
     english: ['📖', '동화'],
     'feature-request': ['💡', '요청'],
     settings: ['⚙️', '설정'],
+    admin: ['🛡️', '관리'],
   };
 
   const navigation = document.querySelector('.view-tabs');
@@ -56,6 +57,15 @@
     script.dataset.module = 'english-story-name';
     script.async = false;
     script.onerror = () => console.error('영어동화 이름 편집 모듈을 불러오지 못했어요.');
+    document.body.appendChild(script);
+  }
+
+  if (!document.querySelector('script[data-module="family-admin"]')) {
+    const script = document.createElement('script');
+    script.src = 'family-admin.js?v=20260801-v1';
+    script.dataset.module = 'family-admin';
+    script.async = false;
+    script.onerror = () => console.error('가족 관리자 모듈을 불러오지 못했어요.');
     document.body.appendChild(script);
   }
 })();
