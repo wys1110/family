@@ -2,12 +2,15 @@
   const PARAM_NAME = "invite";
   const STORAGE_KEY = "family-pending-invite-v1";
   const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-  const INVITE_PATTERN = /^[A-F0-9]{6}$/;
+  const CURRENT_INVITE_PATTERN = /^[A-F0-9]{6}$/i;
+  const LEGACY_INVITE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{5,127}$/;
   const SHARE_BUTTON_HTML = '<span aria-hidden="true">↗</span> 초대 링크 공유';
 
   const normalizeCode = (value) => {
-    const code = String(value || "").trim().toUpperCase();
-    return INVITE_PATTERN.test(code) ? code : "";
+    const rawCode = String(value || "").trim();
+    if (CURRENT_INVITE_PATTERN.test(rawCode)) return rawCode.toUpperCase();
+    if (LEGACY_INVITE_PATTERN.test(rawCode)) return rawCode;
+    return "";
   };
 
   const readStoredInvite = () => {
@@ -136,6 +139,7 @@
 
     const code = normalizeCode(state.household?.invite_code);
     if (!code) {
+      console.error("가족 초대 코드가 없거나 지원하지 않는 형식입니다");
       setShareButtonFeedback(button, '<span aria-hidden="true">!</span> 링크 생성 실패');
       showToast("초대 링크를 만들지 못했어요");
       return;
