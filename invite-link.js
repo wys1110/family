@@ -3,6 +3,7 @@
   const STORAGE_KEY = "family-pending-invite-v1";
   const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
   const INVITE_PATTERN = /^[A-F0-9]{6}$/;
+  const SHARE_BUTTON_HTML = '<span aria-hidden="true">↗</span> 초대 링크 공유';
 
   const normalizeCode = (value) => {
     const code = String(value || "").trim().toUpperCase();
@@ -61,40 +62,131 @@
     if (typeof toast === "function") toast(message);
   };
 
-  const shareInvite = async () => {
+  const setShareButtonFeedback = (button, html, duration = 1800) => {
+    if (!button) return;
+    window.clearTimeout(Number(button.dataset.inviteResetTimer || 0));
+    button.innerHTML = html;
+    if (!duration) return;
+    const timer = window.setTimeout(() => {
+      if (button.isConnected) button.innerHTML = SHARE_BUTTON_HTML;
+      delete button.dataset.inviteResetTimer;
+    }, duration);
+    button.dataset.inviteResetTimer = String(timer);
+  };
+
+  const copyInviteUrl = async (url) => {
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        return true;
+      } catch (error) {
+        console.warn("클립보드 API로 초대 링크 복사 실패", error);
+      }
+    }
+
+    const input = document.createElement("textarea");
+    input.value = url;
+    input.setAttribute("readonly", "");
+    input.setAttribute("aria-hidden", "true");
+    input.style.position = "fixed";
+    input.style.inset = "0 auto auto -9999px";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+    try { input.focus({ preventScroll: true }); }
+    catch { input.focus(); }
+    input.select();
+    input.setSelectionRange(0, input.value.length);
+
+    let copied = false;
+    try { copied = Boolean(document.execCommand("copy")); }
+    catch (error) { console.warn("기본 복사 방식으로 초대 링크 복사 실패", error); }
+    input.remove();
+    return copied;
+  };
+
+  const revealManualInvite = (button, url) => {
+    const card = button?.closest(".invite-link-card");
+    if (!card) return;
+
+    let fallback = card.querySelector("[data-invite-manual-link]");
+    if (!fallback) {
+      fallback = document.createElement("div");
+      fallback.className = "invite-manual-link";
+      fallback.dataset.inviteManualLink = "";
+      fallback.innerHTML = `
+        <label for="manualFamilyInviteUrl">공유가 열리지 않으면 아래 링크를 길게 눌러 복사하세요.</label>
+        <input id="manualFamilyInviteUrl" type="text" readonly inputmode="none" />
+      `;
+      button.insertAdjacentElement("afterend", fallback);
+    }
+
+    const input = fallback.querySelector("input");
+    input.value = url;
+    fallback.hidden = false;
+    requestAnimationFrame(() => {
+      try { input.focus({ preventScroll: true }); }
+      catch { input.focus(); }
+      input.select();
+      input.setSelectionRange(0, input.value.length);
+    });
+  };
+
+  const shareInvite = async (button) => {
+    if (!button || button.disabled) return;
+
     const code = normalizeCode(state.household?.invite_code);
-    if (!code) return showToast("초대 링크를 만들지 못했어요");
+    if (!code) {
+      setShareButtonFeedback(button, '<span aria-hidden="true">!</span> 링크 생성 실패');
+      showToast("초대 링크를 만들지 못했어요");
+      return;
+    }
 
     const url = buildInviteUrl(code);
+    const householdName = state.household?.name || "우리 가족";
     const shareData = {
-      title: `${state.household.name} 가족 공간 초대`,
-      text: `${state.household.name} 가족 공간에 함께 참여해 주세요.`,
+      title: `${householdName} 가족 공간 초대`,
+      text: `${householdName} 가족 공간에 함께 참여해 주세요.`,
       url,
     };
 
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    setShareButtonFeedback(button, '<span aria-hidden="true">…</span> 공유 준비 중', 0);
+
     try {
-      if (navigator.share) {
-        await navigator.share(shareData);
+      const nativeShareAvailable = typeof navigator.share === "function";
+      let nativeShareAllowed = nativeShareAvailable;
+      if (nativeShareAvailable && typeof navigator.canShare === "function") {
+        try { nativeShareAllowed = navigator.canShare(shareData); }
+        catch { nativeShareAllowed = false; }
+      }
+
+      if (nativeShareAvailable && nativeShareAllowed) {
+        try {
+          await navigator.share(shareData);
+          setShareButtonFeedback(button, '<span aria-hidden="true">✓</span> 공유 완료');
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") {
+            setShareButtonFeedback(button, SHARE_BUTTON_HTML, 0);
+            return;
+          }
+          console.warn("기본 공유창을 열지 못해 링크 복사로 전환", error);
+        }
+      }
+
+      if (await copyInviteUrl(url)) {
+        setShareButtonFeedback(button, '<span aria-hidden="true">✓</span> 링크 복사됨');
+        showToast("초대 링크를 복사했어요");
         return;
       }
-      await navigator.clipboard.writeText(url);
-      showToast("초대 링크를 복사했어요");
-    } catch (error) {
-      if (error?.name === "AbortError") return;
-      try {
-        const input = document.createElement("textarea");
-        input.value = url;
-        input.setAttribute("readonly", "");
-        input.style.position = "fixed";
-        input.style.opacity = "0";
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        input.remove();
-        showToast("초대 링크를 복사했어요");
-      } catch {
-        showToast("초대 링크를 공유하지 못했어요");
-      }
+
+      revealManualInvite(button, url);
+      setShareButtonFeedback(button, '<span aria-hidden="true">↧</span> 아래 링크를 복사하세요', 2600);
+      showToast("아래 초대 링크를 직접 복사해 주세요");
+    } finally {
+      button.disabled = false;
+      button.setAttribute("aria-busy", "false");
     }
   };
 
@@ -127,7 +219,6 @@
 
   const bindAccountActions = (root) => {
     root.querySelector("#createHouseholdForm")?.addEventListener("submit", createHousehold);
-    root.querySelector("#shareFamilyInvite")?.addEventListener("click", shareInvite);
     root.querySelector("#joinFamilyInvite")?.addEventListener("click", (event) => joinFromInvite(event.currentTarget));
     root.querySelector("#logoutButton")?.addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
   };
@@ -167,7 +258,7 @@
         <span class="invite-link-icon" aria-hidden="true">👨‍👩‍👧‍👦</span>
         <strong>${escapeHtml(state.household.name)}</strong>
         <p>가족에게 초대 링크를 보내 함께 기록하세요.</p>
-        <button class="primary-button invite-link-action" id="shareFamilyInvite" type="button"><span aria-hidden="true">↗</span> 초대 링크 공유</button>
+        <button class="primary-button invite-link-action" id="shareFamilyInvite" type="button">${SHARE_BUTTON_HTML}</button>
       </div>
       <button class="secondary-button" id="logoutButton" type="button">로그아웃</button>
     `;
@@ -187,6 +278,13 @@
     if (!code) return originalAuthRedirectUrl();
     return buildInviteUrl(code);
   };
+
+  document.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target.closest("#shareFamilyInvite") : null;
+    if (!target) return;
+    event.preventDefault();
+    shareInvite(target);
+  }, true);
 
   const initialCode = inviteFromUrl();
   if (initialCode) storeInvite(initialCode);
