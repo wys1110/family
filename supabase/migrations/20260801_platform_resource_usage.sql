@@ -17,9 +17,8 @@ begin
     raise exception 'platform administrator access required' using errcode = '42501';
   end if;
 
-  select coalesce(sum(pg_database_size(datname)), 0)
-  into database_bytes
-  from pg_database;
+  select pg_database_size(current_database())
+  into database_bytes;
 
   if to_regclass('storage.objects') is not null then
     execute $query$
@@ -45,8 +44,8 @@ begin
 end;
 $$;
 
-revoke all on function public.get_platform_resource_usage() from public;
-grant execute on function public.get_platform_resource_usage() to authenticated;
+revoke all on function public.get_platform_resource_usage() from public, anon;
+grant execute on function public.get_platform_resource_usage() to authenticated, service_role;
 
 comment on function public.get_platform_resource_usage() is
   'Returns database and file Storage usage to a registered platform administrator.';
