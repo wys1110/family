@@ -12,11 +12,10 @@
 
   let gesture = null;
   let animating = false;
-  let pickerYear = new Date().getFullYear();
   const runningAnimations = new Set();
 
   const calendarGrid = () => document.querySelector("#calendarGrid");
-  const monthPickerDialog = () => document.querySelector("#monthPickerDialog");
+  const nativeMonthPicker = () => document.querySelector("#nativeMonthPicker");
 
   function clearGridMotion(grid = calendarGrid()) {
     if (!grid) return;
@@ -215,80 +214,18 @@
     else clearGridMotion(grid);
   }
 
-  function syncMonthPickerTriggerLabel() {
-    const trigger = document.querySelector("#monthLabel");
-    if (!trigger) return;
-    const label = trigger.textContent.trim() || "월 선택";
-    trigger.setAttribute("aria-label", `${label}. 다른 월 선택`);
+  function monthValue(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
   }
 
-  function createMonthPickerDialog() {
-    const existing = monthPickerDialog();
-    if (existing) return existing;
+  function syncMonthPickerTrigger() {
+    const label = document.querySelector("#monthLabel");
+    const input = nativeMonthPicker();
+    if (!label || !input) return;
 
-    const dialog = document.createElement("dialog");
-    dialog.id = "monthPickerDialog";
-    dialog.className = "month-picker-dialog";
-    dialog.setAttribute("aria-labelledby", "monthPickerTitle");
-    dialog.innerHTML = `
-      <div class="month-picker-panel">
-        <div class="month-picker-handle" aria-hidden="true"></div>
-        <div class="month-picker-header">
-          <div><p>달력 이동</p><h2 id="monthPickerTitle">월 선택</h2></div>
-          <button type="button" class="month-picker-close" data-month-picker-close aria-label="닫기">×</button>
-        </div>
-        <div class="month-picker-year-nav" aria-label="연도 선택">
-          <button type="button" data-month-picker-year="-1" aria-label="이전 연도">‹</button>
-          <strong id="monthPickerYear" aria-live="polite"></strong>
-          <button type="button" data-month-picker-year="1" aria-label="다음 연도">›</button>
-        </div>
-        <div class="month-picker-grid" id="monthPickerGrid" role="group" aria-label="월 선택"></div>
-        <div class="month-picker-actions">
-          <button type="button" class="month-picker-current" data-month-picker-current>이번 달</button>
-          <button type="button" class="month-picker-cancel" data-month-picker-close>취소</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(dialog);
-
-    dialog.querySelectorAll("[data-month-picker-close]").forEach((button) => {
-      button.addEventListener("click", () => dialog.close());
-    });
-    dialog.querySelectorAll("[data-month-picker-year]").forEach((button) => {
-      button.addEventListener("click", () => {
-        pickerYear += Number(button.dataset.monthPickerYear);
-        renderMonthPicker();
-      });
-    });
-    dialog.querySelector("[data-month-picker-current]").addEventListener("click", () => {
-      const today = new Date();
-      selectMonth(today.getFullYear(), today.getMonth(), today.getDate());
-    });
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-    return dialog;
-  }
-
-  function renderMonthPicker() {
-    const dialog = createMonthPickerDialog();
-    const yearLabel = dialog.querySelector("#monthPickerYear");
-    const grid = dialog.querySelector("#monthPickerGrid");
-    const today = new Date();
-    const viewedYear = state.viewDate.getFullYear();
-    const viewedMonth = state.viewDate.getMonth();
-
-    yearLabel.textContent = `${pickerYear}년`;
-    grid.innerHTML = Array.from({ length: 12 }, (_, month) => {
-      const selected = pickerYear === viewedYear && month === viewedMonth;
-      const current = pickerYear === today.getFullYear() && month === today.getMonth();
-      const note = selected ? "선택됨" : current ? "이번 달" : "";
-      return `<button type="button" data-month-picker-month="${month}" class="${selected ? "selected" : ""} ${current ? "current" : ""}" aria-pressed="${selected}"><strong>${month + 1}월</strong><small>${note}</small></button>`;
-    }).join("");
-
-    grid.querySelectorAll("[data-month-picker-month]").forEach((button) => {
-      button.addEventListener("click", () => selectMonth(pickerYear, Number(button.dataset.monthPickerMonth)));
-    });
+    const text = label.textContent.trim() || "월 선택";
+    input.setAttribute("aria-label", `${text}. 이동할 연도와 월 선택`);
+    if (document.activeElement !== input) input.value = monthValue(state.viewDate);
   }
 
   function selectMonth(year, month, preferredDay = parseDate(state.selectedDate).getDate()) {
@@ -298,46 +235,42 @@
     lastCalendarTap = { date: null, at: 0 };
     renderCalendar();
     renderAgenda();
-    monthPickerDialog()?.close();
-  }
-
-  function openMonthPicker() {
-    const dialog = createMonthPickerDialog();
-    pickerYear = state.viewDate.getFullYear();
-    renderMonthPicker();
-    syncMonthPickerTriggerLabel();
-    if (!dialog.open) dialog.showModal();
-    requestAnimationFrame(() => {
-      const preferred = dialog.querySelector(".month-picker-grid .selected")
-        || dialog.querySelector(".month-picker-grid button");
-      preferred?.focus();
-    });
+    syncMonthPickerTrigger();
   }
 
   function installMonthPicker() {
     const heading = document.querySelector("#monthLabel");
-    if (!heading || heading.dataset.monthPickerInstalled === "true") return;
+    if (!heading || nativeMonthPicker()) return;
 
-    let trigger = heading;
-    if (heading.tagName !== "BUTTON") {
-      trigger = document.createElement("button");
-      trigger.id = heading.id;
-      trigger.type = "button";
-      trigger.className = "month-picker-trigger";
-      trigger.textContent = heading.textContent;
-      heading.replaceWith(trigger);
-    } else {
-      trigger.classList.add("month-picker-trigger");
-      trigger.type = "button";
-    }
+    const trigger = document.createElement("label");
+    trigger.className = "month-picker-trigger";
 
-    trigger.dataset.monthPickerInstalled = "true";
-    trigger.setAttribute("aria-haspopup", "dialog");
-    trigger.setAttribute("aria-controls", "monthPickerDialog");
-    trigger.addEventListener("click", openMonthPicker);
-    new MutationObserver(syncMonthPickerTriggerLabel).observe(trigger, { childList: true, characterData: true, subtree: true });
-    syncMonthPickerTriggerLabel();
-    createMonthPickerDialog();
+    const label = document.createElement("span");
+    label.id = "monthLabel";
+    label.textContent = heading.textContent;
+
+    const input = document.createElement("input");
+    input.id = "nativeMonthPicker";
+    input.className = "month-picker-native-input";
+    input.type = "month";
+    input.value = monthValue(state.viewDate);
+    input.autocomplete = "off";
+
+    input.addEventListener("change", () => {
+      const match = /^(\d{4})-(\d{2})$/.exec(input.value);
+      if (!match) return;
+      selectMonth(Number(match[1]), Number(match[2]) - 1);
+    });
+
+    trigger.append(label, input);
+    heading.replaceWith(trigger);
+
+    new MutationObserver(syncMonthPickerTrigger).observe(label, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    syncMonthPickerTrigger();
   }
 
   function install() {
