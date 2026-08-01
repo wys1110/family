@@ -1,21 +1,30 @@
 (() => {
   if (document.querySelector('[data-family-admin-module]')) return;
 
-  const VIEW_NAME = 'admin';
-  const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
+  const VIEW = 'admin';
+  const ADMIN_EMAIL = 'wys1110@gmail.com';
+  const ACTIVE_VIEW_KEY = 'family-active-view-v1';
   const main = document.querySelector('.app-shell main');
-  const navigation = document.querySelector('.view-tabs');
-  if (!main || !navigation) return;
+  const nav = document.querySelector('.view-tabs');
+  if (!main || !nav) return;
 
-  let tab = navigation.querySelector(`[data-view="${VIEW_NAME}"]`);
+  if (!document.querySelector('link[data-family-admin-style]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'family-admin.css?v=20260801-global-v2';
+    link.dataset.familyAdminStyle = '';
+    document.head.appendChild(link);
+  }
+
+  let tab = nav.querySelector(`[data-view="${VIEW}"]`);
   if (!tab) {
     tab = document.createElement('button');
     tab.className = 'view-tab';
-    tab.dataset.view = VIEW_NAME;
+    tab.dataset.view = VIEW;
     tab.type = 'button';
     tab.textContent = '관리자';
     tab.hidden = true;
-    navigation.appendChild(tab);
+    nav.appendChild(tab);
   }
 
   const view = document.createElement('div');
@@ -24,479 +33,239 @@
   view.dataset.familyAdminModule = '';
   view.hidden = true;
   view.innerHTML = `
-    <section class="settings-card admin-family-card" aria-labelledby="adminFamilyTitle">
-      <div class="settings-heading admin-family-heading">
+    <section class="settings-card global-admin-card" aria-labelledby="globalAdminTitle">
+      <div class="settings-heading global-admin-heading">
         <span class="settings-mark" aria-hidden="true">♛</span>
-        <div>
-          <p class="eyebrow">관리자 전용</p>
-          <h2 id="adminFamilyTitle">가족 그룹 구성</h2>
-          <span>현재 가족 공간에 연결된 계정과 등록 정보를 확인하세요.</span>
-        </div>
+        <div><p class="eyebrow">WYS1110 전용</p><h2 id="globalAdminTitle">앱 전체 사용자 관리</h2><span>모든 가입 사용자와 가족 그룹 구성을 확인하세요.</span></div>
         <button class="admin-refresh-button" type="button" data-admin-refresh>새로고침</button>
       </div>
-      <div class="admin-loading" data-admin-loading>가족 그룹을 확인하는 중이에요.</div>
-      <div class="admin-content" data-admin-content hidden>
-        <div class="admin-household-summary">
-          <div class="admin-household-name">
-            <span>가족 그룹</span>
-            <strong data-admin-household-name>우리 가족</strong>
-          </div>
-          <div class="admin-stat-grid">
-            <div><strong data-admin-member-count>0</strong><span>로그인 구성원</span></div>
-            <div><strong data-admin-calendar-count>0</strong><span>캘린더 이름</span></div>
-            <div><strong data-admin-baby-count>0</strong><span>등록된 아이</span></div>
+      <div class="global-admin-loading" data-admin-loading>전체 사용자 정보를 불러오는 중이에요.</div>
+      <div class="global-admin-error" data-admin-error hidden><strong data-admin-error-title></strong><span data-admin-error-copy></span></div>
+      <div data-admin-content hidden>
+        <div class="global-admin-stats">
+          <div><strong data-stat="users">0</strong><span>전체 사용자</span></div>
+          <div><strong data-stat="households">0</strong><span>가족 그룹</span></div>
+          <div><strong data-stat="ungrouped_users">0</strong><span>그룹 미가입</span></div>
+          <div><strong data-stat="active_30d">0</strong><span>30일 내 로그인</span></div>
+        </div>
+        <div class="global-admin-tools">
+          <label class="global-admin-search"><span aria-hidden="true">⌕</span><input type="search" data-admin-search placeholder="이름, 이메일, 가족 그룹 검색" autocomplete="off"></label>
+          <div class="global-admin-modes" role="tablist" aria-label="관리 대상">
+            <button class="active" type="button" data-admin-mode="users" role="tab" aria-selected="true">사용자</button>
+            <button type="button" data-admin-mode="households" role="tab" aria-selected="false">가족 그룹</button>
           </div>
         </div>
-
-        <section class="admin-group-section" aria-labelledby="adminLoginMembersTitle">
-          <div class="admin-section-heading">
-            <div><h3 id="adminLoginMembersTitle">로그인 구성원</h3><span>실제로 이 가족 그룹에 참여한 계정이에요.</span></div>
-            <span class="admin-section-count" data-admin-login-count></span>
-          </div>
-          <div class="admin-member-list" data-admin-member-list></div>
-          <p class="admin-privacy-note">개인정보 보호를 위해 다른 구성원의 이메일은 표시하지 않아요.</p>
+        <section class="global-admin-section" data-admin-section="users">
+          <div class="global-admin-section-head"><div><h3>전체 사용자</h3><span>가입 계정, 최근 로그인, 소속 가족 그룹</span></div><strong data-admin-count="users">0명</strong></div>
+          <div class="global-admin-list" data-admin-users></div>
         </section>
-
-        <section class="admin-group-section" aria-labelledby="adminCalendarMembersTitle">
-          <div class="admin-section-heading">
-            <div><h3 id="adminCalendarMembersTitle">캘린더 구성</h3><span>일정과 할 일에서 사용하는 표시 이름이에요.</span></div>
-          </div>
-          <div class="admin-chip-list" data-admin-calendar-list></div>
+        <section class="global-admin-section" data-admin-section="households" hidden>
+          <div class="global-admin-section-head"><div><h3>가족 그룹 구성</h3><span>그룹별 관리자, 구성원, 기록 규모</span></div><strong data-admin-count="households">0개</strong></div>
+          <div class="global-admin-list" data-admin-households></div>
         </section>
-
-        <section class="admin-group-section" aria-labelledby="adminBabiesTitle">
-          <div class="admin-section-heading">
-            <div><h3 id="adminBabiesTitle">아이 프로필</h3><span>성장일기에 연결된 아이 목록이에요.</span></div>
-          </div>
-          <div class="admin-baby-list" data-admin-baby-list></div>
-        </section>
+        <p class="global-admin-note">계정 삭제·차단·그룹 이동 같은 변경 작업은 실수 방지를 위해 제공하지 않습니다.</p>
       </div>
-      <div class="admin-error" data-admin-error hidden>
-        <strong>가족 그룹을 불러오지 못했어요.</strong>
-        <span>잠시 후 새로고침해 주세요.</span>
-      </div>
-    </section>
-  `;
+    </section>`;
   main.appendChild(view);
 
-  if (!document.querySelector('style[data-family-admin-style]')) {
-    const style = document.createElement('style');
-    style.dataset.familyAdminStyle = '';
-    style.textContent = `
-      .admin-view[hidden] { display: none !important; }
-      .admin-family-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
-      .admin-family-heading .admin-refresh-button {
-        align-self: start;
-        min-height: 38px;
-        padding: 0 12px;
-        border: 1px solid var(--separator);
-        border-radius: 12px;
-        color: var(--blue);
-        background: rgba(var(--theme-accent-rgb), .10);
-        font: inherit;
-        font-size: 11px;
-        font-weight: 750;
-      }
-      .admin-family-heading .admin-refresh-button:disabled { opacity: .55; }
-      .admin-loading, .admin-error {
-        padding: 22px 16px;
-        border: 1px dashed var(--separator);
-        border-radius: 18px;
-        color: var(--secondary);
-        text-align: center;
-        font-size: 13px;
-      }
-      .admin-error strong, .admin-error span { display: block; }
-      .admin-error strong { color: var(--label); margin-bottom: 5px; }
-      .admin-household-summary {
-        padding: 16px;
-        border: 1px solid var(--separator);
-        border-radius: 20px;
-        background: rgba(var(--theme-accent-rgb), .065);
-      }
-      .admin-household-name span, .admin-household-name strong { display: block; }
-      .admin-household-name span { color: var(--secondary); font-size: 10px; font-weight: 750; }
-      .admin-household-name strong { margin-top: 4px; color: var(--label); font-size: 20px; }
-      .admin-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
-      .admin-stat-grid div {
-        min-width: 0;
-        padding: 11px 8px;
-        border: 1px solid var(--separator);
-        border-radius: 14px;
-        background: var(--surface);
-        text-align: center;
-      }
-      .admin-stat-grid strong, .admin-stat-grid span { display: block; }
-      .admin-stat-grid strong { color: var(--label); font-size: 18px; }
-      .admin-stat-grid span { margin-top: 3px; color: var(--secondary); font-size: 9px; line-height: 1.25; }
-      .admin-group-section { margin-top: 20px; }
-      .admin-section-heading { display: flex; gap: 12px; align-items: end; justify-content: space-between; margin-bottom: 10px; }
-      .admin-section-heading h3 { margin: 0; color: var(--label); font-size: 15px; }
-      .admin-section-heading div > span { display: block; margin-top: 3px; color: var(--secondary); font-size: 10px; line-height: 1.4; }
-      .admin-section-count {
-        flex: none;
-        padding: 5px 8px;
-        border-radius: 999px;
-        color: var(--blue);
-        background: rgba(var(--theme-accent-rgb), .10);
-        font-size: 9px;
-        font-weight: 750;
-      }
-      .admin-member-list { display: grid; gap: 8px; }
-      .admin-member-item {
-        display: grid;
-        grid-template-columns: 42px minmax(0, 1fr) auto;
-        gap: 11px;
-        align-items: center;
-        min-height: 68px;
-        padding: 10px 12px;
-        border: 1px solid var(--separator);
-        border-radius: 17px;
-        background: var(--surface);
-      }
-      .admin-member-avatar {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        color: white;
-        background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));
-        font-size: 14px;
-        font-weight: 800;
-      }
-      .admin-member-copy { min-width: 0; }
-      .admin-member-copy strong, .admin-member-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .admin-member-copy strong { color: var(--label); font-size: 13px; }
-      .admin-member-copy span { margin-top: 4px; color: var(--secondary); font-size: 10px; }
-      .admin-role-badge {
-        padding: 6px 9px;
-        border: 1px solid var(--separator);
-        border-radius: 999px;
-        color: var(--secondary);
-        background: var(--surface-2);
-        font-size: 9px;
-        font-weight: 800;
-      }
-      .admin-role-badge.owner { color: var(--blue); background: rgba(var(--theme-accent-rgb), .11); }
-      .admin-privacy-note { margin: 8px 2px 0; color: var(--tertiary); font-size: 9px; line-height: 1.4; }
-      .admin-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-      .admin-calendar-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        min-height: 34px;
-        padding: 0 11px;
-        border: 1px solid var(--separator);
-        border-radius: 999px;
-        color: var(--label);
-        background: var(--surface);
-        font-size: 11px;
-        font-weight: 700;
-      }
-      .admin-calendar-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--member-color, var(--blue)); }
-      .admin-baby-list { display: grid; gap: 8px; }
-      .admin-baby-item, .admin-empty-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-height: 54px;
-        padding: 10px 12px;
-        border: 1px solid var(--separator);
-        border-radius: 16px;
-        background: var(--surface);
-      }
-      .admin-baby-item div strong, .admin-baby-item div span { display: block; }
-      .admin-baby-item div strong { color: var(--label); font-size: 12px; }
-      .admin-baby-item div span { margin-top: 3px; color: var(--secondary); font-size: 9px; }
-      .admin-baby-item > span { color: var(--blue); font-size: 9px; font-weight: 800; }
-      .admin-empty-item { justify-content: center; color: var(--secondary); font-size: 11px; }
-      @media (max-width: 520px) {
-        .admin-family-heading { grid-template-columns: 44px minmax(0, 1fr); }
-        .admin-family-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  const getFamilyContext = () => {
-    if (typeof state === 'undefined' || !state.session || !state.household?.id) return null;
-    return {
-      supabase: state.supabase,
-      session: state.session,
-      household: state.household,
-    };
+  const $ = (selector) => view.querySelector(selector);
+  const esc = (value = '') => String(value).replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+  const arr = (value) => Array.isArray(value) ? value : [];
+  const email = (session) => String(session?.user?.email || '').trim().toLowerCase();
+  const formatDate = (value, withTime = false) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '기록 없음';
+    return new Intl.DateTimeFormat('ko-KR', withTime
+      ? { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+      : { year: 'numeric', month: 'numeric', day: 'numeric' }).format(date);
   };
-
-  const waitForFamilyContext = async () => {
-    for (let attempt = 0; attempt < 60; attempt += 1) {
-      const context = getFamilyContext();
-      if (context) return context;
+  const provider = (value) => ({ google: 'Google', email: '이메일' }[value] || value || '이메일');
+  const missingMigration = (error) => error?.code === '42883' || /is_platform_admin|get_global_admin_overview|schema cache/i.test(error?.message || '');
+  const context = () => (typeof state !== 'undefined' && state.supabase && state.session)
+    ? { supabase: state.supabase, session: state.session }
+    : null;
+  const waitContext = async () => {
+    for (let i = 0; i < 80; i += 1) {
+      const current = context();
+      if (current) return current;
+      if (typeof state !== 'undefined' && state.authReady && !state.session) return null;
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     return null;
   };
 
-  const sessionName = (session) => {
-    const metadata = session?.user?.user_metadata || {};
-    return String(metadata.full_name || metadata.name || metadata.user_name || session?.user?.email || '나').trim().slice(0, 80) || '나';
+  let allowed = false;
+  let data = { stats: {}, users: [], households: [] };
+  let mode = 'users';
+  let query = '';
+  let loadId = 0;
+
+  const syncColumns = () => {
+    const count = [...nav.querySelectorAll('.view-tab')].filter((button) => !button.hidden).length;
+    nav.style.gridTemplateColumns = `repeat(${Math.max(1, count)}, minmax(0, 1fr))`;
   };
-
-  const formatJoinedAt = (value) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '참여일 정보 없음';
-    return `${new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(date)} 참여`;
+  const setAllowed = (value) => {
+    allowed = Boolean(value);
+    tab.hidden = !allowed;
+    syncColumns();
+    if (!allowed && !view.hidden && typeof switchView === 'function') switchView('settings');
   };
-
-  const formatBirthDate = (value) => {
-    if (!value) return '생일 정보 없음';
-    const date = new Date(`${value}T00:00:00`);
-    if (Number.isNaN(date.getTime())) return '생일 정보 없음';
-    return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
-  };
-
-  const visibleBabies = () => {
-    if (typeof state === 'undefined' || !Array.isArray(state.babies)) return [];
-    return state.babies.filter((baby) => !baby?.archivedAt && !baby?.archived_at);
-  };
-
-  const visibleCalendarMembers = () => {
-    if (typeof state === 'undefined' || !Array.isArray(state.familyMembers)) return [];
-    return state.familyMembers;
-  };
-
-  const syncNavigationColumns = () => {
-    const visibleTabs = [...navigation.querySelectorAll('.view-tab')].filter((button) => !button.hidden).length;
-    navigation.style.gridTemplateColumns = `repeat(${Math.max(1, visibleTabs)}, minmax(0, 1fr))`;
-  };
-
-  let adminAllowed = false;
-  let loadRequestId = 0;
-
-  const setAdminAccess = (allowed) => {
-    adminAllowed = Boolean(allowed);
-    tab.hidden = !adminAllowed;
-    syncNavigationColumns();
-    if (!adminAllowed && !view.hidden && typeof switchView === 'function') switchView('settings');
-  };
-
-  const createMemberItem = (member, index, context) => {
-    const current = member.user_id === context.session.user.id;
-    const name = current ? sessionName(context.session) : (member.display_name || `가족 구성원 ${index + 1}`);
-    const item = document.createElement('article');
-    item.className = 'admin-member-item';
-
-    const avatar = document.createElement('span');
-    avatar.className = 'admin-member-avatar';
-    avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = name.slice(0, 1).toUpperCase();
-
-    const copy = document.createElement('div');
-    copy.className = 'admin-member-copy';
-    const strong = document.createElement('strong');
-    strong.textContent = current ? `${name} · 나` : name;
-    const meta = document.createElement('span');
-    meta.textContent = formatJoinedAt(member.created_at);
-    copy.append(strong, meta);
-
-    const role = document.createElement('span');
-    role.className = `admin-role-badge${member.role === 'owner' ? ' owner' : ''}`;
-    role.textContent = member.role === 'owner' ? '관리자' : '구성원';
-
-    item.append(avatar, copy, role);
-    return item;
-  };
-
-  const renderOverview = (context, members) => {
-    const babies = visibleBabies();
-    const calendarMembers = visibleCalendarMembers();
-    view.querySelector('[data-admin-household-name]').textContent = context.household.name || '우리 가족';
-    view.querySelector('[data-admin-member-count]').textContent = String(members.length);
-    view.querySelector('[data-admin-calendar-count]').textContent = String(calendarMembers.length);
-    view.querySelector('[data-admin-baby-count]').textContent = String(babies.length);
-    view.querySelector('[data-admin-login-count]').textContent = `${members.length}명`;
-
-    const memberList = view.querySelector('[data-admin-member-list]');
-    memberList.replaceChildren(...members.map((member, index) => createMemberItem(member, index, context)));
-
-    const calendarList = view.querySelector('[data-admin-calendar-list]');
-    if (calendarMembers.length) {
-      calendarList.replaceChildren(...calendarMembers.map((member) => {
-        const chip = document.createElement('span');
-        chip.className = 'admin-calendar-chip';
-        const dot = document.createElement('i');
-        dot.style.setProperty('--member-color', member.color || 'var(--blue)');
-        const label = document.createElement('span');
-        label.textContent = member.name || '가족';
-        chip.append(dot, label);
-        return chip;
-      }));
-    } else {
-      const empty = document.createElement('div');
-      empty.className = 'admin-empty-item';
-      empty.textContent = '등록된 캘린더 이름이 없어요.';
-      calendarList.replaceChildren(empty);
+  const verify = async (current) => {
+    if (!current) return false;
+    try {
+      const { data: result, error } = await current.supabase.rpc('is_platform_admin');
+      if (error) throw error;
+      return result === true;
+    } catch (error) {
+      return missingMigration(error) && email(current.session) === ADMIN_EMAIL;
     }
-
-    const babyList = view.querySelector('[data-admin-baby-list]');
-    if (babies.length) {
-      babyList.replaceChildren(...babies.map((baby) => {
-        const item = document.createElement('article');
-        item.className = 'admin-baby-item';
-        const copy = document.createElement('div');
-        const name = document.createElement('strong');
-        name.textContent = baby.name || '이름 없는 아이';
-        const birth = document.createElement('span');
-        birth.textContent = formatBirthDate(baby.birthDate || baby.birth_date);
-        copy.append(name, birth);
-        const status = document.createElement('span');
-        status.textContent = '활성 프로필';
-        item.append(copy, status);
-        return item;
-      }));
-    } else {
-      const empty = document.createElement('div');
-      empty.className = 'admin-empty-item';
-      empty.textContent = '등록된 아이 프로필이 없어요.';
-      babyList.replaceChildren(empty);
-    }
-
-    view.querySelector('[data-admin-loading]').hidden = true;
-    view.querySelector('[data-admin-error]').hidden = true;
-    view.querySelector('[data-admin-content]').hidden = false;
   };
 
-  const demoMembers = (context) => [
-    { user_id: context.session.user.id, role: 'owner', created_at: new Date().toISOString(), display_name: sessionName(context.session) },
-    { user_id: 'demo-family-member', role: 'member', created_at: new Date(Date.now() - 86400000 * 7).toISOString(), display_name: '테스트 가족 구성원' },
-  ];
+  const userText = (user) => [user.name, user.email, user.provider, ...arr(user.households).flatMap((group) => [group.name, group.role])].join(' ').toLowerCase();
+  const groupText = (group) => [group.name, ...arr(group.members).flatMap((member) => [member.name, member.email, member.role])].join(' ').toLowerCase();
+  const empty = (message) => `<div class="global-admin-empty">${esc(message)}</div>`;
 
-  const loadOverview = async ({ announceError = false } = {}) => {
-    const requestId = ++loadRequestId;
-    const refreshButton = view.querySelector('[data-admin-refresh]');
-    const loading = view.querySelector('[data-admin-loading]');
-    const content = view.querySelector('[data-admin-content]');
-    const errorBox = view.querySelector('[data-admin-error]');
-    refreshButton.disabled = true;
-    refreshButton.textContent = '불러오는 중…';
-    loading.hidden = false;
-    content.hidden = true;
-    errorBox.hidden = true;
+  const userHtml = (user) => {
+    const groups = arr(user.households);
+    const groupNames = groups.length ? groups.map((group) => group.name || '이름 없는 그룹').join(', ') : '가족 그룹 미가입';
+    const name = user.name || '이름 미등록';
+    return `<article class="global-admin-user">
+      <span class="global-admin-avatar" aria-hidden="true">${esc((name || user.email || '?').slice(0, 1).toUpperCase())}</span>
+      <div class="global-admin-user-copy"><strong>${esc(name)}</strong><span>${esc(user.email || '이메일 없음')}</span><small>${esc(provider(user.provider))} · ${esc(groupNames)}</small></div>
+      <div class="global-admin-user-status"><b class="${groups.length ? 'connected' : ''}">${groups.length ? '그룹 연결' : '미가입'}</b><small>최근 ${esc(formatDate(user.last_sign_in_at, true))}</small></div>
+    </article>`;
+  };
 
-    const context = await waitForFamilyContext();
-    if (requestId !== loadRequestId) return;
-    if (!context) {
-      setAdminAccess(false);
-      loading.hidden = true;
-      errorBox.hidden = false;
-      refreshButton.disabled = false;
-      refreshButton.textContent = '새로고침';
+  const groupHtml = (group) => {
+    const members = arr(group.members);
+    const memberHtml = members.length ? members.map((member) => `<div class="global-admin-member">
+      <div><strong>${esc(member.name || '이름 미등록')}</strong><span>${esc(member.email || '이메일 없음')}</span></div>
+      <em class="${member.role === 'owner' ? 'owner' : ''}">${member.role === 'owner' ? '그룹 관리자' : '구성원'}</em>
+    </div>`).join('') : empty('연결된 사용자가 없어요.');
+    return `<article class="global-admin-household">
+      <div class="global-admin-household-head"><div><strong>${esc(group.name || '이름 없는 가족 그룹')}</strong><span>${esc(formatDate(group.created_at))} 생성</span></div><b>${members.length}명</b></div>
+      <div class="global-admin-metrics"><span><strong>${esc(group.baby_count || 0)}</strong>아이</span><span><strong>${esc(group.event_count || 0)}</strong>일정</span><span><strong>${esc(group.growth_count || 0)}</strong>성장 기록</span></div>
+      <div class="global-admin-members">${memberHtml}</div>
+    </article>`;
+  };
+
+  const renderLists = () => {
+    const needle = query.trim().toLowerCase();
+    const users = arr(data.users).filter((user) => !needle || userText(user).includes(needle));
+    const groups = arr(data.households).filter((group) => !needle || groupText(group).includes(needle));
+    $('[data-admin-count="users"]').textContent = `${users.length}명`;
+    $('[data-admin-count="households"]').textContent = `${groups.length}개`;
+    $('[data-admin-users]').innerHTML = users.length ? users.map(userHtml).join('') : empty('검색 조건에 맞는 사용자가 없어요.');
+    $('[data-admin-households]').innerHTML = groups.length ? groups.map(groupHtml).join('') : empty('검색 조건에 맞는 가족 그룹이 없어요.');
+  };
+
+  const setMode = (next) => {
+    mode = next === 'households' ? 'households' : 'users';
+    view.querySelectorAll('[data-admin-mode]').forEach((button) => {
+      const active = button.dataset.adminMode === mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    view.querySelectorAll('[data-admin-section]').forEach((section) => { section.hidden = section.dataset.adminSection !== mode; });
+  };
+
+  const render = (result) => {
+    data = { stats: result?.stats || {}, users: arr(result?.users), households: arr(result?.households) };
+    ['users', 'households', 'ungrouped_users', 'active_30d'].forEach((key) => { $(`[data-stat="${key}"]`).textContent = String(data.stats[key] || 0); });
+    renderLists();
+    setMode(mode);
+    $('[data-admin-loading]').hidden = true;
+    $('[data-admin-error]').hidden = true;
+    $('[data-admin-content]').hidden = false;
+  };
+
+  const showError = (error) => {
+    const missing = missingMigration(error);
+    $('[data-admin-error-title]').textContent = missing ? '관리자 DB 설정이 아직 적용되지 않았어요.' : '전체 사용자 정보를 불러오지 못했어요.';
+    $('[data-admin-error-copy]').textContent = missing ? 'Supabase에 20260801_platform_user_admin.sql을 실행해 주세요.' : '권한 또는 네트워크 상태를 확인해 주세요.';
+    $('[data-admin-loading]').hidden = true;
+    $('[data-admin-content]').hidden = true;
+    $('[data-admin-error]').hidden = false;
+  };
+
+  const load = async (announce = false) => {
+    const id = ++loadId;
+    const refresh = $('[data-admin-refresh]');
+    refresh.disabled = true;
+    refresh.textContent = '불러오는 중…';
+    $('[data-admin-loading]').hidden = false;
+    $('[data-admin-content]').hidden = true;
+    $('[data-admin-error]').hidden = true;
+    const current = await waitContext();
+    if (id !== loadId) return;
+    if (!(await verify(current))) {
+      setAllowed(false);
+      refresh.disabled = false;
+      refresh.textContent = '새로고침';
       return;
     }
-
+    setAllowed(true);
     try {
-      if (window.FAMILY_DEMO?.active) {
-        const members = demoMembers(context);
-        setAdminAccess(true);
-        renderOverview(context, members);
-        return;
-      }
-
-      if (!context.supabase) throw new Error('Supabase 연결 없음');
-      const { data, error } = await context.supabase
-        .from('household_members')
-        .select('user_id, role, created_at')
-        .eq('household_id', context.household.id)
-        .order('role', { ascending: false })
-        .order('created_at', { ascending: true });
+      const { data: result, error } = await current.supabase.rpc('get_global_admin_overview');
       if (error) throw error;
-      if (requestId !== loadRequestId) return;
-
-      const members = Array.isArray(data) ? data : [];
-      const currentMembership = members.find((member) => member.user_id === context.session.user.id);
-      setAdminAccess(currentMembership?.role === 'owner');
-      if (!adminAllowed) return;
-      renderOverview(context, members);
+      if (id === loadId) render(result || {});
     } catch (error) {
-      console.error('관리자 가족 그룹 조회 실패', error);
-      setAdminAccess(false);
-      loading.hidden = true;
-      content.hidden = true;
-      errorBox.hidden = false;
-      if (announceError && typeof toast === 'function') toast('가족 그룹을 불러오지 못했어요');
+      console.error('앱 전체 관리자 조회 실패', error);
+      if (id === loadId) showError(error);
+      if (announce && typeof toast === 'function') toast('전체 사용자 정보를 불러오지 못했어요');
     } finally {
-      refreshButton.disabled = false;
-      refreshButton.textContent = '새로고침';
+      if (id === loadId) { refresh.disabled = false; refresh.textContent = '새로고침'; }
     }
   };
 
   const installView = () => {
     if (typeof switchView !== 'function') return false;
     if (switchView.__familyAdminInstalled) return true;
-
-    const previousSwitchView = switchView;
-    const enhancedSwitchView = function (requestedView) {
-      if (requestedView !== VIEW_NAME) {
-        view.hidden = true;
-        return previousSwitchView(requestedView);
-      }
-      if (!adminAllowed) return;
-
-      previousSwitchView('calendar');
-      if (typeof state !== 'undefined') state.activeView = VIEW_NAME;
-      try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, VIEW_NAME); } catch { /* 현재 화면만 유지 */ }
-
+    const previous = switchView;
+    const enhanced = function (requested) {
+      if (requested !== VIEW) { view.hidden = true; return previous(requested); }
+      if (!allowed) return;
+      previous('calendar');
+      if (typeof state !== 'undefined') state.activeView = VIEW;
+      try { localStorage.setItem(ACTIVE_VIEW_KEY, VIEW); } catch { /* current screen only */ }
       ['calendarView', 'growthView', 'englishView', 'privateView', 'featureRequestView', 'settingsView'].forEach((id) => {
         const target = document.getElementById(id);
         if (target) target.hidden = true;
       });
       view.hidden = false;
       document.querySelectorAll('.view-tab').forEach((button) => {
-        const active = button.dataset.view === VIEW_NAME;
+        const active = button.dataset.view === VIEW;
         button.classList.toggle('active', active);
-        button.setAttribute('role', 'tab');
         button.setAttribute('aria-selected', String(active));
       });
-      const addButton = document.querySelector('#addEventButton');
-      if (addButton) addButton.hidden = true;
-      loadOverview();
+      const add = document.querySelector('#addEventButton');
+      if (add) add.hidden = true;
+      load();
     };
-
-    Object.keys(previousSwitchView).forEach((key) => {
-      try { enhancedSwitchView[key] = previousSwitchView[key]; } catch { /* 읽기 전용 속성은 건너뜀 */ }
-    });
-    enhancedSwitchView.__familyAdminInstalled = true;
-    switchView = enhancedSwitchView;
+    Object.keys(previous).forEach((key) => { try { enhanced[key] = previous[key]; } catch { /* readonly */ } });
+    enhanced.__familyAdminInstalled = true;
+    switchView = enhanced;
     return true;
   };
 
-  const restoreView = (attempt = 0) => {
-    if (!installView()) {
-      if (attempt < 40) setTimeout(() => restoreView(attempt + 1), 100);
-      return;
-    }
-    let savedView = null;
-    try { savedView = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY); } catch { /* 기본 탭 유지 */ }
-    loadOverview().then(() => {
-      if (savedView === VIEW_NAME && adminAllowed && typeof switchView === 'function') switchView(VIEW_NAME);
+  const restore = (attempt = 0) => {
+    if (!installView()) { if (attempt < 50) setTimeout(() => restore(attempt + 1), 100); return; }
+    let saved = null;
+    try { saved = localStorage.getItem(ACTIVE_VIEW_KEY); } catch { /* default */ }
+    waitContext().then(async (current) => {
+      setAllowed(await verify(current));
+      if (saved === VIEW && allowed && typeof switchView === 'function') switchView(VIEW);
     });
   };
 
-  tab.addEventListener('click', () => {
-    if (adminAllowed && typeof switchView === 'function') switchView(VIEW_NAME);
+  tab.addEventListener('click', () => { if (allowed && typeof switchView === 'function') switchView(VIEW); });
+  $('[data-admin-refresh]').addEventListener('click', () => load(true));
+  $('[data-admin-search]').addEventListener('input', (event) => { query = event.target.value || ''; renderLists(); });
+  $('.global-admin-modes').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-admin-mode]');
+    if (button) setMode(button.dataset.adminMode);
   });
-
-  view.querySelector('[data-admin-refresh]').addEventListener('click', () => {
-    loadOverview({ announceError: true });
-  });
-
-  new MutationObserver(syncNavigationColumns).observe(navigation, {
-    childList: true,
-    attributes: true,
-    attributeFilter: ['hidden'],
-  });
-
-  syncNavigationColumns();
-  restoreView();
+  new MutationObserver(syncColumns).observe(nav, { childList: true, attributes: true, attributeFilter: ['hidden'] });
+  syncColumns();
+  restore();
 })();
