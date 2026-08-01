@@ -51,30 +51,19 @@
     attributeFilter: ['class'],
   });
 
-  if (!document.querySelector('script[data-module="english-story-name"]')) {
+  const loadModule = (name, src, errorMessage) => {
+    if (document.querySelector(`script[data-module="${name}"]`)) return;
     const script = document.createElement('script');
-    script.src = 'english-story-name.js?v=20260801-v1';
-    script.dataset.module = 'english-story-name';
+    script.src = src;
+    script.dataset.module = name;
     script.async = false;
-    script.onerror = () => console.error('영어동화 이름 편집 모듈을 불러오지 못했어요.');
+    script.onerror = () => console.error(errorMessage);
     document.body.appendChild(script);
-  }
+  };
 
-  if (!document.querySelector('script[data-module="family-admin"]')) {
-    const script = document.createElement('script');
-    script.src = 'family-admin.js?v=20260801-global-v2';
-    script.dataset.module = 'family-admin';
-    script.async = false;
-    script.onerror = () => console.error('가족 관리자 모듈을 불러오지 못했어요.');
-    document.body.appendChild(script);
-  }
-
-  if (!document.querySelector('script[data-module="platform-request-admin"]')) {
-    const script = document.createElement('script');
-    script.src = 'platform-request-admin.js?v=20260801-v1';
-    script.dataset.module = 'platform-request-admin';
-    script.async = false;
-    script.onerror = () => console.error('플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
-    document.body.appendChild(script);
-  }
+  loadModule('english-story-name', 'english-story-name.js?v=20260801-v1', '영어동화 이름 편집 모듈을 불러오지 못했어요.');
+  loadModule('family-admin', 'family-admin.js?v=20260801-global-v2', '가족 관리자 모듈을 불러오지 못했어요.');
+  loadModule('platform-request-admin', 'platform-request-admin.js?v=20260801-v1', '플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
+  loadModule('activity-log', 'activity-log.js?v=20260801-v1', '최근 활동 기록 모듈을 불러오지 못했어요.');
+  loadModule('admin-recent-activity', 'admin-recent-activity.js?v=20260801-v1', '최근 활동 관리자 모듈을 불러오지 못했어요.');
 })();
