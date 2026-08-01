@@ -60,12 +60,15 @@
   const logSessionOpen = async () => {
     const context = await waitForContext();
     if (!context) return;
-    const sessionKey = `${SESSION_KEY_PREFIX}:${context.userId}`;
+    const sessionKey = `${SESSION_KEY_PREFIX}:${context.userId}:${context.householdId || 'none'}`;
     try {
       if (sessionStorage.getItem(sessionKey)) return;
-      sessionStorage.setItem(sessionKey, new Date().toISOString());
-    } catch { /* sessionStorage가 막혀도 한 번 기록 시도 */ }
-    await logActivity('session_open', 'app');
+    } catch { /* sessionStorage가 막혀도 기록 시도 */ }
+
+    const saved = await logActivity('session_open', 'app');
+    if (!saved) return;
+    try { sessionStorage.setItem(sessionKey, new Date().toISOString()); }
+    catch { /* 현재 세션의 중복 방지는 서버에서도 수행 */ }
   };
 
   const installDisclosure = (attempt = 0) => {
@@ -120,6 +123,6 @@
   });
 
   window.addEventListener('familycontextchange', logSessionOpen);
-  logSessionOpen();
+  setTimeout(logSessionOpen, 1200);
   installDisclosure();
 })();
