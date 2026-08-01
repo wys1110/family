@@ -8,7 +8,7 @@ self.addEventListener("message", (event) => {
 
 // Installed iOS apps can retain old versioned assets after a normal reload.
 // Always request the module manifest and viewport-fixed utility assets from
-// the network so layout fixes reach the installed app immediately.
+// the network so layout and interaction fixes reach the installed app immediately.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
@@ -22,6 +22,8 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/settings-layout-polish.css") ||
     url.pathname.endsWith("/growth-inline-approved-polish.css") ||
     url.pathname.endsWith("/tab-emojis.js") ||
+    url.pathname.endsWith("/invite-link.css") ||
+    url.pathname.endsWith("/invite-link.js") ||
     url.pathname.endsWith("/language-practice.js") ||
     url.pathname.endsWith("/language-practice.css");
   if (!forceNetwork) return;
