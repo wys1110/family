@@ -47,13 +47,38 @@
   transition: background .16s ease, transform .16s ease;
 }
 
+/* typography-system.css의 공통 label/span 규칙보다 우선해 년월을 또렷하게 유지한다. */
+#calendarView .month-nav {
+  align-items: center;
+}
+
+#calendarView .month-picker-trigger {
+  align-self: center;
+  min-height: 44px;
+  font-size: 21px;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+#calendarView .month-picker-trigger > #monthLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  letter-spacing: inherit;
+  transform: translateY(1px);
+}
+
 .month-picker-trigger::after {
   content: "⌄";
   color: var(--blue);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1;
-  transform: translateY(-1px);
+  transform: translateY(1px);
 }
 
 .month-picker-trigger:active {
