@@ -62,7 +62,7 @@
 
   if (!document.querySelector('script[data-module="family-admin"]')) {
     const script = document.createElement('script');
-    script.src = 'family-admin.js?v=20260801-v1';
+    script.src = 'family-admin.js?v=20260801-global-v2';
     script.dataset.module = 'family-admin';
     script.async = false;
     script.onerror = () => console.error('가족 관리자 모듈을 불러오지 못했어요.');
