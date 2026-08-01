@@ -1,0 +1,455 @@
+/*
+ * White and black monochrome themes.
+ * Loaded after the starry-night palette so the black option can reuse the
+ * complete dark-mode coverage while replacing navy accents with neutral gray.
+ */
+
+html[data-family-theme="white"] {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #ededeb;
+  --label: #1b1d1f;
+  --secondary: #666b70;
+  --tertiary: #979ca1;
+  --separator: rgba(24, 27, 30, .12);
+  --blue: #202124;
+  --green: #65716a;
+  --orange: #9a7657;
+  --red: #a85f61;
+  --pink: #9d697b;
+  --indigo: #716d82;
+  --shadow: 0 18px 48px rgba(20, 22, 24, .08);
+  --theme-accent-rgb: 32, 33, 36;
+  --theme-hero-start: #17191b;
+  --theme-hero-end: #3b3e42;
+  --theme-verse-start: #ffffff;
+  --theme-verse-end: #eeeeec;
+  --theme-tab-bg: rgba(229, 229, 227, .94);
+  --theme-tab-active: #ffffff;
+  --ui-card: #ffffff;
+  --ui-card-muted: #f1f1ef;
+  --ui-border: rgba(24, 27, 30, .12);
+  --ui-accent-soft: rgba(32, 33, 36, .07);
+  color-scheme: light;
+}
+
+html[data-family-theme="white"],
+html[data-family-theme="white"] body {
+  background-color: var(--bg);
+}
+
+html[data-family-theme="white"] body {
+  background-image:
+    radial-gradient(circle at 8% 2%, rgba(0, 0, 0, .025), transparent 25rem),
+    linear-gradient(180deg, #fafaf8 0%, #f4f4f2 100%);
+}
+
+html[data-family-theme="white"] .view-tabs {
+  border: 1px solid rgba(24, 27, 30, .08);
+  background: rgba(235, 235, 233, .94) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+html[data-family-theme="white"] .view-tab {
+  color: #5f6469;
+}
+
+html[data-family-theme="white"] .view-tab.active {
+  color: #111315;
+  border: 1px solid rgba(24, 27, 30, .08);
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(18, 20, 22, .10);
+}
+
+html[data-family-theme="white"] .daily-verse-card {
+  color: var(--label);
+  border-color: rgba(24, 27, 30, .08);
+  background: linear-gradient(145deg, #fff, #efefed);
+  box-shadow: 0 12px 32px rgba(20, 22, 24, .07);
+}
+
+html[data-family-theme="white"] .daily-verse-heading .verse-cross {
+  color: #fff;
+  background: linear-gradient(145deg, #17191b, #45484c);
+}
+
+html[data-family-theme="white"] .hero-card {
+  border: 1px solid rgba(255, 255, 255, .12);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 255, 255, .14), transparent 34%),
+    linear-gradient(135deg, #17191b, #44474b);
+  box-shadow: 0 20px 48px rgba(18, 20, 22, .18);
+}
+
+html[data-family-theme="white"] :is(
+  .calendar-card,
+  .settings-card,
+  .feature-request-card,
+  .feature-request-admin-card,
+  .baby-care-card,
+  .care-timer-card,
+  .care-pattern-card,
+  .growth-measurement-card,
+  .recent-photo-section,
+  .english-today-card,
+  .english-story-card,
+  .private-card,
+  .platform-admin-card,
+  .account-panel,
+  .sheet-panel,
+  .sheet-dialog form,
+  .completion-panel
+) {
+  color: var(--label);
+  border-color: var(--separator);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+html[data-family-theme="white"] #calendarView :is(
+  .quick-add-card,
+  .agenda-item,
+  .upcoming-event-item,
+  .empty-state,
+  .todo-overview-card,
+  .todo-quick-form,
+  .family-todo-item,
+  .todo-empty-state
+),
+html[data-family-theme="white"] #growthView :is(
+  .growth-summary-body,
+  .care-timeline-item,
+  .growth-history-item,
+  .growth-inline-history-item
+),
+html[data-family-theme="white"] #featureRequestView :is(
+  .feature-request-item,
+  .feature-request-empty
+) {
+  color: var(--label);
+  border-color: var(--separator);
+  background: #fff;
+}
+
+html[data-family-theme="white"] :is(input, select, textarea) {
+  color: var(--label);
+  border-color: rgba(24, 27, 30, .14);
+  background: #f6f6f4;
+}
+
+html[data-family-theme="white"] :is(input, textarea)::placeholder {
+  color: var(--tertiary);
+}
+
+html[data-family-theme="white"] #calendarView .calendar-day.selected {
+  color: #111315;
+  border-color: rgba(24, 27, 30, .14);
+  background: #e9e9e7;
+}
+
+html[data-family-theme="white"] #calendarView .calendar-day.today .day-number {
+  color: #fff;
+  background: #202124;
+  box-shadow: 0 4px 12px rgba(32, 33, 36, .20);
+}
+
+html[data-family-theme="white"] #calendarView :is(.icon-button, .today-button, .bulk-add-button, .edit-event-button) {
+  color: #202124;
+  border-color: rgba(24, 27, 30, .10);
+  background: #eeeeec;
+}
+
+html[data-family-theme="white"] #calendarView .calendar-subtabs,
+html[data-family-theme="white"] #calendarView .todo-filter-tabs {
+  border-color: rgba(24, 27, 30, .10);
+  background: #eeeeec;
+}
+
+html[data-family-theme="white"] #calendarView :is(.calendar-subtabs button.active, .todo-filter-tabs button.active) {
+  color: #fff;
+  background: #202124;
+}
+
+html[data-family-theme="white"] #settingsView .theme-option {
+  color: var(--label);
+  border-color: rgba(24, 27, 30, .11);
+  background: #fff;
+}
+
+html[data-family-theme="white"] #settingsView .theme-option.active {
+  border-color: rgba(32, 33, 36, .42);
+  background: #f1f1ef;
+  box-shadow: 0 8px 22px rgba(18, 20, 22, .08);
+}
+
+html[data-family-theme="white"] #settingsView .theme-check {
+  border-color: rgba(24, 27, 30, .18);
+}
+
+html[data-family-theme="white"] #settingsView .theme-option.active .theme-check {
+  color: #fff;
+  border-color: #202124;
+  background: #202124;
+}
+
+html[data-family-theme="white"] #settingsView .theme-save-note {
+  color: #666b70;
+  background: #eeeeec;
+}
+
+/* Black reuses the full night-theme coverage, then removes blue/navy tint. */
+html[data-family-theme="night"][data-family-theme-choice="black"] {
+  --bg: #050505;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --label: #f5f5f5;
+  --secondary: #b8b8b8;
+  --tertiary: #7f7f7f;
+  --separator: rgba(255, 255, 255, .12);
+  --blue: #d7d7d7;
+  --green: #a8b0aa;
+  --orange: #c0a083;
+  --red: #d58e8e;
+  --pink: #c89aaa;
+  --indigo: #aaa5b8;
+  --shadow: 0 20px 54px rgba(0, 0, 0, .48);
+  --theme-accent-rgb: 215, 215, 215;
+  --theme-hero-start: #111111;
+  --theme-hero-end: #303030;
+  --theme-verse-start: #111111;
+  --theme-verse-end: #1b1b1b;
+  --theme-tab-bg: rgba(7, 7, 7, .94);
+  --theme-tab-active: #2a2a2a;
+  --night-bg-deep: #050505;
+  --night-panel: #111111;
+  --night-panel-raised: #1a1a1a;
+  --night-panel-soft: #202020;
+  --night-line: rgba(255, 255, 255, .12);
+  --night-blue: #d7d7d7;
+  --night-violet: #aaa5b8;
+  --night-gold: #c0a083;
+  --night-rose: #c89aaa;
+  --night-teal: #a8b0aa;
+  --night-diaper: #a9b8c2;
+  --ui-card: rgba(17, 17, 17, .98);
+  --ui-card-muted: rgba(26, 26, 26, .96);
+  --ui-border: rgba(255, 255, 255, .12);
+  --ui-accent-soft: rgba(255, 255, 255, .07);
+  color-scheme: dark;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"],
+html[data-family-theme="night"][data-family-theme-choice="black"] body {
+  background-color: #050505;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body {
+  background-image:
+    radial-gradient(circle at 12% 4%, rgba(255, 255, 255, .045), transparent 26rem),
+    linear-gradient(180deg, #050505 0%, #090909 48%, #030303 100%);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .topbar .eyebrow,
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .section-heading,
+  .settings-heading,
+  .feature-request-heading,
+  .feature-request-admin-heading
+) .eyebrow {
+  color: #a9a9a9;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .view-tabs {
+  border-color: rgba(255, 255, 255, .11);
+  background: rgba(6, 6, 6, .94) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .view-tab {
+  color: #adadad;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .view-tab.active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .15);
+  background: linear-gradient(145deg, #343434, #202020);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .daily-verse-card {
+  border-color: rgba(255, 255, 255, .10);
+  background:
+    radial-gradient(circle at 91% 13%, rgba(255, 255, 255, .035), transparent 38%),
+    linear-gradient(145deg, #111111, #1a1a1a);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .daily-verse-heading .verse-cross {
+  color: #111;
+  border-color: rgba(255, 255, 255, .14);
+  background: linear-gradient(145deg, #f0f0f0, #a8a8a8);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .hero-card {
+  border-color: rgba(255, 255, 255, .13);
+  background:
+    radial-gradient(circle at 82% 5%, rgba(255, 255, 255, .08), transparent 28%),
+    linear-gradient(135deg, #101010, #353535);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, .52), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-card {
+  border-color: rgba(255, 255, 255, .11);
+  background: linear-gradient(180deg, rgba(20, 20, 20, .99), rgba(9, 9, 9, .99));
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(.icon-button, .today-button) {
+  color: #e2e2e2;
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .075);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-day.selected {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .15);
+  background: linear-gradient(145deg, rgba(68, 68, 68, .82), rgba(37, 37, 37, .82));
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-day.today .day-number {
+  color: #080808;
+  background: linear-gradient(145deg, #f0f0f0, #bcbcbc);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, .14);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .quick-add-card,
+  .agenda-item,
+  .upcoming-event-item,
+  .empty-state,
+  .todo-overview-card,
+  .todo-quick-form,
+  .family-todo-item,
+  .todo-empty-state
+) {
+  border-color: rgba(255, 255, 255, .10);
+  background: linear-gradient(145deg, rgba(24, 24, 24, .98), rgba(12, 12, 12, .99));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .quick-date-badge,
+  .edit-event-button,
+  .bulk-add-button,
+  .member-chip,
+  .quick-time-button
+) {
+  color: #d1d1d1;
+  border-color: rgba(255, 255, 255, .11);
+  background: rgba(255, 255, 255, .075);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .member-chip.selected,
+  .quick-add-submit,
+  .todo-filter-tabs button.active
+) {
+  color: #090909;
+  background: #d7d7d7;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-subtabs,
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .todo-filter-tabs {
+  border-color: rgba(255, 255, 255, .09);
+  background: #111;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-subtabs button.active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .13);
+  background: linear-gradient(145deg, #3b3b3b, #242424);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView {
+  --care-formula: #c0a083;
+  --care-pumped: #a8b0aa;
+  --care-breast: #c89aaa;
+  --care-solid: #b58e6b;
+  --care-sleep: #aaa5b8;
+  --care-diaper: #a9b8c2;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .baby-care-card,
+  .care-timer-card,
+  .care-pattern-card,
+  .growth-measurement-card,
+  .recent-photo-section,
+  .growth-summary-body,
+  .care-timeline-item,
+  .growth-history-item,
+  .growth-inline-history-item
+),
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView :is(
+  .english-today-card,
+  .english-story-card
+),
+html[data-family-theme="night"][data-family-theme-choice="black"] #featureRequestView :is(
+  .feature-request-card,
+  .feature-request-item,
+  .feature-request-empty
+),
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .settings-card {
+  border-color: rgba(255, 255, 255, .10);
+  background: linear-gradient(145deg, rgba(22, 22, 22, .99), rgba(11, 11, 11, .99));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .auth-panel,
+  .sheet-dialog form,
+  .sheet-panel,
+  .completion-panel,
+  .account-panel,
+  .platform-admin-card
+) {
+  color: var(--label);
+  border-color: rgba(255, 255, 255, .10);
+  background: #111;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(input, select, textarea) {
+  color: #f4f4f4;
+  border-color: rgba(255, 255, 255, .12);
+  background: #1b1b1b;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(input, textarea)::placeholder {
+  color: #777;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option {
+  color: #f5f5f5;
+  border-color: rgba(255, 255, 255, .10);
+  background: #121212;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option.active {
+  border-color: rgba(255, 255, 255, .32);
+  background: #202020;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .42);
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option.active .theme-check {
+  color: #090909;
+  border-color: #dedede;
+  background: #dedede;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-save-note {
+  color: #b8b8b8;
+  background: #1a1a1a;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .photo-viewer-panel {
+  background: #050505;
+}
