@@ -117,7 +117,7 @@ window.FAMILY_CONFIG = {
 
   const modules = [
     { name: "growth-delete-sync", version: "20260717-delete-refresh-v1" },
-    { name: "calendar-swipe", version: "20260716-fast-swipe" },
+    { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20260718-logic-audit-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260716-formula-breast-v1" },
