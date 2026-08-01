@@ -4,6 +4,7 @@
   const VIEW_NAME = 'settings';
   const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
   const THEME_STORAGE_KEY = 'family-theme-v1';
+  const THEME_CHOICE_STORAGE_KEY = 'family-theme-choice-v1';
   const DEFAULT_THEME = 'forest';
   const THEMES = [
     {
@@ -39,7 +40,25 @@
       name: '별빛 밤',
       description: '깊은 네이비와 은은한 별빛 포인트',
       themeColor: '#050d1c',
+      colorScheme: 'dark',
       preview: ['#050d1c', '#142746', '#79aaff', '#f2c675', '#f4f7ff'],
+    },
+    {
+      id: 'white',
+      name: '화이트',
+      description: '깨끗한 화이트와 차콜 포인트',
+      themeColor: '#f7f7f5',
+      colorScheme: 'light',
+      preview: ['#f7f7f5', '#ffffff', '#202124', '#aeb4ba', '#1b1d1f'],
+    },
+    {
+      id: 'black',
+      cssTheme: 'night',
+      name: '블랙',
+      description: '깊은 블랙과 다크 그레이의 모던한 톤',
+      themeColor: '#050505',
+      colorScheme: 'dark',
+      preview: ['#050505', '#151515', '#d8d8d8', '#7f858c', '#f5f5f5'],
     },
   ];
 
@@ -49,8 +68,11 @@
 
   const validTheme = (value) => THEMES.some((theme) => theme.id === value) ? value : DEFAULT_THEME;
   const storedTheme = () => {
-    try { return validTheme(localStorage.getItem(THEME_STORAGE_KEY)); }
-    catch { return DEFAULT_THEME; }
+    try {
+      const storedChoice = localStorage.getItem(THEME_CHOICE_STORAGE_KEY);
+      const storedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
+      return validTheme(storedChoice || storedThemeId);
+    } catch { return DEFAULT_THEME; }
   };
 
   let tab = navigation.querySelector(`[data-view="${VIEW_NAME}"]`);
@@ -122,15 +144,20 @@
   const applyTheme = (themeId, { persist = true, announce = false } = {}) => {
     const selectedId = validTheme(themeId);
     const selected = THEMES.find((theme) => theme.id === selectedId) || THEMES[0];
-    document.documentElement.dataset.familyTheme = selected.id;
-    document.documentElement.style.colorScheme = selected.id === 'night' ? 'dark' : 'light';
+    const cssTheme = selected.cssTheme || selected.id;
+    document.documentElement.dataset.familyTheme = cssTheme;
+    document.documentElement.dataset.familyThemeChoice = selected.id;
+    document.documentElement.style.colorScheme = selected.colorScheme || (cssTheme === 'night' ? 'dark' : 'light');
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) themeMeta.content = selected.themeColor;
     if (persist) {
-      try { localStorage.setItem(THEME_STORAGE_KEY, selected.id); } catch { /* 현재 화면에는 적용 */ }
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, selected.id);
+        localStorage.setItem(THEME_CHOICE_STORAGE_KEY, selected.id);
+      } catch { /* 현재 화면에는 적용 */ }
     }
     updateControls(selected.id);
-    window.dispatchEvent(new CustomEvent('familythemechange', { detail: { theme: selected.id } }));
+    window.dispatchEvent(new CustomEvent('familythemechange', { detail: { theme: selected.id, cssTheme } }));
     if (announce && typeof toast === 'function') toast(`${selected.name} 테마로 바꿨어요 🎨`);
   };
 
