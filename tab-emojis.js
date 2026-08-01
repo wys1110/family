@@ -68,4 +68,13 @@
     script.onerror = () => console.error('가족 관리자 모듈을 불러오지 못했어요.');
     document.body.appendChild(script);
   }
+
+  if (!document.querySelector('script[data-module="platform-request-admin"]')) {
+    const script = document.createElement('script');
+    script.src = 'platform-request-admin.js?v=20260801-v1';
+    script.dataset.module = 'platform-request-admin';
+    script.async = false;
+    script.onerror = () => console.error('플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
+    document.body.appendChild(script);
+  }
 })();
