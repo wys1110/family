@@ -1,8 +1,9 @@
+/* 설정 화면에는 전용 새로고침 카드가 있으므로 플로팅 버튼을 숨겨 폼을 가리지 않게 합니다. */
 body.settings-refresh-active > .refresh-button {
-  display: grid !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .settings-refresh-settings {
