@@ -8,7 +8,7 @@
     english: ['📖', '동화'],
     'feature-request': ['💡', '요청'],
     settings: ['⚙️', '설정'],
-    admin: ['🛡️', '관리'],
+    admin: ['👑', '관리'],
   };
 
   const navigation = document.querySelector('.view-tabs');
