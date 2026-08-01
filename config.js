@@ -17,22 +17,29 @@ window.FAMILY_CONFIG = {
   document.addEventListener("gestureend", preventViewportZoom, { passive: false });
 
   const themeStorageKey = "family-theme-v1";
+  const themeChoiceStorageKey = "family-theme-choice-v1";
   const themeColors = {
     forest: "#fff8f3",
     sunshine: "#fffaf0",
     rose: "#fff5f7",
     ocean: "#f3f9fb",
     night: "#050d1c",
+    white: "#f7f7f5",
+    black: "#050505",
     storybook: "#edf4e6",
     ghibli: "#eaf3df",
   };
+  const themeCssAliases = { black: "night" };
   let initialTheme = "forest";
   try {
+    const storedChoice = localStorage.getItem(themeChoiceStorageKey);
     const storedTheme = localStorage.getItem(themeStorageKey);
-    if (themeColors[storedTheme]) initialTheme = storedTheme;
+    const candidate = storedChoice || storedTheme;
+    if (themeColors[candidate]) initialTheme = candidate;
   } catch { /* 기본 테마 사용 */ }
-  document.documentElement.dataset.familyTheme = initialTheme;
-  document.documentElement.style.colorScheme = initialTheme === "night" ? "dark" : "light";
+  document.documentElement.dataset.familyTheme = themeCssAliases[initialTheme] || initialTheme;
+  document.documentElement.dataset.familyThemeChoice = initialTheme;
+  document.documentElement.style.colorScheme = ["night", "black"].includes(initialTheme) ? "dark" : "light";
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) themeMeta.content = themeColors[initialTheme];
 
@@ -131,7 +138,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260722-settings-visible-v4" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
-    { name: "settings", version: "20260722-korean-labels-v2" },
+    { name: "settings", version: "20260801-white-black-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
@@ -189,6 +196,7 @@ window.FAMILY_CONFIG = {
     { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
     { name: "care-color-separation", version: "20260722-night-contrast-v1", script: false },
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
+    { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
