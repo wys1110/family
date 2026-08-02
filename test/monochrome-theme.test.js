@@ -7,14 +7,20 @@ const settings = read("settings.js");
 const palette = read("monochrome-theme.css");
 const floatingActions = read("refresh-button.css");
 const blackThemeCleanup = read("growth-delete-sync.css");
+const finalBlackTheme = read("black-theme-final.css");
+const serviceWorker = read("service-worker.js");
 
 describe("white and black themes", () => {
-  test("loads the monochrome palette after the starry-night palette", () => {
+  test("loads the final black pass after every night and monochrome palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260802-final-black-v2", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
+    expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
+    expect(finalBlackTheme).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-final-black-v2"\);/);
+    expect(serviceWorker).toContain('url.pathname.endsWith("/black-theme-final.css")');
   });
 
   test("bootstraps stored white and black choices before modules load", () => {
@@ -72,13 +78,12 @@ describe("white and black themes", () => {
     expect(blackThemeCleanup).toContain('background: linear-gradient(145deg, #181818, #0d0d0d) !important');
   });
 
-  test("neutralizes blue active controls and charts", () => {
-    expect(blackThemeCleanup).toContain('.calendar-day.selected');
-    expect(blackThemeCleanup).toContain('.english-progress i');
-    expect(blackThemeCleanup).toContain('.feature-request-item[data-status="reviewing"]');
-    expect(blackThemeCleanup).toContain('.theme-option.active');
-    expect(blackThemeCleanup).toContain('.admin-user-chart-bar');
-    expect(blackThemeCleanup).toContain('linear-gradient(90deg, #777, #d0d0d0) !important');
+  test("neutralizes blue controls even when feature modules inject styles later", () => {
+    expect(finalBlackTheme).toContain(':is(button, [role="button"])');
+    expect(finalBlackTheme).toContain('background-image: linear-gradient(145deg, #2d2d2d, #171717) !important');
+    expect(finalBlackTheme).toContain('.admin-user-chart-bar');
+    expect(finalBlackTheme).toContain('.english-progress i');
+    expect(finalBlackTheme).toContain('linear-gradient(90deg, #777, #d0d0d0) !important');
   });
 
   test("covers schedule, growth, story, request, settings and dialogs", () => {
