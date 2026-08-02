@@ -5,6 +5,7 @@ const read = (path) => readFileSync(path, "utf8");
 const config = read("config.js");
 const settings = read("settings.js");
 const palette = read("monochrome-theme.css");
+const floatingActions = read("refresh-button.css");
 
 describe("white and black themes", () => {
   test("loads the monochrome palette after the starry-night palette", () => {
@@ -39,6 +40,13 @@ describe("white and black themes", () => {
     expect(palette).toContain('--night-bg-deep: #050505');
     expect(palette).toContain('--night-blue: #d7d7d7');
     expect(palette).toContain('color-scheme: dark');
+  });
+
+  test("keeps the black-theme schedule add button neutral", () => {
+    expect(config).toContain('{ name: "refresh-button", version: "20260802-black-fab-v1" }');
+    expect(floatingActions).toContain('html[data-family-theme="night"][data-family-theme-choice="black"] body > #addEventButton.fab');
+    expect(floatingActions).toContain('background: linear-gradient(145deg, #252525, #151515)');
+    expect(floatingActions).not.toContain('data-family-theme-choice="black"] body > #addEventButton.fab {\n  background: linear-gradient(145deg, #315f99, #214a7d)');
   });
 
   test("covers schedule, growth, story, request, settings and dialogs", () => {
