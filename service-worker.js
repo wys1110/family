@@ -29,6 +29,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/monochrome-theme.css") ||
     url.pathname.endsWith("/black-theme-final.css") ||
     url.pathname.endsWith("/theme-system.css") ||
+    url.pathname.endsWith("/theme-calendar-exception.css") ||
     url.pathname.endsWith("/tab-emojis.js") ||
     url.pathname.endsWith("/family-admin.js") ||
     url.pathname.endsWith("/family-admin.css") ||
