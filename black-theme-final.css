@@ -320,3 +320,186 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .
     0 10px 24px rgba(0, 0, 0, .44),
     inset 0 1px 0 rgba(255, 255, 255, .08) !important;
 }
+
+/*
+ * Keep the schedule page on its original starry-night palette.
+ * The rest of the app remains monochrome black.
+ */
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView {
+  --surface: #0d1c33 !important;
+  --surface-2: #142746 !important;
+  --label: #f4f7ff !important;
+  --secondary: #b6c4da !important;
+  --tertiary: #7f91ad !important;
+  --separator: rgba(134, 175, 255, .18) !important;
+  --blue: #79aaff !important;
+  --theme-accent-rgb: 121, 170, 255 !important;
+  --night-panel: #0d1c33 !important;
+  --night-panel-raised: #142746 !important;
+  --night-panel-soft: #172d4d !important;
+  --night-line: rgba(134, 175, 255, .18) !important;
+  --night-blue: #79aaff !important;
+  --ui-card: rgba(13, 28, 51, .96) !important;
+  --ui-card-muted: rgba(20, 39, 70, .92) !important;
+  --ui-border: rgba(134, 175, 255, .18) !important;
+  --ui-accent-soft: rgba(121, 170, 255, .13) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .hero-card {
+  border-color: rgba(151, 188, 250, .24) !important;
+  background:
+    radial-gradient(circle at 82% 5%, rgba(242, 198, 117, .16), transparent 28%),
+    radial-gradient(circle at 98% 90%, rgba(169, 156, 249, .20), transparent 36%),
+    linear-gradient(135deg, #103368, #31588e) !important;
+  box-shadow: 0 22px 52px rgba(2, 9, 22, .44), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .family-chip {
+  color: #eef4ff !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  background: rgba(5, 17, 34, .28) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-card {
+  border-color: rgba(134, 175, 255, .18) !important;
+  background:
+    radial-gradient(circle at 91% 0%, rgba(121, 170, 255, .08), transparent 30%),
+    linear-gradient(180deg, rgba(15, 33, 59, .98), rgba(8, 23, 43, .98)) !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(.icon-button, .today-button) {
+  color: #9fc4ff !important;
+  border-color: rgba(121, 170, 255, .20) !important;
+  background: rgba(35, 75, 127, .54) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .weekdays span {
+  color: #91a5c2 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .weekdays span:first-child,
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-day.public-holiday-day:not(.today) .day-number {
+  color: #ff9da5 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-day {
+  color: #dbe5f5 !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-day:hover {
+  border-color: transparent !important;
+  background: rgba(121, 170, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-day.selected {
+  color: #dceaff !important;
+  border-color: rgba(121, 170, 255, .24) !important;
+  background: linear-gradient(145deg, rgba(41, 86, 146, .70), rgba(25, 56, 98, .66)) !important;
+  box-shadow: inset 0 0 0 1px rgba(170, 205, 255, .08) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-day.today .day-number {
+  color: #061124 !important;
+  background: linear-gradient(145deg, #9ec6ff, #6e9ff2) !important;
+  box-shadow: 0 4px 12px rgba(121, 170, 255, .28) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-event-bar {
+  color: #fff !important;
+  background-color: color-mix(in srgb, var(--member-color, #74d9c7) 74%, #172a48) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .17), 0 2px 7px rgba(0, 0, 0, .24) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(.calendar-overflow-badge, .count-badge) {
+  color: #c4d4eb !important;
+  border-color: rgba(134, 175, 255, .15) !important;
+  background: rgba(26, 52, 87, .86) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(
+  .quick-add-card,
+  .agenda-item,
+  .upcoming-event-item,
+  .empty-state
+) {
+  color: #f4f7ff !important;
+  border-color: rgba(134, 175, 255, .16) !important;
+  background: linear-gradient(145deg, rgba(18, 39, 67, .96), rgba(11, 27, 49, .98)) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(.quick-date-badge, .edit-event-button, .bulk-add-button) {
+  color: #a8caff !important;
+  border-color: rgba(121, 170, 255, .20) !important;
+  background: rgba(37, 76, 127, .54) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(.member-chip, .quick-time-button) {
+  color: #c0cee0 !important;
+  border-color: transparent !important;
+  background: rgba(25, 49, 81, .86) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .member-chip.selected,
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .quick-add-submit {
+  color: #061124 !important;
+  border-color: transparent !important;
+  background: linear-gradient(145deg, #9ec6ff, #6f9fe9) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-subtabs {
+  border-color: rgba(134, 175, 255, .14) !important;
+  background: rgba(11, 27, 49, .86) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-subtabs button {
+  color: #aebdd3 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .calendar-subtabs button.active {
+  color: #fff !important;
+  border-color: rgba(121, 170, 255, .22) !important;
+  background: linear-gradient(145deg, #264f87, #1a3965) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView :is(
+  .todo-overview-card,
+  .todo-quick-form,
+  .family-todo-item,
+  .todo-empty-state
+) {
+  color: #f4f7ff !important;
+  border-color: rgba(134, 175, 255, .16) !important;
+  background: linear-gradient(145deg, rgba(18, 39, 67, .96), rgba(11, 27, 49, .98)) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .todo-stats div,
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .todo-filter-tabs button {
+  color: #b8c7dc !important;
+  border-color: rgba(134, 175, 255, .14) !important;
+  background: rgba(23, 46, 78, .78) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #calendarView#calendarView .todo-filter-tabs button.active {
+  color: #061124 !important;
+  border-color: transparent !important;
+  background: #79aaff !important;
+  box-shadow: none !important;
+}
