@@ -86,6 +86,17 @@ describe("white and black themes", () => {
     expect(finalBlackTheme).toContain('linear-gradient(90deg, #777, #d0d0d0) !important');
   });
 
+  test("keeps the event editor frame, controls and footer neutral black", () => {
+    expect(finalBlackTheme).toContain('body #eventDialog {');
+    expect(finalBlackTheme).toContain('--event-sheet-bg: #080808 !important');
+    expect(finalBlackTheme).toContain('#eventDialog .date-shortcuts button.active');
+    expect(finalBlackTheme).toContain('#eventDialog .member-selector button.selected');
+    expect(finalBlackTheme).toContain('#eventDialog .dialog-actions');
+    expect(finalBlackTheme).toContain('background-image: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important');
+    expect(finalBlackTheme).not.toContain('#6f9ee7');
+    expect(finalBlackTheme).not.toContain('#70c8b8');
+  });
+
   test("covers schedule, growth, story, request, settings and dialogs", () => {
     expect(palette).toContain('#calendarView .calendar-card');
     expect(palette).toContain('#growthView :is(');
