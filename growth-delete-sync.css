@@ -1,1 +1,142 @@
 /* 성장 기록 삭제 동기화는 companion script에서 처리합니다. */
+
+/*
+ * Black-theme blue cleanup.
+ * Several night-theme modules intentionally use navy gradients. The black
+ * theme is an alias of night, so neutral overrides need stronger selectors
+ * to prevent those later module rules from leaking blue back into the UI.
+ */
+html[data-family-theme="night"][data-family-theme-choice="black"] body .topbar-account-actions > .notification-center-button,
+html[data-family-theme="night"][data-family-theme-choice="black"] body .topbar-account-actions > .avatar-button,
+html[data-family-theme="night"][data-family-theme-choice="black"] body > .refresh-button {
+  color: #f5f5f5 !important;
+  border-color: rgba(255, 255, 255, .17) !important;
+  background: linear-gradient(145deg, #292929, #151515) !important;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, .48),
+    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body .topbar-account-actions > .avatar-button i {
+  border-color: #050505 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-panel,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-tabs,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-item-foreground,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-reminder-field,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-item-icon,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-item-actions button,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-header .close-button {
+  border-color: rgba(255, 255, 255, .10) !important;
+  background: #151515 !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-tabs button.active,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-header-actions > button:first-child,
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-item-actions button:first-child {
+  color: #f2f2f2 !important;
+  background: #292929 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .notification-center-tabs button.active::after {
+  background: #bdbdbd !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .baby-archive-button,
+  .add-baby-button,
+  .growth-summary-toggle,
+  .recent-photo-actions button,
+  .growth-inline-actions button,
+  .growth-inline-empty > button,
+  .quick-now-badge
+) {
+  color: #e7e7e7 !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background: linear-gradient(145deg, #292929, #171717) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .growth-quick-section,
+  .care-timer-card,
+  .care-quick-block,
+  .care-pattern-section,
+  .care-pattern-card,
+  .care-linear-card,
+  .care-linear-summary,
+  .care-linear-empty,
+  .growth-measurement-card,
+  .integrated-care-summary,
+  .growth-summary-body,
+  .recent-photo-section
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background:
+    radial-gradient(circle at 90% 4%, rgba(255, 255, 255, .045), transparent 38%),
+    linear-gradient(145deg, #171717, #0d0d0d) !important;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, .42),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .care-pattern-tabs,
+  .care-day-mode-control,
+  .care-day-mode-control > div,
+  .care-pattern-date
+) {
+  border-color: rgba(255, 255, 255, .09) !important;
+  background: #141414 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .care-pattern-tabs button.active,
+  .care-day-mode-control button.active,
+  .summary-period-tabs button.active
+) {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: linear-gradient(145deg, #343434, #202020) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView .growth-quick-section .growth-quick-grid button,
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView .care-timer-card .care-quick-block .growth-quick-grid button,
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView button[data-growth-quick="수유·이유식"],
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView button[data-growth-quick="기저귀"] {
+  color: #ededed !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(255, 255, 255, .055), transparent 48%),
+    linear-gradient(145deg, #2a2a2a, #171717) !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, .32),
+    inset 0 1px 0 rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView button[data-growth-quick="수유·이유식"] {
+  color: #d8b37c !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView button[data-growth-quick="기저귀"] {
+  color: #a9b8c2 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #growthView button[data-growth-quick] .quick-symbol {
+  color: inherit !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #303030 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView .care-split-time,
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView .care-split-edit {
+  color: #e6e6e6 !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background: linear-gradient(145deg, #2b2b2b, #171717) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
