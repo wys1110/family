@@ -81,8 +81,8 @@ jobs:
           config = Path('config.js')
           text = config.read_text()
           text, count = re.subn(
-              r'"notification-center\.js\?v=[^"]+"',
-              '"notification-center.js?v=20260802-persistent-inbox-v1"',
+              r'(\{ name: "notification-center", version: ")[^"]+(" \},)',
+              r'\g<1>20260802-persistent-inbox-v1\g<2>',
               text,
               count=1,
           )
