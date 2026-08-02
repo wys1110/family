@@ -18,6 +18,7 @@
     admin: '관리자',
   };
   const RANGE_DAYS = { '1': 1, '7': 7, '30': 30 };
+  const MAX_CHART_USERS = 8;
 
   let activities = [];
   let loadId = 0;
@@ -99,6 +100,21 @@
       .admin-recent-summary strong, .admin-recent-summary span { display: block; }
       .admin-recent-summary strong { color: var(--label); font-size: 18px; }
       .admin-recent-summary span { margin-top: 3px; color: var(--secondary); font-size: 9px; }
+      .admin-user-chart { margin-bottom: 12px; padding: 13px; border: 1px solid var(--separator); border-radius: 16px; background: rgba(var(--theme-accent-rgb), .035); }
+      .admin-user-chart-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+      .admin-user-chart-heading strong { color: var(--label); font-size: 12px; }
+      .admin-user-chart-heading span { color: var(--tertiary); font-size: 8px; white-space: nowrap; }
+      .admin-user-chart-list { display: grid; gap: 10px; }
+      .admin-user-chart-row { display: grid; grid-template-columns: minmax(72px, 112px) minmax(0, 1fr) auto; gap: 9px; align-items: center; }
+      .admin-user-chart-label { min-width: 0; }
+      .admin-user-chart-label strong, .admin-user-chart-label span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .admin-user-chart-label strong { color: var(--label); font-size: 10px; }
+      .admin-user-chart-label span { margin-top: 2px; color: var(--tertiary); font-size: 7px; }
+      .admin-user-chart-track { position: relative; height: 11px; overflow: hidden; border-radius: 999px; background: rgba(var(--theme-accent-rgb), .09); }
+      .admin-user-chart-bar { display: block; width: var(--activity-width); height: 100%; min-width: 6px; border-radius: inherit; background: linear-gradient(90deg, rgba(var(--theme-accent-rgb), .48), rgba(var(--theme-accent-rgb), .92)); transition: width .28s ease; }
+      .admin-user-chart-count { min-width: 25px; color: var(--label); font-size: 10px; font-variant-numeric: tabular-nums; text-align: right; }
+      .admin-user-chart-more { margin: 9px 0 0; color: var(--tertiary); font-size: 8px; text-align: right; }
+      .admin-user-chart-empty { padding: 8px 0 2px; color: var(--secondary); font-size: 9px; text-align: center; }
       .admin-recent-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 140px); gap: 8px; margin-bottom: 12px; }
       .admin-recent-controls input, .admin-recent-controls select { width: 100%; min-height: 42px; border: 1px solid var(--separator); border-radius: 12px; color: var(--label); background: var(--surface); font: inherit; font-size: 11px; }
       .admin-recent-controls input { padding: 0 12px; }
@@ -122,9 +138,13 @@
       @media (max-width: 540px) {
         .admin-recent-heading { grid-template-columns: 44px minmax(0, 1fr); }
         .admin-recent-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
+        .admin-user-chart-row { grid-template-columns: minmax(64px, 92px) minmax(0, 1fr) auto; gap: 7px; }
         .admin-recent-controls { grid-template-columns: 1fr; }
         .admin-recent-item { grid-template-columns: 38px minmax(0, 1fr); }
         .admin-recent-time { grid-column: 2; display: flex; gap: 6px; text-align: left; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .admin-user-chart-bar { transition: none; }
       }
     `;
     document.head.appendChild(style);
@@ -151,6 +171,15 @@
         <div><strong data-admin-recent-total>0</strong><span>조회 기간 활동</span></div>
         <div><strong data-admin-recent-users>0</strong><span>활동 사용자</span></div>
         <div><strong data-admin-recent-today>0</strong><span>오늘 활동</span></div>
+      </div>
+      <div class="admin-user-chart" data-admin-user-chart>
+        <div class="admin-user-chart-heading">
+          <strong>사용자별 활동</strong>
+          <span>조회 기간 활동 횟수</span>
+        </div>
+        <div class="admin-user-chart-list" data-admin-user-chart-list>
+          <div class="admin-user-chart-empty">활동을 불러오는 중이에요.</div>
+        </div>
       </div>
       <div class="admin-recent-controls">
         <input type="search" data-admin-recent-search placeholder="사용자·이메일·가족 그룹 검색" aria-label="최근 활동 검색">
@@ -181,9 +210,56 @@
       .some((value) => String(value).toLocaleLowerCase('ko-KR').includes(query)));
   };
 
+  const buildUserActivityRows = () => {
+    const grouped = new Map();
+    activities.forEach((activity) => {
+      const key = activity.user_id || activity.user_email || `${activity.household_id || ''}:${activity.user_name || ''}`;
+      const current = grouped.get(key) || {
+        name: activity.user_name || activity.user_email || '이름 미등록',
+        email: activity.user_email || '',
+        count: 0,
+      };
+      current.count += 1;
+      if (!current.name && activity.user_name) current.name = activity.user_name;
+      if (!current.email && activity.user_email) current.email = activity.user_email;
+      grouped.set(key, current);
+    });
+    return [...grouped.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ko-KR'));
+  };
+
+  const renderUserChart = (section) => {
+    const chart = section.querySelector('[data-admin-user-chart-list]');
+    const rows = buildUserActivityRows();
+    if (!rows.length) {
+      chart.innerHTML = '<div class="admin-user-chart-empty">조회 기간에 사용자 활동이 없어요.</div>';
+      return;
+    }
+
+    const visibleRows = rows.slice(0, MAX_CHART_USERS);
+    const maxCount = Math.max(...visibleRows.map((row) => row.count), 1);
+    const rowMarkup = visibleRows.map((row) => {
+      const width = Math.max(6, Math.round((row.count / maxCount) * 100));
+      const detail = row.email && row.email !== row.name ? row.email : '이메일 없음';
+      const label = `${row.name} ${row.count}회`;
+      return `
+        <div class="admin-user-chart-row" aria-label="${escapeHtml(label)}">
+          <div class="admin-user-chart-label">
+            <strong>${escapeHtml(row.name)}</strong>
+            <span>${escapeHtml(detail)}</span>
+          </div>
+          <div class="admin-user-chart-track" aria-hidden="true">
+            <span class="admin-user-chart-bar" style="--activity-width: ${width}%"></span>
+          </div>
+          <strong class="admin-user-chart-count">${row.count}</strong>
+        </div>`;
+    }).join('');
+    const moreCount = rows.length - visibleRows.length;
+    chart.innerHTML = `${rowMarkup}${moreCount > 0 ? `<p class="admin-user-chart-more">그 외 ${moreCount}명</p>` : ''}`;
+  };
+
   const render = (section) => {
     const visible = filteredActivities(section);
-    const uniqueUsers = new Set(activities.map((activity) => activity.user_id)).size;
+    const uniqueUsers = new Set(activities.map((activity) => activity.user_id || activity.user_email)).size;
     const today = new Date();
     const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
     const todayCount = activities.filter((activity) => {
@@ -193,6 +269,7 @@
     section.querySelector('[data-admin-recent-total]').textContent = String(activities.length);
     section.querySelector('[data-admin-recent-users]').textContent = String(uniqueUsers);
     section.querySelector('[data-admin-recent-today]').textContent = String(todayCount);
+    renderUserChart(section);
 
     const list = section.querySelector('[data-admin-recent-list]');
     if (!visible.length) {
@@ -221,6 +298,7 @@
 
   const showError = (section, error) => {
     const missing = missingMigration(error);
+    section.querySelector('[data-admin-user-chart-list]').innerHTML = '<div class="admin-user-chart-empty">그래프를 불러오지 못했어요.</div>';
     section.querySelector('[data-admin-recent-list]').innerHTML = `
       <div class="admin-recent-error">
         <strong>${missing ? '최근 활동 DB 설정이 필요해요.' : '최근 활동을 불러오지 못했어요.'}</strong>
@@ -241,7 +319,7 @@
       const since = new Date(Date.now() - days * 86400000).toISOString();
       const { data, error } = await context.supabase.rpc('list_platform_recent_activity', {
         p_since_at: since,
-        p_row_limit: 300,
+        p_row_limit: 500,
       });
       if (currentLoadId !== loadId) return;
       if (error) throw error;
