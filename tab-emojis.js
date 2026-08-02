@@ -66,5 +66,5 @@
   loadModule('admin-resource-usage', 'admin-resource-usage.js?v=20260801-v1', 'Supabase 사용량 관리자 모듈을 불러오지 못했어요.');
   loadModule('platform-request-admin', 'platform-request-admin.js?v=20260801-v1', '플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
   loadModule('activity-log', 'activity-log.js?v=20260801-v1', '최근 활동 기록 모듈을 불러오지 못했어요.');
-  loadModule('admin-recent-activity', 'admin-recent-activity.js?v=20260801-v1', '최근 활동 관리자 모듈을 불러오지 못했어요.');
+  loadModule('admin-recent-activity', 'admin-recent-activity.js?v=20260802-user-graph-v1', '최근 활동 관리자 모듈을 불러오지 못했어요.');
 })();
