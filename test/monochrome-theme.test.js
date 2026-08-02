@@ -9,6 +9,7 @@ const floatingActions = read("refresh-button.css");
 const blackThemeCleanup = read("growth-delete-sync.css");
 const finalBlackTheme = read("black-theme-final.css");
 const themeSystem = read("theme-system.css");
+const calendarThemeException = read("theme-calendar-exception.css");
 const serviceWorker = read("service-worker.js");
 
 describe("white and black themes", () => {
@@ -20,9 +21,11 @@ describe("white and black themes", () => {
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
     expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
-    expect(finalBlackTheme.trim()).toBe('@import url("./theme-system.css?v=20260802-theme-system-v1");');
+    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260802-theme-system-v1");');
+    expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260802-calendar-exception-v1");');
     expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
+    expect(serviceWorker).toContain('url.pathname.endsWith("/theme-calendar-exception.css")');
   });
 
   test("bootstraps stored white and black choices before modules load", () => {
@@ -96,6 +99,14 @@ describe("white and black themes", () => {
     expect(themeSystem).toContain('background-image: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important');
     expect(themeSystem).not.toContain('#6f9ee7');
     expect(themeSystem).not.toContain('#70c8b8');
+  });
+
+  test("keeps the schedule page on its existing starry-night colors", () => {
+    expect(calendarThemeException).toContain('body #calendarView#calendarView {');
+    expect(calendarThemeException).toContain('--theme-accent: #79aaff');
+    expect(calendarThemeException).toContain('.calendar-day.today .day-number');
+    expect(calendarThemeException).toContain('.todo-filter-tabs button.active');
+    expect(calendarThemeException).not.toContain('#eventDialog');
   });
 
   test("covers schedule, growth, story, request, settings and dialogs", () => {
