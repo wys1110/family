@@ -122,3 +122,164 @@ html[data-family-theme="night"][data-family-theme-choice="black"] body :is(
   background-image: linear-gradient(145deg, #292929, #151515) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
 }
+
+/*
+ * Event editor.
+ * The night editor has its own navy frame, panels and sticky footer. Keep the
+ * black choice neutral while preserving member identity only in the small dots.
+ */
+html[data-family-theme="night"][data-family-theme-choice="black"] body #eventDialog {
+  --event-sheet-bg: #080808 !important;
+  --event-panel: #151515 !important;
+  --event-panel-soft: #101010 !important;
+  --event-line: rgba(255, 255, 255, .12) !important;
+  --event-line-strong: rgba(255, 255, 255, .20) !important;
+  --event-action-bg: rgba(8, 8, 8, .98) !important;
+  --event-frame-line: rgba(255, 255, 255, .18) !important;
+  --event-frame-line-soft: rgba(255, 255, 255, .10) !important;
+  --event-frame-footer: rgba(8, 8, 8, .98) !important;
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  background:
+    radial-gradient(circle at 92% 2%, rgba(255, 255, 255, .035), transparent 16rem),
+    linear-gradient(180deg, #111 0%, #070707 100%) !important;
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, .68),
+    inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] body #eventDialog::backdrop {
+  background: rgba(0, 0, 0, .68) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog #eventForm {
+  background: transparent !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .sheet-handle {
+  background: #4a4a4a !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .dialog-header .eyebrow {
+  color: #a9a9a9 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .close-button {
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  background-color: #1a1a1a !important;
+  background-image: linear-gradient(145deg, #292929, #151515) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog :is(
+  #eventTitle,
+  .event-date-fields input,
+  #eventTimeField input,
+  .notification-reminder-field select,
+  .notification-reminder-field input,
+  #eventNote
+) {
+  color: #f3f3f3 !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background: #151515 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  color-scheme: dark !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog :is(input, textarea)::placeholder {
+  color: #777 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .date-shortcuts {
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #101010 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .date-shortcuts button {
+  color: #bdbdbd !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .date-shortcuts button.active {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .17) !important;
+  background-color: #303030 !important;
+  background-image: linear-gradient(145deg, #464646, #252525) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog :is(
+  .all-day-row,
+  .notification-reminder-field
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #111 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .ios-switch span {
+  background: #3a3a3a !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .ios-switch input:checked + span {
+  background: #777 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .notification-reminder-field::before {
+  border-color: rgba(255, 255, 255, .14) !important;
+  background-color: #242424 !important;
+  filter: grayscale(1) brightness(1.45) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .notification-reminder-field .notification-custom-time {
+  border-top-color: rgba(255, 255, 255, .14) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .member-selector button {
+  color: #bdbdbd !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background-color: #151515 !important;
+  background-image: linear-gradient(145deg, #202020, #121212) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .member-selector button.selected {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+  background-color: #2a2a2a !important;
+  background-image: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .member-selector .member-selector-add {
+  color: #d5d5d5 !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  background-color: #181818 !important;
+  background-image: linear-gradient(145deg, #242424, #141414) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .member-selector .member-selector-add i {
+  color: #111 !important;
+  background: linear-gradient(145deg, #ededed, #a9a9a9) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .dialog-actions {
+  border-top-color: rgba(255, 255, 255, .10) !important;
+  background: linear-gradient(180deg, rgba(8, 8, 8, .82), #080808 28%) !important;
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, .54) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #eventDialog .primary-button {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  background-color: #242424 !important;
+  background-image: linear-gradient(145deg, #383838, #191919) !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, .44),
+    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
