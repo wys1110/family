@@ -1,13 +1,13 @@
 (() => {
   if (document.querySelector('[data-notification-center-module]')) return;
 
-  const STORAGE_PREFIX = 'family-notification-center-v1';
+  const STORAGE_PREFIX = 'family-notification-center-v2';
   const EVENT_PRESETS = new Set(['none', 'at-time', 'before-10', 'before-60', 'custom']);
   const TODO_PRESETS = new Set(['none', 'due-morning', 'day-before', 'custom']);
   const POLL_INTERVAL_MS = 30_000;
   const TODO_REFRESH_MS = 3 * 60_000;
   const DAY_MS = 86_400_000;
-  const HISTORY_WINDOW_MS = 30 * DAY_MS;
+  const HISTORY_WINDOW_MS = 90 * DAY_MS;
   const UPCOMING_WINDOW_MS = 365 * DAY_MS;
 
   const topbarActions = document.querySelector('.topbar-account-actions');
@@ -17,11 +17,16 @@
   let store = null;
   let items = [];
   let todoSnapshot = [];
+  let remoteRows = [];
   let lastTodoLoadAt = 0;
   let todoLoadPromise = null;
+  let remoteLoadPromise = null;
+  let remoteSupported = true;
   let refreshTimer = null;
   let renderQueued = false;
   let pendingTodoSave = null;
+  let realtimeChannel = null;
+  let realtimeScope = '';
 
   const scopeKey = () => {
     if (typeof state !== 'undefined' && state.session?.user?.id && state.household?.id) {
@@ -31,9 +36,16 @@
   };
 
   const storageKey = () => `${STORAGE_PREFIX}:${scopeKey()}`;
+  const remoteReady = () => Boolean(
+    remoteSupported
+    && typeof state !== 'undefined'
+    && state.supabase
+    && state.session?.user?.id
+    && state.household?.id,
+  );
 
   const emptyStore = () => ({
-    version: 1,
+    version: 2,
     filter: 'new',
     read: {},
     dismissed: {},
@@ -73,7 +85,9 @@
     if (store && nextScope === activeScope) return;
     store = readStore();
     todoSnapshot = [];
+    remoteRows = [];
     lastTodoLoadAt = 0;
+    remoteSupported = true;
   };
 
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -99,12 +113,17 @@
     return Number.isFinite(parsed.getTime()) ? parsed : null;
   };
 
-  const formatDateTime = (timestamp) => {
+  const formatDateTime = (timestamp, allDay = false) => {
     const date = new Date(timestamp);
     const today = dateKey();
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const prefix = dateKey(date) === today ? '오늘' : dateKey(date) === dateKey(tomorrow) ? '내일' : new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' }).format(date);
+    const prefix = dateKey(date) === today
+      ? '오늘'
+      : dateKey(date) === dateKey(tomorrow)
+        ? '내일'
+        : new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' }).format(date);
+    if (allDay) return `${prefix} 종일`;
     return `${prefix} ${new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' }).format(date)}`;
   };
 
@@ -156,7 +175,10 @@
     delivered: Boolean(store.delivered[id]),
   });
 
-  const createItem = (input) => ({
+  const createLocalItem = (input) => ({
+    persistent: false,
+    virtual: false,
+    allDay: false,
     ...input,
     ...itemState(input.id),
   });
@@ -198,8 +220,7 @@
             .order('completed', { ascending: true })
             .order('due_date', { ascending: true, nullsFirst: false })
             .limit(500);
-          if (!error) todoSnapshot = (data || []).map(normalizeTodo);
-          else todoSnapshot = loadLocalTodos();
+          todoSnapshot = error ? loadLocalTodos() : (data || []).map(normalizeTodo);
         } catch {
           todoSnapshot = loadLocalTodos();
         }
@@ -213,23 +234,104 @@
     return todoLoadPromise;
   };
 
+  const normalizeRemoteNotification = (row = {}) => {
+    const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    const scheduledAt = new Date(row.scheduled_at || row.created_at || Date.now()).getTime();
+    const sourceType = String(row.source_type || 'notification');
+    return {
+      id: `db:${row.id}`,
+      remoteId: row.id,
+      kind: sourceType === 'event' ? 'event' : sourceType === 'todo' ? 'todo' : sourceType === 'briefing' ? 'briefing' : 'notification',
+      sourceType,
+      icon: String(row.icon || (sourceType === 'event' ? '📅' : sourceType === 'todo' ? '✅' : '🔔')),
+      title: String(row.title || '알림'),
+      body: String(row.body || ''),
+      scheduledAt: Number.isFinite(scheduledAt) ? scheduledAt : Date.now(),
+      sourceId: String(row.source_id || metadata.eventId || ''),
+      sourceDate: String(row.source_date || metadata.date || ''),
+      metadata,
+      read: Boolean(row.read_at),
+      dismissed: Boolean(row.dismissed_at),
+      delivered: Boolean(row.delivered_at),
+      deliverable: false,
+      configurable: false,
+      persistent: true,
+      virtual: false,
+      allDay: false,
+    };
+  };
+
+  const loadRemoteNotifications = async ({ force = false } = {}) => {
+    ensureScope();
+    if (!remoteReady()) {
+      remoteRows = [];
+      return remoteRows;
+    }
+    if (!force && remoteRows.length) return remoteRows;
+    if (remoteLoadPromise) return remoteLoadPromise;
+
+    remoteLoadPromise = (async () => {
+      const cutoff = new Date(Date.now() - HISTORY_WINDOW_MS).toISOString();
+      try {
+        const { data, error } = await state.supabase
+          .from('notifications')
+          .select('id,kind,title,body,icon,source_type,source_id,source_date,scheduled_at,read_at,dismissed_at,delivered_at,metadata,created_at')
+          .eq('household_id', state.household.id)
+          .eq('user_id', state.session.user.id)
+          .gte('scheduled_at', cutoff)
+          .is('dismissed_at', null)
+          .order('scheduled_at', { ascending: false })
+          .limit(500);
+        if (error) {
+          if (String(error.code) === '42P01' || /notifications/i.test(String(error.message || ''))) remoteSupported = false;
+          throw error;
+        }
+        remoteRows = (data || []).map(normalizeRemoteNotification);
+      } catch (error) {
+        remoteRows = [];
+        if (remoteSupported) console.warn('알림 이력을 불러오지 못했어요', error);
+      }
+      return remoteRows;
+    })().finally(() => { remoteLoadPromise = null; });
+
+    return remoteLoadPromise;
+  };
+
   const buildEventItems = (now) => {
     if (typeof state === 'undefined' || !Array.isArray(state.events)) return [];
     return state.events.flatMap((event) => {
       const config = eventReminderConfig(event.id);
-      const scheduledAt = eventReminderTimestamp(event, config);
-      if (!scheduledAt || scheduledAt < now - HISTORY_WINDOW_MS || scheduledAt > now + UPCOMING_WINDOW_MS) return [];
-      return [createItem({
-        id: `event:${event.id}:${scheduledAt}`,
+      const reminderAt = eventReminderTimestamp(event, config);
+      if (reminderAt && reminderAt >= now - HISTORY_WINDOW_MS && reminderAt <= now + UPCOMING_WINDOW_MS) {
+        return [createLocalItem({
+          id: `event:${event.id}:${reminderAt}`,
+          kind: 'event',
+          icon: '📅',
+          title: event.title,
+          body: `${event.member || '가족'} 일정 · ${event.time || '종일'}`,
+          scheduledAt: reminderAt,
+          sourceId: event.id,
+          sourceDate: event.date,
+          deliverable: true,
+          configurable: true,
+        })];
+      }
+
+      const scheduleAt = parseLocalDateTime(event.date, event.time || '23:59')?.getTime();
+      if (!scheduleAt || scheduleAt <= now || scheduleAt > now + UPCOMING_WINDOW_MS) return [];
+      return [createLocalItem({
+        id: `schedule:event:${event.id}:${scheduleAt}`,
         kind: 'event',
         icon: '📅',
         title: event.title,
         body: `${event.member || '가족'} 일정 · ${event.time || '종일'}`,
-        scheduledAt,
+        scheduledAt: scheduleAt,
         sourceId: event.id,
         sourceDate: event.date,
-        deliverable: true,
-        configurable: true,
+        deliverable: false,
+        configurable: false,
+        virtual: true,
+        allDay: !event.time,
       })];
     });
   };
@@ -237,20 +339,37 @@
   const buildTodoItems = (now) => todoSnapshot.flatMap((todo) => {
     if (!todo.id || todo.completed || !todo.dueDate) return [];
     const config = todoReminderConfig(todo.id);
-    const scheduledAt = todoReminderTimestamp(todo, config);
-    if (!scheduledAt || scheduledAt < now - HISTORY_WINDOW_MS || scheduledAt > now + UPCOMING_WINDOW_MS) return [];
-    return [createItem({
-      id: `todo:${todo.id}:${scheduledAt}`,
+    const configuredAt = todoReminderTimestamp(todo, config);
+    if (config.enabled && configuredAt && configuredAt >= now - HISTORY_WINDOW_MS && configuredAt <= now + UPCOMING_WINDOW_MS) {
+      return [createLocalItem({
+        id: `todo:${todo.id}:${configuredAt}`,
+        kind: 'todo',
+        icon: '✅',
+        title: todo.title,
+        body: `${todo.assignee || '가족'} 담당 · 마감 ${todo.dueDate.replaceAll('-', '.')}`,
+        scheduledAt: configuredAt,
+        sourceId: todo.id,
+        sourceDate: todo.dueDate,
+        deliverable: true,
+        configurable: true,
+      })];
+    }
+
+    const scheduleAt = parseLocalDateTime(todo.dueDate, '23:59')?.getTime();
+    if (!scheduleAt || scheduleAt <= now || scheduleAt > now + UPCOMING_WINDOW_MS) return [];
+    return [createLocalItem({
+      id: `schedule:todo:${todo.id}:${scheduleAt}`,
       kind: 'todo',
       icon: '✅',
       title: todo.title,
-      body: `${todo.assignee || '가족'} 담당 · 마감 ${formatDateTime(parseLocalDateTime(todo.dueDate, '09:00').getTime()).replace(/ 오전 9:00| 09:00/, '')}`,
-      scheduledAt,
+      body: `${todo.assignee || '가족'} 담당 · 마감 ${todo.dueDate.replaceAll('-', '.')}`,
+      scheduledAt: scheduleAt,
       sourceId: todo.id,
       sourceDate: todo.dueDate,
-      deliverable: config.enabled,
-      configurable: config.enabled,
-      fallback: !config.enabled,
+      deliverable: false,
+      configurable: false,
+      virtual: true,
+      allDay: true,
     })];
   });
 
@@ -270,7 +389,7 @@
     if (!scheduled) return [];
     if (scheduled.getTime() <= Date.now()) scheduled.setDate(scheduled.getDate() + 1);
     const scheduledAt = scheduled.getTime();
-    return [createItem({
+    return [createLocalItem({
       id: `briefing:${dateKey(scheduled)}:${settings.time}`,
       kind: 'briefing',
       icon: '🔔',
@@ -280,6 +399,7 @@
       sourceId: 'dailyBriefingSettings',
       deliverable: false,
       configurable: false,
+      virtual: true,
     })];
   };
 
@@ -307,14 +427,14 @@
     const target = ['breast', 'formula', 'all'].includes(settings.target) ? settings.target : 'breast';
     const latest = state.growthEntries
       .filter((entry) => (!entry.babyId || entry.babyId === state.activeBabyId) && feedingTypeOf(entry) && (target === 'all' || feedingTypeOf(entry) === target))
-      .map((entry) => ({ entry, timestamp: parseLocalDateTime(entry.date, entry.time || '00:00')?.getTime() || 0 }))
+      .map((entry) => ({ timestamp: parseLocalDateTime(entry.date, entry.time || '00:00')?.getTime() || 0 }))
       .filter((entry) => entry.timestamp > 0 && entry.timestamp <= now)
       .sort((left, right) => right.timestamp - left.timestamp)[0];
     const baseTimestamp = Math.max(latest?.timestamp || 0, Number(settings.enabledAt) || 0) || now;
     const scheduledAt = baseTimestamp + Math.max(15, Number(settings.intervalMinutes) || 180) * 60_000;
     if (scheduledAt < now - HISTORY_WINDOW_MS || scheduledAt > now + UPCOMING_WINDOW_MS) return [];
     const label = ({ breast: '모유', formula: '분유', all: '수유' })[target];
-    return [createItem({
+    return [createLocalItem({
       id: `feeding:${state.activeBabyId}:${target}:${baseTimestamp}`,
       kind: 'feeding',
       icon: '🍼',
@@ -324,11 +444,12 @@
       sourceId: state.activeBabyId,
       deliverable: false,
       configurable: false,
+      virtual: true,
     })];
   };
 
   const pruneStore = () => {
-    const cutoff = Date.now() - 90 * DAY_MS;
+    const cutoff = Date.now() - HISTORY_WINDOW_MS;
     ['read', 'dismissed', 'delivered'].forEach((name) => {
       Object.entries(store[name]).forEach(([id, timestamp]) => {
         if (Number(timestamp) < cutoff) delete store[name][id];
@@ -343,9 +464,9 @@
   };
 
   const visibleItems = () => items.filter((item) => !item.dismissed);
-  const newItems = () => visibleItems().filter((item) => item.scheduledAt <= Date.now() && !item.read);
+  const newItems = () => visibleItems().filter((item) => !item.virtual && item.scheduledAt <= Date.now() && !item.read);
   const upcomingItems = () => visibleItems().filter((item) => item.scheduledAt > Date.now());
-  const historyItems = () => visibleItems().filter((item) => item.scheduledAt <= Date.now() && item.read);
+  const historyItems = () => visibleItems().filter((item) => !item.virtual && item.scheduledAt <= Date.now() && item.read);
 
   const showSystemNotification = async (item) => {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -369,7 +490,7 @@
 
   const deliverDueItems = async () => {
     const now = Date.now();
-    const due = items.filter((item) => item.deliverable && !item.dismissed && !item.delivered && item.scheduledAt <= now && item.scheduledAt >= now - DAY_MS);
+    const due = items.filter((item) => !item.persistent && item.deliverable && !item.dismissed && !item.delivered && item.scheduledAt <= now && item.scheduledAt >= now - DAY_MS);
     if (!due.length) return;
     due.forEach((item) => { store.delivered[item.id] = now; item.delivered = true; });
     persist();
@@ -409,7 +530,7 @@
         <button type="button" data-notification-filter="history" role="tab">지난 알림 <span>0</span></button>
       </nav>
       <div class="notification-center-list" id="notificationCenterList" aria-live="polite"></div>
-      <p class="notification-center-guide">일정·할 일에서 알림 시간을 정할 수 있어요. 시스템 알림은 설정에서 허용한 기기에서 표시됩니다.</p>
+      <p class="notification-center-guide">앞으로의 일정·할 일과 가족 변경 알림을 한곳에 모아 보여줘요.</p>
     </div>`;
   document.body.appendChild(dialog);
 
@@ -417,12 +538,12 @@
   const markAllButton = dialog.querySelector('#notificationMarkAllRead');
 
   const emptyCopy = {
-    new: ['새 알림이 없어요', '놓친 일정과 할 일이 생기면 여기에 모아드려요.'],
-    upcoming: ['예정된 알림이 없어요', '일정이나 할 일에서 알림 시간을 추가해 보세요.'],
-    history: ['지난 알림이 없어요', '확인한 알림이 여기에 남아요.'],
+    new: ['새 알림이 없어요', '가족 일정 변경이나 마감 알림이 생기면 여기에 표시돼요.'],
+    upcoming: ['예정된 일정이 없어요', '앞으로의 일정과 마감 있는 할 일이 자동으로 표시돼요.'],
+    history: ['지난 알림이 없어요', '확인한 알림이 모든 기기에서 여기에 남아요.'],
   };
 
-  const itemActionLabel = (item) => ({ event: '일정 열기', todo: '할 일 열기', feeding: '성장 기록 열기', briefing: '설정 열기' })[item.kind] || '열기';
+  const itemActionLabel = (item) => ({ event: '일정 열기', todo: '할 일 열기', feeding: '성장 기록 열기', briefing: '설정 열기' })[item.kind] || '확인';
 
   const renderList = () => {
     const counts = { new: newItems().length, upcoming: upcomingItems().length, history: historyItems().length };
@@ -444,17 +565,17 @@
     }
 
     list.innerHTML = filtered.map((item) => `
-      <article class="notification-item${item.read ? ' read' : ''}${item.fallback ? ' fallback' : ''}" data-notification-id="${escapeHtml(item.id)}">
+      <article class="notification-item${item.read ? ' read' : ''}${item.virtual ? ' fallback' : ''}" data-notification-id="${escapeHtml(item.id)}">
         <div class="notification-delete-backdrop"><span>삭제</span></div>
         <div class="notification-item-foreground">
           <button class="notification-item-main" type="button" data-notification-open>
-            <span class="notification-item-icon" aria-hidden="true">${item.icon}</span>
+            <span class="notification-item-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
             <span class="notification-item-copy">
               <strong>${escapeHtml(item.title)}</strong>
               <small>${escapeHtml(item.body)}</small>
-              <em>${escapeHtml(formatDateTime(item.scheduledAt))} · ${escapeHtml(relativeTime(item.scheduledAt))}</em>
+              <em>${escapeHtml(formatDateTime(item.scheduledAt, item.allDay))} · ${escapeHtml(relativeTime(item.scheduledAt))}</em>
             </span>
-            ${!item.read && item.scheduledAt <= Date.now() ? '<i class="notification-unread-dot" aria-label="읽지 않음"></i>' : ''}
+            ${!item.read && !item.virtual && item.scheduledAt <= Date.now() ? '<i class="notification-unread-dot" aria-label="읽지 않음"></i>' : ''}
           </button>
           <div class="notification-item-actions">
             <button type="button" data-notification-open>${itemActionLabel(item)}</button>
@@ -487,11 +608,15 @@
     requestAnimationFrame(render);
   };
 
-  const refresh = async ({ forceTodos = false } = {}) => {
+  const refresh = async ({ forceTodos = false, forceRemote = false } = {}) => {
     ensureScope();
-    await loadTodos({ force: forceTodos });
+    await Promise.all([
+      loadTodos({ force: forceTodos }),
+      loadRemoteNotifications({ force: forceRemote }),
+    ]);
     const now = Date.now();
     items = [
+      ...remoteRows,
       ...buildEventItems(now),
       ...buildTodoItems(now),
       ...buildFeedingItem(now),
@@ -503,17 +628,44 @@
     queueRender();
   };
 
-  const markRead = (item) => {
-    store.read[item.id] = Date.now();
-    item.read = true;
-    persist();
+  const updateRemote = async (item, patch) => {
+    if (!item.persistent || !item.remoteId || !remoteReady()) return true;
+    const { error } = await state.supabase
+      .from('notifications')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('id', item.remoteId)
+      .eq('user_id', state.session.user.id)
+      .eq('household_id', state.household.id);
+    if (error) {
+      console.warn('알림 상태를 동기화하지 못했어요', error);
+      return false;
+    }
+    return true;
   };
 
-  const dismissItem = (item) => {
-    store.dismissed[item.id] = Date.now();
+  const markRead = async (item) => {
+    if (item.read || item.virtual) return;
+    const now = Date.now();
+    item.read = true;
+    if (item.persistent) {
+      await updateRemote(item, { read_at: new Date(now).toISOString() });
+    } else {
+      store.read[item.id] = now;
+      persist();
+    }
+    queueRender();
+  };
+
+  const dismissItem = async (item) => {
+    const now = Date.now();
     item.dismissed = true;
-    persist();
-    refresh();
+    if (item.persistent) {
+      await updateRemote(item, { dismissed_at: new Date(now).toISOString() });
+    } else {
+      store.dismissed[item.id] = now;
+      persist();
+    }
+    await refresh({ forceRemote: item.persistent });
   };
 
   const disableItem = (item) => {
@@ -531,28 +683,31 @@
   };
 
   const waitForTodoItem = (todoId, attempt = 0) => {
-    const row = document.querySelector(`[data-todo-id="${CSS.escape(todoId)}"] [data-todo-edit]`);
+    const escaped = window.CSS?.escape ? window.CSS.escape(todoId) : String(todoId).replace(/["\\]/g, '\\$&');
+    const row = document.querySelector(`[data-todo-id="${escaped}"] [data-todo-edit]`);
     if (row) return row.click();
     if (attempt < 20) setTimeout(() => waitForTodoItem(todoId, attempt + 1), 100);
   };
 
-  const openSource = (item) => {
-    markRead(item);
+  const openSource = async (item) => {
+    await markRead(item);
     dialog.close();
-    if (item.kind === 'event' && typeof state !== 'undefined') {
-      const event = state.events?.find((entry) => entry.id === item.sourceId);
-      if (!event) return;
+    if ((item.kind === 'event' || item.sourceType === 'event') && typeof state !== 'undefined') {
+      const event = state.events?.find((entry) => String(entry.id) === String(item.sourceId));
       if (typeof window.switchView === 'function') window.switchView('calendar');
-      state.selectedDate = event.date;
-      if (typeof window.parseDate === 'function' && typeof window.startOfMonth === 'function') state.viewDate = window.startOfMonth(window.parseDate(event.date));
-      if (typeof window.render === 'function') window.render();
-      if (typeof window.openEventDialog === 'function') window.openEventDialog(event);
+      const targetDate = event?.date || item.sourceDate;
+      if (targetDate) {
+        state.selectedDate = targetDate;
+        if (typeof window.parseDate === 'function' && typeof window.startOfMonth === 'function') state.viewDate = window.startOfMonth(window.parseDate(targetDate));
+        if (typeof window.render === 'function') window.render();
+      }
+      if (event && typeof window.openEventDialog === 'function') window.openEventDialog(event);
       return;
     }
-    if (item.kind === 'todo') {
+    if (item.kind === 'todo' || item.sourceType === 'todo') {
       if (typeof window.switchView === 'function') window.switchView('calendar');
       document.querySelector('[data-calendar-mode="todo"]')?.click();
-      waitForTodoItem(item.sourceId);
+      if (item.sourceId) waitForTodoItem(item.sourceId);
       return;
     }
     if (item.kind === 'feeding') {
@@ -611,11 +766,25 @@
     persist();
     renderList();
   });
-  markAllButton.addEventListener('click', () => {
-    const now = Date.now();
-    newItems().forEach((item) => { store.read[item.id] = now; item.read = true; });
+  markAllButton.addEventListener('click', async () => {
+    const now = new Date().toISOString();
+    const current = newItems();
+    const remoteIds = current.filter((item) => item.persistent && item.remoteId).map((item) => item.remoteId);
+    current.forEach((item) => {
+      item.read = true;
+      if (!item.persistent) store.read[item.id] = Date.now();
+    });
     persist();
     render();
+    if (remoteIds.length && remoteReady()) {
+      const { error } = await state.supabase
+        .from('notifications')
+        .update({ read_at: now, updated_at: now })
+        .in('id', remoteIds)
+        .eq('user_id', state.session.user.id)
+        .eq('household_id', state.household.id);
+      if (error) console.warn('모두 읽음 상태를 동기화하지 못했어요', error);
+    }
   });
   list.addEventListener('click', (event) => {
     const article = event.target.closest('[data-notification-id]');
@@ -627,7 +796,7 @@
     else if (event.target.closest('[data-notification-open]')) openSource(item);
   });
   button.addEventListener('click', async () => {
-    await refresh({ forceTodos: true });
+    await refresh({ forceTodos: true, forceRemote: true });
     if (!dialog.open) dialog.showModal();
     renderList();
   });
@@ -656,7 +825,7 @@
       id: 'eventReminderPreset',
       customId: 'eventReminderCustomAt',
       options: '<option value="none">알림 없음</option><option value="at-time">정시</option><option value="before-10">10분 전</option><option value="before-60">1시간 전</option><option value="custom">직접 설정</option>',
-      help: '앱이 열려 있으면 목록과 시스템 알림으로 알려줘요.',
+      help: '알림을 따로 켜지 않아도 예정 탭에는 일정이 자동으로 표시돼요.',
     });
     timeField.insertAdjacentElement('afterend', field);
     const preset = field.querySelector('#eventReminderPreset');
@@ -689,7 +858,7 @@
             enabled: selectedPreset !== 'none',
           };
           persist();
-          refresh();
+          refresh({ forceRemote: true });
         }
         return saved;
       };
@@ -723,7 +892,7 @@
       id: 'todoReminderPreset',
       customId: 'todoReminderCustomAt',
       options: '<option value="none">알림 없음</option><option value="due-morning">마감일 오전 9시</option><option value="day-before">하루 전 오전 9시</option><option value="custom">직접 설정</option>',
-      help: '알림이 없어도 오늘·기한 초과 할 일은 알림 목록에서 확인할 수 있어요.',
+      help: '마감일이 있으면 알림을 끈 상태에서도 예정 탭에 자동으로 표시돼요.',
     });
     recurrence.closest('label')?.insertAdjacentElement('afterend', field);
     const preset = field.querySelector('#todoReminderPreset');
@@ -780,26 +949,53 @@
     if (attempt < 60) setTimeout(() => observeTodoList(attempt + 1), 100);
   };
 
+  const syncRealtime = () => {
+    const nextScope = remoteReady() ? scopeKey() : '';
+    if (nextScope === realtimeScope) return;
+    if (realtimeChannel && typeof state !== 'undefined' && state.supabase) {
+      state.supabase.removeChannel(realtimeChannel).catch(() => {});
+    }
+    realtimeChannel = null;
+    realtimeScope = nextScope;
+    if (!nextScope) return;
+    realtimeChannel = state.supabase
+      .channel(`family-notifications-${state.session.user.id}-${state.household.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${state.session.user.id}`,
+      }, () => refresh({ forceRemote: true }))
+      .subscribe();
+  };
+
   window.addEventListener('familycontextchange', () => {
     store = null;
     ensureScope();
-    refresh({ forceTodos: true });
+    syncRealtime();
+    refresh({ forceTodos: true, forceRemote: true });
   });
   window.addEventListener('family:growth-entry-saved', () => refresh());
-  window.addEventListener('focus', () => refresh({ forceTodos: true }));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh({ forceTodos: true }); });
+  window.addEventListener('focus', () => refresh({ forceTodos: true, forceRemote: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refresh({ forceTodos: true, forceRemote: true });
+  });
   window.addEventListener('storage', (event) => {
     if (!event.key || event.key.startsWith(STORAGE_PREFIX) || event.key.startsWith('family-feeding-reminder-v1') || event.key.startsWith('family-daily-briefing-v1')) {
       store = null;
       ensureScope();
-      refresh({ forceTodos: true });
+      refresh({ forceTodos: true, forceRemote: true });
     }
   });
 
   store = readStore();
   installFormFields();
   observeTodoList();
-  refresh({ forceTodos: true });
-  refreshTimer = setInterval(() => refresh(), POLL_INTERVAL_MS);
-  window.addEventListener('pagehide', () => clearInterval(refreshTimer), { once: true });
+  syncRealtime();
+  refresh({ forceTodos: true, forceRemote: true });
+  refreshTimer = setInterval(() => refresh({ forceRemote: true }), POLL_INTERVAL_MS);
+  window.addEventListener('pagehide', () => {
+    clearInterval(refreshTimer);
+    if (realtimeChannel && typeof state !== 'undefined' && state.supabase) state.supabase.removeChannel(realtimeChannel);
+  }, { once: true });
 })();

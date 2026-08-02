@@ -19,6 +19,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/refresh-button.css") ||
     url.pathname.endsWith("/refresh-button.js") ||
     url.pathname.endsWith("/notification-center.css") ||
+    url.pathname.endsWith("/notification-center.js") ||
     url.pathname.endsWith("/settings-layout-polish.css") ||
     url.pathname.endsWith("/settings-refresh.css") ||
     url.pathname.endsWith("/settings-refresh.js") ||
