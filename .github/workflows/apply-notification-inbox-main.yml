@@ -1,34 +1,41 @@
-name: Apply notification inbox to main
+name: Apply notification inbox PR
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-    paths:
-      - .github/workflows/apply-notification-inbox-main.yml
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/notification-inbox-20260802'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: feature/notification-inbox-20260802
           fetch-depth: 0
 
-      - name: Rebuild and verify sources
+      - name: Rebuild, verify, and commit final sources
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin feature/notification-inbox-20260802
-          source_ref='origin/feature/notification-inbox-20260802'
+          git fetch origin main feature/notification-inbox-20260802
+          git merge origin/main --no-edit
 
-          for file in $(git ls-tree -r --name-only "$source_ref" -- .notification-update \
-            | grep 'notification-center.js.b64' \
-            | sort); do
-            git show "$source_ref:$file"
+          if ! compgen -G '.notification-update/notification-center.js.b64.*' > /dev/null; then
+            echo 'Notification inbox sources are already applied.'
+            exit 0
+          fi
+
+          for file in $(find .notification-update -maxdepth 1 -type f -name 'notification-center.js.b64.*' | sort); do
+            cat "$file"
           done | base64 --decode > notification-center.js
 
           for file in \
@@ -40,11 +47,11 @@ jobs:
             .notification-final/edge.07 \
             .notification-final/edge.08 \
             .notification-final/edge.09; do
-            git show "$source_ref:$file"
+            cat "$file"
           done | base64 --decode > supabase/functions/daily-briefing-push/index.ts
 
-          git show "$source_ref:.notification-final/20260802_notification_history.sql" \
-            > supabase/migrations/20260802_notification_history.sql
+          cp .notification-final/20260802_notification_history.sql \
+            supabase/migrations/20260802_notification_history.sql
 
           printf '%s  %s\n' \
             'cd5a650ffb2b16ea86016b07f5d21869b239b92bff2ffad2f432655d36380b3e' \
@@ -86,13 +93,13 @@ jobs:
           node --check service-worker.js
           node --check config.js
 
-      - name: Commit final implementation
-        shell: bash
-        run: |
-          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/apply-notification-inbox-main.yml
+          git rm -r --ignore-unmatch \
+            .notification-update \
+            .notification-final \
+            .github/workflows/apply-notification-inbox.yml \
+            .github/workflows/apply-notification-inbox-main.yml
           git add \
             notification-center.js \
             service-worker.js \
@@ -100,6 +107,4 @@ jobs:
             supabase/functions/daily-briefing-push/index.ts \
             supabase/migrations/20260802_notification_history.sql
           git commit -m '알림 목록과 이력 동기화 구현'
-          git push
-
-# retrigger: 2026-08-02T22:14+09:00
+          git push origin HEAD:feature/notification-inbox-20260802
