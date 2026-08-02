@@ -1,0 +1,357 @@
+@import url("./growth-delete-sync.css?v=20260802-theme-system-v1");
+
+/*
+ * Family theme system
+ * -------------------
+ * This file is the final semantic theme layer. Component modules may keep
+ * their layout rules, but theme colors should resolve through these tokens.
+ * The black choice is intentionally keyed by data-family-theme-choice so it
+ * no longer depends on the legacy black -> night CSS alias.
+ */
+
+:root {
+  --theme-canvas: var(--bg);
+  --theme-surface: var(--surface);
+  --theme-surface-raised: var(--surface-2);
+  --theme-surface-soft: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+  --theme-control: var(--surface-2);
+  --theme-control-active: var(--blue);
+  --theme-border: var(--separator);
+  --theme-border-strong: color-mix(in srgb, var(--label) 18%, transparent);
+  --theme-text: var(--label);
+  --theme-text-muted: var(--secondary);
+  --theme-text-subtle: var(--tertiary);
+  --theme-accent: var(--blue);
+  --theme-accent-contrast: #fff;
+  --theme-progress-track: color-mix(in srgb, var(--surface-2) 88%, var(--surface));
+  --theme-progress-fill: var(--blue);
+  --theme-shadow: var(--shadow);
+  --theme-overlay: rgba(0, 0, 0, .36);
+}
+
+html[data-family-theme-choice="black"] {
+  color-scheme: dark;
+  --theme-canvas: #050505;
+  --theme-surface: #111111;
+  --theme-surface-raised: #1a1a1a;
+  --theme-surface-soft: #161616;
+  --theme-control: #202020;
+  --theme-control-active: #303030;
+  --theme-border: rgba(255, 255, 255, .12);
+  --theme-border-strong: rgba(255, 255, 255, .20);
+  --theme-text: #f5f5f5;
+  --theme-text-muted: #b9b9b9;
+  --theme-text-subtle: #858585;
+  --theme-accent: #d7d7d7;
+  --theme-accent-contrast: #090909;
+  --theme-progress-track: #252525;
+  --theme-progress-fill: linear-gradient(90deg, #777, #d0d0d0);
+  --theme-shadow: 0 18px 44px rgba(0, 0, 0, .42);
+  --theme-overlay: rgba(0, 0, 0, .68);
+
+  /* Legacy variables remain mapped while components migrate to tokens. */
+  --bg: var(--theme-canvas) !important;
+  --surface: var(--theme-surface) !important;
+  --surface-2: var(--theme-surface-raised) !important;
+  --separator: var(--theme-border) !important;
+  --label: var(--theme-text) !important;
+  --secondary: var(--theme-text-muted) !important;
+  --tertiary: var(--theme-text-subtle) !important;
+  --blue: var(--theme-accent) !important;
+  --theme-accent-rgb: 215, 215, 215 !important;
+  --theme-hero-start: #252525 !important;
+  --theme-hero-end: #111111 !important;
+  --theme-tab-bg: rgba(6, 6, 6, .96) !important;
+  --theme-tab-active: #292929 !important;
+  --night-bg-deep: var(--theme-canvas) !important;
+  --night-panel: var(--theme-surface) !important;
+  --night-panel-raised: var(--theme-surface-raised) !important;
+  --night-panel-soft: var(--theme-control) !important;
+  --night-line: var(--theme-border) !important;
+  --night-blue: var(--theme-accent) !important;
+  --ui-card: rgba(17, 17, 17, .98) !important;
+  --ui-card-muted: rgba(26, 26, 26, .96) !important;
+  --ui-border: var(--theme-border) !important;
+  --ui-accent-soft: rgba(255, 255, 255, .07) !important;
+}
+
+html[data-family-theme-choice="black"],
+html[data-family-theme-choice="black"] body {
+  color: var(--theme-text) !important;
+  background: var(--theme-canvas) !important;
+}
+
+/* Reusable semantic primitives for current and future modules. */
+html[data-family-theme-choice="black"] :is(.theme-surface, [data-theme-surface="base"]) {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface) !important;
+  box-shadow: var(--theme-shadow) !important;
+}
+
+html[data-family-theme-choice="black"] :is(.theme-surface-raised, [data-theme-surface="raised"]) {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface-raised) !important;
+}
+
+html[data-family-theme-choice="black"] :is(.theme-control, [data-theme-control]) {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+  background: var(--theme-control) !important;
+}
+
+/* Catch controls created or restyled after their feature module loads. */
+html[data-family-theme-choice="black"] :is(
+  #calendarView,
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .notification-center-panel,
+  .account-panel,
+  .sheet-panel,
+  .sheet-dialog form
+) :is(button, [role="button"]):not(.danger-button):not([data-delete]) {
+  border-color: rgba(255, 255, 255, .13) !important;
+  background-color: var(--theme-control) !important;
+  background-image: linear-gradient(145deg, #2d2d2d, #171717) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme-choice="black"] :is(
+  #calendarView,
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .notification-center-panel,
+  .account-panel,
+  .sheet-panel,
+  .sheet-dialog form
+) :is(button.active, button[aria-selected="true"], button[aria-pressed="true"], [role="button"].active) {
+  color: #fff !important;
+  border-color: var(--theme-border-strong) !important;
+  background-color: var(--theme-control-active) !important;
+  background-image: linear-gradient(145deg, #404040, #222) !important;
+}
+
+html[data-family-theme-choice="black"] :is(input, select, textarea) {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+  background-color: var(--theme-surface-raised) !important;
+  color-scheme: dark;
+}
+
+html[data-family-theme-choice="black"] :is(input, textarea)::placeholder {
+  color: #777 !important;
+}
+
+/* Preserve theme thumbnails while their surrounding option stays black. */
+html[data-family-theme-choice="black"] #settingsView .theme-preview {
+  background-color: initial;
+}
+
+/* Neutral badges, tracks and utility shells. */
+html[data-family-theme-choice="black"] :is(
+  .count-badge,
+  .quick-now-badge,
+  .care-live-badge,
+  .settings-current-theme,
+  .global-admin-section-head > strong,
+  .global-admin-user-status b,
+  .global-admin-household-head > b,
+  .admin-recent-summary,
+  .admin-user-chart,
+  .notification-reminder-field
+) {
+  color: #d5d5d5 !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background-color: #181818 !important;
+  background-image: none !important;
+}
+
+html[data-family-theme-choice="black"] :is(
+  .admin-user-chart-track,
+  .english-progress,
+  .care-progress,
+  .progress-track
+) {
+  background: var(--theme-progress-track) !important;
+}
+
+html[data-family-theme-choice="black"] :is(
+  .admin-user-chart-bar,
+  .english-progress i,
+  .care-progress i,
+  .progress-track > i
+) {
+  background: var(--theme-progress-fill) !important;
+}
+
+/* Floating utilities live outside page containers. */
+html[data-family-theme-choice="black"] body :is(
+  #addEventButton.fab,
+  .refresh-button,
+  .settings-refresh-action,
+  .notification-center-button,
+  .avatar-button
+) {
+  color: #f5f5f5 !important;
+  border-color: rgba(255, 255, 255, .17) !important;
+  background-color: #1b1b1b !important;
+  background-image: linear-gradient(145deg, #292929, #151515) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+/* Sheets and dialogs share one neutral frame. */
+html[data-family-theme-choice="black"] body .sheet-dialog {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border-strong) !important;
+  background: linear-gradient(180deg, #111 0%, #070707 100%) !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .68), inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+}
+
+html[data-family-theme-choice="black"] body .sheet-dialog::backdrop {
+  background: var(--theme-overlay) !important;
+}
+
+html[data-family-theme-choice="black"] .sheet-dialog :is(.sheet-handle) {
+  background: #4a4a4a !important;
+}
+
+html[data-family-theme-choice="black"] .sheet-dialog :is(.dialog-actions) {
+  border-top-color: rgba(255, 255, 255, .10) !important;
+  background: linear-gradient(180deg, rgba(8, 8, 8, .82), #080808 28%) !important;
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, .54) !important;
+}
+
+/* Event editor: no component-owned navy palette may escape the theme tokens. */
+html[data-family-theme-choice="black"] body #eventDialog {
+  --event-sheet-bg: #080808 !important;
+  --event-panel: #151515 !important;
+  --event-panel-soft: #101010 !important;
+  --event-line: rgba(255, 255, 255, .12) !important;
+  --event-line-strong: rgba(255, 255, 255, .20) !important;
+  --event-action-bg: rgba(8, 8, 8, .98) !important;
+  --event-frame-line: rgba(255, 255, 255, .18) !important;
+  --event-frame-line-soft: rgba(255, 255, 255, .10) !important;
+  --event-frame-footer: rgba(8, 8, 8, .98) !important;
+  color: var(--theme-text) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  background: radial-gradient(circle at 92% 2%, rgba(255, 255, 255, .035), transparent 16rem), linear-gradient(180deg, #111 0%, #070707 100%) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog #eventForm {
+  background: transparent !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .dialog-header .eyebrow {
+  color: #a9a9a9 !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .close-button {
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  background-color: #1a1a1a !important;
+  background-image: linear-gradient(145deg, #292929, #151515) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog :is(
+  #eventTitle,
+  .event-date-fields input,
+  #eventTimeField input,
+  .notification-reminder-field select,
+  .notification-reminder-field input,
+  #eventNote
+) {
+  color: var(--theme-text) !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background: var(--event-panel) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  color-scheme: dark !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .date-shortcuts {
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: var(--event-panel-soft) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .date-shortcuts button {
+  color: #bdbdbd !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .date-shortcuts button.active {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .17) !important;
+  background-color: #303030 !important;
+  background-image: linear-gradient(145deg, #464646, #252525) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog :is(.all-day-row, .notification-reminder-field) {
+  color: var(--theme-text) !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #111 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .ios-switch span {
+  background: #3a3a3a !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .ios-switch input:checked + span {
+  background: #777 !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .notification-reminder-field::before {
+  border-color: rgba(255, 255, 255, .14) !important;
+  background-color: #242424 !important;
+  filter: grayscale(1) brightness(1.45) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .notification-reminder-field .notification-custom-time {
+  border-top-color: rgba(255, 255, 255, .14) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .member-selector button {
+  color: #bdbdbd !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background-color: #151515 !important;
+  background-image: linear-gradient(145deg, #202020, #121212) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .member-selector button.selected {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+  background-color: #2a2a2a !important;
+  background-image: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .member-selector .member-selector-add {
+  color: #d5d5d5 !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  background-color: #181818 !important;
+  background-image: linear-gradient(145deg, #242424, #141414) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .member-selector .member-selector-add i {
+  color: #111 !important;
+  background: linear-gradient(145deg, #ededed, #a9a9a9) !important;
+}
+
+html[data-family-theme-choice="black"] #eventDialog .primary-button {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  background-color: #242424 !important;
+  background-image: linear-gradient(145deg, #383838, #191919) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
