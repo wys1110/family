@@ -104,14 +104,30 @@ Deno.serve(async (request: Request) => {
     if (error) return json({ error: "SUBSCRIPTION_LOAD_FAILED" }, 500);
     if (!subscriptions?.length) return json({ error: "SUBSCRIPTION_NOT_FOUND" }, 404);
 
+    const local = localClock(new Date(), subscriptions[0].timezone);
+    const events = await loadEvents(serviceClient, householdId, local.date);
+    const payload = buildPayload(local.date, events, true);
+    const notificationId = await upsertNotification(serviceClient, {
+      householdId,
+      userId: user.id,
+      kind: "daily_briefing",
+      title: payload.title,
+      body: payload.body,
+      icon: "🔔",
+      sourceType: "briefing",
+      sourceId: local.date,
+      sourceDate: local.date,
+      scheduledAt: new Date().toISOString(),
+      dedupeKey: `briefing-test:${crypto.randomUUID()}`,
+      metadata: { test: true, date: local.date, url: payload.url },
+    });
+
     let sent = 0;
     for (const subscription of subscriptions) {
-      const local = localClock(new Date(), subscription.timezone);
-      const events = await loadEvents(serviceClient, subscription.household_id, local.date);
-      const payload = buildPayload(local.date, events, true);
       const result = await sendPush(serviceClient, subscription, payload, { markSent: false });
       if (result === "sent") sent += 1;
     }
+    if (notificationId && sent) await markNotificationDelivered(serviceClient, notificationId);
     return json({ sent });
   }
 
@@ -119,6 +135,36 @@ Deno.serve(async (request: Request) => {
     if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
     const change = normalizeEventChange(body.change);
     if (!change) return json({ error: "INVALID_EVENT_CHANGE" }, 400);
+
+    const payload = buildEventChangePayload(change);
+    const { data: members, error: memberError } = await serviceClient
+      .from("household_members")
+      .select("user_id")
+      .eq("household_id", householdId)
+      .neq("user_id", user.id)
+      .limit(500);
+    if (memberError) return json({ error: "MEMBER_LOAD_FAILED" }, 500);
+
+    const occurrence = new Date().toISOString();
+    const recipientIds = [...new Set((members || []).map((member) => member.user_id).filter(Boolean))];
+    const notificationIds = new Map<string, string>();
+    for (const recipientId of recipientIds) {
+      const notificationId = await upsertNotification(serviceClient, {
+        householdId,
+        userId: recipientId,
+        kind: "event_change",
+        title: payload.title,
+        body: payload.body,
+        icon: "📅",
+        sourceType: "event",
+        sourceId: change.id || null,
+        sourceDate: change.date,
+        scheduledAt: occurrence,
+        dedupeKey: `event-change:${change.kind}:${change.id || change.date}:${occurrence}:${recipientId}`,
+        metadata: { kind: change.kind, date: change.date, endDate: change.endDate, url: payload.url },
+      });
+      if (notificationId) notificationIds.set(recipientId, notificationId);
+    }
 
     const { data: subscriptions, error } = await serviceClient.from("push_subscriptions")
       .select("id,user_id,household_id,endpoint,p256dh,auth,timezone,briefing_time")
@@ -129,17 +175,23 @@ Deno.serve(async (request: Request) => {
       .limit(100);
     if (error) return json({ error: "SUBSCRIPTION_LOAD_FAILED" }, 500);
 
-    const payload = buildEventChangePayload(change);
     let sent = 0;
     let expired = 0;
     let failed = 0;
+    const deliveredUsers = new Set<string>();
     for (const subscription of subscriptions || []) {
       const result = await sendPush(serviceClient, subscription, payload, { markSent: false });
-      if (result === "sent") sent += 1;
-      else if (result === "expired") expired += 1;
+      if (result === "sent") {
+        sent += 1;
+        deliveredUsers.add(subscription.user_id);
+      } else if (result === "expired") expired += 1;
       else failed += 1;
     }
-    return json({ scanned: subscriptions?.length || 0, sent, expired, failed });
+    for (const recipientId of deliveredUsers) {
+      const notificationId = notificationIds.get(recipientId);
+      if (notificationId) await markNotificationDelivered(serviceClient, notificationId);
+    }
+    return json({ scanned: subscriptions?.length || 0, recipients: recipientIds.length, sent, expired, failed });
   }
 
   return json({ error: "UNKNOWN_ACTION" }, 400);
@@ -169,6 +221,7 @@ async function dispatchDueBriefings(serviceClient) {
 
   const now = new Date();
   const eventCache = new Map<string, unknown[]>();
+  const notificationCache = new Map<string, string>();
   let due = 0;
   let sent = 0;
   let expired = 0;
@@ -186,12 +239,35 @@ async function dispatchDueBriefings(serviceClient) {
       eventCache.set(cacheKey, events);
     }
 
-    const result = await sendPush(serviceClient, subscription, buildPayload(local.date, events, false), {
+    const payload = buildPayload(local.date, events, false);
+    const notificationKey = `${subscription.user_id}:${subscription.household_id}:${local.date}`;
+    let notificationId = notificationCache.get(notificationKey);
+    if (!notificationId) {
+      notificationId = await upsertNotification(serviceClient, {
+        householdId: subscription.household_id,
+        userId: subscription.user_id,
+        kind: "daily_briefing",
+        title: payload.title,
+        body: payload.body,
+        icon: "🔔",
+        sourceType: "briefing",
+        sourceId: local.date,
+        sourceDate: local.date,
+        scheduledAt: now.toISOString(),
+        dedupeKey: `daily-briefing:${local.date}`,
+        metadata: { date: local.date, url: payload.url, eventCount: events.length },
+      });
+      if (notificationId) notificationCache.set(notificationKey, notificationId);
+    }
+
+    const result = await sendPush(serviceClient, subscription, payload, {
       markSent: true,
       localDate: local.date,
     });
-    if (result === "sent") sent += 1;
-    else if (result === "expired") expired += 1;
+    if (result === "sent") {
+      sent += 1;
+      if (notificationId) await markNotificationDelivered(serviceClient, notificationId);
+    } else if (result === "expired") expired += 1;
     else failed += 1;
   }
 
@@ -268,6 +344,36 @@ function shortKoreanDate(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
   if (!match) return "일정 날짜";
   return `${Number(match[2])}월 ${Number(match[3])}일`;
+}
+
+async function upsertNotification(serviceClient, input) {
+  const { data, error } = await serviceClient.from("notifications").upsert({
+    household_id: input.householdId,
+    user_id: input.userId,
+    kind: input.kind,
+    title: input.title,
+    body: input.body,
+    icon: input.icon,
+    source_type: input.sourceType || null,
+    source_id: input.sourceId || null,
+    source_date: input.sourceDate || null,
+    scheduled_at: input.scheduledAt || new Date().toISOString(),
+    dedupe_key: input.dedupeKey,
+    metadata: input.metadata || {},
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id,household_id,dedupe_key" }).select("id").single();
+  if (error) {
+    console.error("NOTIFICATION_UPSERT_FAILED", error.code || safeError(error));
+    return "";
+  }
+  return data?.id || "";
+}
+
+async function markNotificationDelivered(serviceClient, notificationId: string) {
+  await serviceClient.from("notifications").update({
+    delivered_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq("id", notificationId);
 }
 
 async function sendPush(serviceClient, subscription, payload, options) {
