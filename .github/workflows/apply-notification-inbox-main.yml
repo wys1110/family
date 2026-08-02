@@ -101,3 +101,5 @@ jobs:
             supabase/migrations/20260802_notification_history.sql
           git commit -m '알림 목록과 이력 동기화 구현'
           git push
+
+# retrigger: 2026-08-02T22:14+09:00
