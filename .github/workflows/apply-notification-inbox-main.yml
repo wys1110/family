@@ -26,6 +26,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin main feature/notification-inbox-20260802
           git merge origin/main --no-edit
 
@@ -93,13 +95,12 @@ jobs:
           node --check service-worker.js
           node --check config.js
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm -r --ignore-unmatch \
             .notification-update \
             .notification-final \
             .github/workflows/apply-notification-inbox.yml \
-            .github/workflows/apply-notification-inbox-main.yml
+            .github/workflows/apply-notification-inbox-main.yml \
+            x
           git add \
             notification-center.js \
             service-worker.js \
