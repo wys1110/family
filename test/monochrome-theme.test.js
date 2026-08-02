@@ -7,14 +7,22 @@ const settings = read("settings.js");
 const palette = read("monochrome-theme.css");
 const floatingActions = read("refresh-button.css");
 const blackThemeCleanup = read("growth-delete-sync.css");
+const finalBlackTheme = read("black-theme-final.css");
+const themeSystem = read("theme-system.css");
+const serviceWorker = read("service-worker.js");
 
 describe("white and black themes", () => {
-  test("loads the monochrome palette after the starry-night palette", () => {
+  test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260802-final-black-v2", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
+    expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
+    expect(finalBlackTheme.trim()).toBe('@import url("./theme-system.css?v=20260802-theme-system-v1");');
+    expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
+    expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
   });
 
   test("bootstraps stored white and black choices before modules load", () => {
@@ -38,27 +46,56 @@ describe("white and black themes", () => {
     expect(palette).toContain('html[data-family-theme="white"]');
     expect(palette).toContain('--surface: #ffffff');
     expect(palette).toContain('html[data-family-theme="night"][data-family-theme-choice="black"]');
-    expect(palette).toContain('--night-bg-deep: #050505');
-    expect(palette).toContain('--night-blue: #d7d7d7');
-    expect(palette).toContain('color-scheme: dark');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"]');
+    expect(themeSystem).toContain('--theme-canvas: #050505');
+    expect(themeSystem).toContain('--theme-accent: #d7d7d7');
+    expect(themeSystem).toContain('color-scheme: dark');
   });
 
   test("keeps the black-theme schedule add button neutral", () => {
     expect(config).toContain('{ name: "refresh-button", version: "20260802-black-fab-v1" }');
     expect(floatingActions).toContain('html[data-family-theme="night"][data-family-theme-choice="black"] body > #addEventButton.fab');
     expect(floatingActions).toContain('background: linear-gradient(145deg, #252525, #151515)');
-    expect(floatingActions).not.toContain('data-family-theme-choice="black"] body > #addEventButton.fab {\n  background: linear-gradient(145deg, #315f99, #214a7d)');
+    expect(themeSystem).toContain('#addEventButton.fab');
   });
 
-  test("removes remaining navy surfaces from the black growth UI", () => {
+  test("keeps the legacy cleanup as a compatibility layer", () => {
     expect(blackThemeCleanup).toContain('body > .refresh-button');
     expect(blackThemeCleanup).toContain('.topbar-account-actions > .avatar-button');
     expect(blackThemeCleanup).toContain('.growth-quick-section');
     expect(blackThemeCleanup).toContain('.care-pattern-section');
     expect(blackThemeCleanup).toContain('button[data-growth-quick="기저귀"]');
-    expect(blackThemeCleanup).toContain('linear-gradient(145deg, #2a2a2a, #171717) !important');
     expect(blackThemeCleanup).not.toContain('#315f99');
     expect(blackThemeCleanup).not.toContain('#214a7d');
+  });
+
+  test("exposes semantic tokens for current and future components", () => {
+    expect(themeSystem).toContain('--theme-surface');
+    expect(themeSystem).toContain('--theme-control-active');
+    expect(themeSystem).toContain('--theme-border-strong');
+    expect(themeSystem).toContain('--theme-progress-fill');
+    expect(themeSystem).toContain('[data-theme-surface="base"]');
+    expect(themeSystem).toContain('[data-theme-control]');
+    expect(themeSystem).not.toContain('html[data-family-theme="night"][data-family-theme-choice="black"]');
+  });
+
+  test("neutralizes controls even when feature modules inject styles later", () => {
+    expect(themeSystem).toContain(':is(button, [role="button"])');
+    expect(themeSystem).toContain('background-image: linear-gradient(145deg, #2d2d2d, #171717) !important');
+    expect(themeSystem).toContain('.admin-user-chart-bar');
+    expect(themeSystem).toContain('.english-progress i');
+    expect(themeSystem).toContain('background: var(--theme-progress-fill) !important');
+  });
+
+  test("keeps the event editor frame, controls and footer neutral black", () => {
+    expect(themeSystem).toContain('body #eventDialog {');
+    expect(themeSystem).toContain('--event-sheet-bg: #080808 !important');
+    expect(themeSystem).toContain('#eventDialog .date-shortcuts button.active');
+    expect(themeSystem).toContain('#eventDialog .member-selector button.selected');
+    expect(themeSystem).toContain('.sheet-dialog :is(.dialog-actions)');
+    expect(themeSystem).toContain('background-image: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important');
+    expect(themeSystem).not.toContain('#6f9ee7');
+    expect(themeSystem).not.toContain('#70c8b8');
   });
 
   test("covers schedule, growth, story, request, settings and dialogs", () => {
@@ -67,6 +104,6 @@ describe("white and black themes", () => {
     expect(palette).toContain('#englishView :is(');
     expect(palette).toContain('#featureRequestView :is(');
     expect(palette).toContain('#settingsView .settings-card');
-    expect(palette).toContain('.sheet-dialog form');
+    expect(themeSystem).toContain('.sheet-dialog');
   });
 });

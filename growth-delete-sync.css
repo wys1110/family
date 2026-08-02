@@ -44,7 +44,10 @@ html[data-family-theme="night"][data-family-theme-choice="black"] .notification-
   background: #bdbdbd !important;
 }
 
+/* Growth */
 html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
+  .baby-header-actions > button,
+  .baby-selector button,
   .baby-archive-button,
   .add-baby-button,
   .growth-summary-toggle,
@@ -59,6 +62,12 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :i
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
 }
 
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView .baby-selector button.active {
+  color: #fff !important;
+  background: linear-gradient(145deg, #383838, #202020) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #growthView .baby-care-card,
 html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
   .growth-quick-section,
   .care-timer-card,
@@ -71,7 +80,11 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :i
   .growth-measurement-card,
   .integrated-care-summary,
   .growth-summary-body,
-  .recent-photo-section
+  .recent-photo-section,
+  .weekly-care-summary,
+  .growth-entry,
+  .growth-insight-row > article,
+  .growth-insight-row > .insight-title
 ) {
   color: var(--label) !important;
   border-color: rgba(255, 255, 255, .10) !important;
@@ -96,7 +109,8 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :i
 html[data-family-theme="night"][data-family-theme-choice="black"] #growthView :is(
   .care-pattern-tabs button.active,
   .care-day-mode-control button.active,
-  .summary-period-tabs button.active
+  .summary-period-tabs button.active,
+  .growth-filter-bar button.active
 ) {
   color: #fff !important;
   border-color: rgba(255, 255, 255, .14) !important;
@@ -139,4 +153,363 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #growthView .c
   border-color: rgba(255, 255, 255, .13) !important;
   background: linear-gradient(145deg, #2b2b2b, #171717) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+/* Calendar and todos */
+html[data-family-theme="night"][data-family-theme-choice="black"] .hero-card,
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .calendar-card,
+  .quick-add-card,
+  .agenda-item,
+  .upcoming-event-item,
+  .empty-state,
+  .todo-overview-card,
+  .todo-quick-form,
+  .family-todo-item,
+  .todo-empty-state
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background:
+    radial-gradient(circle at 92% 3%, rgba(255, 255, 255, .045), transparent 36%),
+    linear-gradient(145deg, #181818, #0c0c0c) !important;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, .42),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .icon-button,
+  .today-button,
+  .quick-date-badge,
+  .edit-event-button,
+  .bulk-add-button,
+  .member-chip,
+  .quick-time-button,
+  .count-badge,
+  .calendar-overflow-badge,
+  .todo-stats div,
+  .todo-filter-tabs button
+) {
+  color: #d3d3d3 !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #202020 !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .calendar-subtabs,
+  .todo-filter-tabs
+) {
+  border-color: rgba(255, 255, 255, .09) !important;
+  background: #111 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView :is(
+  .calendar-subtabs button.active,
+  .todo-filter-tabs button.active,
+  .member-chip.selected,
+  .quick-add-submit
+) {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: linear-gradient(145deg, #383838, #222) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-day:hover {
+  background: rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-day.selected {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .16) !important;
+  background: linear-gradient(145deg, #3a3a3a, #222) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #calendarView .calendar-day.today .day-number {
+  color: #090909 !important;
+  background: linear-gradient(145deg, #f0f0f0, #bdbdbd) !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, .13) !important;
+}
+
+/* Stories */
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView {
+  --english-panel: #111 !important;
+  --english-panel-strong: #181818 !important;
+  --english-panel-soft: #222 !important;
+  --english-border: rgba(255, 255, 255, .11) !important;
+  --english-text: #f5f5f5 !important;
+  --english-muted: #b9b9b9 !important;
+  --english-subtle: #858585 !important;
+  --english-accent: #d2d2d2 !important;
+  --english-accent-strong: #a9a9a9 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView :is(
+  .english-today-card,
+  .english-story-player,
+  .english-story-cover,
+  .english-sentence,
+  .english-library-card
+) {
+  color: var(--english-text) !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background:
+    radial-gradient(circle at 92% 3%, rgba(255, 255, 255, .045), transparent 36%),
+    linear-gradient(145deg, #191919, #0d0d0d) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView :is(
+  .english-today-card button,
+  .english-player-actions button,
+  .english-story-footer button,
+  .english-sentence > button
+) {
+  color: #e8e8e8 !important;
+  border-color: rgba(255, 255, 255, .13) !important;
+  background: linear-gradient(145deg, #2d2d2d, #191919) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView :is(
+  .english-player-actions .english-play-main,
+  .english-player-actions button.active:not(.english-play-main),
+  .english-story-footer #englishMarkRead
+) {
+  color: #fff !important;
+  background: linear-gradient(145deg, #404040, #242424) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView .english-sentence.active,
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView .english-library-card.active {
+  border-color: rgba(255, 255, 255, .20) !important;
+  background: linear-gradient(145deg, #303030, #1b1b1b) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView .english-progress {
+  background: #252525 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #englishView .english-progress i {
+  background: linear-gradient(90deg, #8f8f8f, #e0e0e0) !important;
+}
+
+/* Requests */
+html[data-family-theme="night"][data-family-theme-choice="black"] #featureRequestView :is(
+  .feature-request-card,
+  .feature-request-admin,
+  .feature-request-item,
+  .feature-request-empty
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background:
+    radial-gradient(circle at 92% 3%, rgba(255, 255, 255, .04), transparent 36%),
+    linear-gradient(145deg, #181818, #0d0d0d) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #featureRequestView :is(
+  .feature-request-form textarea,
+  .feature-request-item select
+) {
+  color: #f3f3f3 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #featureRequestView :is(
+  .feature-request-actions button,
+  .feature-request-admin-heading button
+) {
+  color: #f4f4f4 !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: linear-gradient(145deg, #323232, #1b1b1b) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #featureRequestView .feature-request-item[data-status="reviewing"] {
+  border-left-color: #9a9a9a !important;
+}
+
+/* Settings */
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(
+  .settings-card,
+  .feeding-reminder-form,
+  .daily-briefing-form,
+  .family-profile-photo-control,
+  .family-profile-preview,
+  .theme-save-note
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background:
+    radial-gradient(circle at 92% 3%, rgba(255, 255, 255, .04), transparent 36%),
+    linear-gradient(145deg, #181818, #0d0d0d) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(
+  .settings-mark,
+  .settings-current-theme,
+  .feeding-reminder-switch,
+  .daily-briefing-switch,
+  .feeding-reminder-presets,
+  .daily-briefing-actions
+) {
+  color: #e5e5e5 !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option {
+  color: #ededed !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background: #141414 !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option:hover {
+  border-color: rgba(255, 255, 255, .18) !important;
+  background: #1b1b1b !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option.active {
+  border-color: rgba(255, 255, 255, .30) !important;
+  background: linear-gradient(145deg, #303030, #1b1b1b) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-option.active .theme-check {
+  color: #090909 !important;
+  border-color: #dedede !important;
+  background: #dedede !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(input, select, textarea) {
+  color: #f3f3f3 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #1a1a1a !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(
+  .feeding-reminder-presets button.active,
+  .daily-briefing-actions .primary-button,
+  .settings-refresh-action
+) {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: linear-gradient(145deg, #363636, #202020) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+}
+
+/* Administration */
+html[data-family-theme="night"][data-family-theme-choice="black"] .admin-view :is(
+  .global-admin-card,
+  .platform-admin-card,
+  .global-admin-stats > div,
+  .global-admin-search,
+  .global-admin-modes,
+  .global-admin-user,
+  .global-admin-household,
+  .global-admin-member,
+  .admin-recent-card,
+  .admin-recent-summary > div,
+  .admin-user-chart,
+  .admin-recent-item
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  background: linear-gradient(145deg, #181818, #0d0d0d) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .admin-view :is(
+  .admin-refresh-button,
+  .global-admin-section-head > strong,
+  .global-admin-user-status b,
+  .global-admin-household-head > b,
+  .global-admin-member em,
+  .global-admin-modes button.active
+) {
+  color: #e4e4e4 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #252525 !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .admin-view :is(
+  .admin-recent-controls input,
+  .admin-recent-controls select,
+  .global-admin-search input
+) {
+  color: #f2f2f2 !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: #181818 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .admin-view .admin-user-chart-track {
+  background: #272727 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .admin-view .admin-user-chart-bar {
+  background: linear-gradient(90deg, #777, #d0d0d0) !important;
+}
+
+/* Shared sheets, dialogs, auth, and feedback */
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .sheet-dialog form,
+  .sheet-panel,
+  .completion-panel,
+  .account-dialog .sheet-panel,
+  .account-panel,
+  .auth-panel,
+  .notification-center-panel
+) {
+  color: var(--label) !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background: linear-gradient(145deg, #181818, #0c0c0c) !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .58) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .sheet-dialog input,
+  .sheet-dialog select,
+  .sheet-dialog textarea,
+  .account-panel input,
+  .auth-panel input
+) {
+  color: #f3f3f3 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #1b1b1b !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .sheet-dialog button[type="submit"],
+  .oauth-button,
+  .demo-login-button,
+  .gate-login-form button,
+  .completion-panel button
+) {
+  color: #f5f5f5 !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: linear-gradient(145deg, #343434, #1c1c1c) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] .toast {
+  color: #f4f4f4 !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: rgba(20, 20, 20, .97) !important;
 }

@@ -1,0 +1,111 @@
+name: Apply notification inbox PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/notification-inbox-20260802'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/notification-inbox-20260802
+          fetch-depth: 0
+
+      - name: Rebuild, verify, and commit final sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main feature/notification-inbox-20260802
+          git merge origin/main --no-edit
+
+          if ! compgen -G '.notification-update/notification-center.js.b64.*' > /dev/null; then
+            echo 'Notification inbox sources are already applied.'
+            exit 0
+          fi
+
+          for file in $(find .notification-update -maxdepth 1 -type f -name 'notification-center.js.b64.*' | sort); do
+            cat "$file"
+          done | base64 --decode > notification-center.js
+
+          for file in \
+            .notification-update/daily-briefing-push-index.ts.b64.00 \
+            .notification-final/edge.03 \
+            .notification-final/edge.04 \
+            .notification-final/edge.05 \
+            .notification-final/edge.06 \
+            .notification-final/edge.07 \
+            .notification-final/edge.08 \
+            .notification-final/edge.09; do
+            cat "$file"
+          done | base64 --decode > supabase/functions/daily-briefing-push/index.ts
+
+          cp .notification-final/20260802_notification_history.sql \
+            supabase/migrations/20260802_notification_history.sql
+
+          printf '%s  %s\n' \
+            'cd5a650ffb2b16ea86016b07f5d21869b239b92bff2ffad2f432655d36380b3e' \
+            'notification-center.js' \
+            '2ade1e6051e5733cc4ef6df6942a7249acbf6684b5024efacd53d818c7a0e583' \
+            'supabase/functions/daily-briefing-push/index.ts' \
+            'ef8b0330de3e937e47f4608f91b51dcff646ef4584ff92f6203e841a15eb0824' \
+            'supabase/migrations/20260802_notification_history.sql' \
+            | sha256sum -c -
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          service_worker = Path('service-worker.js')
+          text = service_worker.read_text()
+          anchor = '    url.pathname.endsWith("/notification-center.css") ||\n'
+          addition = '    url.pathname.endsWith("/notification-center.js") ||\n'
+          if addition not in text:
+              if anchor not in text:
+                  raise SystemExit('service worker anchor missing')
+              text = text.replace(anchor, anchor + addition, 1)
+          service_worker.write_text(text)
+
+          config = Path('config.js')
+          text = config.read_text()
+          text, count = re.subn(
+              r'(\{ name: "notification-center", version: ")[^"]+(" \},)',
+              r'\g<1>20260802-persistent-inbox-v1\g<2>',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('notification module version anchor missing')
+          config.write_text(text)
+          PY
+
+          node --check notification-center.js
+          node --check service-worker.js
+          node --check config.js
+
+          git rm -r --ignore-unmatch \
+            .notification-update \
+            .notification-final \
+            .github/workflows/apply-notification-inbox.yml \
+            .github/workflows/apply-notification-inbox-main.yml \
+            x
+          git add \
+            notification-center.js \
+            service-worker.js \
+            config.js \
+            supabase/functions/daily-briefing-push/index.ts \
+            supabase/migrations/20260802_notification_history.sql
+          git commit -m '알림 목록과 이력 동기화 구현'
+          git push origin HEAD:feature/notification-inbox-20260802
