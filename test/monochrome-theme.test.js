@@ -61,6 +61,26 @@ describe("white and black themes", () => {
     expect(blackThemeCleanup).not.toContain('#214a7d');
   });
 
+  test("extends neutral black surfaces across every top-level page", () => {
+    expect(blackThemeCleanup).toContain('#calendarView :is(');
+    expect(blackThemeCleanup).toContain('#englishView :is(');
+    expect(blackThemeCleanup).toContain('#featureRequestView :is(');
+    expect(blackThemeCleanup).toContain('#settingsView :is(');
+    expect(blackThemeCleanup).toContain('.admin-view :is(');
+    expect(blackThemeCleanup).toContain('.sheet-dialog form');
+    expect(blackThemeCleanup).toContain('.auth-panel');
+    expect(blackThemeCleanup).toContain('background: linear-gradient(145deg, #181818, #0d0d0d) !important');
+  });
+
+  test("neutralizes blue active controls and charts", () => {
+    expect(blackThemeCleanup).toContain('.calendar-day.selected');
+    expect(blackThemeCleanup).toContain('.english-progress i');
+    expect(blackThemeCleanup).toContain('.feature-request-item[data-status="reviewing"]');
+    expect(blackThemeCleanup).toContain('.theme-option.active');
+    expect(blackThemeCleanup).toContain('.admin-user-chart-bar');
+    expect(blackThemeCleanup).toContain('linear-gradient(90deg, #777, #d0d0d0) !important');
+  });
+
   test("covers schedule, growth, story, request, settings and dialogs", () => {
     expect(palette).toContain('#calendarView .calendar-card');
     expect(palette).toContain('#growthView :is(');
