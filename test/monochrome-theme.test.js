@@ -6,6 +6,7 @@ const config = read("config.js");
 const settings = read("settings.js");
 const palette = read("monochrome-theme.css");
 const floatingActions = read("refresh-button.css");
+const blackThemeCleanup = read("growth-delete-sync.css");
 
 describe("white and black themes", () => {
   test("loads the monochrome palette after the starry-night palette", () => {
@@ -47,6 +48,17 @@ describe("white and black themes", () => {
     expect(floatingActions).toContain('html[data-family-theme="night"][data-family-theme-choice="black"] body > #addEventButton.fab');
     expect(floatingActions).toContain('background: linear-gradient(145deg, #252525, #151515)');
     expect(floatingActions).not.toContain('data-family-theme-choice="black"] body > #addEventButton.fab {\n  background: linear-gradient(145deg, #315f99, #214a7d)');
+  });
+
+  test("removes remaining navy surfaces from the black growth UI", () => {
+    expect(blackThemeCleanup).toContain('body > .refresh-button');
+    expect(blackThemeCleanup).toContain('.topbar-account-actions > .avatar-button');
+    expect(blackThemeCleanup).toContain('.growth-quick-section');
+    expect(blackThemeCleanup).toContain('.care-pattern-section');
+    expect(blackThemeCleanup).toContain('button[data-growth-quick="기저귀"]');
+    expect(blackThemeCleanup).toContain('linear-gradient(145deg, #2a2a2a, #171717) !important');
+    expect(blackThemeCleanup).not.toContain('#315f99');
+    expect(blackThemeCleanup).not.toContain('#214a7d');
   });
 
   test("covers schedule, growth, story, request, settings and dialogs", () => {
