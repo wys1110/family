@@ -1,0 +1,124 @@
+@import url("./growth-delete-sync.css?v=20260802-final-black-v2");
+
+/*
+ * Final black-theme pass.
+ * This stylesheet is intentionally loaded after every page/theme module so
+ * night-theme navy rules and styles injected by feature modules cannot win
+ * the cascade for the black choice.
+ */
+html[data-family-theme="night"][data-family-theme-choice="black"] {
+  --bg: #050505 !important;
+  --surface: #111111 !important;
+  --surface-2: #1a1a1a !important;
+  --separator: rgba(255, 255, 255, .12) !important;
+  --blue: #d7d7d7 !important;
+  --theme-accent-rgb: 215, 215, 215 !important;
+  --theme-hero-start: #252525 !important;
+  --theme-hero-end: #111111 !important;
+  --theme-tab-bg: rgba(6, 6, 6, .96) !important;
+  --theme-tab-active: #292929 !important;
+  --night-bg-deep: #050505 !important;
+  --night-panel: #111111 !important;
+  --night-panel-raised: #1a1a1a !important;
+  --night-panel-soft: #202020 !important;
+  --night-line: rgba(255, 255, 255, .12) !important;
+  --night-blue: #d7d7d7 !important;
+  --ui-card: rgba(17, 17, 17, .98) !important;
+  --ui-card-muted: rgba(26, 26, 26, .96) !important;
+  --ui-border: rgba(255, 255, 255, .12) !important;
+  --ui-accent-soft: rgba(255, 255, 255, .07) !important;
+}
+
+/* Catch controls created or restyled after the original page CSS loaded. */
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  #calendarView,
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .notification-center-panel,
+  .account-panel,
+  .sheet-panel,
+  .sheet-dialog form
+) :is(button, [role="button"]):not(.danger-button):not([data-delete]) {
+  border-color: rgba(255, 255, 255, .13) !important;
+  background-color: #202020 !important;
+  background-image: linear-gradient(145deg, #2d2d2d, #171717) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  #calendarView,
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .notification-center-panel,
+  .account-panel,
+  .sheet-panel,
+  .sheet-dialog form
+) :is(button.active, button[aria-selected="true"], button[aria-pressed="true"], [role="button"].active) {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+  background-color: #303030 !important;
+  background-image: linear-gradient(145deg, #404040, #222) !important;
+}
+
+/* Preserve theme thumbnails themselves while keeping their surrounding option black. */
+html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView .theme-preview {
+  background-color: initial;
+}
+
+/* Neutralize common blue-tinted badges, tracks and utility shells. */
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .count-badge,
+  .quick-now-badge,
+  .care-live-badge,
+  .settings-current-theme,
+  .global-admin-section-head > strong,
+  .global-admin-user-status b,
+  .global-admin-household-head > b,
+  .admin-recent-summary,
+  .admin-user-chart,
+  .notification-reminder-field
+) {
+  color: #d5d5d5 !important;
+  border-color: rgba(255, 255, 255, .11) !important;
+  background-color: #181818 !important;
+  background-image: none !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .admin-user-chart-track,
+  .english-progress,
+  .care-progress,
+  .progress-track
+) {
+  background: #252525 !important;
+}
+
+html[data-family-theme="night"][data-family-theme-choice="black"] :is(
+  .admin-user-chart-bar,
+  .english-progress i,
+  .care-progress i,
+  .progress-track > i
+) {
+  background: linear-gradient(90deg, #777, #d0d0d0) !important;
+}
+
+/* Floating utilities live outside the page containers. */
+html[data-family-theme="night"][data-family-theme-choice="black"] body :is(
+  #addEventButton.fab,
+  .refresh-button,
+  .settings-refresh-action,
+  .notification-center-button,
+  .avatar-button
+) {
+  color: #f5f5f5 !important;
+  border-color: rgba(255, 255, 255, .17) !important;
+  background-color: #1b1b1b !important;
+  background-image: linear-gradient(145deg, #292929, #151515) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
