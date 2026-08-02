@@ -69,9 +69,47 @@
 .global-admin-member em { flex: none; padding: 4px 7px; border-radius: 999px; color: var(--secondary); background: var(--surface); font-size: 8px; font-style: normal; font-weight: 800; }
 .global-admin-member em.owner { color: var(--blue); }
 .global-admin-note { margin: 16px 2px 0; color: var(--tertiary); font-size: 9px; line-height: 1.5; }
+
+/* Keep every admin block on one shared horizontal grid. */
+.admin-view,
+.admin-view .global-admin-card,
+.admin-view .global-admin-card > [data-admin-content],
+.admin-view .global-admin-stats,
+.admin-view .global-admin-tools,
+.admin-view .global-admin-search,
+.admin-view .global-admin-modes,
+.admin-view .global-admin-section,
+.admin-view .global-admin-list,
+.admin-view .global-admin-user,
+.admin-view .global-admin-household {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.admin-view .global-admin-card > [data-admin-content] { overflow-x: hidden; }
+.admin-view .global-admin-card > [data-admin-content] > * { min-width: 0; }
+.global-admin-search { margin: 0; }
+.global-admin-search input {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.global-admin-search input:focus { box-shadow: none; }
+.global-admin-modes, .global-admin-section, .global-admin-list { margin-right: 0; margin-left: 0; }
+.global-admin-stats > div, .global-admin-list > * { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; }
+
 @media (max-width: 520px) {
   .global-admin-heading { grid-template-columns: 44px minmax(0, 1fr); }
-  .admin-view .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
+  .admin-view .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
   .global-admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .global-admin-user { grid-template-columns: 42px minmax(0, 1fr); }
   .global-admin-user-status { grid-column: 2; grid-auto-flow: column; justify-content: start; justify-items: start; }
