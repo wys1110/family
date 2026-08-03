@@ -165,6 +165,12 @@ body,
   display: none !important;
 }
 
+#settingsView > [data-settings-refresh-module],
+#settingsView > [data-activity-disclosure] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 .settings-card {
   margin-top: 18px;
   padding: 20px;
