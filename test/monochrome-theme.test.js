@@ -41,7 +41,7 @@ describe("white and black themes", () => {
     expect(settings).toContain("name: '화이트'");
     expect(settings).toContain("id: 'black'");
     expect(settings).toContain("cssTheme: 'night'");
-    expect(settings).toContain("name: '블랙'");
+    expect(settings).toContain("name: '다크'");
     expect(settings).toContain("localStorage.setItem(activeThemeChoiceStorageKey, selected.id)");
   });
 

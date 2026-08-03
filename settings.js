@@ -10,44 +10,8 @@
   const demoMode = window.FAMILY_DEMO_MODE === true;
   const activeThemeStorageKey = demoMode ? DEMO_THEME_STORAGE_KEY : THEME_STORAGE_KEY;
   const activeThemeChoiceStorageKey = demoMode ? DEMO_THEME_CHOICE_STORAGE_KEY : THEME_CHOICE_STORAGE_KEY;
-  const DEFAULT_THEME = demoMode ? 'white' : 'forest';
+  const DEFAULT_THEME = 'white';
   const THEMES = [
-    {
-      id: 'forest',
-      name: '포근한 숲',
-      description: '지금의 차분한 초록과 크림 톤',
-      themeColor: '#fff8f3',
-      preview: ['#fff8f3', '#fffefd', '#56796a', '#c98291', '#38443e'],
-    },
-    {
-      id: 'sunshine',
-      name: '햇살 크림',
-      description: '따뜻한 베이지와 골드 포인트',
-      themeColor: '#fffaf0',
-      preview: ['#fffaf0', '#fffdf7', '#b77a3f', '#d9974d', '#4a4033'],
-    },
-    {
-      id: 'rose',
-      name: '로즈 가든',
-      description: '부드러운 핑크와 말린 장미 톤',
-      themeColor: '#fff5f7',
-      preview: ['#fff5f7', '#fffdfd', '#a86d82', '#d27e9a', '#4b3940'],
-    },
-    {
-      id: 'ocean',
-      name: '맑은 바다',
-      description: '깨끗한 하늘색과 청록 포인트',
-      themeColor: '#f3f9fb',
-      preview: ['#f3f9fb', '#fcfeff', '#4f8497', '#76a8b8', '#33454d'],
-    },
-    {
-      id: 'night',
-      name: '별빛 밤',
-      description: '깊은 네이비와 은은한 별빛 포인트',
-      themeColor: '#050d1c',
-      colorScheme: 'dark',
-      preview: ['#050d1c', '#142746', '#79aaff', '#f2c675', '#f4f7ff'],
-    },
     {
       id: 'white',
       name: '화이트',
@@ -59,17 +23,14 @@
     {
       id: 'black',
       cssTheme: 'night',
-      name: '블랙',
+      name: '다크',
       description: '깊은 블랙과 다크 그레이의 모던한 톤',
       themeColor: '#050505',
       colorScheme: 'dark',
       preview: ['#050505', '#151515', '#d8d8d8', '#7f858c', '#f5f5f5'],
     },
   ];
-  const DEMO_THEMES = THEMES
-    .filter((theme) => ['white', 'black'].includes(theme.id))
-    .map((theme) => theme.id === 'black' ? { ...theme, name: '다크' } : theme);
-  const AVAILABLE_THEMES = demoMode ? DEMO_THEMES : THEMES;
+  const AVAILABLE_THEMES = THEMES;
 
   const main = document.querySelector('.app-shell main');
   const navigation = document.querySelector('.view-tabs');

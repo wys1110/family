@@ -43,9 +43,9 @@ describe("starry-night page palette", () => {
     expect(palette).toContain("--entry-color: var(--care-diaper)");
   });
 
-  test("keeps the settings preview and browser chrome synchronized", () => {
-    expect(config).toContain('night: "#050d1c"');
-    expect(settings).toContain("themeColor: '#050d1c'");
-    expect(settings).toContain("preview: ['#050d1c', '#142746', '#79aaff', '#f2c675', '#f4f7ff']");
+  test("keeps the dark settings preview and browser chrome synchronized", () => {
+    expect(config).toContain('black: "#050505"');
+    expect(settings).toContain("themeColor: '#050505'");
+    expect(settings).toContain("preview: ['#050505', '#151515', '#d8d8d8', '#7f858c', '#f5f5f5']");
   });
 });
