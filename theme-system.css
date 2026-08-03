@@ -158,6 +158,15 @@ html[data-family-theme-choice="black"] #calendarView .calendar-day:nth-child(7n)
   color: #6ea8ff !important;
 }
 
+/* Black mode keeps the daily total neutral; category cards retain their data colors. */
+html[data-family-theme-choice="black"] #growthView .daily-intake-summary header > p {
+  color: var(--theme-text) !important;
+}
+
+html[data-family-theme-choice="black"] #growthView .daily-intake-summary header > p span {
+  color: var(--theme-text-muted) !important;
+}
+
 html[data-family-theme-choice="black"] :is(input, select, textarea) {
   color: var(--theme-text) !important;
   border-color: var(--theme-border) !important;
