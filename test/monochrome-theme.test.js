@@ -90,6 +90,13 @@ describe("white and black themes", () => {
     expect(themeSystem).toContain('background: var(--theme-progress-fill) !important');
   });
 
+  test("keeps black calendar event bars on their member colors", () => {
+    expect(themeSystem).toContain(':not(.calendar-event-bar)');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .calendar-event-bar');
+    expect(themeSystem).toContain('background: var(--member-color) !important;');
+    expect(themeSystem).toContain('background-image: none !important;');
+  });
+
   test("keeps the event editor frame, controls and footer neutral black", () => {
     expect(themeSystem).toContain('body #eventDialog {');
     expect(themeSystem).toContain('--event-sheet-bg: #080808 !important');

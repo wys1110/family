@@ -113,7 +113,7 @@ html[data-family-theme-choice="black"] :is(
   .account-panel,
   .sheet-panel,
   .sheet-dialog form
-) :is(button, [role="button"]):not(.danger-button):not([data-delete]) {
+) :is(button, [role="button"]):not(.calendar-event-bar):not(.danger-button):not([data-delete]) {
   border-color: rgba(255, 255, 255, .13) !important;
   background-color: var(--theme-control) !important;
   background-image: linear-gradient(145deg, #2d2d2d, #171717) !important;
@@ -131,11 +131,20 @@ html[data-family-theme-choice="black"] :is(
   .account-panel,
   .sheet-panel,
   .sheet-dialog form
-) :is(button.active, button[aria-selected="true"], button[aria-pressed="true"], [role="button"].active) {
+) :is(button.active, button[aria-selected="true"], button[aria-pressed="true"], [role="button"].active):not(.calendar-event-bar) {
   color: #fff !important;
   border-color: var(--theme-border-strong) !important;
   background-color: var(--theme-control-active) !important;
   background-image: linear-gradient(145deg, #404040, #222) !important;
+}
+
+/* Calendar event bars carry each member's color inline; keep that identity in black mode. */
+html[data-family-theme-choice="black"] #calendarView .calendar-event-bar {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  background: var(--member-color) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .24) !important;
 }
 
 html[data-family-theme-choice="black"] :is(input, select, textarea) {
