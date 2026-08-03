@@ -136,7 +136,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260802-black-fab-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
-    { name: "settings", version: "20260803-production-two-themes-v1" },
+    { name: "settings", version: "20260803-settings-visibility-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
