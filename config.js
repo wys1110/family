@@ -23,19 +23,12 @@ window.FAMILY_CONFIG = {
   if (themeV2Choice === "1") document.documentElement.dataset.familyThemeV2 = "true";
   if (themeV2Choice === "0") delete document.documentElement.dataset.familyThemeV2;
   const themeColors = {
-    forest: "#fff8f3",
-    sunshine: "#fffaf0",
-    rose: "#fff5f7",
-    ocean: "#f3f9fb",
-    night: "#050d1c",
     white: "#f7f7f5",
     black: "#050505",
-    storybook: "#edf4e6",
-    ghibli: "#eaf3df",
   };
   const themeCssAliases = { black: "night" };
-  let initialTheme = demoMode ? "white" : "forest";
-  const validInitialThemes = demoMode ? ["white", "black"] : Object.keys(themeColors);
+  let initialTheme = "white";
+  const validInitialThemes = ["white", "black"];
   try {
     const storedChoice = localStorage.getItem(themeChoiceStorageKey);
     const storedTheme = localStorage.getItem(themeStorageKey);
@@ -143,7 +136,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260802-black-fab-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
-    { name: "settings", version: "20260803-demo-theme-two-modes-v1" },
+    { name: "settings", version: "20260803-production-two-themes-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
@@ -153,8 +146,6 @@ window.FAMILY_CONFIG = {
     { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260722-settings-gear-v3" },
-    { name: "storybook-theme", version: "20260803-demo-theme-two-modes-v1" },
-    { name: "ghibli-theme", version: "20260803-demo-theme-two-modes-v1" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
     { name: "notification-center", version: "20260802-persistent-inbox-v1" },
     { name: "adaptive-feeding", version: "20260727-direct-stepper-v1" },

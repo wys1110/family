@@ -12,12 +12,9 @@ describe("demo theme boundary", () => {
     expect(config).toContain("const demoMode = window.FAMILY_DEMO_MODE === true;");
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
-    expect(config).toContain('{ name: "settings", version: "20260803-demo-theme-two-modes-v1" }');
-    expect(config).toContain('{ name: "storybook-theme", version: "20260803-demo-theme-two-modes-v1" }');
-    expect(config).toContain('{ name: "ghibli-theme", version: "20260803-demo-theme-two-modes-v1" }');
-    expect(read("index.html")).toContain('config.js?v=20260803-demo-theme-two-modes-v1');
-    expect(settings).toContain("const DEMO_THEMES = THEMES");
-    expect(settings).toContain("const AVAILABLE_THEMES = demoMode ? DEMO_THEMES : THEMES;");
+    expect(config).toContain('{ name: "settings", version: "20260803-production-two-themes-v1" }');
+    expect(read("index.html")).toContain('config.js?v=20260803-production-two-themes-v1');
+    expect(settings).toContain("const AVAILABLE_THEMES = THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");
   });
@@ -29,12 +26,16 @@ describe("demo theme boundary", () => {
     expect(settings).toContain("cssTheme: 'night'");
   });
 
-  test("keeps production theme definitions available outside demo mode", () => {
-    expect(settings).toContain("id: 'forest'");
-    expect(settings).toContain("id: 'sunshine'");
-    expect(settings).toContain("id: 'rose'");
-    expect(settings).toContain("id: 'ocean'");
-    expect(settings).toContain("id: 'night'");
+  test("keeps production and demo on the same two-theme catalog", () => {
+    expect(settings).toContain("id: 'white'");
+    expect(settings).toContain("id: 'black'");
+    expect(settings).not.toContain("id: 'forest'");
+    expect(settings).not.toContain("id: 'sunshine'");
+    expect(settings).not.toContain("id: 'rose'");
+    expect(settings).not.toContain("id: 'ocean'");
+    expect(settings).not.toContain("id: 'night'");
+    expect(config).not.toContain('{ name: "storybook-theme"');
+    expect(config).not.toContain('{ name: "ghibli-theme"');
     expect(storybook).toContain("const THEME_ID = 'storybook';");
     expect(ghibli).toContain("const THEME_ID = 'ghibli';");
   });
