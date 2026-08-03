@@ -106,6 +106,13 @@ describe("white and black themes", () => {
     expect(themeSystem).toContain('color: #6ea8ff !important;');
   });
 
+  test("keeps black daily feeding totals neutral", () => {
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #growthView .daily-intake-summary header > p {');
+    expect(themeSystem).toContain('color: var(--theme-text) !important;');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #growthView .daily-intake-summary header > p span {');
+    expect(themeSystem).toContain('color: var(--theme-text-muted) !important;');
+  });
+
   test("keeps the event editor frame, controls and footer neutral black", () => {
     expect(themeSystem).toContain('body #eventDialog {');
     expect(themeSystem).toContain('--event-sheet-bg: #080808 !important');
