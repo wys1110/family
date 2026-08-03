@@ -36,6 +36,14 @@ html[data-family-theme-v2="true"] {
   --color-warning-soft: rgba(138, 101, 48, .11);
   --color-info: #536776;
   --color-info-soft: rgba(83, 103, 118, .10);
+  --color-data-formula: #d69a55;
+  --color-data-pumped: #67a5b4;
+  --color-data-breast: #c97f96;
+  --color-data-solid: #729265;
+  --color-data-sleep: #7768aa;
+  --color-data-diaper: #557a67;
+  --color-story-accent: var(--color-warning);
+  --color-story-accent-soft: var(--color-warning-soft);
   --color-control-gradient: linear-gradient(145deg, #ffffff, #eceeeb);
   --color-control-active-gradient: linear-gradient(145deg, #35373a, #1d1f21);
   --color-surface-gradient: linear-gradient(180deg, #ffffff, #f5f6f4);
@@ -103,6 +111,14 @@ html[data-family-theme-v2="true"][data-family-theme-choice="black"] {
   --color-warning-soft: rgba(208, 192, 166, .10);
   --color-info: #b7c0c7;
   --color-info-soft: rgba(183, 192, 199, .10);
+  --color-data-formula: var(--color-text-secondary);
+  --color-data-pumped: var(--color-text-tertiary);
+  --color-data-breast: var(--color-text-secondary);
+  --color-data-solid: var(--color-text-tertiary);
+  --color-data-sleep: var(--color-text-secondary);
+  --color-data-diaper: var(--color-text-tertiary);
+  --color-story-accent: var(--color-text-secondary);
+  --color-story-accent-soft: var(--color-accent-soft);
   --color-control-gradient: linear-gradient(145deg, #2d2d2d, #171717);
   --color-control-active-gradient: linear-gradient(145deg, #444444, #252525);
   --color-surface-gradient: linear-gradient(180deg, #151515, #0b0b0b);
@@ -265,6 +281,128 @@ html[data-family-theme-v2="true"] #settingsView :is(
   #dailyBriefingSettings button
 ) {
   color: var(--color-text-secondary) !important;
+}
+
+/* Component palettes consume the theme-owned semantic data colors. */
+html[data-family-theme-v2="true"] #growthView,
+html[data-family-theme-v2="true"] #growthView .care-pattern-section {
+  --growth-green: var(--color-success);
+  --growth-formula: var(--color-data-formula);
+  --growth-pumped: var(--color-data-pumped);
+  --growth-breast: var(--color-data-breast);
+  --growth-solid: var(--color-data-solid);
+  --growth-sleep: var(--color-data-sleep);
+  --growth-diaper: var(--color-data-diaper);
+  --care-formula: var(--color-data-formula);
+  --care-pumped: var(--color-data-pumped);
+  --care-breast: var(--color-data-breast);
+  --care-solid: var(--color-data-solid);
+  --care-sleep: var(--color-data-sleep);
+  --care-diaper: var(--color-data-diaper);
+  --care-formula-strong: var(--color-data-formula);
+  --care-breast-strong: var(--color-data-breast);
+  --care-sleep-strong: var(--color-data-sleep);
+  --care-diaper-strong: var(--color-data-diaper);
+}
+
+html[data-family-theme-v2="true"] #growthView :is(
+  .daily-intake-summary header > div > span,
+  .daily-intake-note,
+  .care-pattern-categories button span,
+  .care-rhythm-legend span,
+  .care-linear-summary span,
+  .care-linear-summary small
+) {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"] #growthView :is(
+  .care-day-mode-control,
+  .care-pattern-view-control,
+  .care-pattern-categories
+) button * {
+  color: inherit !important;
+}
+
+html[data-family-theme-v2="true"] #englishView :is(
+  .english-book-mark,
+  .english-today-label
+) {
+  color: var(--color-story-accent) !important;
+}
+
+html[data-family-theme-v2="true"] #englishView :is(
+  .english-library-card small,
+  .english-library-card em,
+  .english-library-card > i
+) {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView :is(
+  .daily-intake-summary,
+  .adaptive-interval-card,
+  .care-linear-summary article,
+  .care-time-list,
+  .care-time-row,
+  .care-split-entry
+) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background: var(--color-surface-gradient) !important;
+  box-shadow: var(--elevation-card) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-summary header > p,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown span,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown small,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-note {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-summary header > p b {
+  color: var(--color-text-primary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown article {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background: var(--color-surface-raised) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .care-split-entry {
+  --entry-color: var(--color-text-secondary) !important;
+  --entry-border: var(--color-border-subtle) !important;
+  --entry-bg: var(--color-surface-raised) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .care-time-row {
+  --care-time-color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #englishView :is(
+  .english-book-mark,
+  .english-cover-emoji,
+  .english-library-card > span
+) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background: var(--color-control) !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #englishView :is(
+  .english-today-label,
+  .english-library-card small,
+  .english-library-card em,
+  .english-library-card > i
+) {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #englishView .english-progress i {
+  background: var(--color-progress-gradient) !important;
 }
 
 html[data-family-theme-v2="true"] body :is(
