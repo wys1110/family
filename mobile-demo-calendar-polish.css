@@ -1,0 +1,77 @@
+/* Mobile QA polish for the isolated demo surface. */
+
+/* The status must scroll with the page; a fixed pill covered the calendar after scrolling. */
+.demo-mode-banner {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: max-content;
+  margin: max(8px, env(safe-area-inset-top, 0px)) auto 0;
+  transform: none;
+}
+
+body.demo-mode .app-shell {
+  padding-top: max(22px, env(safe-area-inset-top, 0px));
+}
+
+/* Keep mobile bars legible while preserving the compact seven-column grid. */
+@media (max-width: 767.98px) {
+  #calendarView .calendar-grid {
+    grid-auto-rows: minmax(76px, auto);
+  }
+
+  #calendarView .calendar-day {
+    min-height: 76px;
+  }
+
+  body.demo-mode #calendarView .calendar-event-bar {
+    height: 20px;
+    min-height: 20px;
+    padding-inline: 3px;
+    border-radius: 6px;
+    font-size: max(10px, var(--calendar-event-user-font-size, 10px)) !important;
+    line-height: 20px;
+    letter-spacing: -.025em;
+  }
+
+  body.demo-mode #calendarView .calendar-event-bar > span {
+    font-size: inherit !important;
+    line-height: 1;
+  }
+
+  /* Two adjacent lanes remain inside the mobile row instead of touching. */
+  #calendarView .calendar-event-bar[style*="52px"] { margin-top: 54px; }
+  #calendarView .calendar-event-bar[style*="70px"] { margin-top: 74px; }
+  #calendarView .calendar-event-bar[style*="88px"] { margin-top: 94px; }
+  #calendarView .calendar-overflow-badge {
+    min-width: 24px;
+    height: 18px;
+    margin-top: 96px;
+    padding-inline: 5px;
+    font-size: 9px;
+    line-height: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .demo-mode-banner {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+  }
+
+  .demo-mode-banner span {
+    min-width: 0;
+  }
+}
+
+/* Safari's bottom toolbar can cover fixed actions when the safe-area is zero. */
+@media (max-width: 767.98px) {
+  body > .refresh-button,
+  body > #addEventButton.fab {
+    bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  }
+
+  body:has(> #addEventButton.fab) main {
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  }
+}
