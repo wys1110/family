@@ -29,7 +29,7 @@ describe("white and black themes", () => {
   });
 
   test("bootstraps stored white and black choices before modules load", () => {
-    expect(config).toContain('const themeChoiceStorageKey = "family-theme-choice-v1"');
+    expect(config).toContain('const themeChoiceStorageKey = demoMode ? "family-demo-theme-choice-v1" : "family-theme-choice-v1"');
     expect(config).toContain('white: "#f7f7f5"');
     expect(config).toContain('black: "#050505"');
     expect(config).toContain('const themeCssAliases = { black: "night" }');
@@ -42,7 +42,7 @@ describe("white and black themes", () => {
     expect(settings).toContain("id: 'black'");
     expect(settings).toContain("cssTheme: 'night'");
     expect(settings).toContain("name: '블랙'");
-    expect(settings).toContain("localStorage.setItem(THEME_CHOICE_STORAGE_KEY, selected.id)");
+    expect(settings).toContain("localStorage.setItem(activeThemeChoiceStorageKey, selected.id)");
   });
 
   test("keeps white light and black neutral dark", () => {

@@ -16,8 +16,9 @@ window.FAMILY_CONFIG = {
   document.addEventListener("gesturechange", preventViewportZoom, { passive: false });
   document.addEventListener("gestureend", preventViewportZoom, { passive: false });
 
-  const themeStorageKey = "family-theme-v1";
-  const themeChoiceStorageKey = "family-theme-choice-v1";
+  const demoMode = window.FAMILY_DEMO_MODE === true;
+  const themeStorageKey = demoMode ? "family-demo-theme-v1" : "family-theme-v1";
+  const themeChoiceStorageKey = demoMode ? "family-demo-theme-choice-v1" : "family-theme-choice-v1";
   const themeV2Choice = new URLSearchParams(window.location.search).get("theme-v2");
   if (themeV2Choice === "1") document.documentElement.dataset.familyThemeV2 = "true";
   if (themeV2Choice === "0") delete document.documentElement.dataset.familyThemeV2;
@@ -33,12 +34,13 @@ window.FAMILY_CONFIG = {
     ghibli: "#eaf3df",
   };
   const themeCssAliases = { black: "night" };
-  let initialTheme = "forest";
+  let initialTheme = demoMode ? "white" : "forest";
+  const validInitialThemes = demoMode ? ["white", "black"] : Object.keys(themeColors);
   try {
     const storedChoice = localStorage.getItem(themeChoiceStorageKey);
     const storedTheme = localStorage.getItem(themeStorageKey);
     const candidate = storedChoice || storedTheme;
-    if (themeColors[candidate]) initialTheme = candidate;
+    if (validInitialThemes.includes(candidate)) initialTheme = candidate;
   } catch { /* 기본 테마 사용 */ }
   document.documentElement.dataset.familyTheme = themeCssAliases[initialTheme] || initialTheme;
   document.documentElement.dataset.familyThemeChoice = initialTheme;
@@ -141,7 +143,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260802-black-fab-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
-    { name: "settings", version: "20260801-white-black-v1" },
+    { name: "settings", version: "20260803-demo-theme-two-modes-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
@@ -151,8 +153,8 @@ window.FAMILY_CONFIG = {
     { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260722-settings-gear-v3" },
-    { name: "storybook-theme", version: "20260716-storybook-v2" },
-    { name: "ghibli-theme", version: "20260716-ghibli-v2" },
+    { name: "storybook-theme", version: "20260803-demo-theme-two-modes-v1" },
+    { name: "ghibli-theme", version: "20260803-demo-theme-two-modes-v1" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
     { name: "notification-center", version: "20260802-persistent-inbox-v1" },
     { name: "adaptive-feeding", version: "20260727-direct-stepper-v1" },
