@@ -236,6 +236,7 @@ html[data-family-theme-choice="black"] :is(
 /* Floating utilities live outside page containers. */
 html[data-family-theme-choice="black"] body :is(
   #addEventButton.fab,
+  .family-todo-fab,
   .refresh-button,
   .settings-refresh-action,
   .notification-center-button,
