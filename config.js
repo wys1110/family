@@ -200,7 +200,7 @@ window.FAMILY_CONFIG = {
     { name: "care-color-separation", version: "20260722-night-contrast-v1", script: false },
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
     { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
-    { name: "black-theme-final", version: "20260802-final-black-v2", script: false },
+    { name: "black-theme-final", version: "20260803-black-neutral-v1", script: false },
     { name: "theme-v2", version: "20260803-shadow-v3", script: false },
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },
   ];
