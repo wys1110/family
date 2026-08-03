@@ -167,6 +167,19 @@ html[data-family-theme-choice="black"] #growthView .daily-intake-summary header 
   color: var(--theme-text-muted) !important;
 }
 
+/* The legacy night layer gives this card navy surfaces. Black mode keeps the
+ * summary frame neutral while preserving the category-specific accents. */
+html[data-family-theme-choice="black"] #growthView .daily-intake-summary {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface) !important;
+  box-shadow: var(--theme-shadow) !important;
+}
+
+html[data-family-theme-choice="black"] #growthView .daily-intake-breakdown article {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface-raised) !important;
+}
+
 html[data-family-theme-choice="black"] :is(input, select, textarea) {
   color: var(--theme-text) !important;
   border-color: var(--theme-border) !important;
