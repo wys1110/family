@@ -235,7 +235,7 @@ textarea::placeholder {
 /* Labels, dates, helper copy and badges */
 #calendarView :is(
   small,
-  label,
+  label:not(.month-picker-trigger),
   legend,
   .eyebrow,
   .album-stamp,

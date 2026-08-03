@@ -51,7 +51,7 @@ test("상단 우측 알림과 계정 버튼은 헤더의 정상 레이아웃에 
 test("변경된 새로고침 모듈을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
   const config = readFileSync("config.js", "utf8")
 
-  expect(config).toContain('{ name: "refresh-button", version: "20260722-settings-visible-v4" }')
+  expect(config).toContain('{ name: "refresh-button", version: "20260802-black-fab-v1" }')
 });
 
 test("config fallback 버튼을 발견하면 fallback 클릭 핸들러를 비활성화하지 않는다", () => {

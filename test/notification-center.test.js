@@ -7,7 +7,7 @@ const style = readFileSync('notification-center.css', 'utf8');
 const packageJson = readFileSync('package.json', 'utf8');
 
 test('상단 알림 버튼과 새 알림·예정·지난 알림 목록을 설치한다', () => {
-  expect(config).toContain('{ name: "notification-center", version: "20260723-family-font-scale-v1" }');
+  expect(config).toContain('{ name: "notification-center", version: "20260802-persistent-inbox-v1" }');
   expect(client).toContain("button.id = 'notificationCenterButton'");
   expect(client).toContain('data-notification-filter="new"');
   expect(client).toContain('data-notification-filter="upcoming"');
@@ -31,7 +31,7 @@ test('알림 상태를 사용자와 가족 공간별로 분리하고 읽음·삭
   expect(client).toContain('eventReminders: {}');
   expect(client).toContain('todoReminders: {}');
   expect(client).toContain('store.read[item.id] = Date.now()');
-  expect(client).toContain('store.dismissed[item.id] = Date.now()');
+  expect(client).toContain('store.dismissed[item.id] = now');
   expect(client).toContain('store.delivered[item.id] = now');
 });
 
