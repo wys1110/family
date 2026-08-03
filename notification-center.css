@@ -81,3 +81,6 @@
 .notification-reminder-field>label>span{font-size:var(--type-control-size,14px)}
 .notification-reminder-field select,.notification-reminder-field input{min-height:44px;font-size:var(--type-body-size,15px)}
 @media(max-width:560px){.notification-item-actions button{min-height:40px}}
+
+/* Keep every notification row at its content height when the upcoming list grows. */
+.notification-center-list{grid-auto-rows:max-content;align-content:start}

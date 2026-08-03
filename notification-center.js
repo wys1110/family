@@ -513,12 +513,13 @@
 
   const dialog = document.createElement('dialog');
   dialog.id = 'notificationCenterDialog';
+  dialog.setAttribute('aria-labelledby', 'notificationCenterTitle');
   dialog.className = 'notification-center-dialog';
   dialog.innerHTML = `
     <div class="notification-center-panel">
       <div class="sheet-handle"></div>
       <header class="notification-center-header">
-        <div><p class="eyebrow">NOTIFICATIONS</p><h2>알림</h2></div>
+        <div><p class="eyebrow">NOTIFICATIONS</p><h2 id="notificationCenterTitle">알림</h2></div>
         <div class="notification-center-header-actions">
           <button id="notificationMarkAllRead" type="button">모두 읽음</button>
           <button class="close-button" type="button" data-notification-close aria-label="알림 닫기">×</button>
