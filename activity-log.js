@@ -3,6 +3,9 @@
   document.documentElement.dataset.activityLogModule = 'ready';
   if (window.FAMILY_DEMO?.active) return;
 
+  // Keep the disclosure implementation available for a future product decision,
+  // but do not expose it in the current settings surface.
+  const SHOW_ACTIVITY_DISCLOSURE = false;
   const SESSION_KEY_PREFIX = 'family-activity-session-v1';
   const VIEW_FEATURES = new Set(['calendar', 'growth', 'english', 'feature-request', 'settings', 'admin']);
   const recent = new Map();
@@ -124,5 +127,5 @@
 
   window.addEventListener('familycontextchange', logSessionOpen);
   setTimeout(logSessionOpen, 1200);
-  installDisclosure();
+  if (SHOW_ACTIVITY_DISCLOSURE) installDisclosure();
 })();
