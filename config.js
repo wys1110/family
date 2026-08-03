@@ -201,7 +201,7 @@ window.FAMILY_CONFIG = {
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
     { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
     { name: "black-theme-final", version: "20260802-final-black-v2", script: false },
-    { name: "theme-v2", version: "20260803-shadow-v1", script: false },
+    { name: "theme-v2", version: "20260803-shadow-v2", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
