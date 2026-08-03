@@ -16,13 +16,13 @@ describe("white and black themes", () => {
   test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
-    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260802-final-black-v2", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260803-black-neutral-v1", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
     expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
     expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260802-theme-system-v1");');
-    expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260802-calendar-exception-v1");');
+    expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260803-night-only-v1");');
     expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-calendar-exception.css")');
@@ -101,8 +101,10 @@ describe("white and black themes", () => {
     expect(themeSystem).not.toContain('#70c8b8');
   });
 
-  test("keeps the schedule page on its existing starry-night colors", () => {
+  test("scopes the starry-night schedule exception to the night theme", () => {
     expect(calendarThemeException).toContain('body #calendarView#calendarView {');
+    expect(calendarThemeException).toContain('html[data-family-theme-choice="night"]');
+    expect(calendarThemeException).not.toContain('html[data-family-theme-choice="black"]');
     expect(calendarThemeException).toContain('--theme-accent: #79aaff');
     expect(calendarThemeException).toContain('.calendar-day.today .day-number');
     expect(calendarThemeException).toContain('.todo-filter-tabs button.active');
