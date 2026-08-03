@@ -12,7 +12,7 @@ describe("demo theme boundary", () => {
     expect(config).toContain("const demoMode = window.FAMILY_DEMO_MODE === true;");
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
-    expect(settings).toContain("const DEMO_THEMES = [");
+    expect(settings).toContain("const DEMO_THEMES = THEMES");
     expect(settings).toContain("const AVAILABLE_THEMES = demoMode ? DEMO_THEMES : THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");
@@ -31,8 +31,8 @@ describe("demo theme boundary", () => {
     expect(settings).toContain("id: 'rose'");
     expect(settings).toContain("id: 'ocean'");
     expect(settings).toContain("id: 'night'");
-    expect(settings).toContain("id: 'storybook'");
-    expect(settings).toContain("id: 'ghibli'");
+    expect(storybook).toContain("const THEME_ID = 'storybook';");
+    expect(ghibli).toContain("const THEME_ID = 'ghibli';");
   });
 
   test("does not add storybook or ghibli choices in demo mode", () => {

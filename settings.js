@@ -5,7 +5,12 @@
   const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
   const THEME_STORAGE_KEY = 'family-theme-v1';
   const THEME_CHOICE_STORAGE_KEY = 'family-theme-choice-v1';
-  const DEFAULT_THEME = 'forest';
+  const DEMO_THEME_STORAGE_KEY = 'family-demo-theme-v1';
+  const DEMO_THEME_CHOICE_STORAGE_KEY = 'family-demo-theme-choice-v1';
+  const demoMode = window.FAMILY_DEMO_MODE === true;
+  const activeThemeStorageKey = demoMode ? DEMO_THEME_STORAGE_KEY : THEME_STORAGE_KEY;
+  const activeThemeChoiceStorageKey = demoMode ? DEMO_THEME_CHOICE_STORAGE_KEY : THEME_CHOICE_STORAGE_KEY;
+  const DEFAULT_THEME = demoMode ? 'white' : 'forest';
   const THEMES = [
     {
       id: 'forest',
@@ -61,16 +66,20 @@
       preview: ['#050505', '#151515', '#d8d8d8', '#7f858c', '#f5f5f5'],
     },
   ];
+  const DEMO_THEMES = THEMES
+    .filter((theme) => ['white', 'black'].includes(theme.id))
+    .map((theme) => theme.id === 'black' ? { ...theme, name: '다크' } : theme);
+  const AVAILABLE_THEMES = demoMode ? DEMO_THEMES : THEMES;
 
   const main = document.querySelector('.app-shell main');
   const navigation = document.querySelector('.view-tabs');
   if (!main || !navigation) return;
 
-  const validTheme = (value) => THEMES.some((theme) => theme.id === value) ? value : DEFAULT_THEME;
+  const validTheme = (value) => AVAILABLE_THEMES.some((theme) => theme.id === value) ? value : DEFAULT_THEME;
   const storedTheme = () => {
     try {
-      const storedChoice = localStorage.getItem(THEME_CHOICE_STORAGE_KEY);
-      const storedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
+      const storedChoice = localStorage.getItem(activeThemeChoiceStorageKey);
+      const storedThemeId = localStorage.getItem(activeThemeStorageKey);
       return validTheme(storedChoice || storedThemeId);
     } catch { return DEFAULT_THEME; }
   };
@@ -101,7 +110,7 @@
         </div>
       </div>
       <div class="theme-option-grid" role="radiogroup" aria-label="화면 테마 선택">
-        ${THEMES.map((theme) => `
+        ${AVAILABLE_THEMES.map((theme) => `
           <button class="theme-option" type="button" data-theme-option="${theme.id}" role="radio" aria-checked="false"
             style="--preview-bg:${theme.preview[0]};--preview-surface:${theme.preview[1]};--preview-accent:${theme.preview[2]};--preview-highlight:${theme.preview[3]};--preview-text:${theme.preview[4]}">
             <span class="theme-preview" aria-hidden="true">
@@ -132,7 +141,7 @@
   view.querySelector('.settings-heading').appendChild(currentThemeLabel);
 
   const updateControls = (themeId) => {
-    const selected = THEMES.find((theme) => theme.id === themeId) || THEMES[0];
+    const selected = AVAILABLE_THEMES.find((theme) => theme.id === themeId) || AVAILABLE_THEMES[0];
     view.querySelectorAll('[data-theme-option]').forEach((button) => {
       const active = button.dataset.themeOption === selected.id;
       button.classList.toggle('active', active);
@@ -143,7 +152,7 @@
 
   const applyTheme = (themeId, { persist = true, announce = false } = {}) => {
     const selectedId = validTheme(themeId);
-    const selected = THEMES.find((theme) => theme.id === selectedId) || THEMES[0];
+    const selected = AVAILABLE_THEMES.find((theme) => theme.id === selectedId) || AVAILABLE_THEMES[0];
     const cssTheme = selected.cssTheme || selected.id;
     document.documentElement.dataset.familyTheme = cssTheme;
     document.documentElement.dataset.familyThemeChoice = selected.id;
@@ -152,8 +161,8 @@
     if (themeMeta) themeMeta.content = selected.themeColor;
     if (persist) {
       try {
-        localStorage.setItem(THEME_STORAGE_KEY, selected.id);
-        localStorage.setItem(THEME_CHOICE_STORAGE_KEY, selected.id);
+        localStorage.setItem(activeThemeStorageKey, selected.id);
+        localStorage.setItem(activeThemeChoiceStorageKey, selected.id);
       } catch { /* 현재 화면에는 적용 */ }
     }
     updateControls(selected.id);

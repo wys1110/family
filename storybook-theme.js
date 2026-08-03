@@ -1,4 +1,5 @@
 (() => {
+  if (window.FAMILY_DEMO_MODE === true) return;
   if (document.querySelector('[data-storybook-theme-module]')) return;
 
   const loadGhibliTheme = () => {

@@ -16,8 +16,9 @@ window.FAMILY_CONFIG = {
   document.addEventListener("gesturechange", preventViewportZoom, { passive: false });
   document.addEventListener("gestureend", preventViewportZoom, { passive: false });
 
-  const themeStorageKey = "family-theme-v1";
-  const themeChoiceStorageKey = "family-theme-choice-v1";
+  const demoMode = window.FAMILY_DEMO_MODE === true;
+  const themeStorageKey = demoMode ? "family-demo-theme-v1" : "family-theme-v1";
+  const themeChoiceStorageKey = demoMode ? "family-demo-theme-choice-v1" : "family-theme-choice-v1";
   const themeV2Choice = new URLSearchParams(window.location.search).get("theme-v2");
   if (themeV2Choice === "1") document.documentElement.dataset.familyThemeV2 = "true";
   if (themeV2Choice === "0") delete document.documentElement.dataset.familyThemeV2;
@@ -33,12 +34,13 @@ window.FAMILY_CONFIG = {
     ghibli: "#eaf3df",
   };
   const themeCssAliases = { black: "night" };
-  let initialTheme = "forest";
+  let initialTheme = demoMode ? "white" : "forest";
+  const validInitialThemes = demoMode ? ["white", "black"] : Object.keys(themeColors);
   try {
     const storedChoice = localStorage.getItem(themeChoiceStorageKey);
     const storedTheme = localStorage.getItem(themeStorageKey);
     const candidate = storedChoice || storedTheme;
-    if (themeColors[candidate]) initialTheme = candidate;
+    if (validInitialThemes.includes(candidate)) initialTheme = candidate;
   } catch { /* 기본 테마 사용 */ }
   document.documentElement.dataset.familyTheme = themeCssAliases[initialTheme] || initialTheme;
   document.documentElement.dataset.familyThemeChoice = initialTheme;
