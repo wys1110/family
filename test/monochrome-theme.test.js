@@ -97,6 +97,15 @@ describe("white and black themes", () => {
     expect(themeSystem).toContain('background-image: none !important;');
   });
 
+  test("colors black calendar weekends like a dark calendar", () => {
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .weekdays span:first-child');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .weekdays span:last-child');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .calendar-day:nth-child(7n + 1):not(.today) .day-number');
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .calendar-day:nth-child(7n):not(.today) .day-number');
+    expect(themeSystem).toContain('color: #ff6b78 !important;');
+    expect(themeSystem).toContain('color: #6ea8ff !important;');
+  });
+
   test("keeps the event editor frame, controls and footer neutral black", () => {
     expect(themeSystem).toContain('body #eventDialog {');
     expect(themeSystem).toContain('--event-sheet-bg: #080808 !important');

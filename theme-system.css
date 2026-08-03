@@ -147,6 +147,17 @@ html[data-family-theme-choice="black"] #calendarView .calendar-event-bar {
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .24) !important;
 }
 
+/* Weekend cues follow the dark-calendar convention without recoloring today. */
+html[data-family-theme-choice="black"] #calendarView .weekdays span:first-child,
+html[data-family-theme-choice="black"] #calendarView .calendar-day:nth-child(7n + 1):not(.today) .day-number {
+  color: #ff6b78 !important;
+}
+
+html[data-family-theme-choice="black"] #calendarView .weekdays span:last-child,
+html[data-family-theme-choice="black"] #calendarView .calendar-day:nth-child(7n):not(.today) .day-number {
+  color: #6ea8ff !important;
+}
+
 html[data-family-theme-choice="black"] :is(input, select, textarea) {
   color: var(--theme-text) !important;
   border-color: var(--theme-border) !important;
