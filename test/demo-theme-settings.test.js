@@ -13,7 +13,7 @@ describe("demo theme boundary", () => {
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
     expect(config).toContain('{ name: "settings", version: "20260803-production-two-themes-v1" }');
-    expect(read("index.html")).toContain('config.js?v=20260803-production-two-themes-v1');
+    expect(read("index.html")).toContain('config.js?v=20260803-calendar-month-typography-v1');
     expect(settings).toContain("const AVAILABLE_THEMES = THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");
