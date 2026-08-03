@@ -1,0 +1,315 @@
+/*
+ * Theme v2 shadow layer
+ * ---------------------
+ * This file is inert unless data-family-theme-v2="true" is present. It can be
+ * completed and verified beside the current production theme, then enabled by
+ * changing one bootstrap decision. Calendar colors remain intentionally owned
+ * by theme-calendar-exception.css.
+ */
+
+html[data-family-theme-v2="true"] {
+  color-scheme: light;
+
+  --color-canvas: #f6f6f4;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-soft: #f0f1ef;
+  --color-control: #f2f3f1;
+  --color-control-hover: #e8e9e7;
+  --color-control-active: #202124;
+  --color-text-primary: #202124;
+  --color-text-secondary: #62666a;
+  --color-text-tertiary: #8a8e92;
+  --color-text-on-accent: #ffffff;
+  --color-border-subtle: rgba(32, 33, 36, .11);
+  --color-border-strong: rgba(32, 33, 36, .20);
+  --color-accent: #202124;
+  --color-accent-soft: rgba(32, 33, 36, .08);
+  --color-focus: #62666a;
+  --color-overlay: rgba(20, 21, 22, .38);
+  --color-shadow: rgba(32, 33, 36, .14);
+  --color-danger: #a33b42;
+  --color-danger-soft: rgba(163, 59, 66, .10);
+  --color-success: #426c55;
+  --color-success-soft: rgba(66, 108, 85, .10);
+  --color-warning: #8a6530;
+  --color-warning-soft: rgba(138, 101, 48, .11);
+  --color-info: #536776;
+  --color-info-soft: rgba(83, 103, 118, .10);
+  --color-control-gradient: linear-gradient(145deg, #ffffff, #eceeeb);
+  --color-control-active-gradient: linear-gradient(145deg, #35373a, #1d1f21);
+  --color-surface-gradient: linear-gradient(180deg, #ffffff, #f5f6f4);
+  --color-progress-gradient: linear-gradient(90deg, #5c6064, #202124);
+  --elevation-card: 0 14px 38px rgba(32, 33, 36, .10);
+  --elevation-floating: 0 16px 36px rgba(32, 33, 36, .18);
+
+  /* Stable semantic API consumed by component modules. */
+  --theme-canvas: var(--color-canvas);
+  --theme-surface: var(--color-surface);
+  --theme-surface-raised: var(--color-surface-raised);
+  --theme-surface-soft: var(--color-surface-soft);
+  --theme-control: var(--color-control);
+  --theme-control-active: var(--color-control-active);
+  --theme-border: var(--color-border-subtle);
+  --theme-border-strong: var(--color-border-strong);
+  --theme-text: var(--color-text-primary);
+  --theme-text-muted: var(--color-text-secondary);
+  --theme-text-subtle: var(--color-text-tertiary);
+  --theme-accent: var(--color-accent);
+  --theme-accent-contrast: var(--color-text-on-accent);
+  --theme-progress-track: var(--color-surface-soft);
+  --theme-progress-fill: var(--color-progress-gradient);
+  --theme-shadow: var(--elevation-card);
+  --theme-overlay: var(--color-overlay);
+
+  /* Temporary compatibility aliases while component files migrate. */
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-raised);
+  --separator: var(--color-border-subtle);
+  --label: var(--color-text-primary);
+  --secondary: var(--color-text-secondary);
+  --tertiary: var(--color-text-tertiary);
+  --blue: var(--color-accent);
+  --shadow: var(--elevation-card);
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] {
+  color-scheme: dark;
+
+  --color-canvas: #050505;
+  --color-surface: #111111;
+  --color-surface-raised: #191919;
+  --color-surface-soft: #161616;
+  --color-control: #202020;
+  --color-control-hover: #292929;
+  --color-control-active: #353535;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #b9b9b9;
+  --color-text-tertiary: #858585;
+  --color-text-on-accent: #090909;
+  --color-border-subtle: rgba(255, 255, 255, .12);
+  --color-border-strong: rgba(255, 255, 255, .21);
+  --color-accent: #d7d7d7;
+  --color-accent-soft: rgba(255, 255, 255, .08);
+  --color-focus: #b9b9b9;
+  --color-overlay: rgba(0, 0, 0, .68);
+  --color-shadow: rgba(0, 0, 0, .46);
+  --color-danger: #e0a2a6;
+  --color-danger-soft: rgba(224, 162, 166, .10);
+  --color-success: #b4c7bb;
+  --color-success-soft: rgba(180, 199, 187, .10);
+  --color-warning: #d0c0a6;
+  --color-warning-soft: rgba(208, 192, 166, .10);
+  --color-info: #b7c0c7;
+  --color-info-soft: rgba(183, 192, 199, .10);
+  --color-control-gradient: linear-gradient(145deg, #2d2d2d, #171717);
+  --color-control-active-gradient: linear-gradient(145deg, #444444, #252525);
+  --color-surface-gradient: linear-gradient(180deg, #151515, #0b0b0b);
+  --color-progress-gradient: linear-gradient(90deg, #777777, #d0d0d0);
+  --elevation-card: 0 18px 44px rgba(0, 0, 0, .42);
+  --elevation-floating: 0 16px 36px rgba(0, 0, 0, .52);
+}
+
+html[data-family-theme-v2="true"],
+html[data-family-theme-v2="true"] body {
+  color: var(--color-text-primary) !important;
+  background: var(--color-canvas) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(.topbar, .daily-verse-card, .view-tabs) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background-color: var(--color-surface) !important;
+  box-shadow: var(--elevation-card) !important;
+}
+
+html[data-family-theme-v2="true"] body .view-tab {
+  color: var(--color-text-secondary) !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-family-theme-v2="true"] body .view-tab.active {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-strong) !important;
+  background: var(--color-control-active) !important;
+  box-shadow: var(--elevation-card) !important;
+}
+
+/* All non-calendar views share the same semantic surfaces. */
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) {
+  color: var(--color-text-primary) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) :is(
+  .baby-care-card,
+  .care-timer-card,
+  .growth-quick-section,
+  .care-pattern-section,
+  .weekly-care-summary,
+  .recent-photo-section,
+  .growth-entry,
+  .growth-insight-row > article,
+  .growth-summary-body,
+  .care-timeline-item,
+  .growth-history-item,
+  .growth-inline-history-item,
+  .summary-card,
+  .english-today-card,
+  .english-story-card,
+  .english-library-card,
+  .feature-request-card,
+  .feature-request-admin,
+  .feature-request-item,
+  .feature-request-empty,
+  .settings-card,
+  .platform-admin-card,
+  .private-panel
+) {
+  border-color: var(--color-border-subtle) !important;
+  background-color: var(--color-surface) !important;
+  background-image: none !important;
+  box-shadow: var(--elevation-card) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) :is(h1, h2, h3, strong, label, legend, time) {
+  color: var(--color-text-primary) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) :is(.eyebrow, small, .section-kicker, .helper-text, [class*="subtitle"], [class*="description"], [class*="meta"]) {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) :is(button, [role="button"]):not(.danger-button):not([data-delete]):not(.theme-preview *) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background-color: var(--color-control) !important;
+  background-image: var(--color-control-gradient) !important;
+  box-shadow: inset 0 1px 0 var(--color-accent-soft) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #growthView,
+  #englishView,
+  #featureRequestView,
+  #settingsView,
+  .admin-view,
+  .private-view
+) :is(button.active, button[aria-selected="true"], button[aria-pressed="true"], [role="button"].active) {
+  color: var(--color-text-on-accent) !important;
+  border-color: var(--color-border-strong) !important;
+  background-color: var(--color-control-active) !important;
+  background-image: var(--color-control-active-gradient) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(input, select, textarea) {
+  color: var(--color-text-primary) !important;
+  caret-color: var(--color-focus) !important;
+  border-color: var(--color-border-subtle) !important;
+  background: var(--color-surface-raised) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(input, textarea)::placeholder {
+  color: var(--color-text-tertiary) !important;
+}
+
+/* Known leak points are explicit until their owning modules consume tokens. */
+html[data-family-theme-v2="true"] #growthView :is(
+  #carePatternDateLabel,
+  .care-pattern-section .eyebrow,
+  .care-day-mode-control button,
+  .care-pattern-view-control button
+),
+html[data-family-theme-v2="true"] #englishView :is(#englishTodayCopy, #englishStoryTheme),
+html[data-family-theme-v2="true"] #settingsView :is(
+  .family-photo-picker,
+  .feeding-reminder-presets button,
+  .feeding-reminder-permission,
+  #dailyBriefingSettings button
+) {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  #addEventButton.fab,
+  .refresh-button,
+  .settings-refresh-action,
+  .notification-center-button,
+  .avatar-button
+) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-strong) !important;
+  background-color: var(--color-control) !important;
+  background-image: var(--color-control-gradient) !important;
+  box-shadow: var(--elevation-floating) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(
+  .sheet-dialog,
+  .notification-center-panel,
+  .account-panel
+) {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-strong) !important;
+  background: var(--color-surface-gradient) !important;
+  box-shadow: var(--elevation-floating) !important;
+}
+
+html[data-family-theme-v2="true"] body :is(.sheet-dialog, .notification-center-panel)::backdrop {
+  background: var(--color-overlay) !important;
+}
+
+html[data-family-theme-v2="true"] body #eventDialog {
+  --event-sheet-bg: var(--color-surface);
+  --event-panel: var(--color-surface-raised);
+  --event-panel-soft: var(--color-surface-soft);
+  --event-line: var(--color-border-subtle);
+  --event-line-strong: var(--color-border-strong);
+  --event-action-bg: var(--color-surface);
+  --event-frame-line: var(--color-border-strong);
+  --event-frame-line-soft: var(--color-border-subtle);
+  --event-frame-footer: var(--color-surface);
+}
+
+/* Theme thumbnails intentionally demonstrate their own palette. */
+html[data-family-theme-v2="true"] #settingsView .theme-preview,
+html[data-family-theme-v2="true"] #settingsView .theme-preview * {
+  box-shadow: none !important;
+}

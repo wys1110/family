@@ -18,6 +18,9 @@ window.FAMILY_CONFIG = {
 
   const themeStorageKey = "family-theme-v1";
   const themeChoiceStorageKey = "family-theme-choice-v1";
+  const themeV2Choice = new URLSearchParams(window.location.search).get("theme-v2");
+  if (themeV2Choice === "1") document.documentElement.dataset.familyThemeV2 = "true";
+  if (themeV2Choice === "0") delete document.documentElement.dataset.familyThemeV2;
   const themeColors = {
     forest: "#fff8f3",
     sunshine: "#fffaf0",
@@ -198,6 +201,7 @@ window.FAMILY_CONFIG = {
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
     { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
     { name: "black-theme-final", version: "20260802-final-black-v2", script: false },
+    { name: "theme-v2", version: "20260803-shadow-v1", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");

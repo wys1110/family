@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "check": "node --check app.js && node --check config.js && node --check daily-briefing.js && node --check event-change-push.js && node --check notification-center.js && node --check service-worker.js && node --check platform-request-admin.js && tsc --noEmit -p tsconfig.json"
+    "check": "npm run check:theme-colors && node --check app.js && node --check config.js && node --check daily-briefing.js && node --check event-change-push.js && node --check notification-center.js && node --check service-worker.js && node --check platform-request-admin.js && tsc --noEmit -p tsconfig.json",
+    "check:theme-colors": "node scripts/check-theme-colors.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",
