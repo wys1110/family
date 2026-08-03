@@ -9,7 +9,7 @@ const serviceWorker = readFileSync("service-worker.js", "utf8");
 describe("Theme v2 shadow rollout", () => {
   test("loads last but remains gated until explicitly enabled", () => {
     const currentThemeIndex = config.indexOf('{ name: "black-theme-final"');
-    const v2Index = config.indexOf('{ name: "theme-v2", version: "20260803-shadow-v2", script: false }');
+    const v2Index = config.indexOf('{ name: "theme-v2", version: "20260803-shadow-v3", script: false }');
 
     expect(v2Index).toBeGreaterThan(currentThemeIndex);
     expect(config).toContain('get("theme-v2")');
@@ -47,6 +47,13 @@ describe("Theme v2 shadow rollout", () => {
     expect(theme).toContain(".care-pattern-categories button span");
     expect(theme).toContain(".english-library-card > span");
     expect(theme).toContain("--color-story-accent: var(--color-text-secondary)");
+  });
+
+  test("neutralizes black daily feeding breakdown surfaces and totals", () => {
+    expect(theme).toContain(".daily-intake-summary header > p");
+    expect(theme).toContain(".daily-intake-breakdown span");
+    expect(theme).toContain(".daily-intake-breakdown article");
+    expect(theme).toContain("background: var(--color-surface-raised) !important;");
   });
 
   test("always fetches the shadow stylesheet from the network", () => {

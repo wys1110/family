@@ -353,6 +353,24 @@ html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView 
   box-shadow: var(--elevation-card) !important;
 }
 
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-summary header > p,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown span,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown small,
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-note {
+  color: var(--color-text-secondary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-summary header > p b {
+  color: var(--color-text-primary) !important;
+}
+
+html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .daily-intake-breakdown article {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-subtle) !important;
+  background: var(--color-surface-raised) !important;
+  box-shadow: none !important;
+}
+
 html[data-family-theme-v2="true"][data-family-theme-choice="black"] #growthView .care-split-entry {
   --entry-color: var(--color-text-secondary) !important;
   --entry-border: var(--color-border-subtle) !important;
