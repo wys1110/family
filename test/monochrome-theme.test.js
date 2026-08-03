@@ -16,12 +16,12 @@ describe("white and black themes", () => {
   test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
-    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260803-black-feeding-surface-v2", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260803-black-todo-fab-v1", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
     expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
-    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260803-black-feeding-surface-v2");');
+    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260803-black-todo-fab-v1");');
     expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260803-night-only-v1");');
     expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
@@ -60,6 +60,7 @@ describe("white and black themes", () => {
     expect(floatingActions).toContain('html[data-family-theme="night"][data-family-theme-choice="black"] body > #addEventButton.fab');
     expect(floatingActions).toContain('background: linear-gradient(145deg, #252525, #151515)');
     expect(themeSystem).toContain('#addEventButton.fab');
+    expect(themeSystem).toContain('.family-todo-fab');
   });
 
   test("keeps the legacy cleanup as a compatibility layer", () => {
