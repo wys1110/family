@@ -147,7 +147,7 @@ window.FAMILY_CONFIG = {
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260722-settings-gear-v3" },
     { name: "family-todo", version: "20260718-logic-audit-v1" },
-    { name: "notification-center", version: "20260802-persistent-inbox-v1" },
+    { name: "notification-center", version: "20260803-layout-fix-v1" },
     { name: "adaptive-feeding", version: "20260727-direct-stepper-v1" },
     { name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },

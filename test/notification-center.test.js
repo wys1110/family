@@ -7,13 +7,23 @@ const style = readFileSync('notification-center.css', 'utf8');
 const packageJson = readFileSync('package.json', 'utf8');
 
 test('상단 알림 버튼과 새 알림·예정·지난 알림 목록을 설치한다', () => {
-  expect(config).toContain('{ name: "notification-center", version: "20260802-persistent-inbox-v1" }');
+  expect(config).toContain('{ name: "notification-center", version: "20260803-layout-fix-v1" }');
   expect(client).toContain("button.id = 'notificationCenterButton'");
   expect(client).toContain('data-notification-filter="new"');
   expect(client).toContain('data-notification-filter="upcoming"');
   expect(client).toContain('data-notification-filter="history"');
   expect(style).toContain('.notification-center-button');
   expect(style).toContain('.notification-center-dialog');
+});
+
+test('예정 알림이 많아도 목록 행이 항목 높이로 유지된다', () => {
+  expect(style).toContain('grid-auto-rows:max-content');
+  expect(style).toContain('align-content:start');
+});
+
+test('알림 창에 접근 가능한 이름을 제공한다', () => {
+  expect(client).toContain("dialog.setAttribute('aria-labelledby', 'notificationCenterTitle')");
+  expect(client).toContain('<h2 id="notificationCenterTitle">알림</h2>');
 });
 
 test('일정과 할 일 등록창에 알림 시점 선택을 추가한다', () => {
