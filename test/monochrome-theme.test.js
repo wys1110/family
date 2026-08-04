@@ -153,8 +153,8 @@ describe("white and black themes", () => {
 
   test("keeps the white baby profile readable", () => {
     expect(palette).toContain('html[data-family-theme="white"] .baby-care-card.baby-profile-card');
-    expect(palette).toContain('color: var(--theme-accent-contrast);');
-    expect(palette).toContain('background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));');
+    expect(palette).toContain('color: var(--label);');
+    expect(palette).toContain('background: linear-gradient(145deg, var(--theme-surface), var(--theme-surface-raised));');
   });
 
   test("keeps white care category icons on colored tokens", () => {
@@ -164,5 +164,24 @@ describe("white and black themes", () => {
     expect(themeSystem).toContain('--theme-care-solid: #6f9d72;');
     expect(palette).toContain('--category-color: var(--theme-care-pumped);');
     expect(palette).toContain('--category-color: var(--theme-care-solid);');
+  });
+
+  test("keeps white mode hero surfaces and floating utilities light", () => {
+    expect(palette).toContain('html[data-family-theme="white"] .hero-card');
+    expect(palette).toContain('html[data-family-theme="white"] .baby-care-card.baby-profile-card');
+    expect(palette).toContain('color: var(--label);');
+    expect(palette).toContain('background: linear-gradient(145deg, var(--theme-surface), var(--theme-surface-raised));');
+    expect(palette).toContain('html[data-family-theme="white"] body :is(');
+    expect(palette).toContain('.refresh-button');
+    expect(palette).toContain('.avatar-button');
+    expect(palette).toContain('.feature-request-mark');
+    expect(palette).toContain('.settings-mark');
+    expect(palette).toContain('.family-profile-photo-placeholder');
+    expect(palette).toContain('html[data-family-theme="white"] .daily-verse-heading .verse-cross');
+    expect(palette).toContain('background: var(--theme-surface-raised);');
+    expect(palette).toContain(`html[data-family-theme="white"] #calendarView :is(.calendar-subtabs button.active, .todo-filter-tabs button.active) {
+  color: var(--label);
+  border-color: var(--separator);
+  background: var(--theme-surface-raised);`);
   });
 });
