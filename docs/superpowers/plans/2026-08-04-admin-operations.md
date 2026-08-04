@@ -40,6 +40,8 @@
 
 **Files:**
 - Create: `supabase/migrations/20260804_platform_admin_operations.sql`
+- Create: `supabase/migrations/20260804_platform_admin_operations_acl.sql`
+- Create: `supabase/migrations/20260804_platform_admin_operations_rls.sql`
 - Test: `test/admin-operations.test.js`
 
 - [ ] **Step 1: Create the migration with the Supabase CLI**

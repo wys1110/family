@@ -17,7 +17,7 @@
 
 ## 데이터/API
 
-새 migration `20260804_platform_admin_operations.sql`에서 다음을 추가한다.
+새 migration `20260804_platform_admin_operations.sql`과 명시적 ACL/RLS 보정 migration에서 다음을 추가한다.
 
 - `platform_admin_audit_logs`: 관리자 ID, action, optional target, 제한된 metadata, timestamp를 저장한다. RLS를 켜고 테이블 직접 접근은 막는다.
 - `log_platform_admin_action(action, metadata)`: `is_platform_admin()`을 재검증한 뒤 허용된 action만 기록한다.

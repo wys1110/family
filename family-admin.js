@@ -298,4 +298,11 @@
   new MutationObserver(syncColumns).observe(nav, { childList: true, attributes: true, attributeFilter: ['hidden'] });
   syncColumns();
   restore();
+
+  if (!document.querySelector('script[data-admin-operations-module]')) {
+    const operationsScript = document.createElement('script');
+    operationsScript.src = 'admin-ops.js?v=20260804-operations-v1';
+    operationsScript.dataset.adminOperationsModule = '';
+    document.head.appendChild(operationsScript);
+  }
 })();

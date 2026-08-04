@@ -385,6 +385,16 @@
         request.status = nextStatus;
         item.dataset.status = nextStatus;
         updateSummary(section);
+        try {
+          await context.supabase.rpc('log_platform_admin_action', {
+            p_action: 'feature_request_status',
+            p_target_type: 'feature_request',
+            p_target_id: request.id,
+            p_metadata: { next_status: nextStatus },
+          });
+        } catch {
+          // 상태 변경 자체는 성공했으므로 감사 로그 실패가 작업을 되돌리지는 않아요.
+        }
         if (typeof toast === 'function') toast(`요청 상태를 ‘${STATUS_LABELS.get(nextStatus) || nextStatus}’로 변경했어요.`);
       } catch {
         select.value = previousStatus;
