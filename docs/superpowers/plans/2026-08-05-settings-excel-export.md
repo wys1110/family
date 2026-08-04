@@ -79,6 +79,7 @@
 
 **Files:**
 - Modify: `config.js`
+- Modify: `service-worker.js`
 - Test: `test/settings-data-export.test.js`
 
 **Interfaces:**
@@ -87,6 +88,8 @@
 - [ ] **Step 1: Register the module**
 
   Add `{ name: "settings-data-export", version: "20260805-settings-excel-v1" }` immediately after the existing `settings` module so the settings view exists before injection.
+
+  Add `/settings-data-export.js` to the service worker force-network list so installed iOS/PWA clients do not retain an old module copy.
 
 - [ ] **Step 2: Add compact responsive styles**
 
