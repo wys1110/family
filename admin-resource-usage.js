@@ -83,6 +83,7 @@
       .admin-resource-card[hidden] { display: none !important; }
       .admin-resource-card { margin-top: 16px; }
       .admin-resource-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
+      .admin-resource-heading .admin-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
       .admin-resource-heading .admin-refresh-button { align-self: start; }
       .admin-resource-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .admin-resource-item { min-width: 0; padding: 14px; border: 1px solid var(--separator); border-radius: 18px; background: rgba(var(--theme-accent-rgb), .055); }
@@ -107,6 +108,8 @@
       .admin-resource-note { margin: 10px 2px 0; color: var(--tertiary); font-size: 9px; line-height: 1.45; }
       @media (max-width: 520px) {
         .admin-resource-heading { grid-template-columns: 44px minmax(0, 1fr); }
+        .admin-resource-heading .admin-card-actions { grid-column: 1 / -1; justify-content: stretch; width: 100%; }
+        .admin-resource-heading .admin-card-actions > * { flex: 1 1 0; width: 0; max-width: 100%; box-sizing: border-box; }
         .admin-resource-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
       }
       @media (max-width: 360px) {
@@ -122,6 +125,7 @@
     const next = document.createElement('section');
     next.className = 'settings-card admin-resource-card';
     next.dataset.adminResourceUsage = '';
+    next.dataset.adminCollapsed = 'true';
     next.hidden = true;
     next.innerHTML = `
       <div class="settings-heading admin-resource-heading">
@@ -131,7 +135,10 @@
           <h2>Supabase 사용량</h2>
           <span>데이터베이스와 파일 Storage 사용량을 확인하세요.</span>
         </div>
-        <button class="admin-refresh-button" type="button" data-resource-refresh>새로고침</button>
+        <div class="admin-card-actions">
+          <button class="admin-refresh-button" type="button" data-resource-refresh>새로고침</button>
+          <button class="admin-card-toggle" type="button" data-admin-collapse aria-expanded="false" aria-controls="adminResourceDetails">펼치기</button>
+        </div>
       </div>
       <div class="admin-resource-grid">
         <article class="admin-resource-item" data-resource="database">
@@ -147,8 +154,10 @@
           <div class="admin-resource-meta"><span data-resource-percent>0%</span><span>Free 기준</span></div>
         </article>
       </div>
-      <div class="admin-resource-status" data-resource-status>사용량을 불러오는 중이에요.</div>
-      <p class="admin-resource-note"><span data-resource-updated>마지막 갱신 전</span> · 과금 화면의 일별 집계와는 갱신 시점 차이가 있을 수 있어요.</p>`;
+      <div class="admin-card-body" id="adminResourceDetails" data-admin-card-body hidden>
+        <div class="admin-resource-status" data-resource-status>사용량을 불러오는 중이에요.</div>
+        <p class="admin-resource-note"><span data-resource-updated>마지막 갱신 전</span> · 과금 화면의 일별 집계와는 갱신 시점 차이가 있을 수 있어요.</p>
+      </div>`;
     const mainCard = view.querySelector('.global-admin-card');
     if (mainCard) mainCard.insertAdjacentElement('afterend', next);
     else view.prepend(next);

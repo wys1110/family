@@ -80,6 +80,7 @@
       .platform-request-admin-card[hidden] { display: none !important; }
       .platform-request-admin-card { margin-top: 16px; }
       .platform-request-admin-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
+      .platform-request-admin-heading .admin-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
       .platform-request-admin-heading .admin-refresh-button { align-self: start; }
       .platform-request-admin-summary {
         display: grid;
@@ -193,6 +194,8 @@
       .platform-request-admin-error strong { margin-bottom: 5px; color: var(--label); }
       @media (max-width: 560px) {
         .platform-request-admin-heading { grid-template-columns: 44px minmax(0, 1fr); }
+        .platform-request-admin-heading .admin-card-actions { grid-column: 1 / -1; justify-content: stretch; width: 100%; }
+        .platform-request-admin-heading .admin-card-actions > * { flex: 1 1 0; width: 0; max-width: 100%; box-sizing: border-box; }
         .platform-request-admin-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
         .platform-request-admin-controls { grid-template-columns: 1fr; }
         .platform-request-admin-time { width: 100%; margin-left: 0; }
@@ -208,6 +211,7 @@
     section = document.createElement('section');
     section.className = 'settings-card platform-request-admin-card';
     section.dataset.platformRequestAdmin = '';
+    section.dataset.adminCollapsed = 'true';
     section.hidden = true;
     section.innerHTML = `
       <div class="settings-heading platform-request-admin-heading">
@@ -217,22 +221,27 @@
           <h2>전체 사용자 요청</h2>
           <span>모든 가족 그룹에서 등록한 개선 요청을 확인하고 처리 상태를 관리하세요.</span>
         </div>
-        <button class="admin-refresh-button" type="button" data-platform-request-refresh>새로고침</button>
+        <div class="admin-card-actions">
+          <button class="admin-refresh-button" type="button" data-platform-request-refresh>새로고침</button>
+          <button class="admin-card-toggle" type="button" data-admin-collapse aria-expanded="false" aria-controls="platformRequestDetails">펼치기</button>
+        </div>
       </div>
       <div class="platform-request-admin-summary">
         <div><strong data-platform-request-total>0</strong><span>전체 요청</span></div>
         <div><strong data-platform-request-open>0</strong><span>처리 필요</span></div>
         <div><strong data-platform-request-done>0</strong><span>완료</span></div>
       </div>
-      <div class="platform-request-admin-controls">
-        <input type="search" data-platform-request-search placeholder="가족 그룹·작성자·요청 내용 검색" aria-label="전체 요청 검색">
-        <select data-platform-request-filter aria-label="요청 상태 필터">
-          <option value="all">전체 상태</option>
-          ${STATUS_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
-        </select>
-      </div>
-      <div class="platform-request-admin-list" data-platform-request-list>
-        <div class="platform-request-admin-empty">요청을 불러오는 중이에요.</div>
+      <div class="admin-card-body" id="platformRequestDetails" data-admin-card-body hidden>
+        <div class="platform-request-admin-controls">
+          <input type="search" data-platform-request-search placeholder="가족 그룹·작성자·요청 내용 검색" aria-label="전체 요청 검색">
+          <select data-platform-request-filter aria-label="요청 상태 필터">
+            <option value="all">전체 상태</option>
+            ${STATUS_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="platform-request-admin-list" data-platform-request-list>
+          <div class="platform-request-admin-empty">요청을 불러오는 중이에요.</div>
+        </div>
       </div>
     `;
     adminView.appendChild(section);

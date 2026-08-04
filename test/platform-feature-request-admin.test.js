@@ -7,7 +7,7 @@ const migration = readFileSync(new URL('../supabase/migrations/20260801_platform
 
 describe('platform feature request administration', () => {
   it('loads the platform administration module', () => {
-    expect(loader).toContain('platform-request-admin.js?v=20260801-v1');
+    expect(loader).toContain('platform-request-admin.js?v=20260804-dashboard-v1');
   });
 
   it('checks platform-admin authorization and uses protected RPCs', () => {

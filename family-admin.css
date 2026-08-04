@@ -1,11 +1,21 @@
 .admin-view[hidden], .global-admin-section[hidden] { display: none !important; }
 .global-admin-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.admin-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: start; gap: 6px; min-width: 0; }
 .admin-view .admin-refresh-button {
   align-self: start; min-height: 44px; padding: 0 12px; border: 1px solid var(--separator);
   border-radius: 12px; color: var(--blue); background: rgba(var(--theme-accent-rgb), .10);
   font: inherit; font-size: 11px; font-weight: 750;
 }
+.admin-view .admin-card-toggle {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--separator); border-radius: 12px;
+  color: var(--label); background: var(--surface-2); font: inherit; font-size: 11px; font-weight: 750;
+}
+.admin-view .admin-refresh-button:focus-visible, .admin-view .admin-card-toggle:focus-visible,
+.admin-view .global-admin-modes button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.admin-card-body { min-width: 0; }
+.admin-card-body[hidden], [data-admin-collapsed="true"] [data-admin-card-body] { display: none !important; }
 .admin-view .admin-refresh-button:disabled { opacity: .55; }
+.admin-view .admin-card-actions > .admin-refresh-button { justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
 .global-admin-loading, .global-admin-error, .global-admin-empty {
   padding: 22px 14px; border: 1px dashed var(--separator); border-radius: 17px;
   color: var(--secondary); text-align: center; font-size: 11px; line-height: 1.5;
@@ -90,6 +100,7 @@
 }
 .admin-view .global-admin-card > [data-admin-content] { overflow-x: hidden; }
 .admin-view .global-admin-card > [data-admin-content] > * { min-width: 0; }
+.admin-view .global-admin-card > [data-admin-content] > .admin-card-body { margin-top: 12px; }
 .global-admin-search { margin: 0; }
 .global-admin-search input {
   display: block;
@@ -110,7 +121,8 @@
 
 @media (max-width: 520px) {
   .global-admin-heading { grid-template-columns: 44px minmax(0, 1fr); }
-  .admin-view .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
+  .admin-view .admin-card-actions { grid-column: 1 / -1; justify-content: stretch; }
+  .admin-view .admin-card-actions > * { flex: 1 1 0; width: 0; max-width: 100%; box-sizing: border-box; }
   .global-admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .global-admin-user { grid-template-columns: 42px minmax(0, 1fr); }
   .global-admin-user-status { grid-column: 2; grid-auto-flow: column; justify-content: start; justify-items: start; }

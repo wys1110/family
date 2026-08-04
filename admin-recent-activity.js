@@ -94,6 +94,7 @@
       .admin-recent-card[hidden] { display: none !important; }
       .admin-recent-card { margin-top: 16px; }
       .admin-recent-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
+      .admin-recent-heading .admin-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
       .admin-recent-heading .admin-refresh-button { align-self: start; }
       .admin-recent-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
       .admin-recent-summary div { padding: 11px 8px; border: 1px solid var(--separator); border-radius: 14px; background: rgba(var(--theme-accent-rgb), .055); text-align: center; }
@@ -137,6 +138,8 @@
       .admin-recent-note { margin: 10px 2px 0; color: var(--tertiary); font-size: 9px; line-height: 1.45; }
       @media (max-width: 540px) {
         .admin-recent-heading { grid-template-columns: 44px minmax(0, 1fr); }
+        .admin-recent-heading .admin-card-actions { grid-column: 1 / -1; justify-content: stretch; width: 100%; }
+        .admin-recent-heading .admin-card-actions > * { flex: 1 1 0; width: 0; max-width: 100%; box-sizing: border-box; }
         .admin-recent-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
         .admin-user-chart-row { grid-template-columns: minmax(64px, 92px) minmax(0, 1fr) auto; gap: 7px; }
         .admin-recent-controls { grid-template-columns: 1fr; }
@@ -156,6 +159,7 @@
     section = document.createElement('section');
     section.className = 'settings-card admin-recent-card';
     section.dataset.adminRecentActivity = '';
+    section.dataset.adminCollapsed = 'true';
     section.hidden = true;
     section.innerHTML = `
       <div class="settings-heading admin-recent-heading">
@@ -165,32 +169,37 @@
           <h2>최근 사용자 활동</h2>
           <span>앱 실행과 화면 이동 등 최소 활동 정보만 확인합니다.</span>
         </div>
-        <button class="admin-refresh-button" type="button" data-admin-recent-refresh>새로고침</button>
+        <div class="admin-card-actions">
+          <button class="admin-refresh-button" type="button" data-admin-recent-refresh>새로고침</button>
+          <button class="admin-card-toggle" type="button" data-admin-collapse aria-expanded="false" aria-controls="adminRecentDetails">펼치기</button>
+        </div>
       </div>
       <div class="admin-recent-summary">
         <div><strong data-admin-recent-total>0</strong><span>조회 기간 활동</span></div>
         <div><strong data-admin-recent-users>0</strong><span>활동 사용자</span></div>
         <div><strong data-admin-recent-today>0</strong><span>오늘 활동</span></div>
       </div>
-      <div class="admin-user-chart" data-admin-user-chart>
-        <div class="admin-user-chart-heading">
-          <strong>사용자별 활동</strong>
-          <span>조회 기간 활동 횟수</span>
+      <div class="admin-card-body" id="adminRecentDetails" data-admin-card-body hidden>
+        <div class="admin-user-chart" data-admin-user-chart>
+          <div class="admin-user-chart-heading">
+            <strong>사용자별 활동</strong>
+            <span>조회 기간 활동 횟수</span>
+          </div>
+          <div class="admin-user-chart-list" data-admin-user-chart-list>
+            <div class="admin-user-chart-empty">활동을 불러오는 중이에요.</div>
+          </div>
         </div>
-        <div class="admin-user-chart-list" data-admin-user-chart-list>
-          <div class="admin-user-chart-empty">활동을 불러오는 중이에요.</div>
+        <div class="admin-recent-controls">
+          <input type="search" data-admin-recent-search placeholder="사용자·이메일·가족 그룹 검색" aria-label="최근 활동 검색">
+          <select data-admin-recent-range aria-label="최근 활동 기간">
+            <option value="1">최근 24시간</option>
+            <option value="7" selected>최근 7일</option>
+            <option value="30">최근 30일</option>
+          </select>
         </div>
-      </div>
-      <div class="admin-recent-controls">
-        <input type="search" data-admin-recent-search placeholder="사용자·이메일·가족 그룹 검색" aria-label="최근 활동 검색">
-        <select data-admin-recent-range aria-label="최근 활동 기간">
-          <option value="1">최근 24시간</option>
-          <option value="7" selected>최근 7일</option>
-          <option value="30">최근 30일</option>
-        </select>
-      </div>
-      <div class="admin-recent-list" data-admin-recent-list><div class="admin-recent-empty">활동을 불러오는 중이에요.</div></div>
-      <p class="admin-recent-note">일정 제목, 성장 수치, 메모, 사진 같은 실제 내용은 수집하지 않습니다.</p>`;
+        <div class="admin-recent-list" data-admin-recent-list><div class="admin-recent-empty">활동을 불러오는 중이에요.</div></div>
+        <p class="admin-recent-note">일정 제목, 성장 수치, 메모, 사진 같은 실제 내용은 수집하지 않습니다.</p>
+      </div>`;
     adminView.appendChild(section);
     return section;
   };

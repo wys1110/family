@@ -11,7 +11,7 @@
   if (!document.querySelector('link[data-family-admin-style]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'family-admin.css?v=20260801-global-v2';
+    link.href = 'family-admin.css?v=20260804-dashboard-v1';
     link.dataset.familyAdminStyle = '';
     document.head.appendChild(link);
   }
@@ -33,11 +33,14 @@
   view.dataset.familyAdminModule = '';
   view.hidden = true;
   view.innerHTML = `
-    <section class="settings-card global-admin-card" aria-labelledby="globalAdminTitle">
+    <section class="settings-card global-admin-card" aria-labelledby="globalAdminTitle" data-admin-collapsed="true">
       <div class="settings-heading global-admin-heading">
         <span class="settings-mark" aria-hidden="true">♛</span>
         <div><p class="eyebrow">WYS1110 전용</p><h2 id="globalAdminTitle">앱 전체 사용자 관리</h2><span>모든 가입 사용자와 가족 그룹 구성을 확인하세요.</span></div>
-        <button class="admin-refresh-button" type="button" data-admin-refresh>새로고침</button>
+        <div class="admin-card-actions">
+          <button class="admin-refresh-button" type="button" data-admin-refresh>새로고침</button>
+          <button class="admin-card-toggle" type="button" data-admin-collapse aria-expanded="false" aria-controls="globalAdminDetails">펼치기</button>
+        </div>
       </div>
       <div class="global-admin-loading" data-admin-loading>전체 사용자 정보를 불러오는 중이에요.</div>
       <div class="global-admin-error" data-admin-error hidden><strong data-admin-error-title></strong><span data-admin-error-copy></span></div>
@@ -48,22 +51,24 @@
           <div><strong data-stat="ungrouped_users">0</strong><span>그룹 미가입</span></div>
           <div><strong data-stat="active_30d">0</strong><span>30일 내 로그인</span></div>
         </div>
-        <div class="global-admin-tools">
-          <label class="global-admin-search"><span aria-hidden="true">⌕</span><input type="search" data-admin-search placeholder="이름, 이메일, 가족 그룹 검색" autocomplete="off"></label>
-          <div class="global-admin-modes" role="tablist" aria-label="관리 대상">
-            <button class="active" type="button" data-admin-mode="users" role="tab" aria-selected="true">사용자</button>
-            <button type="button" data-admin-mode="households" role="tab" aria-selected="false">가족 그룹</button>
+        <div class="admin-card-body" id="globalAdminDetails" data-admin-card-body hidden>
+          <div class="global-admin-tools">
+            <label class="global-admin-search"><span aria-hidden="true">⌕</span><input type="search" data-admin-search placeholder="이름, 이메일, 가족 그룹 검색" autocomplete="off"></label>
+            <div class="global-admin-modes" role="tablist" aria-label="관리 대상">
+              <button class="active" type="button" data-admin-mode="users" role="tab" aria-selected="true">사용자</button>
+              <button type="button" data-admin-mode="households" role="tab" aria-selected="false">가족 그룹</button>
+            </div>
           </div>
+          <section class="global-admin-section" data-admin-section="users">
+            <div class="global-admin-section-head"><div><h3>전체 사용자</h3><span>가입 계정, 최근 로그인, 소속 가족 그룹</span></div><strong data-admin-count="users">0명</strong></div>
+            <div class="global-admin-list" data-admin-users></div>
+          </section>
+          <section class="global-admin-section" data-admin-section="households" hidden>
+            <div class="global-admin-section-head"><div><h3>가족 그룹 구성</h3><span>그룹별 관리자, 구성원, 기록 규모</span></div><strong data-admin-count="households">0개</strong></div>
+            <div class="global-admin-list" data-admin-households></div>
+          </section>
+          <p class="global-admin-note">계정 삭제·차단·그룹 이동 같은 변경 작업은 실수 방지를 위해 제공하지 않습니다.</p>
         </div>
-        <section class="global-admin-section" data-admin-section="users">
-          <div class="global-admin-section-head"><div><h3>전체 사용자</h3><span>가입 계정, 최근 로그인, 소속 가족 그룹</span></div><strong data-admin-count="users">0명</strong></div>
-          <div class="global-admin-list" data-admin-users></div>
-        </section>
-        <section class="global-admin-section" data-admin-section="households" hidden>
-          <div class="global-admin-section-head"><div><h3>가족 그룹 구성</h3><span>그룹별 관리자, 구성원, 기록 규모</span></div><strong data-admin-count="households">0개</strong></div>
-          <div class="global-admin-list" data-admin-households></div>
-        </section>
-        <p class="global-admin-note">계정 삭제·차단·그룹 이동 같은 변경 작업은 실수 방지를 위해 제공하지 않습니다.</p>
       </div>
     </section>`;
   main.appendChild(view);
@@ -264,6 +269,31 @@
   $('.global-admin-modes').addEventListener('click', (event) => {
     const button = event.target.closest('[data-admin-mode]');
     if (button) setMode(button.dataset.adminMode);
+  });
+  view.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-admin-collapse]');
+    if (!button || !view.contains(button)) return;
+    const card = button.closest('.settings-card');
+    const body = document.getElementById(button.getAttribute('aria-controls'));
+    if (!card || !body) return;
+    const expanded = card.dataset.adminCollapsed === 'true';
+    if (expanded) {
+      view.querySelectorAll('.settings-card[data-admin-collapsed="false"]').forEach((otherCard) => {
+        if (otherCard === card) return;
+        otherCard.dataset.adminCollapsed = 'true';
+        const otherButton = otherCard.querySelector('[data-admin-collapse]');
+        const otherBody = otherButton ? document.getElementById(otherButton.getAttribute('aria-controls')) : null;
+        if (otherBody) otherBody.hidden = true;
+        if (otherButton) {
+          otherButton.setAttribute('aria-expanded', 'false');
+          otherButton.textContent = '펼치기';
+        }
+      });
+    }
+    card.dataset.adminCollapsed = String(!expanded);
+    body.hidden = !expanded;
+    button.setAttribute('aria-expanded', String(expanded));
+    button.textContent = expanded ? '접기' : '펼치기';
   });
   new MutationObserver(syncColumns).observe(nav, { childList: true, attributes: true, attributeFilter: ['hidden'] });
   syncColumns();
