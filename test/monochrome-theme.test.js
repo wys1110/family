@@ -150,4 +150,17 @@ describe("white and black themes", () => {
     expect(palette).toContain('#settingsView .settings-card');
     expect(themeSystem).toContain('.sheet-dialog');
   });
+
+  test("keeps the white baby profile readable", () => {
+    expect(palette).toContain('html[data-family-theme="white"] .baby-care-card.baby-profile-card');
+    expect(palette).toContain('color: #fffaf4;');
+    expect(palette).toContain('background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));');
+  });
+
+  test("keeps white care category icons on colored tokens", () => {
+    expect(palette).toContain('html[data-family-theme="white"] #growthView .care-pattern-categories .pumped');
+    expect(palette).toContain('html[data-family-theme="white"] #growthView .care-pattern-categories .solid');
+    expect(palette).toContain('--category-color: #71a7b8;');
+    expect(palette).toContain('--category-color: #6f9d72;');
+  });
 });
