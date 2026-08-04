@@ -116,7 +116,7 @@
       .admin-user-chart-more { margin: 9px 0 0; color: var(--tertiary); font-size: 8px; text-align: right; }
       .admin-user-chart-empty { padding: 8px 0 2px; color: var(--secondary); font-size: 9px; text-align: center; }
       .admin-recent-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 140px); gap: 8px; margin-bottom: 12px; }
-      .admin-recent-controls input, .admin-recent-controls select { width: 100%; min-height: 42px; border: 1px solid var(--separator); border-radius: 12px; color: var(--label); background: var(--surface); font: inherit; font-size: 11px; }
+      .admin-recent-controls input, .admin-recent-controls select { width: 100%; min-height: 44px; border: 1px solid var(--separator); border-radius: 12px; color: var(--label); background: var(--surface); font: inherit; font-size: 11px; }
       .admin-recent-controls input { padding: 0 12px; }
       .admin-recent-controls select { padding: 0 32px 0 10px; }
       .admin-recent-list { display: grid; gap: 8px; }
@@ -137,7 +137,7 @@
       .admin-recent-note { margin: 10px 2px 0; color: var(--tertiary); font-size: 9px; line-height: 1.45; }
       @media (max-width: 540px) {
         .admin-recent-heading { grid-template-columns: 44px minmax(0, 1fr); }
-        .admin-recent-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
+        .admin-recent-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
         .admin-user-chart-row { grid-template-columns: minmax(64px, 92px) minmax(0, 1fr) auto; gap: 7px; }
         .admin-recent-controls { grid-template-columns: 1fr; }
         .admin-recent-item { grid-template-columns: 38px minmax(0, 1fr); }

@@ -1,7 +1,7 @@
 .admin-view[hidden], .global-admin-section[hidden] { display: none !important; }
 .global-admin-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
 .admin-view .admin-refresh-button {
-  align-self: start; min-height: 38px; padding: 0 12px; border: 1px solid var(--separator);
+  align-self: start; min-height: 44px; padding: 0 12px; border: 1px solid var(--separator);
   border-radius: 12px; color: var(--blue); background: rgba(var(--theme-accent-rgb), .10);
   font: inherit; font-size: 11px; font-weight: 750;
 }
@@ -29,7 +29,7 @@
 .global-admin-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--label); background: transparent; font: inherit; font-size: 13px; }
 .global-admin-search input::placeholder { color: var(--tertiary); }
 .global-admin-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid var(--separator); border-radius: 14px; background: var(--surface-2); }
-.global-admin-modes button { min-height: 38px; border: 0; border-radius: 10px; color: var(--secondary); background: transparent; font: inherit; font-size: 11px; font-weight: 750; }
+.global-admin-modes button { min-height: 44px; border: 0; border-radius: 10px; color: var(--secondary); background: transparent; font: inherit; font-size: 11px; font-weight: 750; }
 .global-admin-modes button.active { color: var(--label); background: var(--surface); box-shadow: 0 5px 14px rgba(0,0,0,.08); }
 .global-admin-section { margin-top: 20px; }
 .global-admin-section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
@@ -41,7 +41,7 @@
   display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 11px; align-items: center;
   min-height: 76px; padding: 11px 12px; border: 1px solid var(--separator); border-radius: 18px; background: var(--surface);
 }
-.global-admin-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: #fff; background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end)); font-size: 14px; font-weight: 800; }
+.global-admin-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: var(--label); background: linear-gradient(145deg, var(--surface), var(--surface-2)); font-size: 14px; font-weight: 800; }
 .global-admin-user-copy { min-width: 0; }
 .global-admin-user-copy strong, .global-admin-user-copy span, .global-admin-user-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .global-admin-user-copy strong { color: var(--label); font-size: 13px; }
@@ -72,6 +72,7 @@
 
 /* Keep every admin block on one shared horizontal grid. */
 .admin-view,
+.admin-view > .settings-card,
 .admin-view .global-admin-card,
 .admin-view .global-admin-card > [data-admin-content],
 .admin-view .global-admin-stats,

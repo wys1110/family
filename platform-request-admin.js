@@ -193,7 +193,7 @@
       .platform-request-admin-error strong { margin-bottom: 5px; color: var(--label); }
       @media (max-width: 560px) {
         .platform-request-admin-heading { grid-template-columns: 44px minmax(0, 1fr); }
-        .platform-request-admin-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; }
+        .platform-request-admin-heading .admin-refresh-button { grid-column: 1 / -1; justify-self: stretch; width: 100%; max-width: 100%; box-sizing: border-box; }
         .platform-request-admin-controls { grid-template-columns: 1fr; }
         .platform-request-admin-time { width: 100%; margin-left: 0; }
         .platform-request-admin-status { grid-template-columns: auto minmax(0, 1fr); }
