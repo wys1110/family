@@ -11,6 +11,7 @@ describe('theme bootstrap prevents refresh flash', () => {
     expect(index.indexOf('theme-bootstrap.js')).toBeGreaterThanOrEqual(0);
     expect(index.indexOf('theme-bootstrap.js')).toBeLessThan(index.indexOf('styles.css'));
     expect(index).toContain('theme-critical.css');
+    expect(index).toContain('data-theme-critical-inline');
   });
 
   test('resolves production and demo theme storage before body paint', () => {
