@@ -23,6 +23,8 @@
   --theme-text-subtle: var(--tertiary);
   --theme-accent: var(--blue);
   --theme-accent-contrast: #fff;
+  --theme-care-pumped: #71a7b8;
+  --theme-care-solid: #6f9d72;
   --theme-progress-track: color-mix(in srgb, var(--surface-2) 88%, var(--surface));
   --theme-progress-fill: var(--blue);
   --theme-shadow: var(--shadow);

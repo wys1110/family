@@ -153,14 +153,16 @@ describe("white and black themes", () => {
 
   test("keeps the white baby profile readable", () => {
     expect(palette).toContain('html[data-family-theme="white"] .baby-care-card.baby-profile-card');
-    expect(palette).toContain('color: #fffaf4;');
+    expect(palette).toContain('color: var(--theme-accent-contrast);');
     expect(palette).toContain('background: linear-gradient(145deg, var(--theme-hero-start), var(--theme-hero-end));');
   });
 
   test("keeps white care category icons on colored tokens", () => {
     expect(palette).toContain('html[data-family-theme="white"] #growthView .care-pattern-categories .pumped');
     expect(palette).toContain('html[data-family-theme="white"] #growthView .care-pattern-categories .solid');
-    expect(palette).toContain('--category-color: #71a7b8;');
-    expect(palette).toContain('--category-color: #6f9d72;');
+    expect(themeSystem).toContain('--theme-care-pumped: #71a7b8;');
+    expect(themeSystem).toContain('--theme-care-solid: #6f9d72;');
+    expect(palette).toContain('--category-color: var(--theme-care-pumped);');
+    expect(palette).toContain('--category-color: var(--theme-care-solid);');
   });
 });
