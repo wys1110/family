@@ -1,0 +1,59 @@
+/* Render-blocking theme contract. Full component palettes load afterward. */
+html[data-family-theme-choice="white"] {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #ededeb;
+  --label: #1b1d1f;
+  --secondary: #666b70;
+  --tertiary: #979ca1;
+  --separator: rgba(24, 27, 30, .12);
+  --blue: #202124;
+  --green: #65716a;
+  --orange: #9a7657;
+  --red: #a85f61;
+  --pink: #9d697b;
+  --indigo: #716d82;
+  --shadow: 0 18px 48px rgba(20, 22, 24, .08);
+  --theme-accent-rgb: 32, 33, 36;
+  --theme-hero-start: #17191b;
+  --theme-hero-end: #3b3e42;
+  color-scheme: light;
+}
+
+html[data-family-theme-choice="white"],
+html[data-family-theme-choice="white"] body {
+  background-color: #f7f7f5;
+  background-image:
+    radial-gradient(circle at 8% 2%, rgba(0, 0, 0, .025), transparent 25rem),
+    linear-gradient(180deg, #fafaf8 0%, #f4f4f2 100%);
+}
+
+html[data-family-theme-choice="black"] {
+  --bg: #050505;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --label: #f5f5f5;
+  --secondary: #b8b8b8;
+  --tertiary: #7f7f7f;
+  --separator: rgba(255, 255, 255, .12);
+  --blue: #d7d7d7;
+  --green: #a8b0aa;
+  --orange: #c0a083;
+  --red: #d58e8e;
+  --pink: #c89aaa;
+  --indigo: #aaa5b8;
+  --shadow: 0 20px 54px rgba(0, 0, 0, .48);
+  --theme-accent-rgb: 215, 215, 215;
+  --theme-hero-start: #111111;
+  --theme-hero-end: #303030;
+  color-scheme: dark;
+}
+
+html[data-family-theme-choice="black"],
+html[data-family-theme-choice="black"] body {
+  color: #f5f5f5;
+  background-color: #050505;
+  background-image:
+    radial-gradient(circle at 12% 4%, rgba(255, 255, 255, .045), transparent 26rem),
+    linear-gradient(180deg, #050505 0%, #090909 48%, #030303 100%);
+}
