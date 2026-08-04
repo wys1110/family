@@ -130,8 +130,8 @@ begin
           select 1
           from public.households household
           where household.id = case
-            when storage.foldername(object.name)[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-            then storage.foldername(object.name)[1]::uuid
+            when (storage.foldername(object.name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+            then ((storage.foldername(object.name))[1])::uuid
             else null
           end
         )

@@ -11,6 +11,7 @@ const serviceWorker = read('service-worker.js');
 const migration = read('supabase/migrations/20260804_platform_admin_operations.sql');
 const aclMigration = read('supabase/migrations/20260804_platform_admin_operations_acl.sql');
 const rlsMigration = read('supabase/migrations/20260804_platform_admin_operations_rls.sql');
+const storageMigration = read('supabase/migrations/20260804_platform_admin_operations_storage.sql');
 
 describe('admin operations dashboard', () => {
   test('renders one compact collapsed card with health, integrity, audit, and export controls', () => {
@@ -58,5 +59,6 @@ describe('admin operations dashboard', () => {
     expect(migration).toContain('revoke all on table public.platform_admin_audit_logs from anon, authenticated;');
     expect(aclMigration).toContain('revoke execute on function public.get_platform_admin_export() from public, anon, service_role;');
     expect(rlsMigration).toContain('platform admins can view audit logs');
+    expect(storageMigration).toContain('(storage.foldername(object.name))[1]');
   });
 });
