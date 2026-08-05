@@ -18,6 +18,7 @@ describe("mobile calendar polish", () => {
     expect(css).toContain("overflow-x: auto");
     expect(css).toContain(".calendar-toolbar");
     expect(css).toContain("grid-template-columns: minmax(0, 1fr) auto auto");
+    expect(css).toContain(".month-picker-trigger");
     expect(css).toContain("white-space: nowrap");
     expect(css).toContain("text-overflow: ellipsis");
     expect(css).toContain("--calendar-event-user-font-size");

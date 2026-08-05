@@ -48,13 +48,23 @@
     gap: 2px;
   }
 
-  #calendarView .month-nav h2 {
-    width: clamp(88px, 25vw, 104px);
+  #calendarView .month-picker-trigger {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: 132px;
     min-width: 0;
+    min-height: 34px;
+    padding-inline: 4px;
     overflow: hidden;
     font-size: 17px;
     letter-spacing: -.05em;
     line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  #calendarView .month-picker-trigger > #monthLabel {
+    min-width: 0;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -109,7 +119,7 @@
     padding-inline: 4px;
     overflow: hidden;
     border-radius: 6px;
-    font-size: min(12px, max(9px, var(--calendar-event-user-font-size, 11px))) !important;
+    font-size: var(--calendar-event-user-font-size, 11px) !important;
     line-height: 18px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -148,5 +158,5 @@
   }
 
   #calendarView .calendar-card { padding-inline: 7px; }
-  #calendarView .month-nav h2 { width: 94px; font-size: 16px; }
+  #calendarView .month-picker-trigger { max-width: 112px; font-size: 16px; }
 }
