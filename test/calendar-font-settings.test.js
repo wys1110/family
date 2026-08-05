@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 const source = readFileSync("calendar-font-settings.js", "utf8");
 const polish = readFileSync("settings-layout-polish.css", "utf8");
 const config = readFileSync("config.js", "utf8");
+const index = readFileSync("index.html", "utf8");
 
 describe("calendar font size presets", () => {
   test("replaces technical pixel entry with three semantic choices", () => {
@@ -38,5 +39,6 @@ describe("calendar font size presets", () => {
     expect(polish).not.toContain(".calendar-font-number-input");
     expect(config).toContain('{ name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false }');
     expect(config).toContain('{ name: "settings-layout-polish", version: "20260722-font-presets-v2", script: false }');
+    expect(index).toContain('config.js?v=20260805-calendar-font-toolbar-v1');
   });
 });
