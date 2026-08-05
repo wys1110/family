@@ -6,6 +6,7 @@ const source = read('settings-family-management.js');
 const css = read('settings-family-management.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
+const migration = read('supabase/migrations/20260805_household_backup_imports.sql');
 
 const loadApi = () => {
   const window = {};
@@ -36,6 +37,16 @@ describe('settings family management', () => {
     expect(api.archiveDecision('할머니', [])).toEqual({ mode: 'archive', reason: 'unused' });
     expect(source).toContain(".eq('household_id', context.householdId)");
     expect(source).toContain(".eq('id', member.id)");
+    expect(source).toContain("archived_at");
+  });
+
+  test('uses an RLS-protected household backup registry for remote deduplication', () => {
+    expect(migration).toContain('create table if not exists public.household_backup_imports');
+    expect(migration).toContain('unique (household_id, backup_id)');
+    expect(migration).toContain('enable row level security');
+    expect(migration).toContain('public.is_household_member(household_id)');
+    expect(source).toContain("household_backup_imports");
+    expect(source).toContain("backupId");
   });
 
   test('scopes every restored row to the active household and current user', () => {

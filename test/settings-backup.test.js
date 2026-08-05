@@ -26,6 +26,21 @@ describe('settings JSON backup contract', () => {
     expect(first).not.toContain('household-42');
   });
 
+  test('creates one deterministic backup id for the same shared data', () => {
+    const api = loadApi();
+    const tables = {
+      events: [{ id: 'e2', title: '두 번째' }, { id: 'e1', title: '첫 번째' }],
+      growth_entries: [], calendar_members: [], babies: [],
+    };
+    const first = api.createBackupPayload('household-42', tables, new Date('2026-08-05T00:00:00.000Z'));
+    const second = api.createBackupPayload('household-42', tables, new Date('2026-08-06T00:00:00.000Z'));
+    expect(first.schemaVersion).toBe(2);
+    expect(first.backupId).toMatch(/^bk-[a-f0-9]{16}$/);
+    expect(first.backupId).toBe(second.backupId);
+    expect(api.isDuplicateBackup(first.backupId, [])).toBe(false);
+    expect(api.isDuplicateBackup(first.backupId, [first.backupId])).toBe(true);
+  });
+
   test('validates version and current household before any restore write', () => {
     const api = loadApi();
     const payload = api.createBackupPayload('household-42', {
@@ -38,6 +53,7 @@ describe('settings JSON backup contract', () => {
     expect(api.validateBackupPayload(payload, 'household-42')).toEqual({ ok: true });
     expect(api.validateBackupPayload({ ...payload, schemaVersion: 99 }, 'household-42').ok).toBe(false);
     expect(api.validateBackupPayload(payload, 'other-household').reason).toBe('household-mismatch');
+    expect(api.validateBackupPayload({ ...payload, schemaVersion: 1, backupId: undefined }, 'household-42')).toEqual({ ok: true });
   });
 
   test('keeps only approved shared tables and strips household ids from exported rows', () => {

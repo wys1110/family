@@ -9,6 +9,7 @@
     events: 'family-calendar-events-v1',
     growth: 'family-growth-entries-v1',
     babies: 'family-babies-v1',
+    imports: 'family-backup-imports-v1',
   };
   const BACKUP_TABLES = ['events', 'growth_entries', 'calendar_members', 'babies'];
   const backupApi = window.FAMILY_SETTINGS_BACKUP || {};
@@ -67,7 +68,9 @@
     return { mode: remote ? 'remote' : 'local', householdId, session: state.session, supabase: remote ? state.supabase : null };
   };
   const archivedStorageKey = (householdId) => `${LOCAL_KEYS.archivedMembers}:${householdId}`;
+  const importedBackupsKey = (householdId) => `${LOCAL_KEYS.imports}:${householdId}`;
   const readArchived = (householdId) => readJson(archivedStorageKey(householdId), []);
+  const readImportedBackups = (householdId) => readJson(importedBackupsKey(householdId), []);
   const isArchived = (member, householdId) => Boolean(member?.archived_at) || readArchived(householdId).includes(member?.id || member?.name);
   const activeMembers = (members, householdId) => members.filter((member) => !isArchived(member, householdId));
   const notify = (message) => { if (typeof toast === 'function') toast(message); };
@@ -79,6 +82,11 @@
     const archived = new Set(readArchived(householdId));
     archived.add(member.id || member.name);
     writeJson(archivedStorageKey(householdId), [...archived]);
+  };
+  const markBackupImportedLocally = (householdId, backupId) => {
+    const imported = new Set(readImportedBackups(householdId));
+    imported.add(backupId);
+    writeJson(importedBackupsKey(householdId), [...imported]);
   };
 
   const listMembers = () => {
@@ -188,8 +196,9 @@
   };
 
   const newId = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
-  const restoreLocal = (tables) => {
-    if (typeof state === 'undefined') return;
+  const restoreLocal = (tables, context, backupId) => {
+    if (typeof state === 'undefined') return { duplicate: false };
+    if (backupApi.isDuplicateBackup?.(backupId, readImportedBackups(context.householdId))) return { duplicate: true };
     const events = (tables.events || []).map((row) => ({ ...row, id: newId() }));
     const growth = (tables.growth_entries || []).map((row) => ({ ...row, id: newId() }));
     const babies = (tables.babies || []).map((row) => ({ ...row, id: newId() }));
@@ -203,9 +212,19 @@
     writeJson(LOCAL_KEYS.growth, state.growthEntries);
     writeJson(LOCAL_KEYS.babies, state.babies);
     writeJson(LOCAL_KEYS.members, state.familyMembers);
+    markBackupImportedLocally(context.householdId, backupId);
+    return { duplicate: false };
   };
 
-  const restoreRemote = async (tables, context) => {
+  const restoreRemote = async (tables, context, backupId) => {
+    const registry = context.supabase.from('household_backup_imports');
+    const { data: existing, error: lookupError } = await registry.select('backup_id')
+      .eq('household_id', context.householdId).eq('backup_id', backupId).maybeSingle();
+    if (lookupError) {
+      if (/relation|schema cache|household_backup_imports/i.test(lookupError.message || '')) throw new Error('backup-registry-missing');
+      throw lookupError;
+    }
+    if (existing) return { duplicate: true };
     for (const table of BACKUP_TABLES) {
       const rows = (tables[table] || []).map((row) => scopeRestoreRow(table, row, {
         householdId: context.householdId,
@@ -215,6 +234,15 @@
       const { error } = await context.supabase.from(table).insert(rows);
       if (error) throw error;
     }
+    const { error: registryError } = await registry.insert({
+      household_id: context.householdId,
+      backup_id: backupId,
+      imported_by: context.session.user.id,
+      row_counts: Object.fromEntries(BACKUP_TABLES.map((table) => [table, (tables[table] || []).length])),
+    });
+    if (registryError?.code === '23505') return { duplicate: true };
+    if (registryError) throw registryError;
+    return { duplicate: false };
   };
 
   const downloadJson = async (card) => {
@@ -296,17 +324,26 @@
       restoreButton.disabled = true;
       try {
         const context = currentContext();
-        if (context.mode === 'remote') await restoreRemote(pendingPayload.tables, context);
-        else restoreLocal(pendingPayload.tables);
+        const backupId = backupApi.getBackupId(pendingPayload, context.householdId);
+        const result = context.mode === 'remote'
+          ? await restoreRemote(pendingPayload.tables, context, backupId)
+          : restoreLocal(pendingPayload.tables, context, backupId);
         pendingPayload = null;
         preview.hidden = true;
-        status.textContent = '복원이 완료됐어요.';
-        await loadMembers();
-        refreshApp();
-        notify('가족 기록을 복원했어요');
+        if (result.duplicate) {
+          status.textContent = '이 백업은 이미 복원된 기록이에요.';
+          notify('이미 복원한 백업이에요');
+        } else {
+          status.textContent = '복원이 완료됐어요.';
+          await loadMembers();
+          refreshApp();
+          notify('가족 기록을 복원했어요');
+        }
       } catch (error) {
         console.error('가족 JSON 복원 실패', error);
-        status.textContent = '복원 중 오류가 발생했어요. 기존 데이터는 유지됩니다.';
+        status.textContent = error.message === 'backup-registry-missing'
+          ? 'Supabase 마이그레이션 적용 후 복원할 수 있어요.'
+          : '복원 중 오류가 발생했어요. 기존 데이터는 유지됩니다.';
       } finally {
         restoreButton.disabled = !pendingPayload;
       }
