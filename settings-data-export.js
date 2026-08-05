@@ -211,6 +211,7 @@
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user || !state.household?.id) return null;
     return { supabase: state.supabase, householdId: state.household.id };
   };
+  const canManage = () => Boolean(window.FAMILY_PERMISSIONS_API?.isOwner?.());
 
   const injectStyle = () => {
     if (document.querySelector('style[data-settings-data-export-style]')) return;
@@ -267,7 +268,7 @@
   };
 
   const setVisibility = (card) => {
-    const ready = Boolean(getContext());
+    const ready = Boolean(getContext()) && canManage();
     card.hidden = !ready;
     return ready;
   };
@@ -283,6 +284,10 @@
     const downloadButton = card.querySelector('[data-settings-export-download]');
     const status = card.querySelector('[data-settings-export-status]');
     if (!context || !downloadButton) return;
+    if (!canManage()) {
+      status.textContent = '가족 관리자만 사용할 수 있어요.';
+      return;
+    }
     downloadButton.disabled = true;
     downloadButton.textContent = '파일을 준비하는 중…';
     status.classList.remove('error');

@@ -67,6 +67,8 @@
     const remote = Boolean(state.supabase && state.session && state.household?.id);
     return { mode: remote ? 'remote' : 'local', householdId, session: state.session, supabase: remote ? state.supabase : null };
   };
+  const canManage = () => Boolean(window.FAMILY_PERMISSIONS_API?.isOwner?.());
+  const ownerOnlyMessage = '가족 관리자만 사용할 수 있어요.';
   const archivedStorageKey = (householdId) => `${LOCAL_KEYS.archivedMembers}:${householdId}`;
   const importedBackupsKey = (householdId) => `${LOCAL_KEYS.imports}:${householdId}`;
   const readArchived = (householdId) => readJson(archivedStorageKey(householdId), []);
@@ -249,6 +251,10 @@
     const context = currentContext();
     const button = card.querySelector('[data-settings-backup-download]');
     const status = card.querySelector('[data-settings-backup-status]');
+    if (!canManage()) {
+      status.textContent = ownerOnlyMessage;
+      return;
+    }
     button.disabled = true;
     status.textContent = '가족 기록을 모으는 중…';
     try {
@@ -295,8 +301,19 @@
     const restoreButton = card.querySelector('[data-settings-backup-restore]');
     const preview = card.querySelector('[data-settings-restore-preview]');
     let pendingPayload = null;
+    const syncPermission = () => {
+      const allowed = canManage();
+      backupButton.disabled = !allowed;
+      input.disabled = !allowed;
+      restoreButton.disabled = !allowed || !pendingPayload;
+      if (!allowed) card.querySelector('[data-settings-backup-status]').textContent = ownerOnlyMessage;
+    };
     backupButton.addEventListener('click', () => downloadJson(card));
     input.addEventListener('change', async () => {
+      if (!canManage()) {
+        syncPermission();
+        return;
+      }
       const [file] = input.files || [];
       input.value = '';
       if (!file) return;
@@ -319,6 +336,10 @@
       }
     });
     restoreButton.addEventListener('click', async () => {
+      if (!canManage()) {
+        syncPermission();
+        return;
+      }
       if (!pendingPayload || !window.confirm('기존 기록은 유지하고 백업 기록을 추가할까요?')) return;
       const status = card.querySelector('[data-settings-backup-status]');
       restoreButton.disabled = true;
@@ -345,15 +366,18 @@
           ? 'Supabase 마이그레이션 적용 후 복원할 수 있어요.'
           : '복원 중 오류가 발생했어요. 기존 데이터는 유지됩니다.';
       } finally {
-        restoreButton.disabled = !pendingPayload;
+        syncPermission();
       }
     });
+    window.addEventListener('familycontextchange', syncPermission);
+    syncPermission();
     return card;
   };
 
   const renderMemberList = (card) => {
     const list = card.querySelector('[data-settings-family-members]');
     const members = listMembers();
+    const allowed = canManage();
     card.querySelector('[data-settings-member-count]').textContent = `${members.length}명`;
     list.replaceChildren(...members.map((member) => {
       const row = document.createElement('form');
@@ -361,10 +385,10 @@
       row.dataset.memberId = member.id || member.name;
       row.innerHTML = `
         <span class="settings-family-member-dot" style="--member-color:${escapeHtml(normalizeMember(member)?.color || defaultColor())}" aria-hidden="true"></span>
-        <label><span class="sr-only">구성원 이름</span><input name="memberName" maxlength="${MAX_NAME_LENGTH}" value="${escapeHtml(member.name)}" /></label>
-        <label class="settings-family-color"><span class="sr-only">구성원 색상</span><input name="memberColor" type="color" value="${escapeHtml(normalizeMember(member)?.color || defaultColor())}" /></label>
-        <button type="submit" data-member-save>저장</button>
-        <button type="button" data-member-archive>보관</button>
+        <label><span class="sr-only">구성원 이름</span><input name="memberName" maxlength="${MAX_NAME_LENGTH}" value="${escapeHtml(member.name)}"${allowed ? '' : ' disabled'} /></label>
+        <label class="settings-family-color"><span class="sr-only">구성원 색상</span><input name="memberColor" type="color" value="${escapeHtml(normalizeMember(member)?.color || defaultColor())}"${allowed ? '' : ' disabled'} /></label>
+        <button type="submit" data-member-save${allowed ? '' : ' disabled'}>저장</button>
+        <button type="button" data-member-archive${allowed ? '' : ' disabled'}>보관</button>
       `;
       return row;
     }));
@@ -385,12 +409,19 @@
       <form class="settings-family-member-add" data-settings-family-member-add>
         <label><span>새 구성원</span><input name="memberName" maxlength="${MAX_NAME_LENGTH}" placeholder="예: 할머니" required /></label>
         <label class="settings-family-color"><span>색상</span><input name="memberColor" type="color" value="${escapeHtml(defaultColor())}" /></label>
-        <button type="submit">추가</button>
+        <button type="submit" data-settings-family-member-submit>추가</button>
       </form>
       <p class="settings-family-members-status" data-settings-family-members-status aria-live="polite">기존 일정은 구성원을 보관해도 그대로 남아요.</p>
     `;
+    const syncPermission = () => {
+      const allowed = canManage();
+      card.querySelector('[data-settings-family-member-add]').querySelectorAll('input, button').forEach((control) => { control.disabled = !allowed; });
+      if (!allowed) card.querySelector('[data-settings-family-members-status]').textContent = ownerOnlyMessage;
+      renderMemberList(card);
+    };
     card.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (!canManage()) { syncPermission(); return; }
       const form = event.target;
       const isRow = form.matches('[data-member-id]');
       const status = card.querySelector('[data-settings-family-members-status]');
@@ -407,6 +438,7 @@
     card.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-member-archive]');
       if (!button) return;
+      if (!canManage()) { syncPermission(); return; }
       const row = button.closest('[data-member-id]');
       const member = listMembers().find((item) => (item.id || item.name) === row?.dataset.memberId);
       if (!member) return;
@@ -415,6 +447,8 @@
       try { if (await archiveMember(member)) { status.textContent = '구성원을 보관했어요.'; renderMemberList(card); } }
       catch (error) { status.textContent = error.message || '구성원을 보관하지 못했어요.'; button.disabled = false; }
     });
+    window.addEventListener('familycontextchange', syncPermission);
+    syncPermission();
     return card;
   };
 

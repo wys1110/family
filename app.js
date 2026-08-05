@@ -56,7 +56,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -254,6 +254,7 @@ async function bootstrapData() {
       // Do not leave the previous household visible while the next membership
       // and its data are being resolved.
       state.household = null;
+      state.householdRole = null;
       state.babies = [];
       state.archivedBabies = [];
       state.events = [];
@@ -262,14 +263,16 @@ async function bootstrapData() {
       state.activeBabyId = null;
       render();
       updateAuthGate();
-      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, households(id,name,invite_code)").limit(1);
+      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").limit(1);
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
       if (error) throw error;
+      state.householdRole = memberships?.[0]?.role || null;
       state.household = memberships?.[0]?.households || null;
       if (state.household) loaded = await loadRemoteData(requestId, sessionKey, state.household.id);
       else { state.babies = []; state.archivedBabies = []; state.events = []; state.growthEntries = []; state.familyMembers = [...DEFAULT_FAMILY_MEMBERS]; }
     } else {
       state.household = DEMO_MODE ? demoHousehold() : null;
+      state.householdRole = state.household ? 'owner' : null;
       state.familyMembers = localMembers();
       const babies = readLocalJson(BABY_STORAGE_KEY, []);
       state.babies = babies.filter((baby) => !baby.archivedAt);
@@ -296,6 +299,7 @@ async function bootstrapData() {
     detail: {
       userId: state.session?.user?.id || null,
       householdId: state.household?.id || null,
+      householdRole: state.householdRole || null,
       activeBabyId: state.activeBabyId || null,
       remote: Boolean(state.supabase && state.session),
     },

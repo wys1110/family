@@ -136,6 +136,7 @@ window.FAMILY_CONFIG = {
     { name: "feature-request", version: "20260722-korean-labels-v2" },
     { name: "refresh-button", version: "20260802-black-fab-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
+    { name: "family-permissions", version: "20260805-family-permissions-v1" },
     { name: "settings", version: "20260804-settings-notification-cards-v1" },
     { name: "settings-backup", version: "20260805-settings-management-v1", style: false },
     { name: "settings-family-management", version: "20260805-settings-management-v1" },
