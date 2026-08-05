@@ -39,6 +39,27 @@
   let publicKeyCache = "";
   let busy = false;
 
+  const notificationPermission = () => {
+    try { return "Notification" in window ? Notification.permission : "unsupported"; }
+    catch { return "unsupported"; }
+  };
+
+  const getStatus = () => {
+    const supported = pushSupported();
+    const pushReady = Boolean(briefing.pushReady);
+    return {
+      enabled: Boolean(briefing.enabled),
+      pushReady,
+      permission: notificationPermission(),
+      serviceWorker: typeof navigator !== "undefined" && "serviceWorker" in navigator,
+      supported,
+      configured: pushReady || Boolean(publicKeyCache),
+      mode: pushReady ? "push-ready" : supported ? "not-configured" : "in-app",
+      time: briefing.time,
+      timezone: briefing.timezone,
+    };
+  };
+
   const persist = () => {
     try { localStorage.setItem(scopedStorageKey(), JSON.stringify(briefing)); } catch { /* 현재 화면 설정은 유지 */ }
   };
@@ -267,31 +288,36 @@
   function updateStatus(message = "", tone = "") {
     const status = card?.querySelector("#dailyBriefingStatus");
     if (!status) return;
+    const statusText = status.querySelector("[data-status-text]") || status;
     status.className = `daily-briefing-status${tone ? ` ${tone}` : ""}`;
     if (message) {
-      status.textContent = message;
+      statusText.textContent = message;
       return;
     }
 
-    if (!pushSupported()) {
-      status.textContent = "현재 브라우저에서는 앱 알림을 지원하지 않아요.";
+    const statusSnapshot = getStatus();
+    if (!statusSnapshot.supported) {
+      statusText.textContent = "현재 브라우저에서는 앱 알림을 지원하지 않아요.";
       status.classList.add("error");
     } else if (isIos() && !isStandalone()) {
-      status.textContent = "홈 화면에 추가한 뒤 앱 아이콘으로 열면 알림을 켤 수 있어요.";
+      statusText.textContent = "홈 화면에 추가한 뒤 앱 아이콘으로 열면 알림을 켤 수 있어요.";
       status.classList.add("guide");
-    } else if (Notification.permission === "denied") {
-      status.textContent = "iPhone 설정 → 알림에서 이 앱을 허용해 주세요.";
+    } else if (statusSnapshot.permission === "denied") {
+      statusText.textContent = "iPhone 설정 → 알림에서 이 앱을 허용해 주세요.";
       status.classList.add("error");
-    } else if (briefing.enabled && briefing.pushReady) {
-      status.textContent = `매일 ${briefing.time} · 오늘 일정 요약을 이 기기로 보내요.`;
+    } else if (statusSnapshot.pushReady && briefing.enabled) {
+      statusText.textContent = `알림 연결 상태: 연결됨 · 매일 ${briefing.time} 일정 요약을 보내요.`;
       status.classList.add("active");
-    } else if (briefing.pushReady) {
-      status.textContent = "가족 일정 변경 알림은 연결됐어요. 아침 브리핑은 꺼져 있어요.";
+    } else if (statusSnapshot.pushReady) {
+      statusText.textContent = "알림 연결 상태: 연결됨 · 아침 브리핑은 꺼져 있어요.";
       status.classList.add("active");
+    } else if (statusSnapshot.mode === "not-configured") {
+      statusText.textContent = "알림 연결 상태: 아직 설정되지 않았어요. VAPID 키와 daily-briefing-push 함수가 필요해요.";
+      status.classList.add("guide");
     } else if (briefing.enabled) {
-      status.textContent = "알림 서버 연결을 확인하고 있어요.";
+      statusText.textContent = "알림 서버 연결을 확인하고 있어요.";
     } else {
-      status.textContent = `기본 시간은 매일 ${briefing.time}이에요. 알림 켜기를 한 번 눌러 주세요.`;
+      statusText.textContent = `기본 시간은 매일 ${briefing.time}이에요. 알림 켜기를 한 번 눌러 주세요.`;
     }
   }
 
@@ -340,7 +366,7 @@
           <button id="dailyBriefingPermission" type="button">앱 알림 켜기</button>
           <button id="dailyBriefingTest" type="button">테스트 알림</button>
         </div>
-        <p id="dailyBriefingStatus" class="daily-briefing-status" aria-live="polite"></p>
+        <p id="dailyBriefingStatus" class="daily-briefing-status" aria-live="polite"><strong>알림 연결 상태</strong><span data-status-text></span></p>
         <p class="daily-briefing-install-note"><strong>iPhone 안내</strong><span>Safari 공유 버튼 → 홈 화면에 추가 → 생성된 앱 아이콘으로 실행해야 잠금 화면 알림이 와요.</span></p>
       </div>`;
     settingsView.appendChild(card);
@@ -391,5 +417,6 @@
   };
 
   window.addEventListener("familycontextchange", reloadForContext);
+  window.FAMILY_DAILY_BRIEFING_API = { getStatus };
   install();
 })();

@@ -611,14 +611,15 @@
   };
 
   const getDeliveryStatus = () => {
-    const permission = 'Notification' in window ? Notification.permission : 'unsupported';
-    const serviceWorker = 'serviceWorker' in navigator;
-    const pushReady = remoteReady() && Boolean(typeof state !== 'undefined' && state.pushReady);
+    const briefingStatus = window.FAMILY_DAILY_BRIEFING_API?.getStatus?.();
+    const permission = briefingStatus?.permission || ('Notification' in window ? Notification.permission : 'unsupported');
+    const serviceWorker = briefingStatus?.serviceWorker ?? ('serviceWorker' in navigator);
+    const pushReady = Boolean(briefingStatus?.pushReady);
     return {
       permission,
       serviceWorker,
       pushReady,
-      mode: pushReady ? 'push-ready' : 'in-app',
+      mode: pushReady ? 'push-ready' : briefingStatus?.supported ? 'not-configured' : 'in-app',
     };
   };
 
