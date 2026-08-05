@@ -4,50 +4,7 @@
 
   const SETTINGS_EXPORT_SHEETS = [
     {
-      name: '가족 그룹',
-      headers: ['그룹명', '생성일'],
-      query: (supabase, householdId) => supabase.from('households')
-        .select('name,created_at')
-        .eq('id', householdId)
-        .limit(1),
-      rows: (rows) => rows.map((row) => [row.name, row.created_at]),
-    },
-    {
-      name: '가족 구성원',
-      headers: ['사용자 ID', '역할', '가입일'],
-      query: (supabase, householdId) => supabase.from('household_members')
-        .select('user_id,role,created_at')
-        .eq('household_id', householdId)
-        .order('created_at'),
-      rows: (rows) => rows.map((row) => [row.user_id, row.role, row.created_at]),
-    },
-    {
-      name: '캘린더 구성원',
-      headers: ['이름', '색상', '정렬 순서'],
-      query: (supabase, householdId) => supabase.from('calendar_members')
-        .select('name,color,sort_order')
-        .eq('household_id', householdId)
-        .order('sort_order'),
-      rows: (rows) => rows.map((row) => [row.name, row.color, row.sort_order]),
-    },
-    {
-      name: '아기 기록',
-      headers: ['이름', '생년월일', '출생 시간', '성별', '출생 체중(kg)', '출생 키(cm)'],
-      query: (supabase, householdId) => supabase.from('babies')
-        .select('name,birth_date,birth_time,sex,birth_weight_kg,birth_height_cm')
-        .eq('household_id', householdId)
-        .order('birth_date'),
-      rows: (rows) => rows.map((row) => [
-        row.name,
-        row.birth_date,
-        row.birth_time,
-        row.sex,
-        row.birth_weight_kg,
-        row.birth_height_cm,
-      ]),
-    },
-    {
-      name: '일정',
+      name: '캘린더 가족 일정',
       headers: ['제목', '시작일', '종료일', '시간', '담당'],
       query: (supabase, householdId) => supabase.from('events')
         .select('title,event_date,event_end_date,event_time,member')
@@ -62,7 +19,7 @@
       ]),
     },
     {
-      name: '성장 기록',
+      name: '성장 기록 히스토리',
       headers: ['제목', '기록일', '기록 시간', '분류', '키(cm)', '몸무게(kg)', '머리 둘레(cm)', '수유량(ml)', '수면(분)', '체온(°C)', '기저귀', '수유 유형', '수유 방향', '수유 시간(분)'],
       query: (supabase, householdId) => supabase.from('growth_entries')
         .select('title,entry_date,entry_time,category,height_cm,weight_kg,head_cm,feeding_ml,sleep_minutes,temperature_c,diaper_kind,feeding_type,feeding_side,feeding_minutes')
@@ -83,23 +40,6 @@
         row.feeding_type,
         row.feeding_side,
         row.feeding_minutes,
-      ]),
-    },
-    {
-      name: '할 일',
-      headers: ['제목', '마감일', '담당', '반복', '완료 여부', '완료 시각', '생성일'],
-      query: (supabase, householdId) => supabase.from('family_todos')
-        .select('title,due_date,assignee,recurrence,completed,completed_at,created_at')
-        .eq('household_id', householdId)
-        .order('due_date'),
-      rows: (rows) => rows.map((row) => [
-        row.title,
-        row.due_date,
-        row.assignee,
-        row.recurrence,
-        row.completed ? '완료' : '미완료',
-        row.completed_at,
-        row.created_at,
       ]),
     },
   ];

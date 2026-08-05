@@ -34,7 +34,7 @@ const loadExportApi = () => {
 
 describe('settings Excel data export', () => {
   test('loads after settings and renders an Excel export card', () => {
-    expect(config).toContain('{ name: "settings-data-export", version: "20260805-settings-excel-v2" }');
+    expect(config).toContain('{ name: "settings-data-export", version: "20260805-settings-excel-v3" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-data-export.js")');
     expect(exportModule).toContain('data-settings-data-export');
     expect(exportModule).toContain('data-settings-export-download');
@@ -43,8 +43,11 @@ describe('settings Excel data export', () => {
 
   test('exports only the current household shared tables', () => {
     expect(exportModule).toContain("household_id', householdId");
-    ['households', 'household_members', 'calendar_members', 'babies', 'events', 'growth_entries', 'family_todos'].forEach((table) => {
+    ['events', 'growth_entries'].forEach((table) => {
       expect(exportModule).toContain(`from('${table}')`);
+    });
+    ['households', 'household_members', 'calendar_members', 'babies', 'family_todos'].forEach((table) => {
+      expect(exportModule).not.toContain(`from('${table}')`);
     });
     expect(exportModule).not.toContain("from('private_entries')");
     expect(exportModule).not.toContain('access_token');
@@ -63,14 +66,39 @@ describe('settings Excel data export', () => {
     expect(exportModule).not.toContain('application/vnd.ms-excel');
     expect(exportModule).toContain('family-data-');
     expect(exportModule).toContain(".replace(/&/g, '&amp;')");
-    ['일정', '성장 기록', '아기 기록', '할 일', '가족 구성원'].forEach((sheet) => {
+    ['캘린더 가족 일정', '성장 기록 히스토리'].forEach((sheet) => {
       expect(exportModule).toContain(`name: '${sheet}'`);
     });
   });
 
+  test('defines exactly two sheets and scopes every query to the active household', async () => {
+    const api = loadExportApi();
+    expect(api.SETTINGS_EXPORT_SHEETS.map((sheet) => sheet.name)).toEqual([
+      '캘린더 가족 일정',
+      '성장 기록 히스토리',
+    ]);
+
+    const filters = [];
+    const supabase = {
+      from() {
+        const chain = {
+          select() { return chain; },
+          eq(field, value) { filters.push([field, value]); return chain; },
+          order() { return Promise.resolve({ data: [], error: null }); },
+        };
+        return chain;
+      },
+    };
+    await Promise.all(api.SETTINGS_EXPORT_SHEETS.map((sheet) => sheet.query(supabase, 'household-42')));
+    expect(filters).toEqual([
+      ['household_id', 'household-42'],
+      ['household_id', 'household-42'],
+    ]);
+  });
+
   test('starts with a ZIP signature and contains OOXML package parts', () => {
     const api = loadExportApi();
-    const bytes = api.buildXlsxZip([{ name: '일정', headers: ['제목'], rows: [['<회의>']] }]);
+    const bytes = api.buildXlsxZip([{ name: '캘린더 가족 일정', headers: ['제목'], rows: [['<회의>']] }]);
     expect([...bytes.slice(0, 4)]).toEqual([0x50, 0x4b, 0x03, 0x04]);
     const packageText = new TextDecoder().decode(bytes);
     expect(packageText).toContain('[Content_Types].xml');
