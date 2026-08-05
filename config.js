@@ -141,7 +141,7 @@ window.FAMILY_CONFIG = {
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },
-    { name: "calendar-font-settings", version: "20260720-numeric-v2", style: false },
+    { name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260722-notification-channels-v3" },
     { name: "event-change-push", version: "20260720-v1", style: false },

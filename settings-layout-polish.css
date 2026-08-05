@@ -1,16 +1,4 @@
-/* Settings screen: polished controls and aligned mobile layout. */
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-wrap > .sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
+/* Settings screen: compact, aligned mobile controls. */
 
 /* Settings are auto-saved, so the floating refresh action only covers controls here. */
 body:has(#settingsView:not([hidden])) .refresh-button {
@@ -20,102 +8,7 @@ body:has(#settingsView:not([hidden])) .refresh-button {
   transform: scale(.86);
 }
 
-/* Calendar font size: compact slider with the live value inside its thumb. */
-#settingsView [data-calendar-font-card] {
-  padding-bottom: 18px;
-}
-
-#settingsView [data-calendar-font-card] .settings-heading {
-  margin-bottom: 8px;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-control {
-  margin-top: 2px;
-  padding: 4px 2px 0;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-wrap {
-  border-radius: 999px;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-input:active + .calendar-font-slider-value {
-  transform: translate(-50%, -50%) scale(.94);
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-value {
-  transition: left .08s linear, transform .14s ease, box-shadow .18s ease;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-slider-input:focus-visible + .calendar-font-slider-value {
-  box-shadow:
-    0 0 0 4px rgba(var(--theme-accent-rgb), .16),
-    0 6px 18px rgba(var(--theme-accent-rgb), .34),
-    inset 0 1px 0 rgba(255, 255, 255, .24);
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-save-note {
-  min-height: 60px;
-  margin-top: 14px;
-  padding-block: 12px;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-save-note > span {
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-}
-
-#settingsView [data-calendar-font-card] .calendar-font-save-note p {
-  gap: 2px;
-}
-
-html[data-family-theme="night"] #settingsView [data-calendar-font-card] .calendar-font-slider-input::-webkit-slider-runnable-track {
-  background: linear-gradient(
-    to right,
-    var(--blue) 0,
-    var(--blue) var(--calendar-font-progress),
-    rgba(var(--theme-accent-rgb), .28) var(--calendar-font-progress),
-    rgba(var(--theme-accent-rgb), .28) 100%
-  );
-}
-
-html[data-family-theme="night"] #settingsView [data-calendar-font-card] .calendar-font-slider-input::-moz-range-track {
-  background: rgba(var(--theme-accent-rgb), .28);
-}
-
-html[data-family-theme="night"] #settingsView [data-calendar-font-card] .calendar-font-slider-value {
-  border-color: rgba(239, 246, 255, .94);
-  box-shadow:
-    0 6px 20px rgba(var(--theme-accent-rgb), .38),
-    0 0 0 1px rgba(255, 255, 255, .05),
-    inset 0 1px 0 rgba(255, 255, 255, .26);
-}
-
 @media (max-width: 767.98px) {
-  #settingsView [data-calendar-font-card] {
-    padding-bottom: 16px;
-  }
-
-  #settingsView [data-calendar-font-card] .settings-heading {
-    margin-bottom: 6px;
-  }
-
-  #settingsView [data-calendar-font-card] .calendar-font-slider-control {
-    gap: 10px;
-    padding-inline: 0;
-  }
-
-  #settingsView [data-calendar-font-card] .calendar-font-scale-labels {
-    margin-top: -4px;
-    margin-inline: 34px;
-  }
-
-  #settingsView [data-calendar-font-card] .calendar-font-save-note {
-    min-height: 56px;
-    margin-top: 11px;
-    padding: 10px 12px;
-  }
-
   #settingsView #dailyBriefingSettings .settings-heading {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     align-items: center;

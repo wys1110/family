@@ -3,17 +3,24 @@
   window.__familyCalendarFontSettingsInstalled = true;
 
   const STORAGE_KEY = 'family-calendar-font-size-v1';
-  const MIN_SIZE = 6;
-  const MAX_SIZE = 14;
-  const DEFAULT_SIZE = 8;
-  const LEGACY_SIZES = Object.freeze({ small: 7, medium: 8, large: 9 });
+  const SIZE_OPTIONS = Object.freeze([
+    { id: 'small', label: '작게', size: 8 },
+    { id: 'medium', label: '보통', size: 11 },
+    { id: 'large', label: '크게', size: 14 },
+  ]);
+  const DEFAULT_SIZE = 11;
 
-  const normalizeSize = (value) => {
-    const legacySize = LEGACY_SIZES[value];
-    const parsed = legacySize || Number.parseInt(String(value ?? ''), 10);
-    if (!Number.isFinite(parsed)) return DEFAULT_SIZE;
-    return Math.min(MAX_SIZE, Math.max(MIN_SIZE, parsed));
+  const optionFor = (value) => {
+    const byId = SIZE_OPTIONS.find((option) => option.id === value);
+    if (byId) return byId;
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    if (!Number.isFinite(parsed)) return SIZE_OPTIONS[1];
+    return SIZE_OPTIONS.reduce((nearest, option) => (
+      Math.abs(option.size - parsed) < Math.abs(nearest.size - parsed) ? option : nearest
+    ));
   };
+
+  const normalizeSize = (value) => optionFor(value).size;
 
   const storedSize = () => {
     try { return normalizeSize(localStorage.getItem(STORAGE_KEY)); }
@@ -32,176 +39,150 @@
         font-size: var(--calendar-event-user-font-size) !important;
       }
 
-      .calendar-font-slider-control {
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr) 24px;
-        gap: 12px;
-        align-items: center;
+      .calendar-font-toolbar {
+        position: relative;
+        z-index: 4;
       }
 
-      .calendar-font-size-mark {
+      .calendar-font-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 32px;
+        padding: 6px 9px;
+        border: 1px solid var(--separator);
+        border-radius: 9px;
         color: var(--secondary);
-        font-size: 15px;
-        font-weight: 750;
-        line-height: 1;
-        text-align: center;
-        user-select: none;
-      }
-
-      .calendar-font-size-mark.large {
-        font-size: 24px;
-      }
-
-      .calendar-font-slider-wrap {
-        --calendar-font-ratio: .25;
-        --calendar-font-progress: 25%;
-        position: relative;
-        display: flex;
-        align-items: center;
-        min-width: 0;
-        height: 52px;
-      }
-
-      .calendar-font-slider-input {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 44px;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        appearance: none;
-        -webkit-appearance: none;
+        background: var(--surface-2);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 760;
         cursor: pointer;
-        touch-action: pan-y;
       }
 
-      .calendar-font-slider-input::-webkit-slider-runnable-track {
-        height: 6px;
-        border-radius: 999px;
-        background: linear-gradient(
-          to right,
-          var(--blue) 0,
-          var(--blue) var(--calendar-font-progress),
-          rgba(var(--theme-accent-rgb), .22) var(--calendar-font-progress),
-          rgba(var(--theme-accent-rgb), .22) 100%
-        );
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .08);
+      .calendar-font-trigger:active { transform: scale(.97); }
+      .calendar-font-trigger:focus-visible {
+        outline: 3px solid rgba(var(--theme-accent-rgb), .28);
+        outline-offset: 2px;
       }
 
-      .calendar-font-slider-input::-moz-range-track {
-        height: 6px;
-        border-radius: 999px;
-        background: rgba(var(--theme-accent-rgb), .22);
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .08);
+      .calendar-font-trigger-icon {
+        color: var(--label);
+        font-size: 12px;
+        letter-spacing: -.12em;
+        line-height: 1;
       }
 
-      .calendar-font-slider-input::-moz-range-progress {
-        height: 6px;
-        border-radius: 999px;
-        background: var(--blue);
-      }
+      .calendar-font-trigger-current { color: var(--label); }
+      .calendar-font-trigger-chevron { color: var(--tertiary); font-size: 11px; }
 
-      .calendar-font-slider-input::-webkit-slider-thumb {
-        width: 42px;
-        height: 42px;
-        margin-top: -18px;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        box-shadow: none;
-        appearance: none;
-        -webkit-appearance: none;
-      }
-
-      .calendar-font-slider-input::-moz-range-thumb {
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        box-shadow: none;
-      }
-
-      .calendar-font-slider-input:focus-visible {
-        border-radius: 999px;
-        box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), .16);
-      }
-
-      .calendar-font-slider-value {
+      .calendar-font-panel {
         position: absolute;
-        z-index: 2;
-        top: 50%;
-        left: calc(21px + (100% - 42px) * var(--calendar-font-ratio));
+        top: calc(100% + 8px);
+        right: 0;
+        width: min(228px, calc(100vw - 36px));
+        padding: 12px;
+        border: 1px solid var(--separator);
+        border-radius: 16px;
+        background: var(--surface);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, .18);
+      }
+
+      .calendar-font-panel[hidden] { display: none !important; }
+      .calendar-font-panel-heading { display: grid; gap: 3px; margin-bottom: 9px; }
+      .calendar-font-panel-heading strong { color: var(--label); font-size: 12px; }
+      .calendar-font-panel-heading small { color: var(--secondary); font-size: 10px; }
+
+      .calendar-font-preset-control {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .calendar-font-preset {
         display: grid;
         place-items: center;
-        width: 42px;
-        height: 42px;
-        transform: translate(-50%, -50%);
-        border: 3px solid rgba(255, 255, 255, .92);
-        border-radius: 50%;
-        color: #fff;
-        background: var(--blue);
-        box-shadow:
-          0 5px 16px rgba(var(--theme-accent-rgb), .32),
-          inset 0 1px 0 rgba(255, 255, 255, .24);
-        font-size: 16px;
-        font-weight: 820;
-        font-variant-numeric: tabular-nums;
-        line-height: 1;
-        pointer-events: none;
+        gap: 4px;
+        min-width: 0;
+        min-height: 52px;
+        padding: 7px 5px;
+        border: 1px solid var(--separator);
+        border-radius: 12px;
+        color: var(--secondary);
+        background: var(--surface);
+        font: inherit;
+        cursor: pointer;
+        transition: transform .16s ease, border-color .16s ease, background .16s ease;
       }
 
-      .calendar-font-scale-labels {
-        display: flex;
-        justify-content: space-between;
-        margin: -2px 36px 0;
-        color: var(--secondary);
-        font-size: 10px;
-        font-weight: 650;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.3;
+      .calendar-font-preset > span {
+        display: grid;
+        place-items: center;
+        min-height: 18px;
+        color: var(--label);
+        font-size: var(--preset-preview-size);
+        font-weight: 800;
+        line-height: 1;
       }
+
+      .calendar-font-preset > strong {
+        font-size: 10px;
+        font-weight: 760;
+        line-height: 1;
+      }
+
+      .calendar-font-preset.active {
+        border-color: rgba(var(--theme-accent-rgb), .58);
+        color: var(--blue);
+        background: rgba(var(--theme-accent-rgb), .1);
+        box-shadow: 0 8px 20px rgba(var(--theme-accent-rgb), .1);
+      }
+
+      .calendar-font-preset:focus-visible {
+        outline: 3px solid rgba(var(--theme-accent-rgb), .28);
+        outline-offset: 2px;
+      }
+
+      .calendar-font-save-note {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 9px 2px 0;
+        color: var(--secondary);
+        font-size: 9px;
+      }
+
+      .calendar-font-save-note span { color: var(--green); font-size: 12px; }
 
       @media (min-width: 768px) {
-        .calendar-font-slider-control {
-          grid-template-columns: 28px minmax(0, 1fr) 28px;
-          gap: 16px;
-        }
-
-        .calendar-font-slider-wrap { height: 58px; }
-        .calendar-font-slider-input { height: 50px; }
-        .calendar-font-size-mark { font-size: 17px; }
-        .calendar-font-size-mark.large { font-size: 27px; }
-        .calendar-font-scale-labels { margin-inline: 44px; font-size: 11px; }
+        .calendar-font-panel { width: 244px; }
       }
     `;
     document.head.appendChild(style);
   };
 
-  const updateControls = (size) => {
-    const normalized = normalizeSize(size);
-    const input = document.querySelector('[data-calendar-font-input]');
-    if (input) {
-      input.value = String(normalized);
-      input.setAttribute('aria-valuetext', `${normalized}px`);
-    }
+  const updateControls = (value) => {
+    const selected = optionFor(value);
+    document.querySelectorAll('[data-calendar-font-preset]').forEach((button) => {
+      const active = button.dataset.calendarFontPreset === selected.id;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-checked', String(active));
+    });
+    document.querySelectorAll('[data-calendar-font-current]').forEach((current) => {
+      current.textContent = selected.label;
+    });
+  };
 
-    const value = document.querySelector('[data-calendar-font-value]');
-    if (value) value.textContent = String(normalized);
-
-    const ratio = (normalized - MIN_SIZE) / (MAX_SIZE - MIN_SIZE);
-    const sliderWrap = document.querySelector('[data-calendar-font-slider]');
-    if (sliderWrap) {
-      sliderWrap.style.setProperty('--calendar-font-ratio', String(ratio));
-      sliderWrap.style.setProperty('--calendar-font-progress', `${ratio * 100}%`);
-    }
+  const closePanel = () => {
+    document.querySelectorAll('[data-calendar-font-panel]').forEach((panel) => { panel.hidden = true; });
+    document.querySelectorAll('[data-calendar-font-trigger]').forEach((trigger) => {
+      trigger.setAttribute('aria-expanded', 'false');
+    });
   };
 
   const applySize = (value, { persist = true, announce = false } = {}) => {
-    const size = normalizeSize(value);
+    const selected = optionFor(value);
+    const size = selected.size;
     document.documentElement.dataset.calendarFontSize = String(size);
     document.documentElement.style.setProperty('--calendar-event-user-font-size', `${size}px`);
     if (persist) {
@@ -209,68 +190,76 @@
     }
     updateControls(size);
     window.dispatchEvent(new CustomEvent('familycalendarfontchange', { detail: { size, pixels: size } }));
-    if (announce && typeof toast === 'function') toast(`캘린더 일정 글자를 ${size}px로 표시해요 🔤`);
+    if (announce && typeof toast === 'function') toast(`일정 글자를 ${selected.label} 크기로 표시해요 🔤`);
     return size;
   };
 
-  const installSettingsCard = () => {
-    const view = document.querySelector('#settingsView');
-    if (!view) return false;
-    if (view.querySelector('[data-calendar-font-card]')) {
-      updateControls(normalizeSize(document.documentElement.dataset.calendarFontSize));
+  const installToolbarControl = () => {
+    const toolbar = document.querySelector('#calendarView .calendar-toolbar');
+    if (!toolbar) return false;
+    if (toolbar.querySelector('[data-calendar-font-toolbar]')) {
+      updateControls(document.documentElement.dataset.calendarFontSize);
       return true;
     }
 
-    const card = document.createElement('section');
-    card.className = 'settings-card';
-    card.dataset.calendarFontCard = '';
-    card.setAttribute('aria-labelledby', 'calendarFontSettingsTitle');
-    card.innerHTML = `
-      <div class="settings-heading">
-        <span class="settings-mark" aria-hidden="true">Aa</span>
-        <div>
-          <p class="eyebrow">CALENDAR</p>
-          <h2 id="calendarFontSettingsTitle">일정 글자 크기</h2>
-          <span>캘린더 안 일정 제목의 크기를 조절해요.</span>
+    const control = document.createElement('div');
+    control.className = 'calendar-font-toolbar';
+    control.dataset.calendarFontToolbar = '';
+    control.innerHTML = `
+      <button class="calendar-font-trigger" type="button" data-calendar-font-trigger
+        aria-label="일정 글자 크기" aria-controls="calendarFontPanel" aria-expanded="false">
+        <span class="calendar-font-trigger-icon" aria-hidden="true">Aa</span>
+        <span class="calendar-font-trigger-current" data-calendar-font-current>보통</span>
+        <span class="calendar-font-trigger-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div class="calendar-font-panel" id="calendarFontPanel" data-calendar-font-panel
+        role="dialog" aria-label="일정 글자 크기" hidden>
+        <div class="calendar-font-panel-heading">
+          <strong>일정 글자 크기</strong>
+          <small>캘린더 일정 제목에 적용돼요</small>
         </div>
-      </div>
-      <div class="calendar-font-slider-control">
-        <span class="calendar-font-size-mark" aria-hidden="true">A</span>
-        <label class="calendar-font-slider-wrap" data-calendar-font-slider>
-          <span class="sr-only">일정 글자 크기</span>
-          <input
-            class="calendar-font-slider-input"
-            type="range"
-            min="${MIN_SIZE}"
-            max="${MAX_SIZE}"
-            step="1"
-            data-calendar-font-input
-            aria-describedby="calendarFontRangeNote"
-          >
-          <output class="calendar-font-slider-value" data-calendar-font-value aria-hidden="true"></output>
-        </label>
-        <span class="calendar-font-size-mark large" aria-hidden="true">A</span>
-      </div>
-      <div class="calendar-font-scale-labels" id="calendarFontRangeNote">
-        <span>${MIN_SIZE}px</span><span>${MAX_SIZE}px</span>
-      </div>
-      <div class="theme-save-note calendar-font-save-note">
-        <span aria-hidden="true">✓</span>
-        <p><strong>크기는 자동 저장돼요</strong><small>다음 방문에도 그대로 적용됩니다.</small></p>
+        <div class="calendar-font-preset-control" role="radiogroup" aria-label="캘린더 일정 글자 크기">
+          ${SIZE_OPTIONS.map((option, index) => `
+            <button class="calendar-font-preset" type="button" role="radio" aria-checked="false"
+              data-calendar-font-preset="${option.id}" style="--preset-preview-size:${11 + index * 3}px">
+              <span aria-hidden="true">가</span><strong>${option.label}</strong>
+            </button>
+          `).join('')}
+        </div>
+        <div class="calendar-font-save-note"><span aria-hidden="true">✓</span><span>이 기기에 자동 저장돼요</span></div>
       </div>
     `;
-    view.appendChild(card);
+    toolbar.appendChild(control);
 
-    const input = card.querySelector('[data-calendar-font-input]');
-    input.addEventListener('input', () => applySize(input.value));
-    input.addEventListener('change', () => applySize(input.value, { announce: true }));
+    control.querySelector('[data-calendar-font-trigger]').addEventListener('click', () => {
+      const panel = control.querySelector('[data-calendar-font-panel]');
+      const trigger = control.querySelector('[data-calendar-font-trigger]');
+      const open = panel.hidden;
+      closePanel();
+      panel.hidden = !open;
+      trigger.setAttribute('aria-expanded', String(open));
+    });
 
-    updateControls(normalizeSize(document.documentElement.dataset.calendarFontSize));
+    control.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-calendar-font-preset]');
+      if (!button) return;
+      applySize(button.dataset.calendarFontPreset, { announce: true });
+      closePanel();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!control.contains(event.target)) closePanel();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closePanel();
+    });
+
+    updateControls(document.documentElement.dataset.calendarFontSize);
     return true;
   };
 
   const install = (attempt = 0) => {
-    if (installSettingsCard()) return;
+    if (installToolbarControl()) return;
     if (attempt < 50) setTimeout(() => install(attempt + 1), 100);
   };
 
