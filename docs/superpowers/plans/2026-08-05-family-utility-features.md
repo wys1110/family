@@ -17,7 +17,7 @@
 - 다크/화이트 테마 토큰만 사용하고 고정 색상을 추가하지 않는다.
 - 검색 버튼, 결과 행, 요약 항목은 최소 44px 터치 영역을 갖는다.
 - VAPID 키, Edge Function, Cron 배포와 실제 백그라운드 푸시 검증은 범위에서 제외한다.
-- 기존 dirty 파일(`config.js`, `refresh-button.*`, 관련 기존 테스트 등)은 변경하거나 stage하지 않는다.
+- 기존 dirty 파일 중 `refresh-button.*`와 기존 테스트는 변경하거나 stage하지 않는다. `config.js`는 새 모듈 manifest 항목만 추가·수정하고, 현재 dirty인 다른 hunks는 보존하며 stage하지 않는다.
 
 ---
 
