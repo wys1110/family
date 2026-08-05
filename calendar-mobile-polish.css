@@ -37,20 +37,27 @@
 
   #calendarView .calendar-toolbar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "month month"
+      "today font";
     gap: 6px;
     align-items: center;
     padding: 0 2px 12px;
   }
 
   #calendarView .month-nav {
+    display: grid;
+    grid-area: month;
+    grid-template-columns: 31px minmax(0, 1fr) 31px;
+    width: 100%;
     min-width: 0;
-    gap: 2px;
+    gap: 0;
   }
 
   #calendarView .month-picker-trigger {
-    flex: 1 1 auto;
-    width: auto;
+    justify-self: center;
+    width: 132px;
     max-width: 132px;
     min-width: 0;
     min-height: 34px;
@@ -82,6 +89,16 @@
     border-radius: 9px;
     font-size: 10px;
     white-space: nowrap;
+  }
+
+  #calendarView .today-button {
+    grid-area: today;
+    justify-self: end;
+  }
+
+  #calendarView .calendar-font-toolbar {
+    grid-area: font;
+    justify-self: end;
   }
 
   #calendarView .calendar-font-trigger {
@@ -164,5 +181,5 @@
   }
 
   #calendarView .calendar-card { padding-inline: 7px; }
-  #calendarView .month-picker-trigger { max-width: 112px; font-size: 16px; }
+  #calendarView .month-picker-trigger { width: 112px; max-width: 112px; font-size: 16px; }
 }

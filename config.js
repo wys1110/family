@@ -197,7 +197,7 @@ window.FAMILY_CONFIG = {
     { name: "black-theme-final", version: "20260803-black-todo-fab-v1", script: false },
     { name: "theme-v2", version: "20260803-shadow-v3", script: false },
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },
-    { name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v3", script: false },
+    { name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v4", script: false },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
