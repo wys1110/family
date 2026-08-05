@@ -34,7 +34,7 @@ const loadExportApi = () => {
 
 describe('settings Excel data export', () => {
   test('loads after settings and renders an Excel export card', () => {
-    expect(config).toContain('{ name: "settings-data-export", version: "20260805-settings-excel-v3" }');
+    expect(config).toContain('{ name: "settings-data-export", version: "20260805-settings-excel-v3", style: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-data-export.js")');
     expect(exportModule).toContain('data-settings-data-export');
     expect(exportModule).toContain('data-settings-export-download');
