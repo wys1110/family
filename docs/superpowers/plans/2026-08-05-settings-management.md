@@ -75,4 +75,4 @@
 - [x] Run `npx vitest run test/settings-backup.test.js test/settings-family-management.test.js test/settings-data-export.test.js`.
 - [x] Run `npm test` or the repository’s documented full test command, plus `git diff --check`.
 - [x] Open the settings tab in the in-app browser and verify card order, compact layout, member edit/archive, backup download, and mismatch rejection.
-- [ ] Commit only the new settings files, config/cache references, tests, and docs from this task.
+- [x] Commit only the new settings files, config/cache references, tests, and docs from this task.
