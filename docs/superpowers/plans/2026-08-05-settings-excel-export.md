@@ -2,18 +2,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 설정 탭에서 현재 로그인한 가족 그룹의 공유 데이터를 Excel 호환 `.xls` 파일로 브라우저에서 내려받게 한다.
+**Goal:** 설정 탭에서 현재 로그인한 가족 그룹의 공유 데이터를 정식 `.xlsx` 파일로 브라우저에서 내려받게 한다.
 
-**Architecture:** `settings-data-export.js`가 기존 `#settingsView`에 접힌 내보내기 카드를 주입하고, 현재 `state.household.id`를 기준으로 RLS 보호 테이블을 조회한다. 모듈은 외부 라이브러리 없이 SpreadsheetML XML 워크북을 생성해 Blob으로 다운로드하며, 원본 사진·인증 정보·개인 전용 `private_entries`는 포함하지 않는다.
+**Architecture:** `settings-data-export.js`가 기존 `#settingsView`에 접힌 내보내기 카드를 주입하고, 현재 `state.household.id`를 기준으로 RLS 보호 테이블을 조회한다. 모듈은 외부 라이브러리 없이 OOXML 파트와 무압축 ZIP 컨테이너를 생성해 Blob으로 다운로드하며, 원본 사진·인증 정보·개인 전용 `private_entries`는 포함하지 않는다.
 
-**Tech Stack:** 정적 HTML/브라우저 JavaScript, Supabase JS Data API + 기존 RLS, SpreadsheetML 2003 XML, Vitest.
+**Tech Stack:** 정적 HTML/브라우저 JavaScript, Supabase JS Data API + 기존 RLS, OOXML ZIP, Vitest.
 
 ## Global Constraints
 
 - 현재 가족 그룹(`state.household.id`) 데이터만 조회하며 클라이언트에서 다른 그룹 ID를 요청하지 않는다.
 - 내보내기 대상은 `households`, `household_members`, `calendar_members`, `babies`, `events`, `growth_entries`, `family_todos`의 공유 필드다.
 - `private_entries`, 인증 토큰, Storage 원본/경로, 운영용 메타데이터는 내보내지 않는다.
-- 외부 SheetJS 또는 CDN 의존성을 추가하지 않는다.
+- 외부 SheetJS 또는 CDN 의존성을 추가하지 않는다. ZIP은 무압축 STORE 방식으로 생성한다.
 - 다운로드는 브라우저에서만 생성하고 Blob URL은 즉시 해제한다.
 - 기존 미커밋 사용자 파일은 staging하지 않는다.
 
@@ -26,7 +26,7 @@
 - Test: `settings-data-export.js`, `config.js`
 
 **Interfaces:**
-- Produces the tested constants and helpers: `SETTINGS_EXPORT_SHEETS`, `buildSpreadsheetXml`, `sanitizeExportRow`.
+- Produces the tested constants and helpers: `SETTINGS_EXPORT_SHEETS`, `buildXlsxZip`, `sanitizeExportRow`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -51,11 +51,11 @@
 **Interfaces:**
 - `SETTINGS_EXPORT_SHEETS`: ordered sheet definitions with `name`, `headers`, and safe row mappers.
 - `sanitizeExportRow(row, headers)`: returns only declared fields and converts dates/numbers to export-safe values.
-- `buildSpreadsheetXml(sheets)`: returns a complete SpreadsheetML XML string.
+- `buildXlsxZip(sheets)`: returns a valid OOXML ZIP `Uint8Array` with workbook, relationship, style, content-type, and worksheet parts.
 
 - [ ] **Step 1: Implement the minimal XML helpers**
 
-  Add XML escaping for `&`, `<`, `>`, `'`, and `"`; emit a UTF-8 XML declaration, workbook namespaces, worksheet names, header rows, string cells, and numeric cells. Use `SpreadsheetML` MIME type `application/vnd.ms-excel` and filename `family-data-YYYY-MM-DD.xls`.
+  Add XML escaping for `&`, `<`, `>`, `'`, and `"`; emit OOXML workbook, relationships, styles, content-type, and worksheet parts with header rows, inline string cells, and numeric cells. Pack the parts into a ZIP with a CRC-32 table and use MIME type `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` with filename `family-data-YYYY-MM-DD.xlsx`.
 
 - [ ] **Step 2: Add settings card injection**
 
@@ -87,9 +87,9 @@
 
 - [ ] **Step 1: Register the module**
 
-  Add `{ name: "settings-data-export", version: "20260805-settings-excel-v1" }` immediately after the existing `settings` module so the settings view exists before injection.
+  Add `{ name: "settings-data-export", version: "20260805-settings-excel-v2" }` immediately after the existing `settings` module so the settings view exists before injection.
 
-  Add `/settings-data-export.js` to the service worker force-network list so installed iOS/PWA clients do not retain an old module copy.
+  Add `/settings-data-export.js` to the service worker force-network list so installed iOS/PWA clients do not retain an old module copy. Bump the loader version to `20260805-settings-excel-v2`.
 
 - [ ] **Step 2: Add compact responsive styles**
 
@@ -112,11 +112,11 @@
 
 - [ ] **Step 2: Verify production asset**
 
-  Confirm `https://wys1110.github.io/family/config.js` references `settings-data-export.js?v=20260805-settings-excel-v1`.
+  Confirm `https://wys1110.github.io/family/config.js` references `settings-data-export.js?v=20260805-settings-excel-v2`.
 
 - [ ] **Step 3: Verify the authenticated settings tab**
 
-  Confirm the card appears only in settings, the button is enabled for a household member, an `.xls` download is triggered after successful reads, no console error occurs, and the card remains usable in white and black themes.
+  Confirm the card appears only in settings, the button is enabled for a household member, an `.xlsx` download is triggered after successful reads, no console error occurs, and the card remains usable in white and black themes.
 
 - [ ] **Step 4: Commit and push only feature files**
 
