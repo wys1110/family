@@ -113,6 +113,9 @@
   }
 
   #calendarView .calendar-event-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
     max-width: 100%;
     height: 18px;
     min-height: 18px;
@@ -120,17 +123,20 @@
     overflow: hidden;
     border-radius: 6px;
     font-size: var(--calendar-event-user-font-size, 11px) !important;
-    line-height: 18px;
+    line-height: 1 !important;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   #calendarView .calendar-event-bar > span {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
     max-width: 100%;
     overflow: hidden;
     font-size: inherit !important;
-    line-height: 1;
+    line-height: 1 !important;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
