@@ -137,6 +137,8 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260802-black-fab-v1" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "settings", version: "20260804-settings-notification-cards-v1" },
+    { name: "settings-backup", version: "20260805-settings-management-v1", style: false },
+    { name: "settings-family-management", version: "20260805-settings-management-v1" },
     { name: "settings-data-export", version: "20260805-settings-excel-v3" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
