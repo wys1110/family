@@ -43,6 +43,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/admin-recent-activity.js") ||
     url.pathname.endsWith("/admin-ops.js") ||
     url.pathname.endsWith("/settings-data-export.js") ||
+    url.pathname.endsWith("/calendar-mobile-polish.css") ||
     url.pathname.endsWith("/invite-link.css") ||
     url.pathname.endsWith("/invite-link.js") ||
     url.pathname.endsWith("/language-practice.js") ||

@@ -1,0 +1,152 @@
+/* Mobile calendar: keep navigation and high-density dates calm at phone widths. */
+
+@media (max-width: 767.98px) {
+  .app-shell .view-tabs {
+    display: flex;
+    gap: 3px;
+    margin: 0 0 14px;
+    padding: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--surface);
+    border: 1px solid var(--separator);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+  }
+
+  .app-shell .view-tabs::-webkit-scrollbar { display: none; }
+
+  .app-shell .view-tab {
+    flex: 1 0 auto;
+    min-width: 56px;
+    min-height: 38px;
+    padding: 0 7px;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+
+  #calendarView .hero-card {
+    min-height: 142px;
+    margin-bottom: 12px;
+    padding: 20px 18px;
+  }
+
+  #calendarView .calendar-card {
+    padding: 16px 9px 10px;
+    border-radius: 20px;
+  }
+
+  #calendarView .calendar-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+    align-items: center;
+    padding: 0 2px 12px;
+  }
+
+  #calendarView .month-nav {
+    min-width: 0;
+    gap: 2px;
+  }
+
+  #calendarView .month-nav h2 {
+    width: clamp(88px, 25vw, 104px);
+    min-width: 0;
+    overflow: hidden;
+    font-size: 17px;
+    letter-spacing: -.05em;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #calendarView .icon-button {
+    width: 31px;
+    height: 31px;
+    font-size: 24px;
+  }
+
+  #calendarView .today-button,
+  #calendarView .calendar-font-trigger {
+    min-height: 31px;
+    padding: 0 8px;
+    border-radius: 9px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  #calendarView .calendar-font-trigger {
+    gap: 3px;
+  }
+
+  #calendarView .calendar-font-trigger-icon { font-size: 11px; }
+  #calendarView .calendar-font-trigger-chevron { font-size: 10px; }
+
+  #calendarView .weekdays span {
+    padding: 6px 0 8px;
+    font-size: 9px;
+  }
+
+  #calendarView .calendar-grid {
+    grid-auto-rows: minmax(78px, auto);
+  }
+
+  #calendarView .calendar-day {
+    min-height: 78px;
+    padding: 3px 1px 4px;
+    border-radius: 11px;
+  }
+
+  #calendarView .day-number {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  #calendarView .calendar-event-bar {
+    max-width: 100%;
+    height: 18px;
+    min-height: 18px;
+    padding-inline: 4px;
+    overflow: hidden;
+    border-radius: 6px;
+    font-size: min(12px, max(9px, var(--calendar-event-user-font-size, 11px))) !important;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #calendarView .calendar-event-bar > span {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: inherit !important;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #calendarView .calendar-overflow-badge {
+    min-width: 22px;
+    height: 18px;
+    padding-inline: 4px;
+    font-size: 9px;
+    line-height: 18px;
+  }
+
+  #calendarView .calendar-help {
+    margin-top: 7px;
+    padding-top: 8px;
+    font-size: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell .view-tab {
+    min-width: 54px;
+    padding-inline: 5px;
+    font-size: 10px;
+  }
+
+  #calendarView .calendar-card { padding-inline: 7px; }
+  #calendarView .month-nav h2 { width: 94px; font-size: 16px; }
+}
