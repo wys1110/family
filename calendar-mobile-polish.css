@@ -76,6 +76,14 @@
     white-space: nowrap;
   }
 
+  #calendarView .month-picker-trigger::after {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
+
   #calendarView .icon-button {
     width: 31px;
     height: 31px;

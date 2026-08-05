@@ -8,9 +8,9 @@ const index = readFileSync("index.html", "utf8");
 
 describe("mobile calendar polish", () => {
   test("loads a cache-busted mobile calendar stylesheet", () => {
-    expect(config).toContain('{ name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v4", script: false }');
+    expect(config).toContain('{ name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v5", script: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/calendar-mobile-polish.css")');
-    expect(index).toContain('config.js?v=20260805-mobile-calendar-v4');
+    expect(index).toContain('config.js?v=20260805-mobile-calendar-v5');
   });
 
   test("keeps mobile navigation and calendar controls readable", () => {
@@ -21,6 +21,8 @@ describe("mobile calendar polish", () => {
     expect(css).toMatch(/grid-template-areas:\s*"month month"\s*"today font"/);
     expect(css).toContain(".calendar-font-toolbar");
     expect(css).toContain(".month-picker-trigger");
+    expect(css).toContain(".month-picker-trigger::after");
+    expect(css).toContain("position: absolute");
     expect(css).toContain("line-height: 1 !important");
     expect(css).toContain("white-space: nowrap");
     expect(css).toContain("text-overflow: ellipsis");
