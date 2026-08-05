@@ -590,6 +590,7 @@
 
     if (moduleState.loading && !moduleState.loaded) {
       list.innerHTML = '<div class="todo-empty-state loading"><span>↻</span><strong>할 일을 불러오는 중이에요</strong></div>';
+      window.dispatchEvent(new CustomEvent('family:todo-snapshot-changed'));
       return;
     }
 
@@ -601,6 +602,7 @@
           ? ['오늘 할 일을 모두 챙겼어요', '새 할 일이 생기면 바로 추가해 보세요.']
           : ['예정된 할 일이 없어요', '마감일을 정해 가족과 함께 준비해요.'];
       list.innerHTML = `<div class="todo-empty-state"><span aria-hidden="true">✓</span><strong>${copy[0]}</strong><small>${copy[1]}</small></div>`;
+      window.dispatchEvent(new CustomEvent('family:todo-snapshot-changed'));
       return;
     }
 
@@ -625,7 +627,13 @@
         </article>
       `;
     }).join('');
+    window.dispatchEvent(new CustomEvent('family:todo-snapshot-changed'));
   }
+
+  window.FAMILY_TODO_API = {
+    getSnapshot: () => moduleState.todos.map((todo) => ({ ...todo })),
+    open: (todo) => openTodoDialog(todo),
+  };
 
   function decorateCalendar() {
     if (!calendarGrid) return;

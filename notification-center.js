@@ -601,7 +601,28 @@
     renderQueued = false;
     updateBadge();
     if (dialog.open) renderList();
+    window.dispatchEvent(new CustomEvent('family:notification-count-changed', {
+      detail: { unread: newItems().length },
+    }));
   };
+
+  const getUnreadCount = () => {
+    try { return newItems().length; } catch { return 0; }
+  };
+
+  const getDeliveryStatus = () => {
+    const permission = 'Notification' in window ? Notification.permission : 'unsupported';
+    const serviceWorker = 'serviceWorker' in navigator;
+    const pushReady = remoteReady() && Boolean(typeof state !== 'undefined' && state.pushReady);
+    return {
+      permission,
+      serviceWorker,
+      pushReady,
+      mode: pushReady ? 'push-ready' : 'in-app',
+    };
+  };
+
+  window.FAMILY_NOTIFICATION_API = { getUnreadCount, getDeliveryStatus };
 
   const queueRender = () => {
     if (renderQueued) return;
