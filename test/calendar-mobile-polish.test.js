@@ -8,9 +8,9 @@ const index = readFileSync("index.html", "utf8");
 
 describe("mobile calendar polish", () => {
   test("loads a cache-busted mobile calendar stylesheet", () => {
-    expect(config).toContain('{ name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v1", script: false }');
+    expect(config).toContain('{ name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v2", script: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/calendar-mobile-polish.css")');
-    expect(index).toContain('config.js?v=20260805-mobile-calendar-v1');
+    expect(index).toContain('config.js?v=20260805-mobile-calendar-v2');
   });
 
   test("keeps mobile navigation and calendar controls readable", () => {
