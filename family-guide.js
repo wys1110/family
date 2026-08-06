@@ -12,7 +12,8 @@
   const phaseLabels = { prenatal: '출산 전', postpartum: '산후·신생아', infant: '영아', toddler: '유아' };
   const phaseButtons = [['current', '현재 단계'], ['all', '전체 단계']];
   const categories = [...new Set(dataApi.cards.map((card) => card.category))];
-  const defaultSettings = () => ({ dueDate: '', birthDate: '', region: { sido: '', sigungu: '' }, hiddenCardIds: [], completedCardIds: [] });
+  const defaultProfileSettings = () => ({ dueDate: '', birthDate: '', region: { sido: '', sigungu: '' }, hiddenCardIds: [], completedCardIds: [] });
+  const defaultSettings = () => ({ profiles: {} });
   let settings = defaultSettings();
   let phaseFilter = 'current';
   let categoryFilter = 'all';
@@ -29,23 +30,55 @@
     return `${STORAGE_KEY}:device`;
   };
   const cleanDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
-  const cleanSettings = (value = {}) => ({
+  const cleanProfileSettings = (value = {}) => ({
     dueDate: cleanDate(value.dueDate),
     birthDate: cleanDate(value.birthDate),
     region: { sido: String(value.region?.sido || ''), sigungu: String(value.region?.sigungu || '') },
     hiddenCardIds: Array.isArray(value.hiddenCardIds) ? [...new Set(value.hiddenCardIds.map(String))] : [],
     completedCardIds: Array.isArray(value.completedCardIds) ? [...new Set(value.completedCardIds.map(String))] : [],
   });
+  const cleanSettings = (value = {}) => {
+    if (value.profiles && typeof value.profiles === 'object' && !Array.isArray(value.profiles)) {
+      return { profiles: Object.fromEntries(Object.entries(value.profiles).map(([id, profile]) => [String(id), cleanProfileSettings(profile)])) };
+    }
+    return { profiles: { unlinked: cleanProfileSettings(value) } };
+  };
+  const currentBaby = () => {
+    try { return typeof activeBaby === 'function' ? activeBaby() : null; }
+    catch { return null; }
+  };
+  const currentBabyId = () => String(currentBaby()?.id || (typeof state !== 'undefined' && state.activeBabyId) || 'unlinked');
   const readSettings = () => {
-    try { return cleanSettings(JSON.parse(localStorage.getItem(storageKey()) || 'null') || {}); }
+    let parsed = null;
+    try { parsed = JSON.parse(localStorage.getItem(storageKey()) || 'null') || {}; }
     catch { return defaultSettings(); }
+    const next = cleanSettings(parsed);
+    const babyId = currentBabyId();
+    if (babyId !== 'unlinked' && !next.profiles[babyId] && next.profiles.unlinked) {
+      next.profiles[babyId] = next.profiles.unlinked;
+      delete next.profiles.unlinked;
+      try { localStorage.setItem(storageKey(), JSON.stringify(next)); } catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
+    }
+    return next;
   };
   const persist = () => {
     try { localStorage.setItem(storageKey(), JSON.stringify(settings)); }
     catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
   };
-  const phaseInfo = () => dataApi.calculatePhase({ dueDate: settings.dueDate, birthDate: settings.birthDate });
-  const regionReady = () => Boolean(settings.region.sido);
+  const currentProfile = () => settings.profiles[currentBabyId()] || defaultProfileSettings();
+  const updateProfile = (next) => {
+    const id = currentBabyId();
+    const profile = currentProfile();
+    settings = { profiles: { ...settings.profiles, [id]: cleanProfileSettings({ ...profile, ...next, region: { ...profile.region, ...(next.region || {}) } }) } };
+    persist();
+    render();
+  };
+  const phaseInfo = () => {
+    const profile = currentProfile();
+    const baby = currentBaby();
+    return dataApi.calculatePhase(dataApi.profilePhaseInput(profile, baby));
+  };
+  const regionReady = () => Boolean(currentProfile().region.sido);
 
   const tab = navigation.querySelector(`[data-view="${VIEW_NAME}"]`) || document.createElement('button');
   if (!tab.parentElement) {
@@ -63,7 +96,7 @@
   view.hidden = true;
   view.innerHTML = `
     <section class="guide-intro-card" aria-labelledby="guideTitle">
-      <div class="guide-intro-heading"><span class="guide-mark" aria-hidden="true">⌂</span><div><p class="eyebrow">FAMILY GUIDE</p><h2 id="guideTitle">준비·육아 가이드</h2><span>기준일과 지역을 넣으면 지금 필요한 정보부터 보여줘요.</span></div></div>
+      <div class="guide-intro-heading"><span class="guide-mark" aria-hidden="true">⌂</span><div><p class="eyebrow">FAMILY GUIDE</p><span data-guide-baby-name>아기 프로필 미선택</span><h2 id="guideTitle">준비·육아 가이드</h2><span>기준일과 지역을 넣으면 지금 필요한 정보부터 보여줘요.</span></div></div>
       <div class="guide-setup-grid">
         <label><span>예정일</span><input type="date" data-guide-due-date></label>
         <label><span>출산일</span><input type="date" data-guide-birth-date></label>
@@ -83,7 +116,7 @@
   main.appendChild(view);
 
   const $ = (selector) => view.querySelector(selector);
-  const setSettings = (next) => { settings = cleanSettings({ ...settings, ...next, region: { ...settings.region, ...(next.region || {}) } }); persist(); render(); };
+  const setSettings = (next) => updateProfile(next);
   const getVisibleCards = () => lastVisibleCards.map((card) => ({ ...card }));
 
   const renderFilters = () => {
@@ -99,24 +132,28 @@
   </article>`;
 
   const render = () => {
+    const profile = currentProfile();
+    const baby = currentBaby();
     const info = phaseInfo();
     const phase = phaseFilter === 'current' && info.mode !== 'unknown' ? info.mode : 'all';
-    let cards = dataApi.filterCards(dataApi.cards, { phase, category: categoryFilter, region: settings.region, hiddenCardIds: settings.hiddenCardIds, completedCardIds: settings.completedCardIds });
+    let cards = dataApi.filterCards(dataApi.cards, { phase, category: categoryFilter, region: profile.region, hiddenCardIds: profile.hiddenCardIds, completedCardIds: profile.completedCardIds });
     if (statusFilter === 'open') cards = cards.filter((item) => !item.completed);
     if (statusFilter === 'done') cards = cards.filter((item) => item.completed);
     lastVisibleCards = cards;
-    $('[data-guide-due-date]').value = settings.dueDate;
-    $('[data-guide-birth-date]').value = settings.birthDate;
-    $('[data-guide-sido]').value = settings.region.sido;
-    $('[data-guide-sigungu]').value = settings.region.sigungu;
+    $('[data-guide-baby-name]').textContent = baby?.name ? `${baby.name} 기준` : '아기 프로필 미선택';
+    $('[data-guide-due-date]').value = profile.dueDate;
+    $('[data-guide-birth-date]').value = baby?.birthDate || profile.birthDate;
+    $('[data-guide-birth-date]').disabled = Boolean(baby?.birthDate);
+    $('[data-guide-sido]').value = profile.region.sido;
+    $('[data-guide-sigungu]').value = profile.region.sigungu;
     $('[data-guide-phase]').textContent = info.label;
     $('[data-guide-phase-detail]').textContent = info.mode === 'unknown'
       ? '기준일을 넣으면 현재 단계에 맞춰 우선순위를 좁혀요.'
-      : `${phaseLabels[info.mode]} 정보 ${cards.length}개 · 지역 ${regionReady() ? settings.region.sido : '전국 공통'}`;
+      : `${phaseLabels[info.mode]} 정보 ${cards.length}개 · 지역 ${regionReady() ? profile.region.sido : '전국 공통'}`;
     $('[data-guide-count]').textContent = `${cards.length}개`;
     const restoreButton = $('[data-guide-restore-hidden]');
-    restoreButton.hidden = settings.hiddenCardIds.length === 0;
-    restoreButton.textContent = settings.hiddenCardIds.length ? `숨긴 카드 ${settings.hiddenCardIds.length}개 복원` : '숨긴 카드 복원';
+    restoreButton.hidden = profile.hiddenCardIds.length === 0;
+    restoreButton.textContent = profile.hiddenCardIds.length ? `숨긴 카드 ${profile.hiddenCardIds.length}개 복원` : '숨긴 카드 복원';
     $('[data-guide-list]').innerHTML = cards.length ? cards.map(renderCard).join('') : '<div class="guide-empty"><strong>조건에 맞는 카드가 없어요.</strong><span>필터를 바꾸거나 숨긴 카드를 확인해 보세요.</span></div>';
     renderFilters();
   };
@@ -153,11 +190,13 @@
     const due = event.target.closest('[data-guide-due-date]');
     const birth = event.target.closest('[data-guide-birth-date]');
     if (due || birth) {
-      const next = { dueDate: $('[data-guide-due-date]').value, birthDate: $('[data-guide-birth-date]').value };
+      const profile = currentProfile();
+      const next = { dueDate: $('[data-guide-due-date]').value, birthDate: currentBaby()?.birthDate || $('[data-guide-birth-date]').value };
       if (next.dueDate && next.birthDate && next.birthDate < next.dueDate) {
         if (typeof toast === 'function') toast('출산일은 예정일 이후 날짜로 입력해 주세요.');
         return render();
       }
+      if (currentBaby()?.birthDate && next.dueDate === profile.dueDate) return render();
       return setSettings(next);
     }
     if (event.target.closest('[data-guide-sido]')) return setSettings({ region: { sido: $('[data-guide-sido]').value, sigungu: '' } });
@@ -172,21 +211,24 @@
     if (phaseButton) { phaseFilter = phaseButton.dataset.guidePhase; return render(); }
     if (categoryButton) { categoryFilter = categoryButton.dataset.guideCategory; return render(); }
     if (statusButton) { statusFilter = statusButton.dataset.guideStatus; return render(); }
-    if (hideButton) return setSettings({ hiddenCardIds: [...settings.hiddenCardIds, hideButton.dataset.guideHide] });
+    const profile = currentProfile();
+    if (hideButton) return setSettings({ hiddenCardIds: [...profile.hiddenCardIds, hideButton.dataset.guideHide] });
     if (restoreButton) return setSettings({ hiddenCardIds: [] });
   });
   view.addEventListener('change', (event) => {
     const checkbox = event.target.closest('[data-guide-complete]');
     if (!checkbox) return;
     const id = checkbox.dataset.guideComplete;
-    const completedCardIds = checkbox.checked ? [...settings.completedCardIds, id] : settings.completedCardIds.filter((value) => value !== id);
+    const profile = currentProfile();
+    const completedCardIds = checkbox.checked ? [...profile.completedCardIds, id] : profile.completedCardIds.filter((value) => value !== id);
     setSettings({ completedCardIds });
   });
   tab.addEventListener('click', () => { if (typeof switchView === 'function') switchView(VIEW_NAME); });
   window.addEventListener('familycontextchange', () => { settings = readSettings(); render(); });
+  window.addEventListener('familybabychange', () => { settings = readSettings(); render(); });
 
   settings = readSettings();
-  window.FAMILY_GUIDE_API = { getSettings: () => ({ ...settings, region: { ...settings.region } }), setSettings, getVisibleCards };
+  window.FAMILY_GUIDE_API = { getSettings: () => ({ ...currentProfile(), babyId: currentBabyId() }), setSettings, getVisibleCards };
   installSwitchView();
   render();
 })();

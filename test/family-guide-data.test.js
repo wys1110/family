@@ -24,6 +24,11 @@ describe('family guide data', () => {
     expect(api.calculatePhase({ todayKey: '2026-08-06' }).mode).toBe('unknown');
   });
 
+  test('profilePhaseInput은 프로필 출생일보다 아기 출생일을 우선한다', () => {
+    expect(api.profilePhaseInput({ birthDate: '2026-08-01', dueDate: '2026-08-20' }, { birthDate: '2026-07-01' }))
+      .toEqual({ birthDate: '2026-07-01', dueDate: '2026-08-20' });
+  });
+
   test('지역·숨김·완료 필터를 적용한다', () => {
     const national = api.filterCards(api.cards, { region: {} });
     expect(national.some((card) => card.regionScope === 'regional')).toBe(false);

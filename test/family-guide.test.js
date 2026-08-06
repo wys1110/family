@@ -24,6 +24,17 @@ describe('family guide tab', () => {
     expect(source).toContain('data-guide-restore-hidden');
   });
 
+  test('가이드는 현재 아기 프로필과 아기별 상태를 사용한다', () => {
+    expect(source).toContain('activeBaby()');
+    expect(source).toContain('familybabychange');
+    expect(source).toContain('profiles');
+    expect(source).toContain('data-guide-baby-name');
+  });
+
+  test('아기 출생일을 가이드 기준일로 우선 사용한다', () => {
+    expect(source).toContain('profilePhaseInput(profile, baby)');
+  });
+
   test('가이드 모듈을 등록하고 탭 라벨·설정 숨김을 연결한다', () => {
     expect(config).toContain('{ name: "family-guide-data", version: "20260806-family-guide-v1", style: false }');
     expect(config).toContain('{ name: "family-guide", version: "20260806-family-guide-v1" }');

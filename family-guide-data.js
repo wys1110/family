@@ -56,6 +56,11 @@
   };
   const diffDays = (from, to) => Math.round((to.getTime() - from.getTime()) / dayMs);
 
+  const profilePhaseInput = (profile = {}, baby = {}) => ({
+    birthDate: toDate(baby.birthDate) ? String(baby.birthDate) : String(profile.birthDate || ''),
+    dueDate: String(profile.dueDate || ''),
+  });
+
   const calculatePhase = ({ dueDate = '', birthDate = '', todayKey = '' } = {}) => {
     const today = toDate(todayKey) || new Date();
     const birth = toDate(birthDate);
@@ -87,5 +92,5 @@
       .map((item) => ({ ...item, completed: completed.has(item.id) }));
   };
 
-  window.FAMILY_GUIDE_DATA_API = { cards, regions: REGIONS, calculatePhase, filterCards };
+  window.FAMILY_GUIDE_DATA_API = { cards, regions: REGIONS, calculatePhase, filterCards, profilePhaseInput };
 })();
