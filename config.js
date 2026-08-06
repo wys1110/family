@@ -141,6 +141,8 @@ window.FAMILY_CONFIG = {
     { name: "settings-backup", version: "20260805-settings-management-v1", style: false },
     { name: "settings-family-management", version: "20260805-settings-management-v1" },
     { name: "settings-data-export", version: "20260805-settings-excel-v3", style: false },
+    { name: "family-guide-data", version: "20260806-family-guide-v1", style: false },
+    { name: "family-guide", version: "20260806-family-guide-v1" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
     { name: "settings-layout-polish", version: "20260720-v1", script: false },

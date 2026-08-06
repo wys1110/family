@@ -8,6 +8,7 @@
     english: ['📖', '동화'],
     'feature-request': ['💡', '요청'],
     settings: ['⚙️', '설정'],
+    guide: ['🧭', '가이드'],
     admin: ['👑', '관리'],
   };
   let shouldRestoreAdmin = false;
