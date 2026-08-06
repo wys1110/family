@@ -57,7 +57,7 @@
   const diffDays = (from, to) => Math.round((to.getTime() - from.getTime()) / dayMs);
 
   const profilePhaseInput = (profile = {}, baby = {}) => ({
-    birthDate: toDate(baby.birthDate) ? String(baby.birthDate) : String(profile.birthDate || ''),
+    birthDate: toDate(baby?.birthDate) ? String(baby.birthDate) : String(profile.birthDate || ''),
     dueDate: String(profile.dueDate || ''),
   });
 

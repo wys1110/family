@@ -29,6 +29,11 @@ describe('family guide data', () => {
       .toEqual({ birthDate: '2026-07-01', dueDate: '2026-08-20' });
   });
 
+  test('아기 데이터가 아직 없을 때도 기준일 계산을 중단하지 않는다', () => {
+    expect(api.profilePhaseInput({ birthDate: '', dueDate: '2026-08-20' }, null))
+      .toEqual({ birthDate: '', dueDate: '2026-08-20' });
+  });
+
   test('지역·숨김·완료 필터를 적용한다', () => {
     const national = api.filterCards(api.cards, { region: {} });
     expect(national.some((card) => card.regionScope === 'regional')).toBe(false);
