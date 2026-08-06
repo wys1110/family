@@ -83,7 +83,7 @@
       .filter((item) => !hidden.has(item.id))
       .filter((item) => phase === 'all' || item.phase.includes(phase))
       .filter((item) => category === 'all' || item.category === category)
-      .filter((item) => item.regionScope === 'national' || item.regionScope === 'regional' || item.regionScope === sido || item.regionScope === sigungu)
+      .filter((item) => item.regionScope === 'national' || (item.regionScope === 'regional' && Boolean(sido)) || item.regionScope === sido || item.regionScope === sigungu)
       .map((item) => ({ ...item, completed: completed.has(item.id) }));
   };
 

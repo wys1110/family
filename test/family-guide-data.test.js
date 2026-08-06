@@ -25,6 +25,8 @@ describe('family guide data', () => {
   });
 
   test('지역·숨김·완료 필터를 적용한다', () => {
+    const national = api.filterCards(api.cards, { region: {} });
+    expect(national.some((card) => card.regionScope === 'regional')).toBe(false);
     const cards = api.filterCards(api.cards, {
       region: { sido: '서울특별시', sigungu: '마포구' },
       hiddenCardIds: ['prepare-hospital-bag'],
