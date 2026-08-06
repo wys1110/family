@@ -159,7 +159,7 @@ window.FAMILY_CONFIG = {
     { name: "family-search", version: "20260805-family-search-v1" },
     { name: "adaptive-feeding", version: "20260806-health-timeline-v1" },
     { name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" },
-    { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
+    { name: "care-entry-edit-fix", version: "20260806-right-lane-edit-v1" },
     { name: "feeding-stepper-fix", version: "20260717-button-handler-v1", style: false },
     { name: "feeding-db-compat", version: "20260717-db-check-fix-v1", style: false },
     { name: "responsive-layout", version: "20260716-desktop-v1", script: false },

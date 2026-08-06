@@ -3,13 +3,14 @@
   if (!content || typeof renderDailyCareClock !== "function" || renderDailyCareClock.__entryEditFixWrapped) return;
 
   const entryType = (entry) => typeof growthCareType === "function" ? growthCareType(entry) : "";
-  const entryLabel = (type) => ({ formula: "분유", pumped: "유축", breast: "직수", diaper: "기저귀" })[type] || "돌봄";
+  const entryLabel = (type) => ({ formula: "분유", pumped: "유축", breast: "직수", diaper: "기저귀", health: "건강" })[type] || "돌봄";
   const entryDetail = (entry, type) => {
     if (["formula", "pumped"].includes(type)) return Number(entry.feedingMl) > 0 ? `${Number(entry.feedingMl)}mL` : entryLabel(type);
     if (type === "breast") {
       const parts = [entry.feedingSide, Number(entry.feedingMinutes) > 0 ? formatDuration(Number(entry.feedingMinutes)) : ""].filter(Boolean);
       return parts.join(" · ") || "직수";
     }
+    if (type === "health") return [entry.title || "건강 기록", Number(entry.temperature) > 0 ? `${Number(entry.temperature)}°C` : ""].filter(Boolean).join(" · ");
     return entry.diaperKind || "교체";
   };
 
@@ -45,10 +46,10 @@
       const time = row.querySelector(".care-split-time")?.textContent.trim();
       if (!time) return;
       const entriesAtTime = grouped.get(time) || [];
-      const feedingEntries = entriesAtTime.filter((entry) => entryType(entry) !== "diaper");
-      const diaperEntries = entriesAtTime.filter((entry) => entryType(entry) === "diaper");
+      const feedingEntries = entriesAtTime.filter((entry) => !["diaper", "health"].includes(entryType(entry)));
+      const diaperEntries = entriesAtTime.filter((entry) => ["diaper", "health"].includes(entryType(entry)));
       row.querySelectorAll(".care-split-cell.feeding .care-split-entry").forEach((card, index) => makeEditable(card, feedingEntries[index]));
-      row.querySelectorAll(".care-split-cell.diaper .care-split-entry").forEach((card, index) => makeEditable(card, diaperEntries[index]));
+      row.querySelectorAll(".care-split-cell.diaper-health .care-split-entry").forEach((card, index) => makeEditable(card, diaperEntries[index]));
     });
   };
 

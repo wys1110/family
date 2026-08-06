@@ -137,6 +137,7 @@
 
 .care-split-cell.feeding { justify-items: end; }
 .care-split-cell.diaper { justify-items: start; }
+.care-split-cell.diaper-health { justify-items: start; }
 
 .care-split-time {
   align-self: start;
