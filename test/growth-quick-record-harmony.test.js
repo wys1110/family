@@ -90,7 +90,7 @@ describe("growth quick record harmony", () => {
   });
 
   test("bumps both feeding module cache versions", () => {
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20260727-direct-stepper-v1" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20260806-health-timeline-v1" }');
     expect(config).toContain('{ name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" }');
   });
 });

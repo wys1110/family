@@ -156,6 +156,7 @@ html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feedin
 html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .solid { --care-accent: var(--care-solid); }
 html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .sleep { --care-accent: var(--care-sleep); }
 html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .diaper { --care-accent: var(--care-diaper); }
+html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary .health { --care-accent: var(--care-health, var(--theme-care-health)); }
 
 html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary span,
 html[data-family-theme="night"] #growthView .care-linear-summary.adaptive-feeding-summary small {
@@ -200,6 +201,12 @@ html[data-family-theme="night"] #growthView .care-split-entry.diaper {
   --entry-color: var(--care-diaper);
   --entry-border: color-mix(in srgb, var(--care-diaper) 50%, transparent);
   --entry-bg: linear-gradient(145deg, #255789, #193957);
+}
+
+html[data-family-theme="night"] #growthView .care-split-entry.health {
+  --entry-color: var(--care-health, var(--theme-care-health));
+  --entry-border: color-mix(in srgb, var(--entry-color) 50%, transparent);
+  --entry-bg: color-mix(in srgb, var(--entry-color) 24%, var(--surface));
 }
 
 html[data-family-theme="night"] #growthView .care-split-entry strong {

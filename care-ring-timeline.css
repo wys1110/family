@@ -34,6 +34,7 @@
 .care-linear-summary .formula strong { color: #c98542; }
 .care-linear-summary .breast strong { color: #b56f82; }
 .care-linear-summary .diaper strong { color: #856548; }
+.care-linear-summary .health strong { color: var(--theme-care-health); }
 
 .care-linear-summary .care-summary-label {
   display: inline-flex;
@@ -83,6 +84,7 @@
 .care-linear-legend .formula { --legend: #e2a15d; }
 .care-linear-legend .breast { --legend: #c98797; }
 .care-linear-legend .diaper { --legend: #9a7654; }
+.care-linear-legend .health { --legend: var(--theme-care-health); }
 
 .care-split-heading,
 .care-split-row {
@@ -262,6 +264,7 @@
 .care-split-entry.formula { --entry-color: #e2a15d; --entry-border: rgba(226, 161, 93, .18); --entry-bg: rgba(255, 247, 235, .94); }
 .care-split-entry.breast { --entry-color: #c98797; --entry-border: rgba(201, 135, 151, .18); --entry-bg: rgba(253, 242, 246, .94); }
 .care-split-entry.diaper { --entry-color: #9a7654; --entry-border: rgba(154, 118, 84, .18); --entry-bg: rgba(249, 245, 239, .94); }
+.care-split-entry.health { --entry-color: var(--theme-care-health); --entry-border: color-mix(in srgb, var(--entry-color) 18%, transparent); --entry-bg: color-mix(in srgb, var(--entry-color) 9%, var(--surface)); }
 .care-split-entry.diaper i { border-radius: 2px; }
 
 .care-linear-empty {

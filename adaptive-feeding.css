@@ -418,6 +418,7 @@
 }
 
 .care-linear-summary .pumped strong { color: #4d8394; }
+.care-linear-summary .health strong { color: var(--theme-care-health); }
 .care-rhythm-bars i.pumped { background: #71a7b8; }
 
 .adaptive-interval-grid {
@@ -440,6 +441,7 @@
 .adaptive-interval-card.pumped { border-top-color: #71a7b8; }
 .adaptive-interval-card.breast { border-top-color: #cc8792; }
 .adaptive-interval-card.diaper { border-top-color: #9b8a64; }
+.adaptive-interval-card.health { border-top-color: var(--theme-care-health); }
 
 .adaptive-interval-card span,
 .adaptive-interval-card strong,

@@ -87,6 +87,11 @@ html[data-family-theme="night"] .care-split-entry.diaper {
   --entry-bg: linear-gradient(145deg, rgba(242, 232, 219, .98), rgba(218, 204, 188, .98));
 }
 
+html[data-family-theme="night"] .care-split-entry.health {
+  --entry-border: color-mix(in srgb, var(--care-health, var(--theme-care-health)) 42%, transparent);
+  --entry-bg: color-mix(in srgb, var(--care-health, var(--theme-care-health)) 20%, var(--surface));
+}
+
 html[data-family-theme="night"] .care-split-edit {
   border-color: color-mix(in srgb, var(--entry-color) 35%, transparent);
   color: color-mix(in srgb, var(--entry-color) 88%, #20252a);

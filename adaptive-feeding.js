@@ -6,7 +6,7 @@
     formula: { label: "분유", title: "분유 수유", type: "분유" },
   };
   const sourceOrder = ["breast", "pumped", "formula"];
-  const careKinds = ["formula", "pumped", "breast", "solid", "sleep", "diaper"];
+  const careKinds = ["formula", "pumped", "breast", "solid", "sleep", "diaper", "health"];
   const BOTTLE_DEFAULT_ML = 100;
   const BOTTLE_STEP_ML = 10;
   const BOTTLE_MIN_ML = 10;
@@ -31,6 +31,7 @@
   function typeOf(entry) {
     if (entry?.category === "기저귀") return "diaper";
     if (entry?.category === "수면") return "sleep";
+    if (entry?.category === "건강·병원") return "health";
     if (entry?.category !== "수유·이유식") return "";
     const type = String(entry.feedingType || "");
     const title = String(entry.title || "");
@@ -241,18 +242,19 @@
     if (note) note.textContent = parts.join(" · ") || (feedings.length ? "수유량·시간 미입력" : "기록 없음");
   };
 
-  function label(kind) { return ({ formula: "분유", pumped: "유축", breast: "직수", solid: "이유식", sleep: "수면", diaper: "기저귀" })[kind]; }
+  function label(kind) { return ({ formula: "분유", pumped: "유축", breast: "직수", solid: "이유식", sleep: "수면", diaper: "기저귀", health: "건강" })[kind]; }
   function detail(entry, kind) {
     if (["formula", "pumped", "solid"].includes(kind)) return Number(entry.feedingMl) ? `${Number(entry.feedingMl)}mL` : label(kind);
     if (kind === "breast") return [entry.feedingSide, Number(entry.feedingMinutes) ? formatDuration(Number(entry.feedingMinutes)) : ""].filter(Boolean).join(" · ") || "직수";
     if (kind === "sleep") return Number(entry.sleepMinutes) ? formatDuration(Number(entry.sleepMinutes)) : "수면";
+    if (kind === "health") return [entry.title || "건강 기록", Number(entry.temperature) ? `${Number(entry.temperature)}°C` : ""].filter(Boolean).join(" · ");
     return entry.diaperKind || "교체";
   }
   function installCareControls() {
     const container = document.querySelector("#carePatternCategories");
     if (!container || container.querySelector('[data-pattern-category="pumped"]')) return;
     carePatternCategories.clear(); careKinds.forEach((kind) => carePatternCategories.add(kind));
-    container.innerHTML = careKinds.map((kind) => `<button type="button" class="${kind} active" data-pattern-category="${kind}" aria-pressed="true"><i>${kind === "formula" ? "F" : kind === "pumped" ? "P" : kind === "breast" ? "M" : kind === "solid" ? "S" : kind === "sleep" ? "Zz" : "D"}</i>${label(kind)}</button>`).join("");
+    container.innerHTML = careKinds.map((kind) => `<button type="button" class="${kind} active" data-pattern-category="${kind}" aria-pressed="true"><i>${kind === "formula" ? "F" : kind === "pumped" ? "P" : kind === "breast" ? "M" : kind === "solid" ? "S" : kind === "sleep" ? "Zz" : kind === "health" ? "!" : "D"}</i>${label(kind)}</button>`).join("");
     const legend = document.querySelector(".care-rhythm-legend");
     if (legend) legend.innerHTML = careKinds.map((kind) => `<span class="${kind}">${label(kind)}</span>`).join("");
   }
@@ -272,9 +274,9 @@
     document.querySelector("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
     const rows = [...groups.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([time, row]) => {
       const cards = (list) => list.map((entry) => { const kind = typeOf(entry); return `<article class="care-split-entry ${kind}"><span><i></i><strong>${label(kind)}</strong></span><small>${escapeHtml(detail(entry, kind))}</small></article>`; }).join("");
-      return `<div class="care-split-row"><div class="care-split-cell feeding">${cards(row.filter((entry) => typeOf(entry) !== "diaper"))}</div><time class="care-split-time">${escapeHtml(time)}</time><div class="care-split-cell diaper">${cards(row.filter((entry) => typeOf(entry) === "diaper"))}</div></div>`;
+      return `<div class="care-split-row"><div class="care-split-cell feeding">${cards(row.filter((entry) => !["diaper", "health"].includes(typeOf(entry))))}</div><time class="care-split-time">${escapeHtml(time)}</time><div class="care-split-cell diaper-health">${cards(row.filter((entry) => ["diaper", "health"].includes(typeOf(entry))))}</div></div>`;
     }).join("");
-    document.querySelector("#carePatternContent").innerHTML = `<section class="care-linear-card"><div class="care-linear-summary adaptive-feeding-summary"><article class="formula"><span>분유</span><strong>${sum("formula", "feedingMl")}mL</strong><small>${byType.formula.length}회</small></article><article class="pumped"><span>유축</span><strong>${sum("pumped", "feedingMl")}mL</strong><small>${byType.pumped.length}회</small></article><article class="breast"><span>직수</span><strong>${formatDuration(sum("breast", "feedingMinutes"))}</strong><small>${byType.breast.length}회</small></article><article class="solid"><span>이유식</span><strong>${sum("solid", "feedingMl")}mL</strong><small>${byType.solid.length}회</small></article><article class="sleep"><span>수면</span><strong>${formatDuration(sum("sleep", "sleepMinutes"))}</strong><small>${byType.sleep.length}회</small></article><article class="diaper"><span>기저귀</span><strong>${byType.diaper.length}회</strong><small>오늘 기록</small></article></div><div class="care-split-heading"><span>수유 · 이유식 · 수면</span><span>시간</span><span>기저귀</span></div><div class="care-split-timeline">${rows || '<p class="care-linear-empty">이 날짜에는 돌봄 시간 기록이 없어요.</p>'}</div></section>`;
+    document.querySelector("#carePatternContent").innerHTML = `<section class="care-linear-card"><div class="care-linear-summary adaptive-feeding-summary"><article class="formula"><span>분유</span><strong>${sum("formula", "feedingMl")}mL</strong><small>${byType.formula.length}회</small></article><article class="pumped"><span>유축</span><strong>${sum("pumped", "feedingMl")}mL</strong><small>${byType.pumped.length}회</small></article><article class="breast"><span>직수</span><strong>${formatDuration(sum("breast", "feedingMinutes"))}</strong><small>${byType.breast.length}회</small></article><article class="solid"><span>이유식</span><strong>${sum("solid", "feedingMl")}mL</strong><small>${byType.solid.length}회</small></article><article class="sleep"><span>수면</span><strong>${formatDuration(sum("sleep", "sleepMinutes"))}</strong><small>${byType.sleep.length}회</small></article><article class="diaper"><span>기저귀</span><strong>${byType.diaper.length}회</strong><small>오늘 기록</small></article><article class="health"><span>건강</span><strong>${byType.health.length}회</strong><small>증상·체온</small></article></div><div class="care-split-heading"><span>수유 · 이유식 · 수면</span><span>시간</span><span>기저귀 · 건강</span></div><div class="care-split-timeline">${rows || '<p class="care-linear-empty">이 날짜에는 돌봄 시간 기록이 없어요.</p>'}</div></section>`;
   };
   renderDailyCareClock = function adaptiveDailyCarePattern(items) {
     const clockButton = document.querySelector('[data-care-day-mode="clock"]');
@@ -291,7 +293,7 @@
     const data = days.map((day) => {
       const current = items.filter((entry) => entry.date === day);
       const total = (kind, field) => current.filter((entry) => typeOf(entry) === kind).reduce((sum, entry) => sum + (Number(entry[field]) || (field ? 0 : 1)), 0);
-      return { day, formula: total("formula", "feedingMl"), pumped: total("pumped", "feedingMl"), breast: total("breast", "feedingMinutes"), solid: total("solid", "feedingMl"), sleep: total("sleep", "sleepMinutes"), diaper: current.filter((entry) => typeOf(entry) === "diaper").length };
+      return { day, formula: total("formula", "feedingMl"), pumped: total("pumped", "feedingMl"), breast: total("breast", "feedingMinutes"), solid: total("solid", "feedingMl"), sleep: total("sleep", "sleepMinutes"), diaper: current.filter((entry) => typeOf(entry) === "diaper").length, health: current.filter((entry) => typeOf(entry) === "health").length };
     });
     const selected = kinds.filter((kind) => carePatternCategories.has(kind));
     const maxima = Object.fromEntries(kinds.map((kind) => [kind, Math.max(1, ...data.map((item) => item[kind]))]));

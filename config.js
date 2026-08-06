@@ -157,7 +157,7 @@ window.FAMILY_CONFIG = {
     { name: "notification-center", version: "20260803-layout-fix-v1" },
     { name: "today-overview", version: "20260805-today-overview-v1" },
     { name: "family-search", version: "20260805-family-search-v1" },
-    { name: "adaptive-feeding", version: "20260727-direct-stepper-v1" },
+    { name: "adaptive-feeding", version: "20260806-health-timeline-v1" },
     { name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" },
     { name: "care-entry-edit-fix", version: "20260717-diaper-edit-v1" },
     { name: "feeding-stepper-fix", version: "20260717-button-handler-v1", style: false },
