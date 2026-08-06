@@ -1,6 +1,7 @@
 .weekly-trend-chart {
   --pumped-line: var(--growth-pumped, #5f9faa);
   --solid-line: var(--growth-solid, #6f9d72);
+  --health-line: var(--growth-health, var(--theme-care-health));
 }
 
 .weekly-trend-line.pumped { stroke: var(--pumped-line); }

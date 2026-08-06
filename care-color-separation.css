@@ -4,6 +4,7 @@
   --care-breast-strong: #d9507d;
   --care-sleep-strong: #7668dc;
   --care-diaper-strong: #29966d;
+  --care-health-strong: var(--theme-care-health);
 }
 
 html[data-family-theme="night"] #growthView .care-pattern-section {
@@ -17,6 +18,7 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
   --care-breast-strong: var(--care-breast);
   --care-sleep-strong: var(--care-sleep);
   --care-diaper-strong: var(--care-diaper);
+  --care-health-strong: var(--theme-care-health);
 }
 
 /* One palette across legend, filters, clock, summaries, and list rows. */
@@ -44,6 +46,12 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
   --category-color: var(--care-diaper-strong);
 }
 
+#growthView .care-rhythm-legend .health,
+#growthView .care-pattern-categories .health {
+  --legend: var(--care-health-strong);
+  --category-color: var(--care-health-strong);
+}
+
 #growthView .care-clock-mark {
   stroke-width: 9px;
   stroke-linecap: round;
@@ -53,10 +61,12 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
 #growthView .care-clock-mark.formula { stroke: var(--care-formula-strong); }
 #growthView .care-clock-mark.breast { stroke: var(--care-breast-strong); }
 #growthView .care-clock-mark.diaper { stroke: var(--care-diaper-strong); }
+#growthView .care-clock-mark.health { stroke: var(--care-health-strong); }
 
 #growthView .care-clock-dot.formula { fill: var(--care-formula-strong); }
 #growthView .care-clock-dot.breast { fill: var(--care-breast-strong); }
 #growthView .care-clock-dot.diaper { fill: var(--care-diaper-strong); }
+#growthView .care-clock-dot.health { fill: var(--care-health-strong); }
 
 #growthView .care-clock-sleep {
   stroke: var(--care-sleep-strong);
@@ -69,6 +79,7 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
 #growthView .care-clock-summary .breast { --summary-color: var(--care-breast-strong); }
 #growthView .care-clock-summary .sleep { --summary-color: var(--care-sleep-strong); }
 #growthView .care-clock-summary .diaper { --summary-color: var(--care-diaper-strong); }
+#growthView .care-clock-summary .health { --summary-color: var(--care-health-strong); }
 
 #growthView .care-time-list {
   border-color: rgba(47, 78, 111, .13);

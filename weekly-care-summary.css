@@ -94,6 +94,7 @@
 
 .weekly-care-metric.sleep { --weekly-accent: #8179a2; }
 .weekly-care-metric.diaper { --weekly-accent: #638c78; }
+.weekly-care-metric.health { --weekly-accent: var(--theme-care-health); }
 
 .weekly-care-metric-heading {
   display: flex;
@@ -249,6 +250,7 @@
 .weekly-trend-line.breast { stroke: var(--breast-line); }
 .weekly-trend-line.sleep { stroke: var(--sleep-line); }
 .weekly-trend-line.diaper { stroke: var(--diaper-line); }
+.weekly-trend-line.health { stroke: var(--health-line); }
 
 .weekly-trend-dot {
   stroke: color-mix(in srgb, var(--surface) 92%, #fff 8%);
@@ -260,6 +262,7 @@
 .weekly-trend-dot.breast { fill: var(--breast-line); }
 .weekly-trend-dot.sleep { fill: var(--sleep-line); }
 .weekly-trend-dot.diaper { fill: var(--diaper-line); }
+.weekly-trend-dot.health { fill: var(--health-line); }
 
 .weekly-trend-axis {
   display: grid;
@@ -321,6 +324,7 @@
 .weekly-trend-legend-item.breast { --legend-color: var(--breast-line); }
 .weekly-trend-legend-item.sleep { --legend-color: var(--sleep-line); }
 .weekly-trend-legend-item.diaper { --legend-color: var(--diaper-line); }
+.weekly-trend-legend-item.health { --legend-color: var(--health-line); }
 
 .weekly-trend-legend-item i {
   width: 8px;

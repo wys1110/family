@@ -7,7 +7,7 @@
     <meta name="description" content="우리 가족의 소중한 일정을 함께 기록하는 캘린더" />
     <title>우리 가족</title>
     <script src="theme-bootstrap.js?v=20260804-theme-bootstrap-v1"></script>
-    <link rel="stylesheet" href="styles.css?v=20260727-isolated-demo-v1" />
+    <link rel="stylesheet" href="styles.css?v=20260806-health-pattern-v1" />
     <style data-theme-critical-inline>
       html[data-family-theme-choice="white"] {
         --bg: #f7f7f5; --surface: #fff; --surface-2: #ededeb; --label: #1b1d1f;
@@ -272,6 +272,7 @@
               <button type="button" class="feed active" data-pattern-category="feed"><i>F</i>수유</button>
               <button type="button" class="sleep active" data-pattern-category="sleep"><i>Zz</i>수면</button>
               <button type="button" class="diaper active" data-pattern-category="diaper"><i>D</i>기저귀</button>
+              <button type="button" class="health active" data-pattern-category="health"><i>!</i>건강</button>
             </div>
             <div class="care-pattern-date" id="carePatternDateNav">
               <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
@@ -439,7 +440,9 @@
           <label>잔 시간 (분)<input id="growthSleepMinutes" type="number" min="0" max="1440" step="1" inputmode="numeric" placeholder="예: 90" /></label>
         </div>
         <div class="growth-detail-group" data-growth-fields="건강·병원" hidden>
+          <label>관찰한 증상<select id="growthSymptom"><option value="">선택 안 함</option><option>아픔·보챔</option><option>구토</option><option>설사</option><option>기침·콧물</option><option>발진</option><option>발열</option><option>약 복용</option><option>병원 방문</option><option>기타</option></select></label>
           <label>체온 (°C)<input id="growthTemperature" type="number" min="30" max="45" step="0.1" inputmode="decimal" placeholder="예: 36.7" /></label>
+          <p class="health-record-note">관찰 기록용이며 진단이 아니에요. 지속·악화되거나 걱정되면 의료기관에 문의하세요.</p>
         </div>
         <div class="growth-detail-group" data-growth-fields="기저귀" hidden>
           <label>기저귀 상태<select id="growthDiaperKind"><option value="">선택</option><option>소변</option><option>대변</option><option>소변·대변</option></select></label>
@@ -535,6 +538,6 @@
     <script src="demo-mode.js?v=20260727-isolated-v1"></script>
     <script src="config.js?v=20260805-mobile-calendar-v5"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260727-isolated-demo-v1"></script>
+    <script src="app.js?v=20260806-health-pattern-v1"></script>
   </body>
 </html>

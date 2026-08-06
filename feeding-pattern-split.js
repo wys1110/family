@@ -1,5 +1,5 @@
 (() => {
-  const CARE_TYPES = ["formula", "breast", "sleep", "diaper"];
+  const CARE_TYPES = ["formula", "breast", "sleep", "diaper", "health"];
 
   function splitCareType(entry) {
     if (entry.category === "수유·이유식") {
@@ -11,6 +11,7 @@
     }
     if (entry.category === "수면") return "sleep";
     if (entry.category === "기저귀") return "diaper";
+    if (entry.category === "건강·병원") return "health";
     return "";
   }
 
@@ -53,7 +54,7 @@
 
   function installSplitControls() {
     const legend = document.querySelector(".care-rhythm-legend");
-    if (legend) legend.innerHTML = '<span class="formula">분유</span><span class="breast">모유</span><span class="sleep">수면</span><span class="diaper">기저귀</span>';
+    if (legend) legend.innerHTML = '<span class="formula">분유</span><span class="breast">모유</span><span class="sleep">수면</span><span class="diaper">기저귀</span><span class="health">건강</span>';
 
     const categories = document.querySelector("#carePatternCategories");
     if (categories) categories.innerHTML = [
@@ -61,6 +62,7 @@
       '<button type="button" class="breast active" data-pattern-category="breast" aria-pressed="true"><i>M</i>모유</button>',
       '<button type="button" class="sleep active" data-pattern-category="sleep" aria-pressed="true"><i>Zz</i>수면</button>',
       '<button type="button" class="diaper active" data-pattern-category="diaper" aria-pressed="true"><i>D</i>기저귀</button>',
+      '<button type="button" class="health active" data-pattern-category="health" aria-pressed="true"><i>!</i>건강</button>',
     ].join("");
 
     const bottleOption = [...document.querySelectorAll("#growthFeedingType option")].find((option) => option.value === "젖병");
@@ -108,6 +110,7 @@
     const breastMinutes = dayEntries.filter((entry) => splitCareType(entry) === "breast").reduce((sum, entry) => sum + (Number(entry.feedingMinutes) || 0), 0);
     const sleepTotal = dayEntries.filter((entry) => splitCareType(entry) === "sleep").reduce((sum, entry) => sum + (Number(entry.sleepMinutes) || 0), 0);
     const diaperCount = dayEntries.filter((entry) => splitCareType(entry) === "diaper").length;
+    const healthCount = dayEntries.filter((entry) => splitCareType(entry) === "health").length;
     const now = new Date();
     const nowAngle = (now.getHours() * 60 + now.getMinutes()) / 1440 * 360;
     const nowStart = clockPoint(nowAngle, 72);
@@ -115,7 +118,7 @@
     const nowMark = carePatternDate === today ? `<line class="care-clock-now" x1="${nowStart.x.toFixed(1)}" y1="${nowStart.y.toFixed(1)}" x2="${nowEnd.x.toFixed(1)}" y2="${nowEnd.y.toFixed(1)}"></line><circle class="care-clock-now-dot" cx="${nowEnd.x.toFixed(1)}" cy="${nowEnd.y.toFixed(1)}" r="3"></circle>` : "";
     const ageText = dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`;
 
-    document.querySelector("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴, 분유 ${formulaMl}밀리리터, 모유 ${breastMinutes}분"><defs><filter id="clockCenterShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#5f655f" flood-opacity=".10" /></filter></defs><circle class="care-clock-outer" cx="180" cy="180" r="129"></circle><circle class="care-clock-face" cx="180" cy="180" r="${clockRadius}"></circle><circle class="care-clock-night" cx="180" cy="180" r="${clockRadius}" pathLength="100" stroke-dasharray="50 50" transform="rotate(180 180 180)"></circle>${ticks}${hours}${marks}${nowMark}<circle class="care-clock-center" cx="180" cy="180" r="69"></circle><text class="care-clock-center-kicker" x="180" y="163" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="180" y="195" text-anchor="middle">${ageText}</text><text class="care-clock-center-caption" x="180" y="214" text-anchor="middle">24시간 돌봄</text></svg><div class="care-clock-periods" aria-hidden="true"><span>밤</span><span>낮</span></div></div><div class="care-clock-summary split-feeding"><article class="formula"><i></i><span>분유</span><strong>${formulaMl}mL</strong></article><article class="breast"><i></i><span>모유</span><strong>${formatDuration(breastMinutes)}</strong></article><article class="sleep"><i></i><span>수면</span><strong>${formatDuration(sleepTotal)}</strong></article><article class="diaper"><i></i><span>기저귀</span><strong>${diaperCount}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
+    document.querySelector("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴, 분유 ${formulaMl}밀리리터, 모유 ${breastMinutes}분, 건강 ${healthCount}회"><defs><filter id="clockCenterShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#5f655f" flood-opacity=".10" /></filter></defs><circle class="care-clock-outer" cx="180" cy="180" r="129"></circle><circle class="care-clock-face" cx="180" cy="180" r="${clockRadius}"></circle><circle class="care-clock-night" cx="180" cy="180" r="${clockRadius}" pathLength="100" stroke-dasharray="50 50" transform="rotate(180 180 180)"></circle>${ticks}${hours}${marks}${nowMark}<circle class="care-clock-center" cx="180" cy="180" r="69"></circle><text class="care-clock-center-kicker" x="180" y="163" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="180" y="195" text-anchor="middle">${ageText}</text><text class="care-clock-center-caption" x="180" y="214" text-anchor="middle">24시간 돌봄</text></svg><div class="care-clock-periods" aria-hidden="true"><span>밤</span><span>낮</span></div></div><div class="care-clock-summary split-feeding"><article class="formula"><i></i><span>분유</span><strong>${formulaMl}mL</strong></article><article class="breast"><i></i><span>모유</span><strong>${formatDuration(breastMinutes)}</strong></article><article class="sleep"><i></i><span>수면</span><strong>${formatDuration(sleepTotal)}</strong></article><article class="diaper"><i></i><span>기저귀</span><strong>${diaperCount}회</strong></article><article class="health"><i></i><span>건강</span><strong>${healthCount}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
   };
 
   renderWeeklyCarePattern = function renderSplitWeeklyCarePattern(entries) {
@@ -129,6 +132,7 @@
         breast: items.filter((entry) => splitCareType(entry) === "breast").reduce((sum, entry) => sum + (Number(entry.feedingMinutes) || 0), 0),
         sleep: items.filter((entry) => splitCareType(entry) === "sleep").reduce((sum, entry) => sum + (Number(entry.sleepMinutes) || 0), 0),
         diaper: items.filter((entry) => splitCareType(entry) === "diaper").length,
+        health: items.filter((entry) => splitCareType(entry) === "health").length,
       };
     });
     const maxima = Object.fromEntries(CARE_TYPES.map((type) => [type, Math.max(1, ...data.map((item) => item[type]))]));
@@ -137,14 +141,14 @@
       document.querySelector("#carePatternContent").innerHTML = '<div class="care-rhythm-empty"><strong>기록이 쌓이면 리듬이 보여요</strong><span>위의 빠른 기록이나 타이머로 오늘부터 시작해 보세요.</span></div>';
       return;
     }
-    const labels = { formula: "분유", breast: "모유", sleep: "수면", diaper: "기저귀" };
-    const values = { formula: (value) => `${value}mL`, breast: (value) => formatDuration(value), sleep: (value) => formatDuration(value), diaper: (value) => `${value}회` };
+    const labels = { formula: "분유", breast: "모유", sleep: "수면", diaper: "기저귀", health: "건강" };
+    const values = { formula: (value) => `${value}mL`, breast: (value) => formatDuration(value), sleep: (value) => formatDuration(value), diaper: (value) => `${value}회`, health: (value) => `${value}회` };
     document.querySelector("#carePatternContent").innerHTML = `<div class="care-rhythm-chart split-feeding">${data.map((item) => {
       const date = parseDate(item.day);
       const isToday = item.day === end;
       const height = (value, max) => value ? Math.max(12, Math.round((value / max) * 100)) : 4;
       const bars = CARE_TYPES.filter((type) => carePatternCategories.has(type)).map((type) => `<i class="${type}" style="--bar:${height(item[type], maxima[type])}%" title="${labels[type]} ${values[type](item[type])}"></i>`).join("");
-      return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 분유 ${item.formula}밀리리터, 모유 ${item.breast}분, 수면 ${item.sleep}분, 기저귀 ${item.diaper}회"><div class="care-rhythm-bars">${bars}</div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
+      return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 분유 ${item.formula}밀리리터, 모유 ${item.breast}분, 수면 ${item.sleep}분, 기저귀 ${item.diaper}회, 건강 ${item.health}회"><div class="care-rhythm-bars">${bars}</div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
     }).join("")}</div>`;
   };
 
@@ -155,6 +159,7 @@
       breast: { label: "모유", className: "breast" },
       sleep: { label: "수면", className: "sleep" },
       diaper: { label: "기저귀", className: "diaper" },
+      health: { label: "건강", className: "health" },
     };
     const cards = CARE_TYPES.filter((type) => carePatternCategories.has(type)).map((type) => {
       const times = entries.filter((entry) => entry.date >= start && splitCareType(entry) === type && entry.time).map(entryDateTime).filter(Boolean).sort((a, b) => a - b);

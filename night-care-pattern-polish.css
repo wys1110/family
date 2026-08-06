@@ -7,6 +7,7 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
   --care-solid: #60cc8c;
   --care-sleep: #a47df3;
   --care-diaper: #5aa7ff;
+  --care-health: var(--theme-care-health);
 }
 
 /* Keep the legend, selector chips, charts, and cards on one color system. */
@@ -44,6 +45,12 @@ html[data-family-theme="night"] #growthView .care-rhythm-legend .diaper,
 html[data-family-theme="night"] #growthView .care-pattern-categories .diaper {
   --legend: var(--care-diaper);
   --category-color: var(--care-diaper);
+}
+
+html[data-family-theme="night"] #growthView .care-rhythm-legend .health,
+html[data-family-theme="night"] #growthView .care-pattern-categories .health {
+  --legend: var(--care-health);
+  --category-color: var(--care-health);
 }
 
 html[data-family-theme="night"] #growthView .care-pattern-categories button.active {

@@ -25,6 +25,7 @@
   --theme-accent-contrast: #fff;
   --theme-care-pumped: #71a7b8;
   --theme-care-solid: #6f9d72;
+  --theme-care-health: #a65e5d;
   --theme-progress-track: color-mix(in srgb, var(--surface-2) 88%, var(--surface));
   --theme-progress-fill: var(--blue);
   --theme-shadow: var(--shadow);
@@ -48,6 +49,7 @@ html[data-family-theme-choice="black"] {
   --theme-accent-contrast: #090909;
   --theme-progress-track: #252525;
   --theme-progress-fill: linear-gradient(90deg, #777, #d0d0d0);
+  --theme-care-health: #ef8e8c;
   --theme-shadow: 0 18px 44px rgba(0, 0, 0, .42);
   --theme-overlay: rgba(0, 0, 0, .68);
 

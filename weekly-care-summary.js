@@ -37,6 +37,7 @@
     const solid = feedings.filter((entry) => feedingKind(entry) === "solid");
     const sleep = items.filter((entry) => entry.category === "수면");
     const diapers = items.filter((entry) => entry.category === "기저귀");
+    const health = items.filter((entry) => entry.category === "건강·병원");
     const sum = (list, field) => list.reduce((total, entry) => total + positiveNumber(entry[field]), 0);
     const formulaMl = sum(formula, "feedingMl");
     const pumpedMl = sum(pumped, "feedingMl");
@@ -55,6 +56,7 @@
         solidMl: sum(dayFeedings.filter((entry) => feedingKind(entry) === "solid"), "feedingMl"),
         sleepMinutes: sum(dayItems.filter((entry) => entry.category === "수면"), "sleepMinutes"),
         diaperCount: dayItems.filter((entry) => entry.category === "기저귀").length,
+        healthCount: dayItems.filter((entry) => entry.category === "건강·병원").length,
       };
     });
 
@@ -71,10 +73,20 @@
       sleep,
       sleepMinutes,
       diapers,
+      health,
       wetDiapers: diapers.filter((entry) => String(entry.diaperKind || "").includes("소변")).length,
       dirtyDiapers: diapers.filter((entry) => String(entry.diaperKind || "").includes("대변")).length,
       daily,
     };
+  }
+
+  function healthCard(totals) {
+    return `
+      <article class="weekly-care-metric health">
+        <div class="weekly-care-metric-heading"><span>건강 기록</span><em>최근 7일</em></div>
+        <strong>${totals.health.length}<small>회</small></strong>
+        <div class="weekly-care-details"><span>증상·체온 관찰 기록</span></div>
+      </article>`;
   }
 
   function feedCard(totals) {
@@ -138,6 +150,9 @@
     }
     if (carePatternCategories.has("diaper")) {
       series.push({ key: "diaperCount", label: "기저귀", unit: "회", className: "diaper", total: totals.diapers.length });
+    }
+    if (carePatternCategories.has("health")) {
+      series.push({ key: "healthCount", label: "건강", unit: "회", className: "health", total: totals.health.length });
     }
     return series;
   }
@@ -222,12 +237,13 @@
     content.querySelector(".care-rhythm-chart")?.remove();
 
     const totals = weeklyTotals(entries);
-    if (!totals.items.some((entry) => ["수유·이유식", "수면", "기저귀"].includes(entry.category))) return;
+    if (!totals.items.some((entry) => ["수유·이유식", "수면", "기저귀", "건강·병원"].includes(entry.category))) return;
 
     const cards = [];
     if (["formula", "pumped", "breast", "solid"].some((kind) => carePatternCategories.has(kind))) cards.push(feedCard(totals));
     if (carePatternCategories.has("sleep")) cards.push(sleepCard(totals));
     if (carePatternCategories.has("diaper")) cards.push(diaperCard(totals));
+    if (carePatternCategories.has("health")) cards.push(healthCard(totals));
 
     content.insertAdjacentHTML("afterbegin", `
       <section class="weekly-care-summary" aria-label="최근 7일 돌봄 합계" aria-live="polite">

@@ -68,7 +68,7 @@ let careTimer = storedCareTimer();
 let careTimerSaveInProgress = false;
 let carePatternView = "day";
 let carePatternDate = dateKey(new Date());
-const carePatternCategories = new Set(["feed", "sleep", "diaper"]);
+const carePatternCategories = new Set(["feed", "sleep", "diaper", "health"]);
 let lastCalendarTap = { date: null, at: 0 };
 let recentPhotoItems = [];
 let allPhotoItems = [];
@@ -1367,6 +1367,7 @@ function growthCareType(entry) {
   if (entry.category === "수유·이유식") return "feed";
   if (entry.category === "수면") return "sleep";
   if (entry.category === "기저귀") return "diaper";
+  if (entry.category === "건강·병원") return "health";
   return "";
 }
 
@@ -1450,14 +1451,14 @@ function renderDailyCareClock(entries) {
   const dayLabel = carePatternDate === today ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()] + "요일";
   $("#carePatternDateLabel").textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 · ${dayLabel}`;
   $("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
-  const counts = { feed: 0, sleep: 0, diaper: 0 };
+  const counts = { feed: 0, sleep: 0, diaper: 0, health: 0 };
   items.forEach((entry) => { const type = growthCareType(entry); if (type) counts[type] += 1; });
   const sleepTotal = items.filter((entry) => growthCareType(entry) === "sleep").reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0);
   const now = new Date(); const nowAngle = (now.getHours() * 60 + now.getMinutes()) / 1440 * 360;
   const nowStart = clockPoint(nowAngle, 72); const nowEnd = clockPoint(nowAngle, 133);
   const nowMark = carePatternDate === today ? `<line class="care-clock-now" x1="${nowStart.x.toFixed(1)}" y1="${nowStart.y.toFixed(1)}" x2="${nowEnd.x.toFixed(1)}" y2="${nowEnd.y.toFixed(1)}"></line><circle class="care-clock-now-dot" cx="${nowEnd.x.toFixed(1)}" cy="${nowEnd.y.toFixed(1)}" r="3"></circle>` : "";
   const ageText = dayNumber === null ? "" : dayNumber >= 0 ? `D+${dayNumber}` : `D${dayNumber}`;
-  $("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴"><defs><filter id="clockCenterShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#5f655f" flood-opacity=".10" /></filter></defs><circle class="care-clock-outer" cx="180" cy="180" r="129"></circle><circle class="care-clock-face" cx="180" cy="180" r="${clockRadius}"></circle><circle class="care-clock-night" cx="180" cy="180" r="${clockRadius}" pathLength="100" stroke-dasharray="50 50" transform="rotate(180 180 180)"></circle>${ticks}${hours}${marks}${nowMark}<circle class="care-clock-center" cx="180" cy="180" r="69"></circle><text class="care-clock-center-kicker" x="180" y="163" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="180" y="195" text-anchor="middle">${ageText}</text><text class="care-clock-center-caption" x="180" y="214" text-anchor="middle">24시간 돌봄</text></svg><div class="care-clock-periods" aria-hidden="true"><span>밤</span><span>낮</span></div></div><div class="care-clock-summary"><article class="feed"><i></i><span>수유</span><strong>${counts.feed}회</strong></article><article class="sleep"><i></i><span>수면</span><strong>${sleepTotal ? formatDuration(sleepTotal) : "0분"}</strong></article><article class="diaper"><i></i><span>기저귀</span><strong>${counts.diaper}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
+  $("#carePatternContent").innerHTML = `<div class="care-clock-wrap"><svg class="care-clock" viewBox="0 0 360 360" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴"><defs><filter id="clockCenterShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#5f655f" flood-opacity=".10" /></filter></defs><circle class="care-clock-outer" cx="180" cy="180" r="129"></circle><circle class="care-clock-face" cx="180" cy="180" r="${clockRadius}"></circle><circle class="care-clock-night" cx="180" cy="180" r="${clockRadius}" pathLength="100" stroke-dasharray="50 50" transform="rotate(180 180 180)"></circle>${ticks}${hours}${marks}${nowMark}<circle class="care-clock-center" cx="180" cy="180" r="69"></circle><text class="care-clock-center-kicker" x="180" y="163" text-anchor="middle">${dayLabel}</text><text class="care-clock-center-day" x="180" y="195" text-anchor="middle">${ageText}</text><text class="care-clock-center-caption" x="180" y="214" text-anchor="middle">24시간 돌봄</text></svg><div class="care-clock-periods" aria-hidden="true"><span>밤</span><span>낮</span></div></div><div class="care-clock-summary"><article class="feed"><i></i><span>수유</span><strong>${counts.feed}회</strong></article><article class="sleep"><i></i><span>수면</span><strong>${sleepTotal ? formatDuration(sleepTotal) : "0분"}</strong></article><article class="diaper"><i></i><span>기저귀</span><strong>${counts.diaper}회</strong></article><article class="health"><i></i><span>건강</span><strong>${counts.health}회</strong></article></div>${clockItems.length ? "" : '<p class="care-pattern-note">이 날짜에는 시간 기록이 없어요.</p>'}`;
 }
 
 function daysFromBirthAt(birthDate, targetDate) {
@@ -1475,12 +1476,14 @@ function renderWeeklyCarePattern(entries) {
       feed: items.filter((entry) => entry.category === "수유·이유식").length,
       sleep: items.filter((entry) => entry.category === "수면").reduce((sum, entry) => sum + (entry.sleepMinutes || 0), 0),
       diaper: items.filter((entry) => entry.category === "기저귀").length,
+      health: items.filter((entry) => entry.category === "건강·병원").length,
     };
   });
   const maxFeed = Math.max(1, ...data.map((item) => item.feed));
   const maxSleep = Math.max(1, ...data.map((item) => item.sleep));
   const maxDiaper = Math.max(1, ...data.map((item) => item.diaper));
-  const hasData = data.some((item) => ["feed", "sleep", "diaper"].some((type) => carePatternCategories.has(type) && item[type]));
+  const maxHealth = Math.max(1, ...data.map((item) => item.health));
+  const hasData = data.some((item) => ["feed", "sleep", "diaper", "health"].some((type) => carePatternCategories.has(type) && item[type]));
   if (!hasData) {
     $("#carePatternContent").innerHTML = '<div class="care-rhythm-empty"><strong>기록이 쌓이면 리듬이 보여요</strong><span>위의 빠른 기록이나 타이머로 오늘부터 시작해 보세요.</span></div>';
     return;
@@ -1489,14 +1492,14 @@ function renderWeeklyCarePattern(entries) {
     const date = parseDate(item.day); const isToday = item.day === end;
     const height = (value, max) => value ? Math.max(12, Math.round((value / max) * 100)) : 4;
     const bar = (type, value, max, title) => carePatternCategories.has(type) ? `<i class="${type}" style="--bar:${height(value, max)}%" title="${title}"></i>` : "";
-    return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 수유 ${item.feed}회, 수면 ${formatDuration(item.sleep)}, 기저귀 ${item.diaper}회"><div class="care-rhythm-bars">${bar("feed", item.feed, maxFeed, `수유 ${item.feed}회`)}${bar("sleep", item.sleep, maxSleep, `수면 ${formatDuration(item.sleep)}`)}${bar("diaper", item.diaper, maxDiaper, `기저귀 ${item.diaper}회`)}</div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
+    return `<article class="care-rhythm-day ${isToday ? "today" : ""}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 수유 ${item.feed}회, 수면 ${formatDuration(item.sleep)}, 기저귀 ${item.diaper}회, 건강 ${item.health}회"><div class="care-rhythm-bars">${bar("feed", item.feed, maxFeed, `수유 ${item.feed}회`)}${bar("sleep", item.sleep, maxSleep, `수면 ${formatDuration(item.sleep)}`)}${bar("diaper", item.diaper, maxDiaper, `기저귀 ${item.diaper}회`)}${bar("health", item.health, maxHealth, `건강 ${item.health}회`)}</div><strong>${isToday ? "오늘" : ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]}</strong><span>${date.getDate()}</span></article>`;
   }).join("")}</div>`;
 }
 
 function renderCareIntervals(entries) {
   const start = addDays(dateKey(new Date()), -6);
   const categoryInfo = {
-    feed: { label: "수유", className: "feed" }, sleep: { label: "수면", className: "sleep" }, diaper: { label: "기저귀", className: "diaper" },
+    feed: { label: "수유", className: "feed" }, sleep: { label: "수면", className: "sleep" }, diaper: { label: "기저귀", className: "diaper" }, health: { label: "건강", className: "health" },
   };
   const cards = [...carePatternCategories].map((type) => {
     const times = entries.filter((entry) => entry.date >= start && growthCareType(entry) === type && entry.time).map(entryDateTime).filter(Boolean).sort((a, b) => a - b);
@@ -1718,7 +1721,10 @@ function quickPresets(category) {
   ];
   if (category === "수면") return [30, 60, 90, 120, 180, 480].map((minutes) => ({ label: formatDuration(minutes), note: minutes >= 180 ? "긴 잠" : "수면", title: "수면 기록", sleepMinutes: minutes }));
   if (category === "기저귀") return ["소변", "대변", "소변·대변"].map((kind) => ({ label: kind, note: "기저귀", title: "기저귀 교체", diaperKind: kind }));
-  if (category === "건강·병원") return [36.5, 37, 37.5, 38, 38.5, 39].map((temperature) => ({ label: `${temperature.toFixed(1)}℃`, note: temperature >= 38 ? "발열" : "체온", title: "체온 기록", temperature }));
+  if (category === "건강·병원") return [
+    ["구토", "구토 기록"], ["아픔·보챔", "아픔·보챔 기록"], ["설사", "설사 기록"], ["기침·콧물", "기침·콧물 기록"], ["발진", "발진 기록"], ["약 복용", "약 복용 기록"],
+    ...[36.5, 37, 37.5, 38, 38.5, 39].map((temperature) => [`${temperature.toFixed(1)}℃`, "체온 기록", temperature]),
+  ].map(([label, title, temperature = null]) => ({ label, note: temperature ? (temperature >= 38 ? "발열" : "체온") : "증상", title, temperature }));
   return [];
 }
 
@@ -1727,7 +1733,7 @@ function openGrowthQuick(category) {
   const presets = quickPresets(category);
   if (!presets.length) { openGrowthDialog(null, category); return; }
   activeQuickCategory = category; activeQuickPresets = presets;
-  const title = category === "수유·이유식" ? "수유를 바로 기록해요" : category === "수면" ? "얼마나 잤나요?" : category === "기저귀" ? "기저귀 상태를 골라요" : "체온을 바로 기록해요";
+  const title = category === "수유·이유식" ? "수유를 바로 기록해요" : category === "수면" ? "얼마나 잤나요?" : category === "기저귀" ? "기저귀 상태를 골라요" : "아픈 기록을 바로 남겨요";
   $("#quickLogTitle").textContent = title;
   $("#quickLogCopy").textContent = "가장 가까운 값을 누르면 현재 시간으로 즉시 저장됩니다.";
   $("#quickPresetGrid").innerHTML = presets.map((preset, index) => `<button type="button" data-preset-index="${index}"><span>${escapeHtml(preset.label)}</span><small>${escapeHtml(preset.note)}</small></button>`).join("");
@@ -1774,6 +1780,7 @@ function openGrowthDialog(entry = null, category = "첫 순간") {
   $("#growthHeight").value = entry?.height || ""; $("#growthWeight").value = entry?.weight || ""; $("#growthHead").value = entry?.head || "";
   $("#growthFeedingMl").value = entry?.feedingMl || ""; $("#growthFeedingType").value = entry?.feedingType || ""; $("#growthFeedingSide").value = entry?.feedingSide || ""; $("#growthFeedingMinutes").value = entry?.feedingMinutes || ""; $("#growthSleepMinutes").value = entry?.sleepMinutes || "";
   $("#growthTemperature").value = entry?.temperature || ""; $("#growthDiaperKind").value = entry?.diaperKind || "";
+  $("#growthSymptom").value = entry?.category === "건강·병원" ? ["아픔·보챔", "구토", "설사", "기침·콧물", "발진", "발열", "약 복용", "병원 방문", "기타"].find((symptom) => String(entry?.title || "").startsWith(symptom)) || "" : "";
   $("#growthNote").value = entry?.note || "";
   syncGrowthFields(); renderGrowthPhotoPreview();
   $("#deleteGrowthButton").classList.toggle("visible", Boolean(entry));
@@ -1975,8 +1982,9 @@ async function saveGrowthEntry(event) {
   try {
     if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
     const category = $("#growthCategory").value;
+    const symptom = category === "건강·병원" ? $("#growthSymptom").value : "";
     const entry = {
-    id: $("#growthId").value || uid(), babyId: state.growthEntries.find((item) => item.id === $("#growthId").value)?.babyId || state.activeBabyId, title: $("#growthEntryTitle").value.trim() || defaultGrowthTitle(category),
+    id: $("#growthId").value || uid(), babyId: state.growthEntries.find((item) => item.id === $("#growthId").value)?.babyId || state.activeBabyId, title: $("#growthEntryTitle").value.trim() || (symptom ? `${symptom} 기록` : defaultGrowthTitle(category)),
     date: $("#growthDate").value, time: $("#growthTime").value, category,
     height: category === "성장" ? numberOrNull($("#growthHeight").value) : null,
     weight: category === "성장" ? numberOrNull($("#growthWeight").value) : null,
