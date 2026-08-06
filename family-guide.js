@@ -71,6 +71,7 @@
         <label class="guide-sigungu-field"><span>시·군·구</span><input type="text" data-guide-sigungu list="guideSigunguList" placeholder="선택 입력"></label>
       </div>
       <p class="guide-privacy-note"><span aria-hidden="true">✓</span> 가이드 설정은 일정·성장 기록과 분리 저장돼요.</p>
+      <button type="button" class="guide-restore-button" data-guide-restore-hidden hidden>숨긴 카드 복원</button>
     </section>
     <section class="guide-status-card" aria-live="polite"><div><p class="eyebrow">CURRENT GUIDE</p><strong data-guide-phase>기준일을 설정해 주세요</strong><span data-guide-phase-detail>개인화 전에는 전국 공통 정보를 보여줘요.</span></div><b data-guide-count>0개</b></section>
     <section class="guide-filter-card" aria-label="가이드 필터">
@@ -113,6 +114,9 @@
       ? '기준일을 넣으면 현재 단계에 맞춰 우선순위를 좁혀요.'
       : `${phaseLabels[info.mode]} 정보 ${cards.length}개 · 지역 ${regionReady() ? settings.region.sido : '전국 공통'}`;
     $('[data-guide-count]').textContent = `${cards.length}개`;
+    const restoreButton = $('[data-guide-restore-hidden]');
+    restoreButton.hidden = settings.hiddenCardIds.length === 0;
+    restoreButton.textContent = settings.hiddenCardIds.length ? `숨긴 카드 ${settings.hiddenCardIds.length}개 복원` : '숨긴 카드 복원';
     $('[data-guide-list]').innerHTML = cards.length ? cards.map(renderCard).join('') : '<div class="guide-empty"><strong>조건에 맞는 카드가 없어요.</strong><span>필터를 바꾸거나 숨긴 카드를 확인해 보세요.</span></div>';
     renderFilters();
   };
@@ -164,10 +168,12 @@
     const categoryButton = event.target.closest('[data-guide-category]');
     const statusButton = event.target.closest('[data-guide-status]');
     const hideButton = event.target.closest('[data-guide-hide]');
+    const restoreButton = event.target.closest('[data-guide-restore-hidden]');
     if (phaseButton) { phaseFilter = phaseButton.dataset.guidePhase; return render(); }
     if (categoryButton) { categoryFilter = categoryButton.dataset.guideCategory; return render(); }
     if (statusButton) { statusFilter = statusButton.dataset.guideStatus; return render(); }
     if (hideButton) return setSettings({ hiddenCardIds: [...settings.hiddenCardIds, hideButton.dataset.guideHide] });
+    if (restoreButton) return setSettings({ hiddenCardIds: [] });
   });
   view.addEventListener('change', (event) => {
     const checkbox = event.target.closest('[data-guide-complete]');

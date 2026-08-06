@@ -21,6 +21,7 @@ describe('family guide tab', () => {
     expect(source).toContain('hiddenCardIds');
     expect(source).toContain('completedCardIds');
     expect(source).toContain('FAMILY_GUIDE_API');
+    expect(source).toContain('data-guide-restore-hidden');
   });
 
   test('가이드 모듈을 등록하고 탭 라벨·설정 숨김을 연결한다', () => {
