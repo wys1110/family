@@ -96,9 +96,9 @@
   view.hidden = true;
   view.innerHTML = `
     <section class="guide-intro-card" aria-labelledby="guideTitle">
-      <div class="guide-intro-heading"><span class="guide-mark" aria-hidden="true">⌂</span><div><p class="eyebrow">FAMILY GUIDE</p><span data-guide-baby-name>아기 프로필 미선택</span><h2 id="guideTitle">준비·육아 가이드</h2><span>기준일과 지역을 넣으면 지금 필요한 정보부터 보여줘요.</span></div></div>
+      <div class="guide-intro-heading"><span class="guide-mark" aria-hidden="true">⌂</span><div><p class="eyebrow">FAMILY GUIDE</p><span data-guide-baby-name>아기 프로필 미선택</span><h2 id="guideTitle">준비·육아 가이드</h2><span data-guide-date-hint>아기 프로필이 있으면 생년월일을 자동으로 사용하고, 없으면 예정일을 입력해요.</span></div></div>
       <div class="guide-setup-grid">
-        <label><span>예정일</span><input type="date" data-guide-due-date></label>
+        <label data-guide-due-field><span>예정일</span><input type="date" data-guide-due-date></label>
         <label><span>출산일</span><input type="date" data-guide-birth-date></label>
         <label class="guide-sido-field"><span>시·도</span><select data-guide-sido><option value="">선택 안 함</option>${dataApi.regions.filter((region) => region !== '전국').map((region) => `<option value="${esc(region)}">${esc(region)}</option>`).join('')}</select></label>
         <label class="guide-sigungu-field"><span>시·군·구</span><input type="text" data-guide-sigungu list="guideSigunguList" placeholder="선택 입력"></label>
@@ -141,9 +141,14 @@
     if (statusFilter === 'done') cards = cards.filter((item) => item.completed);
     lastVisibleCards = cards;
     $('[data-guide-baby-name]').textContent = baby?.name ? `${baby.name} 기준` : '아기 프로필 미선택';
-    $('[data-guide-due-date]').value = profile.dueDate;
+    const dueField = $('[data-guide-due-field]');
+    dueField.hidden = Boolean(baby?.birthDate);
+    $('[data-guide-due-date]').value = baby?.birthDate ? '' : profile.dueDate;
     $('[data-guide-birth-date]').value = baby?.birthDate || profile.birthDate;
     $('[data-guide-birth-date]').disabled = Boolean(baby?.birthDate);
+    $('[data-guide-date-hint]').textContent = baby?.birthDate
+      ? '성장탭의 아기 생년월일을 기준으로 안내해요.'
+      : '아기 프로필이 있으면 생년월일을 자동으로 사용하고, 없으면 예정일을 입력해요.';
     $('[data-guide-sido]').value = profile.region.sido;
     $('[data-guide-sigungu]').value = profile.region.sigungu;
     $('[data-guide-phase]').textContent = info.label;
@@ -190,13 +195,15 @@
     const due = event.target.closest('[data-guide-due-date]');
     const birth = event.target.closest('[data-guide-birth-date]');
     if (due || birth) {
+      const baby = currentBaby();
+      if (baby?.birthDate) return render();
       const profile = currentProfile();
-      const next = { dueDate: $('[data-guide-due-date]').value, birthDate: currentBaby()?.birthDate || $('[data-guide-birth-date]').value };
+      const next = { dueDate: $('[data-guide-due-date]').value, birthDate: $('[data-guide-birth-date]').value };
       if (next.dueDate && next.birthDate && next.birthDate < next.dueDate) {
         if (typeof toast === 'function') toast('출산일은 예정일 이후 날짜로 입력해 주세요.');
         return render();
       }
-      if (currentBaby()?.birthDate && next.dueDate === profile.dueDate) return render();
+      if (next.dueDate === profile.dueDate && next.birthDate === profile.birthDate) return render();
       return setSettings(next);
     }
     if (event.target.closest('[data-guide-sido]')) return setSettings({ region: { sido: $('[data-guide-sido]').value, sigungu: '' } });

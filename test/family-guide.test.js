@@ -35,9 +35,16 @@ describe('family guide tab', () => {
     expect(source).toContain('profilePhaseInput(profile, baby)');
   });
 
+  test('아기 프로필이 있으면 예정일 입력을 숨기고 출생일을 고정한다', () => {
+    expect(source).toContain('data-guide-due-field');
+    expect(source).toContain('dueField.hidden = Boolean(baby?.birthDate)');
+    expect(source).toContain('if (baby?.birthDate) return render();');
+    expect(source).toContain('아기 프로필이 있으면 생년월일을 자동으로 사용하고, 없으면 예정일을 입력해요.');
+  });
+
   test('가이드 모듈을 등록하고 탭 라벨·설정 숨김을 연결한다', () => {
-    expect(config).toContain('{ name: "family-guide-data", version: "20260806-family-guide-v1", style: false }');
-    expect(config).toContain('{ name: "family-guide", version: "20260806-family-guide-v1" }');
+    expect(config).toContain('{ name: "family-guide-data", version: "20260806-family-guide-v3", style: false }');
+    expect(config).toContain('{ name: "family-guide", version: "20260806-family-guide-v3" }');
     expect(tabEmojis).toContain("guide: ['🧭', '가이드']");
     expect(settings).toContain("'guideView'");
   });
