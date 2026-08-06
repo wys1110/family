@@ -5,7 +5,9 @@
  */
 @media (hover: none) and (pointer: coarse) {
   html body .app-shell .view-tabs {
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
     isolation: isolate;
     contain: paint;
     transform: none;

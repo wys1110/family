@@ -13,6 +13,8 @@ test("탭 안정화 모듈을 모든 테마 보정 뒤에 불러온다", () => {
 test("아이폰에서 이전 활성 탭의 잔상이 남는 합성 조건을 제거한다", () => {
   expect(style).toContain("@media (hover: none) and (pointer: coarse)");
   expect(style).toContain("contain: paint");
+  expect(style).toContain("overflow-x: auto");
+  expect(style).toContain("overflow-y: hidden");
   expect(style).toContain("transform: none");
   expect(style).toContain("-webkit-backdrop-filter: none");
   expect(style).toContain(".view-tab:not(.active)");
