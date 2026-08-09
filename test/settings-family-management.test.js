@@ -8,6 +8,7 @@ const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 const migration = read('supabase/migrations/20260805_household_backup_imports.sql');
 const integrityMigration = read('supabase/migrations/20260806_data-integrity-hardening.sql');
+const restoreMeasurementFixMigration = read('supabase/migrations/20260809_fix_restore_backup_head_measurement.sql');
 
 const loadApi = () => {
   const window = {};
@@ -113,5 +114,9 @@ describe('settings family management', () => {
     expect(integrityMigration).toContain('baby_ai_profiles_baby_household_fkey');
     expect(integrityMigration).toContain('public.is_household_owner(household_id)');
     expect(integrityMigration).toContain('mismatched baby household');
+  });
+
+  test('restores a growth entry head measurement from its own backup field', () => {
+    expect(restoreMeasurementFixMigration).toContain("nullif(backup_row ->> 'height_cm', '')::numeric,\n      nullif(backup_row ->> 'weight_kg', '')::numeric,\n      nullif(backup_row ->> 'head_cm', '')::numeric");
   });
 });
