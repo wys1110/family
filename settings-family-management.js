@@ -35,13 +35,76 @@
     delete copy.created_by;
     delete copy.updated_at;
     delete copy.created_at;
-    if (table === 'calendar_members') {
-      copy.created_by = context.userId;
-      copy.sort_order = Number.isFinite(copy.sort_order) ? copy.sort_order : 0;
-    }
-    return { ...copy, household_id: context.householdId };
+    if (table === 'calendar_members') copy.sort_order = Number.isFinite(copy.sort_order) ? copy.sort_order : 0;
+    return { ...copy, household_id: context.householdId, created_by: context.userId };
   };
-  const api = { normalizeMember, hasDuplicateName, archiveDecision, scopeRestoreRow };
+  const firstDefined = (...values) => values.find((value) => value !== undefined && value !== null);
+  const nullable = (value) => value === undefined || value === '' ? null : value;
+  const remapBackupTables = (tables, context, createId = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`) => {
+    const babyIdMap = new Map();
+    const babies = (tables.babies || []).map((row) => {
+      const id = createId();
+      if (row.id) babyIdMap.set(row.id, id);
+      return {
+        id,
+        household_id: context.householdId,
+        created_by: context.userId,
+        name: row.name,
+        birth_date: firstDefined(row.birth_date, row.birthDate),
+        birth_time: nullable(firstDefined(row.birth_time, row.birthTime)),
+        sex: nullable(row.sex),
+        birth_weight_kg: nullable(firstDefined(row.birth_weight_kg, row.birthWeight)),
+        birth_height_cm: nullable(firstDefined(row.birth_height_cm, row.birthHeight)),
+        archived_at: nullable(row.archived_at),
+      };
+    });
+    const events = (tables.events || []).map((row) => ({
+      id: createId(),
+      household_id: context.householdId,
+      created_by: context.userId,
+      title: row.title,
+      event_date: firstDefined(row.event_date, row.date),
+      event_end_date: firstDefined(row.event_end_date, row.endDate, row.event_date, row.date),
+      event_time: nullable(firstDefined(row.event_time, row.time)),
+      member: row.member || '가족',
+      note: nullable(row.note),
+    }));
+    const calendarMembers = (tables.calendar_members || []).map((row, index) => ({
+      id: createId(),
+      household_id: context.householdId,
+      created_by: context.userId,
+      name: row.name,
+      color: row.color || defaultColor(),
+      sort_order: Number.isFinite(row.sort_order) ? row.sort_order : index,
+      archived_at: nullable(row.archived_at),
+    }));
+    const growth_entries = (tables.growth_entries || []).map((row) => {
+      const sourceBabyId = firstDefined(row.baby_id, row.babyId);
+      return {
+        id: createId(),
+        household_id: context.householdId,
+        created_by: context.userId,
+        baby_id: sourceBabyId ? (babyIdMap.get(sourceBabyId) || null) : null,
+        title: row.title,
+        entry_date: firstDefined(row.entry_date, row.date),
+        entry_time: nullable(firstDefined(row.entry_time, row.time)),
+        category: row.category || '기타',
+        height_cm: nullable(firstDefined(row.height_cm, row.height)),
+        weight_kg: nullable(firstDefined(row.weight_kg, row.weight)),
+        head_cm: nullable(firstDefined(row.head_cm, row.head)),
+        feeding_ml: nullable(firstDefined(row.feeding_ml, row.feedingMl)),
+        feeding_type: nullable(firstDefined(row.feeding_type, row.feedingType)),
+        feeding_side: nullable(firstDefined(row.feeding_side, row.feedingSide)),
+        feeding_minutes: nullable(firstDefined(row.feeding_minutes, row.feedingMinutes)),
+        sleep_minutes: nullable(firstDefined(row.sleep_minutes, row.sleepMinutes)),
+        temperature_c: nullable(firstDefined(row.temperature_c, row.temperature)),
+        diaper_kind: nullable(firstDefined(row.diaper_kind, row.diaperKind)),
+        note: nullable(row.note),
+      };
+    });
+    return { events, growth_entries, calendar_members: calendarMembers, babies };
+  };
+  const api = { normalizeMember, hasDuplicateName, archiveDecision, scopeRestoreRow, remapBackupTables };
   window.FAMILY_SETTINGS_MANAGEMENT_API = api;
 
   if (document.querySelector('[data-settings-family-management-module]')) return;
@@ -198,12 +261,49 @@
   };
 
   const newId = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+  const localEventRow = (row, id) => ({
+    ...row,
+    id,
+    date: row.date || row.event_date || '',
+    endDate: row.endDate || row.event_end_date || row.date || row.event_date || '',
+    time: row.time ?? row.event_time ?? '',
+  });
+  const localBabyRow = (row, id) => ({
+    ...row,
+    id,
+    birthDate: row.birthDate || row.birth_date || '',
+    birthTime: row.birthTime ?? row.birth_time ?? '',
+    birthWeight: row.birthWeight ?? row.birth_weight_kg ?? null,
+    birthHeight: row.birthHeight ?? row.birth_height_cm ?? null,
+  });
+  const localGrowthRow = (row, id, babyId) => ({
+    ...row,
+    id,
+    babyId,
+    date: row.date || row.entry_date || '',
+    time: row.time ?? row.entry_time ?? '',
+    height: row.height ?? row.height_cm ?? null,
+    weight: row.weight ?? row.weight_kg ?? null,
+    head: row.head ?? row.head_cm ?? null,
+    feedingMl: row.feedingMl ?? row.feeding_ml ?? null,
+    sleepMinutes: row.sleepMinutes ?? row.sleep_minutes ?? null,
+    temperature: row.temperature ?? row.temperature_c ?? null,
+    diaperKind: row.diaperKind ?? row.diaper_kind ?? '',
+    feedingType: row.feedingType ?? row.feeding_type ?? '',
+    feedingSide: row.feedingSide ?? row.feeding_side ?? '',
+    feedingMinutes: row.feedingMinutes ?? row.feeding_minutes ?? null,
+  });
   const restoreLocal = (tables, context, backupId) => {
     if (typeof state === 'undefined') return { duplicate: false };
     if (backupApi.isDuplicateBackup?.(backupId, readImportedBackups(context.householdId))) return { duplicate: true };
-    const events = (tables.events || []).map((row) => ({ ...row, id: newId() }));
-    const growth = (tables.growth_entries || []).map((row) => ({ ...row, id: newId() }));
-    const babies = (tables.babies || []).map((row) => ({ ...row, id: newId() }));
+    const babyIdMap = new Map();
+    const babies = (tables.babies || []).map((row) => {
+      const id = newId();
+      if (row.id) babyIdMap.set(row.id, id);
+      return localBabyRow(row, id);
+    });
+    const events = (tables.events || []).map((row) => localEventRow(row, newId()));
+    const growth = (tables.growth_entries || []).map((row) => localGrowthRow(row, newId(), babyIdMap.get(row.babyId || row.baby_id) || null));
     const existingNames = new Set(state.familyMembers.map((member) => member.name));
     const members = (tables.calendar_members || []).filter((row) => !existingNames.has(row.name)).map((row) => ({ ...row, id: newId() }));
     state.events.push(...events);
@@ -219,32 +319,22 @@
   };
 
   const restoreRemote = async (tables, context, backupId) => {
-    const registry = context.supabase.from('household_backup_imports');
-    const { data: existing, error: lookupError } = await registry.select('backup_id')
-      .eq('household_id', context.householdId).eq('backup_id', backupId).maybeSingle();
-    if (lookupError) {
-      if (/relation|schema cache|household_backup_imports/i.test(lookupError.message || '')) throw new Error('backup-registry-missing');
-      throw lookupError;
-    }
-    if (existing) return { duplicate: true };
-    for (const table of BACKUP_TABLES) {
-      const rows = (tables[table] || []).map((row) => scopeRestoreRow(table, row, {
-        householdId: context.householdId,
-        userId: context.session.user.id,
-      }));
-      if (!rows.length) continue;
-      const { error } = await context.supabase.from(table).insert(rows);
-      if (error) throw error;
-    }
-    const { error: registryError } = await registry.insert({
-      household_id: context.householdId,
-      backup_id: backupId,
-      imported_by: context.session.user.id,
-      row_counts: Object.fromEntries(BACKUP_TABLES.map((table) => [table, (tables[table] || []).length])),
+    const normalizedTables = remapBackupTables(tables, {
+      householdId: context.householdId,
+      userId: context.session.user.id,
     });
-    if (registryError?.code === '23505') return { duplicate: true };
-    if (registryError) throw registryError;
-    return { duplicate: false };
+    const { data, error } = await context.supabase.rpc('restore_household_backup', {
+      target_household_id: context.householdId,
+      p_backup_id: backupId,
+      p_tables: normalizedTables,
+    });
+    if (error) {
+      if (/restore_household_backup|relation|schema cache|household_backup_imports/i.test(error.message || '')) {
+        throw new Error('backup-registry-missing');
+      }
+      throw error;
+    }
+    return { duplicate: Boolean(data?.duplicate) };
   };
 
   const downloadJson = async (card) => {
@@ -364,7 +454,7 @@
         console.error('가족 JSON 복원 실패', error);
         status.textContent = error.message === 'backup-registry-missing'
           ? 'Supabase 마이그레이션 적용 후 복원할 수 있어요.'
-          : '복원 중 오류가 발생했어요. 기존 데이터는 유지됩니다.';
+          : '복원에 실패했어요. 새 기록 자동 정리를 시도했어요.';
       } finally {
         syncPermission();
       }

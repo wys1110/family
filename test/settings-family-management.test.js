@@ -7,6 +7,7 @@ const css = read('settings-family-management.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 const migration = read('supabase/migrations/20260805_household_backup_imports.sql');
+const integrityMigration = read('supabase/migrations/20260806_data-integrity-hardening.sql');
 
 const loadApi = () => {
   const window = {};
@@ -17,7 +18,7 @@ const loadApi = () => {
 
 describe('settings family management', () => {
   test('loads a compact settings module and style', () => {
-    expect(config).toContain('{ name: "settings-family-management", version: "20260805-settings-management-v1" }');
+    expect(config).toContain('{ name: "settings-family-management", version: "20260808-atomic-backup-restore-v1" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-family-management.js")');
     expect(source).toContain('data-settings-family-members');
     expect(css).toContain('.settings-family-members-card');
@@ -44,7 +45,8 @@ describe('settings family management', () => {
     expect(migration).toContain('create table if not exists public.household_backup_imports');
     expect(migration).toContain('unique (household_id, backup_id)');
     expect(migration).toContain('enable row level security');
-    expect(migration).toContain('public.is_household_member(household_id)');
+    expect(migration).toContain('public.is_household_owner(household_id)');
+    expect(migration).toContain('owners can remove own household backup imports');
     expect(source).toContain("household_backup_imports");
     expect(source).toContain("backupId");
   });
@@ -54,10 +56,62 @@ describe('settings family management', () => {
     expect(api.scopeRestoreRow('events', {
       id: 'old-id', household_id: 'other-household', created_by: 'other-user', title: '회의',
     }, { householdId: 'current-household', userId: 'current-user' })).toEqual({
-      household_id: 'current-household', title: '회의',
+      household_id: 'current-household', created_by: 'current-user', title: '회의',
     });
     expect(api.scopeRestoreRow('calendar_members', { name: '아빠' }, { householdId: 'current-household', userId: 'current-user' })).toEqual({
       household_id: 'current-household', created_by: 'current-user', name: '아빠', sort_order: 0,
     });
+  });
+
+  test('remaps imported baby IDs before inserting growth rows', () => {
+    const api = loadApi();
+    const result = api.remapBackupTables({
+      babies: [{ id: 'old-baby', name: '도윤' }],
+      growth_entries: [{ id: 'old-growth', baby_id: 'old-baby', title: '수유' }],
+      events: [],
+      calendar_members: [],
+    }, { householdId: 'current-household', userId: 'current-user' }, () => 'new-id');
+    expect(result.babies[0]).toMatchObject({ id: 'new-id', household_id: 'current-household', created_by: 'current-user' });
+    expect(result.growth_entries[0]).toMatchObject({ baby_id: 'new-id', household_id: 'current-household', created_by: 'current-user' });
+  });
+
+  test('converts local backup fields to the remote schema before restoring', () => {
+    const api = loadApi();
+    let sequence = 0;
+    const result = api.remapBackupTables({
+      babies: [{ id: 'old-baby', name: '도윤', birthDate: '2026-07-01', birthWeight: 3.2 }],
+      events: [{ id: 'old-event', title: '진료', date: '2026-08-08', endDate: '2026-08-08', time: '09:00' }],
+      growth_entries: [{ id: 'old-growth', babyId: 'old-baby', title: '수유', date: '2026-08-08', feedingMl: 120 }],
+      calendar_members: [{ id: 'old-member', name: '엄마', color: '#B57D4B' }],
+    }, { householdId: 'current-household', userId: 'current-user' }, () => `new-${++sequence}`);
+
+    expect(result.babies[0]).toMatchObject({
+      id: 'new-1', household_id: 'current-household', created_by: 'current-user', birth_date: '2026-07-01', birth_weight_kg: 3.2,
+    });
+    expect(result.babies[0]).not.toHaveProperty('birthDate');
+    expect(result.events[0]).toMatchObject({
+      household_id: 'current-household', event_date: '2026-08-08', event_end_date: '2026-08-08', event_time: '09:00',
+    });
+    expect(result.events[0]).not.toHaveProperty('date');
+    expect(result.growth_entries[0]).toMatchObject({
+      household_id: 'current-household', baby_id: 'new-1', entry_date: '2026-08-08', feeding_ml: 120,
+    });
+    expect(result.growth_entries[0]).not.toHaveProperty('babyId');
+  });
+
+  test('uses one owner-authorized database function for remote restores', () => {
+    expect(source).toContain(".rpc('restore_household_backup'");
+    expect(source).not.toContain("const registry = context.supabase.from('household_backup_imports')");
+    expect(integrityMigration).toContain('create or replace function public.restore_household_backup');
+    expect(integrityMigration).toContain('security definer');
+    expect(integrityMigration).toContain('revoke all on function public.restore_household_backup');
+    expect(integrityMigration).toContain('grant execute on function public.restore_household_backup');
+  });
+
+  test('hardening migration enforces household-scoped baby links and owner-only mutations', () => {
+    expect(integrityMigration).toContain('growth_entries_baby_household_fkey');
+    expect(integrityMigration).toContain('baby_ai_profiles_baby_household_fkey');
+    expect(integrityMigration).toContain('public.is_household_owner(household_id)');
+    expect(integrityMigration).toContain('mismatched baby household');
   });
 });

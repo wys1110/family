@@ -28,7 +28,7 @@
 }
 
 .family-search-dialog::backdrop {
-  background: rgba(0, 0, 0, .44);
+  background: var(--theme-overlay);
   backdrop-filter: blur(8px);
 }
 

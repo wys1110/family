@@ -253,6 +253,48 @@ html[data-family-theme-choice="black"] body :is(
   box-shadow: 0 12px 30px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
 }
 
+/* Feeding is a record type, not a blue call-to-action in the black theme. */
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active :is(
+  .feeding-quick-tabs button[data-feeding-source],
+  .direct-side-options button,
+  .quick-detail-button
+) {
+  color: var(--theme-text-muted) !important;
+  border-color: var(--theme-border) !important;
+  background-color: var(--theme-control) !important;
+  background-image: linear-gradient(145deg, #2d2d2d, #171717) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055) !important;
+}
+
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active :is(
+  .feeding-quick-tabs button[data-feeding-source].active,
+  .direct-side-options button.active
+) {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border-strong) !important;
+  background-color: var(--theme-control-active) !important;
+  background-image: linear-gradient(145deg, #404040, #222222) !important;
+}
+
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active .feeding-save-button {
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border-strong) !important;
+  background-color: #2a2a2a !important;
+  background-image: linear-gradient(145deg, #3d3d3d, #1c1c1c) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active .feeding-save-button::before {
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-raised) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active .feeding-save-button small,
+html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active :is(.feeding-quick-tabs button, .direct-side-options button) small {
+  color: var(--theme-text-muted) !important;
+}
+
 /* Sheets and dialogs share one neutral frame. */
 html[data-family-theme-choice="black"] body .sheet-dialog {
   color: var(--theme-text) !important;

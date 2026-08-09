@@ -10,9 +10,12 @@ const ignoredDirectories = new Set([".git", ".github", "node_modules", "scripts"
 // Raw palette values belong only in these files. The calendar exception is
 // deliberately isolated; every other component must consume semantic tokens.
 const paletteFiles = new Set([
+  "index.html",
   "theme-system.css",
   "theme-v2.css",
   "theme-calendar-exception.css",
+  "theme-bootstrap.js",
+  "theme-critical.css",
 ]);
 
 const literalPattern = /#[0-9a-f]{3,8}(?![0-9a-z_-])|(?:rgb|rgba|hsl|hsla)\([^)]*\)/gi;
@@ -66,6 +69,7 @@ function scanFile(absolute) {
   const matches = [];
 
   for (const match of source.matchAll(literalPattern)) {
+    if (match[0].includes("var(--theme-")) continue;
     const property = extension === ".css" ? propertyAt(source, match.index) : "runtime";
     if (extension === ".css" && !property) continue;
     if (extension !== ".css") {

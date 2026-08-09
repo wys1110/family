@@ -28,7 +28,8 @@ create table public.babies (
   archived_at timestamptz,
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (id, household_id)
 );
 
 create table public.calendar_members (
@@ -79,7 +80,9 @@ create table public.growth_entries (
   photo_paths text[] not null default '{}',
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint growth_entries_baby_household_fkey foreign key (baby_id, household_id)
+    references public.babies(id, household_id) on delete cascade
 );
 
 create table public.feature_requests (
@@ -146,9 +149,9 @@ create policy "members can create babies" on public.babies for insert to authent
 create policy "members can update babies" on public.babies for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete babies" on public.babies for delete to authenticated using (public.is_household_member(household_id));
 create policy "members can view calendar members" on public.calendar_members for select to authenticated using (public.is_household_member(household_id));
-create policy "members can create calendar members" on public.calendar_members for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
-create policy "members can update calendar members" on public.calendar_members for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
-create policy "members can delete calendar members" on public.calendar_members for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can create calendar members" on public.calendar_members for insert to authenticated with check (public.is_household_owner(household_id) and created_by = auth.uid());
+create policy "members can update calendar members" on public.calendar_members for update to authenticated using (public.is_household_owner(household_id)) with check (public.is_household_owner(household_id));
+create policy "members can delete calendar members" on public.calendar_members for delete to authenticated using (public.is_household_owner(household_id));
 create policy "members can view growth entries" on public.growth_entries for select to authenticated using (public.is_household_member(household_id));
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
@@ -228,7 +231,9 @@ create table public.baby_ai_profiles (
   family_notes text check (family_notes is null or char_length(family_notes) <= 2000),
   updated_by uuid not null references auth.users(id) on delete restrict,
   updated_at timestamptz not null default now(),
-  unique (baby_id, household_id)
+  unique (baby_id, household_id),
+  constraint baby_ai_profiles_baby_household_fkey foreign key (baby_id, household_id)
+    references public.babies(id, household_id) on delete cascade
 );
 
 create table public.baby_ai_strategy_drafts (
@@ -245,7 +250,9 @@ create table public.baby_ai_strategy_drafts (
   generated_at timestamptz not null default now(),
   confirmed_by uuid references auth.users(id) on delete set null,
   confirmed_at timestamptz,
-  check ((status = 'confirmed' and confirmed_by is not null and confirmed_at is not null) or status <> 'confirmed')
+  check ((status = 'confirmed' and confirmed_by is not null and confirmed_at is not null) or status <> 'confirmed'),
+  constraint baby_ai_strategy_drafts_baby_household_fkey foreign key (baby_id, household_id)
+    references public.babies(id, household_id) on delete cascade
 );
 
 create table public.baby_ai_refresh_queue (
@@ -256,7 +263,9 @@ create table public.baby_ai_refresh_queue (
   attempt_count integer not null default 0 check (attempt_count between 0 and 3),
   generation bigint not null default 1 check (generation > 0),
   last_error text check (last_error is null or char_length(last_error) <= 500),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint baby_ai_refresh_queue_baby_household_fkey foreign key (baby_id, household_id)
+    references public.babies(id, household_id) on delete cascade
 );
 
 create index baby_ai_strategy_drafts_baby_kind_generated_idx on public.baby_ai_strategy_drafts(baby_id, kind, generated_at desc);

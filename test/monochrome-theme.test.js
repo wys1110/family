@@ -16,12 +16,12 @@ describe("white and black themes", () => {
   test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
-    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260803-black-todo-fab-v1", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260809-feeding-neutral-v1", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
     expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
-    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260803-black-todo-fab-v1");');
+    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260809-feeding-neutral-v1");');
     expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260803-night-only-v1");');
     expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
@@ -56,11 +56,17 @@ describe("white and black themes", () => {
   });
 
   test("keeps the black-theme schedule add button neutral", () => {
-    expect(config).toContain('{ name: "refresh-button", version: "20260802-black-fab-v1" }');
-    expect(floatingActions).toContain('html[data-family-theme="night"][data-family-theme-choice="black"] body > #addEventButton.fab');
-    expect(floatingActions).toContain('background: linear-gradient(145deg, #252525, #151515)');
     expect(themeSystem).toContain('#addEventButton.fab');
     expect(themeSystem).toContain('.family-todo-fab');
+    expect(themeSystem).toContain('background-image: linear-gradient(145deg, #292929, #151515) !important;');
+  });
+
+  test("keeps quick-feeding controls neutral in the black theme", () => {
+    expect(themeSystem).toContain('html[data-family-theme-choice="black"] #quickLogDialog.feeding-quick-active');
+    expect(themeSystem).toContain('.feeding-save-button');
+    expect(themeSystem).toContain('.feeding-save-button::before');
+    expect(themeSystem).toContain('color: var(--theme-text) !important;');
+    expect(themeSystem).toContain('color: var(--theme-text-muted) !important;');
   });
 
   test("keeps the legacy cleanup as a compatibility layer", () => {

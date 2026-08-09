@@ -65,7 +65,7 @@
       .admin-operations-heading .admin-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
       .admin-operations-heading .admin-refresh-button { align-self: start; }
       .admin-ops-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
-      .admin-ops-summary div { min-width: 0; padding: 10px 6px; border: 1px solid var(--separator); border-radius: 14px; background: rgba(var(--theme-accent-rgb), .055); text-align: center; }
+      .admin-ops-summary div { min-width: 0; padding: 10px 6px; border: 1px solid var(--separator); border-radius: 14px; background: color-mix(in srgb, var(--theme-text) 5.5%, transparent); text-align: center; }
       .admin-ops-summary strong, .admin-ops-summary span { display: block; }
       .admin-ops-summary strong { overflow: hidden; color: var(--label); font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
       .admin-ops-summary strong.warning { color: var(--orange); }

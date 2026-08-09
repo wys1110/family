@@ -10,7 +10,7 @@
     scrollbar-width: none;
     background: var(--surface);
     border: 1px solid var(--separator);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--label) 12%, transparent);
   }
 
   .app-shell .view-tabs::-webkit-scrollbar { display: none; }

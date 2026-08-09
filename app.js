@@ -263,7 +263,7 @@ async function bootstrapData() {
       state.activeBabyId = null;
       render();
       updateAuthGate();
-      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").limit(1);
+      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1);
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
       if (error) throw error;
       state.householdRole = memberships?.[0]?.role || null;
@@ -1042,7 +1042,7 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
   state.viewDate = startOfMonth(parseDate(targetDate));
   render();
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("household_id", state.household.id).eq("id", id);
     if (error) {
       event.date = previousDate;
       event.endDate = previousEndDate;
@@ -1151,7 +1151,7 @@ async function saveEvent(event) {
 
 async function deleteEvent() {
   const id = $("#eventId").value; if (!id || !confirm("이 일정을 삭제할까요?")) return;
-  if (state.supabase && state.session) { const { error } = await state.supabase.from("events").delete().eq("id", id); if (error) return toast("삭제하지 못했어요"); }
+  if (state.supabase && state.session) { const { error } = await state.supabase.from("events").delete().eq("household_id", state.household.id).eq("id", id); if (error) return toast("삭제하지 못했어요"); }
   state.events = state.events.filter((event) => event.id !== id); persistLocal(); $("#eventDialog").close(); render(); toast("일정을 삭제했어요");
 }
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
@@ -2036,7 +2036,7 @@ async function deleteGrowthEntry() {
   const id = $("#growthId").value; if (!id || !confirm("이 성장 기록을 삭제할까요?")) return;
   const target = state.growthEntries.find((entry) => entry.id === id);
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("growth_entries").delete().eq("id", id); if (error) return toast("기록을 삭제하지 못했어요");
+    const { error } = await state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id); if (error) return toast("기록을 삭제하지 못했어요");
     if (target?.photoPaths?.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths);
   }
   state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast("성장 기록을 삭제했어요");

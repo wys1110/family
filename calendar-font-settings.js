@@ -85,7 +85,7 @@
         border: 1px solid var(--separator);
         border-radius: 16px;
         background: var(--surface);
-        box-shadow: 0 16px 34px rgba(0, 0, 0, .18);
+        box-shadow: var(--theme-shadow);
       }
 
       .calendar-font-panel[hidden] { display: none !important; }

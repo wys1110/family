@@ -2,130 +2,8 @@
   const pageBody = document.body;
   if (!pageBody) return;
 
-  // Do not keep the top-right controls on Safari's viewport-fixed layer.
-  // The browser chrome moves that layer while tabs and the address bar change,
-  // so the controls are docked in the header's normal layout instead.
-  const topbar = document.querySelector('.topbar');
-  const topbarActions = document.querySelector('.topbar-account-actions');
-
-  const actionRailWidth = () => {
-    if (window.matchMedia('(min-width: 768px)').matches) return 100;
-    if (window.matchMedia('(max-width: 380px)').matches) return 91;
-    return 96;
-  };
-
-  const installTopbarLockStyle = () => {
-    if (document.querySelector('style[data-topbar-position-lock]')) return;
-    const style = document.createElement('style');
-    style.dataset.topbarPositionLock = '';
-    style.textContent = `
-      .topbar {
-        position: relative !important;
-      }
-      .topbar > .topbar-account-actions {
-        position: static !important;
-        z-index: auto !important;
-        display: flex !important;
-        flex: 0 0 96px !important;
-        width: 96px !important;
-        min-width: 96px !important;
-        max-width: 96px !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 8px !important;
-        inset: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        transform: none !important;
-        translate: none !important;
-        animation: none !important;
-        transition: none !important;
-        will-change: auto !important;
-      }
-      .topbar > .topbar-account-actions > button,
-      .topbar > .topbar-account-actions > button:active {
-        transform: none !important;
-        translate: none !important;
-        animation: none !important;
-        transition: none !important;
-      }
-      @media (min-width: 768px) {
-        .topbar > .topbar-account-actions {
-          flex-basis: 100px !important;
-          width: 100px !important;
-          min-width: 100px !important;
-          max-width: 100px !important;
-        }
-      }
-      @media (max-width: 380px) {
-        .topbar > .topbar-account-actions {
-          flex-basis: 91px !important;
-          width: 91px !important;
-          min-width: 91px !important;
-          max-width: 91px !important;
-          gap: 7px !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  };
-
-  const dockTopbarActions = () => {
-    if (!topbar || !topbarActions) return;
-    if (topbarActions.parentElement !== topbar) topbar.appendChild(topbarActions);
-
-    const width = actionRailWidth();
-    topbar.style.setProperty('position', 'relative', 'important');
-    topbarActions.style.setProperty('position', 'static', 'important');
-    topbarActions.style.setProperty('z-index', 'auto', 'important');
-    topbarActions.style.setProperty('display', 'flex', 'important');
-    topbarActions.style.setProperty('flex', `0 0 ${width}px`, 'important');
-    topbarActions.style.setProperty('width', `${width}px`, 'important');
-    topbarActions.style.setProperty('min-width', `${width}px`, 'important');
-    topbarActions.style.setProperty('max-width', `${width}px`, 'important');
-    topbarActions.style.setProperty('align-items', 'center', 'important');
-    topbarActions.style.setProperty('justify-content', 'flex-end', 'important');
-    topbarActions.style.setProperty('gap', width === 91 ? '7px' : '8px', 'important');
-    topbarActions.style.setProperty('top', 'auto', 'important');
-    topbarActions.style.setProperty('right', 'auto', 'important');
-    topbarActions.style.setProperty('bottom', 'auto', 'important');
-    topbarActions.style.setProperty('left', 'auto', 'important');
-    topbarActions.style.setProperty('inset', 'auto', 'important');
-    topbarActions.style.setProperty('margin', '0', 'important');
-    topbarActions.style.setProperty('transform', 'none', 'important');
-    topbarActions.style.setProperty('translate', 'none', 'important');
-    topbarActions.style.setProperty('animation', 'none', 'important');
-    topbarActions.style.setProperty('transition', 'none', 'important');
-    topbarActions.style.setProperty('will-change', 'auto', 'important');
-  };
-
-  installTopbarLockStyle();
-  dockTopbarActions();
-
-  let dockFrame = 0;
-  const scheduleTopbarDock = () => {
-    if (dockFrame) return;
-    dockFrame = window.requestAnimationFrame(() => {
-      dockFrame = 0;
-      dockTopbarActions();
-    });
-  };
-
-  window.addEventListener('pageshow', scheduleTopbarDock);
-  window.addEventListener('orientationchange', () => {
-    window.setTimeout(scheduleTopbarDock, 220);
-  }, { passive: true });
-
-  if (topbarActions && topbar) {
-    const topbarParentObserver = new MutationObserver(() => {
-      if (topbarActions.parentElement !== topbar) scheduleTopbarDock();
-    });
-    topbarParentObserver.observe(pageBody, { childList: true, subtree: true });
-    window.addEventListener('pagehide', () => topbarParentObserver.disconnect(), { once: true });
-  }
-
-  // Keep both lower floating actions as direct body children so position: fixed
-  // stays anchored to the viewport in mobile Safari.
+  // Keep the contextual action as a direct body child so position: fixed stays
+  // anchored to the viewport in mobile Safari.
   const addEventButton = document.querySelector('#addEventButton');
   if (addEventButton && addEventButton.parentElement !== pageBody) {
     pageBody.appendChild(addEventButton);
@@ -139,21 +17,21 @@
     observer.observe(growthInsight);
   }
 
-  let button = document.querySelector('[data-refresh-module]');
-  if (!button) {
-    button = document.createElement('button');
-    button.id = 'refreshButton';
-    button.className = 'refresh-button';
-    button.type = 'button';
-    button.dataset.refreshModule = '';
-    button.setAttribute('aria-label', '페이지 완전 새로고침');
-    button.setAttribute('title', '완전 새로고침');
-    button.innerHTML = '<span aria-hidden="true"></span>';
+  const existingButton = document.querySelector('[data-refresh-module]');
+  if (existingButton) {
+    if (existingButton.parentElement !== pageBody) pageBody.appendChild(existingButton);
+    return;
   }
 
-  if (button.parentElement !== pageBody) pageBody.appendChild(button);
-  button.hidden = false;
-  button.removeAttribute('aria-hidden');
+  const button = document.createElement('button');
+  button.id = 'refreshButton';
+  button.className = 'refresh-button';
+  button.type = 'button';
+  button.dataset.refreshModule = '';
+  button.setAttribute('aria-label', '페이지 완전 새로고침');
+  button.setAttribute('title', '완전 새로고침');
+  button.innerHTML = '<span aria-hidden="true">↻</span>';
+  pageBody.appendChild(button);
   button.dataset.refreshHydrated = 'true';
 
   const showCompleteToast = () => {
@@ -207,8 +85,6 @@
     window.location.replace(target.href);
   };
 
-  if (button.dataset.refreshHandlerBound === 'true') return;
-  button.dataset.refreshHandlerBound = 'true';
   button.addEventListener('click', async () => {
     if (button.disabled) return;
     button.disabled = true;

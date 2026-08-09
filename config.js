@@ -47,27 +47,6 @@ window.FAMILY_CONFIG = {
     const pageBody = document.body;
     if (!pageBody) return;
 
-    const topbarActions = document.querySelector(".topbar-account-actions");
-    if (topbarActions) {
-      if (topbarActions.parentElement !== pageBody) pageBody.appendChild(topbarActions);
-      const desktop = window.matchMedia("(min-width: 768px)").matches;
-      topbarActions.style.setProperty("position", "fixed", "important");
-      topbarActions.style.setProperty("z-index", "1100", "important");
-      topbarActions.style.setProperty(
-        "top",
-        desktop
-          ? "calc(max(18px, env(safe-area-inset-top, 0px)) + 2px)"
-          : "calc(max(12px, env(safe-area-inset-top, 0px)) + 4px)",
-        "important",
-      );
-      topbarActions.style.setProperty("right", "max(16px, calc((100vw - 820px) / 2 + 16px))", "important");
-      topbarActions.style.setProperty("bottom", "auto", "important");
-      topbarActions.style.setProperty("left", "auto", "important");
-      topbarActions.style.setProperty("margin", "0", "important");
-      topbarActions.style.setProperty("transform", "none", "important");
-      topbarActions.style.setProperty("translate", "none", "important");
-    }
-
     let button = document.querySelector('[data-refresh-module]');
     if (!button) {
       button = document.createElement("button");
@@ -77,7 +56,7 @@ window.FAMILY_CONFIG = {
       button.dataset.refreshModule = "";
       button.setAttribute("aria-label", "페이지 완전 새로고침");
       button.setAttribute("title", "완전 새로고침");
-      button.innerHTML = '<span aria-hidden="true"></span>';
+      button.innerHTML = '<span aria-hidden="true">↻</span>';
     }
 
     if (button.parentElement !== pageBody) pageBody.appendChild(button);
@@ -134,18 +113,18 @@ window.FAMILY_CONFIG = {
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260722-korean-labels-v2" },
-    { name: "refresh-button", version: "20260802-black-fab-v1" },
+    { name: "refresh-button", version: "20260722-bottom-refresh-v6" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "family-permissions", version: "20260805-family-permissions-v1" },
     { name: "settings", version: "20260804-settings-notification-cards-v1" },
     { name: "settings-backup", version: "20260805-settings-management-v1", style: false },
-    { name: "settings-family-management", version: "20260805-settings-management-v1" },
-    { name: "settings-data-export", version: "20260805-settings-excel-v3", style: false },
+    { name: "settings-family-management", version: "20260808-atomic-backup-restore-v1" },
+    { name: "settings-data-export", version: "20260806-data-integrity-v1", style: false },
     { name: "family-guide-data", version: "20260806-family-guide-v4", style: false },
     { name: "family-guide", version: "20260806-family-guide-v4" },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
-    { name: "settings-layout-polish", version: "20260720-v1", script: false },
+    { name: "settings-layout-polish", version: "20260722-font-presets-v2", script: false },
     { name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
     { name: "daily-briefing", version: "20260722-notification-channels-v3" },
@@ -202,7 +181,7 @@ window.FAMILY_CONFIG = {
     { name: "care-color-separation", version: "20260806-health-pattern-v1", script: false },
     { name: "night-page-palette", version: "20260727-page-audit-v1", script: false },
     { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
-    { name: "black-theme-final", version: "20260806-health-pattern-v1", script: false },
+    { name: "black-theme-final", version: "20260809-feeding-neutral-v1", script: false },
     { name: "theme-v2", version: "20260803-shadow-v3", script: false },
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },
     { name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v5", script: false },

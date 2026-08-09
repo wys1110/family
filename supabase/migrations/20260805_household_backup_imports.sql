@@ -18,9 +18,14 @@ create policy "members can view household backup imports"
   for select to authenticated
   using (public.is_household_member(household_id));
 
-create policy "members can register household backup imports"
+create policy "owners can register household backup imports"
   on public.household_backup_imports
   for insert to authenticated
-  with check (public.is_household_member(household_id) and imported_by = auth.uid());
+  with check (public.is_household_owner(household_id) and imported_by = auth.uid());
 
-grant select, insert on table public.household_backup_imports to authenticated;
+create policy "owners can remove own household backup imports"
+  on public.household_backup_imports
+  for delete to authenticated
+  using (public.is_household_owner(household_id) and imported_by = auth.uid());
+
+grant select, insert, delete on table public.household_backup_imports to authenticated;

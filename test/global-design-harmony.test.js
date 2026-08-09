@@ -14,18 +14,17 @@ const settingsScript = readFileSync("settings.js", "utf8");
 const typographyCss = readFileSync("typography-system.css", "utf8");
 
 describe("global design harmony", () => {
-  test("docks account utilities in the header and separates the lower floating actions", () => {
-    expect(refreshScript).toContain("const topbar = document.querySelector('.topbar')");
-    expect(refreshScript).toContain("const topbarActions = document.querySelector('.topbar-account-actions')");
-    expect(refreshScript).toContain("topbar.appendChild(topbarActions)");
-    expect(refreshScript).toContain("topbarActions.style.setProperty('position', 'static', 'important')");
-    expect(refreshScript).toContain("pageBody.appendChild(addEventButton)");
+  test("keeps header utilities static, floats only refresh, and centers contextual actions", () => {
+    expect(refreshScript).not.toContain("const topbarActions = document.querySelector('.topbar-account-actions')");
+    expect(refreshScript).not.toContain("topbarActions.insertBefore(button, accountButton)");
     expect(refreshScript).toContain("pageBody.appendChild(button)");
+    expect(refreshScript).toContain("pageBody.appendChild(addEventButton)");
     expect(refreshScript).not.toContain("viewTabs.insertAdjacentElement('afterend', addEventButton)");
+    expect(refreshCss).not.toMatch(/\.topbar-account-actions\s*\{[^}]*position:\s*fixed;/s);
+    expect(refreshCss).toMatch(/body > \.refresh-button\s*\{[^}]*position:\s*fixed;[^}]*right:[^;]+;[^}]*bottom:[^;]+;/s);
     expect(refreshCss).toContain("body > #addEventButton.fab");
     expect(refreshCss).toMatch(/body > #addEventButton\.fab\s*\{[^}]*position:\s*fixed\s*!important;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\);/s);
     expect(refreshCss).toMatch(/body > #addEventButton\.fab\s*\{[^}]*align-items:\s*center;[^}]*justify-content:\s*center;[^}]*gap:\s*6px;/s);
-    expect(refreshCss).toMatch(/body > \.refresh-button\s*\{[^}]*position:\s*fixed;[^}]*right:[^;]+;[^}]*bottom:[^;]+;/s);
     expect(refreshCss).toContain("body:has(> #addEventButton.fab) main");
     expect(refreshCss).toContain("env(safe-area-inset-bottom, 0px)");
     expect(refreshCss).not.toContain("body.floating-actions-safe-zone-active > .refresh-button");
@@ -39,6 +38,7 @@ describe("global design harmony", () => {
     expect(headerCss).toContain("#englishView > .english-page-header");
     expect(headerCss).toContain("#featureRequestView > .feature-request-card");
     expect(headerCss).toContain("--view-content-top-gap: 24px");
+    expect((headerCss.match(/\{/g) || []).length).toBe((headerCss.match(/\}/g) || []).length);
   });
 
   test("removes the cross-shaped growth divider and shortens entrance motion", () => {
@@ -71,9 +71,9 @@ describe("global design harmony", () => {
   });
 
   test("updates every affected stylesheet cache version", () => {
-    expect(index).toContain('styles.css?v=20260727-isolated-demo-v1');
-    expect(index).toContain('<script src="app.js?v=20260727-isolated-demo-v1"></script>');
-    expect(config).toContain('{ name: "refresh-button", version: "20260802-black-fab-v1" }');
+    expect(index).toContain('styles.css?v=20260806-health-pattern-v1');
+    expect(index).toContain('<script src="app.js?v=20260806-health-pattern-v1"></script>');
+    expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260804-settings-notification-cards-v1" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false }');

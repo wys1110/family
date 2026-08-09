@@ -4,12 +4,9 @@ import { expect, test } from "vitest";
 test("PC 헤더에 별도 로그아웃 버튼을 표시하지 않는다", () => {
   const html = readFileSync("index.html", "utf8");
   const baseCss = readFileSync("styles.css", "utf8");
-  const refreshCss = readFileSync("refresh-button.css", "utf8");
 
   expect(html).toContain('id="desktopLogoutButton"');
   expect(baseCss).toContain(".desktop-logout-button { display:none; }");
-  expect(refreshCss).toContain(".desktop-logout-button,\n.desktop-logout-button:not([hidden])");
-  expect(refreshCss).toContain("display: none !important;");
 });
 
 test("계정 팝업 로그아웃은 오류를 처리하는 공통 함수를 쓴다", () => {

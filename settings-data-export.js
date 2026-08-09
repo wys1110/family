@@ -20,12 +20,13 @@
     },
     {
       name: '성장 기록 히스토리',
-      headers: ['제목', '기록일', '기록 시간', '분류', '키(cm)', '몸무게(kg)', '머리 둘레(cm)', '수유량(ml)', '수면(분)', '체온(°C)', '기저귀', '수유 유형', '수유 방향', '수유 시간(분)'],
+      headers: ['아기 ID', '제목', '기록일', '기록 시간', '분류', '키(cm)', '몸무게(kg)', '머리 둘레(cm)', '수유량(ml)', '수면(분)', '체온(°C)', '기저귀', '수유 유형', '수유 방향', '수유 시간(분)'],
       query: (supabase, householdId) => supabase.from('growth_entries')
-        .select('title,entry_date,entry_time,category,height_cm,weight_kg,head_cm,feeding_ml,sleep_minutes,temperature_c,diaper_kind,feeding_type,feeding_side,feeding_minutes')
+        .select('baby_id,title,entry_date,entry_time,category,height_cm,weight_kg,head_cm,feeding_ml,sleep_minutes,temperature_c,diaper_kind,feeding_type,feeding_side,feeding_minutes')
         .eq('household_id', householdId)
         .order('entry_date', { ascending: false }),
       rows: (rows) => rows.map((row) => [
+        row.baby_id,
         row.title,
         row.entry_date,
         row.entry_time,

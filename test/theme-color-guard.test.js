@@ -13,7 +13,10 @@ describe("direct theme color guard", () => {
 
   test("allows raw values only in canonical palette sources", () => {
     expect(baseline.paletteFiles).toEqual([
+      "index.html",
       "theme-calendar-exception.css",
+      "theme-bootstrap.js",
+      "theme-critical.css",
       "theme-system.css",
       "theme-v2.css",
     ]);
