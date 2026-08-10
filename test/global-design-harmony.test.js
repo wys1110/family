@@ -72,7 +72,7 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260806-health-pattern-v1');
-    expect(index).toContain('<script src="app.js?v=20260806-health-pattern-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20260810-family-wallpapers-v1"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20260722-korean-labels-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260804-settings-notification-cards-v1" }');

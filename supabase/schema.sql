@@ -85,6 +85,16 @@ create table public.growth_entries (
     references public.babies(id, household_id) on delete cascade
 );
 
+create table public.household_wallpapers (
+  household_id uuid not null references public.households(id) on delete cascade,
+  surface text not null check (surface in ('calendar', 'growth')),
+  photo_path text not null check (photo_path like household_id::text || '/wallpapers/' || surface || '/%'),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (household_id, surface)
+);
+
 create table public.feature_requests (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
@@ -127,6 +137,7 @@ alter table public.events enable row level security;
 alter table public.babies enable row level security;
 alter table public.calendar_members enable row level security;
 alter table public.growth_entries enable row level security;
+alter table public.household_wallpapers enable row level security;
 alter table public.feature_requests enable row level security;
 alter table public.family_todos enable row level security;
 
@@ -156,6 +167,10 @@ create policy "members can view growth entries" on public.growth_entries for sel
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
 create policy "members can delete growth entries" on public.growth_entries for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can view household wallpapers" on public.household_wallpapers for select to authenticated using ((select public.is_household_member(household_id)));
+create policy "owners can create household wallpapers" on public.household_wallpapers for insert to authenticated with check ((select public.is_household_owner(household_id)) and created_by = (select auth.uid()));
+create policy "owners can update household wallpapers" on public.household_wallpapers for update to authenticated using ((select public.is_household_owner(household_id))) with check ((select public.is_household_owner(household_id)) and created_by = (select auth.uid()));
+create policy "owners can delete household wallpapers" on public.household_wallpapers for delete to authenticated using ((select public.is_household_owner(household_id)));
 create policy "members can submit feature requests" on public.feature_requests for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid() and status = 'new');
 create policy "owner can view feature requests" on public.feature_requests for select to authenticated using (public.is_household_owner(household_id));
 create policy "owner can update feature requests" on public.feature_requests for update to authenticated using (public.is_household_owner(household_id)) with check (public.is_household_owner(household_id));

@@ -17,6 +17,16 @@ html[data-family-theme-choice="white"] {
   --theme-accent-rgb: 32, 33, 36;
   --theme-hero-start: #17191b;
   --theme-hero-end: #3b3e42;
+  --theme-wallpaper-text: #ffffff;
+  --theme-wallpaper-scrim-start: rgba(8, 8, 8, .72);
+  --theme-wallpaper-scrim-middle: rgba(8, 8, 8, .44);
+  --theme-wallpaper-scrim-end: rgba(8, 8, 8, .13);
+  --theme-wallpaper-text-shadow: rgba(0, 0, 0, .62);
+  --theme-wallpaper-surface: rgba(10, 10, 10, .52);
+  --theme-wallpaper-border: rgba(255, 255, 255, .23);
+  --theme-wallpaper-button-border: rgba(255, 255, 255, .26);
+  --theme-wallpaper-button: rgba(5, 5, 5, .54);
+  --theme-wallpaper-muted: rgba(255, 255, 255, .76);
   color-scheme: light;
 }
 
@@ -46,6 +56,16 @@ html[data-family-theme-choice="black"] {
   --theme-accent-rgb: 215, 215, 215;
   --theme-hero-start: #111111;
   --theme-hero-end: #303030;
+  --theme-wallpaper-text: #ffffff;
+  --theme-wallpaper-scrim-start: rgba(4, 4, 4, .82);
+  --theme-wallpaper-scrim-middle: rgba(4, 4, 4, .55);
+  --theme-wallpaper-scrim-end: rgba(4, 4, 4, .18);
+  --theme-wallpaper-text-shadow: rgba(0, 0, 0, .62);
+  --theme-wallpaper-surface: rgba(10, 10, 10, .52);
+  --theme-wallpaper-border: rgba(255, 255, 255, .23);
+  --theme-wallpaper-button-border: rgba(255, 255, 255, .26);
+  --theme-wallpaper-button: rgba(5, 5, 5, .54);
+  --theme-wallpaper-muted: rgba(255, 255, 255, .76);
   color-scheme: dark;
 }
 

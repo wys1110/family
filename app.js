@@ -40,10 +40,12 @@ const ACTIVE_BABY_KEY = storageKey("family-active-baby-v1");
 const ACTIVE_VIEW_KEY = storageKey("family-active-view-v1");
 const GROWTH_SUMMARY_PERIOD_KEY = storageKey("family-growth-summary-period-v1");
 const CARE_TIMER_KEY = storageKey("family-care-timer-v1");
+const WALLPAPER_STORAGE_KEY = storageKey("family-wallpapers-v1");
 const GROWTH_PHOTO_BUCKET = "growth-photos";
 const MAX_GROWTH_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_GROWTH_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+const WALLPAPER_SURFACES = new Set(["calendar", "growth"]);
 const FAMILY_VERSES = [
   { text: "나와 내 집은 여호와를 섬기겠노라.", reference: "여호수아 24:15" },
   { text: "사랑은 오래 참고 사랑은 온유하며.", reference: "고린도전서 13:4" },
@@ -56,7 +58,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let dragState = null;
@@ -392,11 +394,12 @@ function seedDemoData() {
 
 async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
-  const [babiesResult, eventsResult, growthResult, membersResult] = await Promise.all([
+  const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
     supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date"),
     supabase.from("events").select("*").eq("household_id", householdId).order("event_date"),
     supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false }),
     supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order"),
+    supabase.from("household_wallpapers").select("*").eq("household_id", householdId),
   ]);
   if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
   if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요");
@@ -418,6 +421,12 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
   state.familyMembers = membersResult.error || !membersResult.data?.length
     ? [...DEFAULT_FAMILY_MEMBERS]
     : membersResult.data.map((row) => ({ id: row.id, name: row.name, color: validColor(row.color) }));
+  if (wallpapersResult.error) {
+    state.wallpapers = { calendar: null, growth: null };
+    renderWallpapers();
+    toast("월페이퍼를 불러오지 못했어요");
+  }
+  else await hydrateWallpaperUrls(wallpapersResult.data, householdId);
   if (!state.familyMembers.some((member) => member.name === state.quickMember)) state.quickMember = state.familyMembers[0]?.name || "가족";
   if (state.babies.length === 1 && state.growthEntries.some((entry) => !entry.babyId)) {
     const babyId = state.babies[0].id;
@@ -426,7 +435,7 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
     if (error) toast("이전 성장 기록을 아기 프로필에 연결하지 못했어요");
     else state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = babyId; });
   }
-  return ![babiesResult, eventsResult, growthResult, membersResult].some((result) => result.error);
+  return ![babiesResult, eventsResult, growthResult, membersResult, wallpapersResult].some((result) => result.error);
 }
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
@@ -490,6 +499,61 @@ async function hydrateGrowthPhotoUrls(entries) {
   entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
 }
 
+function readLocalWallpapers() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(WALLPAPER_STORAGE_KEY) || "{}") || {};
+    return Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => [surface, typeof saved[surface]?.url === "string" ? saved[surface] : null]));
+  } catch { return { calendar: null, growth: null }; }
+}
+function persistLocalWallpapers() { try { localStorage.setItem(WALLPAPER_STORAGE_KEY, JSON.stringify(state.wallpapers)); } catch { toast("사진을 이 기기에 저장하지 못했어요"); } }
+function wallpaperPathIsOwned(path, householdId, surface) { return typeof path === "string" && path.startsWith(`${householdId}/wallpapers/${surface}/`); }
+function renderWallpapers() {
+  document.querySelectorAll("[data-wallpaper-surface]").forEach((node) => {
+    const surface = node.dataset.wallpaperSurface; const wallpaper = state.wallpapers[surface]; const url = wallpaper?.url || "";
+    node.classList.toggle("has-wallpaper", Boolean(url));
+    node.style.setProperty("--wallpaper-image", url ? `url(${JSON.stringify(url)})` : "none");
+    node.querySelector("[data-wallpaper-remove]").hidden = !url;
+  });
+}
+async function hydrateWallpaperUrls(rows, householdId) {
+  const valid = (rows || []).filter((row) => WALLPAPER_SURFACES.has(row.surface) && row.household_id === householdId && wallpaperPathIsOwned(row.photo_path, householdId, row.surface));
+  const paths = valid.map((row) => row.photo_path);
+  if (!paths.length) { state.wallpapers = { calendar: null, growth: null }; return renderWallpapers(); }
+  const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600); if (error) return;
+  const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
+  state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => { const row = valid.find((item) => item.surface === surface); return [surface, row ? { path: row.photo_path, url: urls.get(row.photo_path) || "" } : null]; }));
+  renderWallpapers();
+}
+async function photoDataUrl(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
+function wallpaperExtension(file) { const type = file.type || "image/jpeg"; return type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg"; }
+async function saveWallpaper(surface, file) {
+  if (!WALLPAPER_SURFACES.has(surface) || !file) return;
+  if (!ALLOWED_GROWTH_PHOTO_TYPES.has(file.type)) return toast("JPG, PNG, WebP 또는 HEIC 사진만 올릴 수 있어요");
+  if (file.size > MAX_PHOTO_BYTES) return toast("사진은 10MB 이하만 올릴 수 있어요");
+  const prepared = await prepareGrowthPhoto(file);
+  if (!state.supabase || !state.session || !state.household) { state.wallpapers[surface] = { path: "", url: await photoDataUrl(prepared) }; persistLocalWallpapers(); renderWallpapers(); return toast("이 기기에 월페이퍼를 설정했어요"); }
+  const path = `${state.household.id}/wallpapers/${surface}/${uid()}.${wallpaperExtension(prepared)}`;
+  const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, prepared, { contentType: prepared.type || "image/jpeg", cacheControl: "3600", upsert: false });
+  if (uploadError) return toast("사진을 올리지 못했어요. 다시 시도해 주세요");
+  const previous = state.wallpapers[surface];
+  const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({ household_id: state.household.id, surface, photo_path: path, created_by: state.session.user.id }).select().single();
+  if (saveError) { await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]); return toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요"); }
+  const { data } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrl(path, 3600);
+  state.wallpapers[surface] = { path, url: data?.signedUrl || "" }; renderWallpapers();
+  if (previous?.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
+  toast("가족 월페이퍼를 바꿨어요");
+}
+async function removeWallpaper(surface) {
+  if (!WALLPAPER_SURFACES.has(surface) || !state.wallpapers[surface]) return;
+  const previous = state.wallpapers[surface];
+  if (!state.supabase || !state.session || !state.household) { state.wallpapers[surface] = null; persistLocalWallpapers(); renderWallpapers(); return toast("월페이퍼를 삭제했어요"); }
+  const { error } = await state.supabase.from("household_wallpapers").delete().eq("household_id", state.household.id).eq("surface", surface);
+  if (error) return toast("월페이퍼를 삭제하지 못했어요");
+  state.wallpapers[surface] = null; renderWallpapers();
+  if (previous.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
+  toast("월페이퍼를 삭제했어요");
+}
+
 function releaseTouchTabFocus(event) {
   if (!["touch", "pen"].includes(event.pointerType)) return;
   const button = event.currentTarget;
@@ -529,6 +593,17 @@ function bindUi() {
   $("#deleteGrowthButton").addEventListener("click", deleteGrowthEntry);
   $("#growthCategory").addEventListener("change", syncGrowthFields);
   $("#growthPhotos").addEventListener("change", addGrowthPhotos);
+  $("#wallpaperPhotoInput").addEventListener("change", async (event) => {
+    const surface = event.currentTarget.dataset.surface; const [file] = event.currentTarget.files;
+    event.currentTarget.value = ""; delete event.currentTarget.dataset.surface;
+    await saveWallpaper(surface, file);
+  });
+  document.addEventListener("click", (event) => {
+    const change = event.target.closest("[data-wallpaper-change]");
+    if (change) { $("#wallpaperPhotoInput").dataset.surface = change.dataset.wallpaperChange; return $("#wallpaperPhotoInput").click(); }
+    const remove = event.target.closest("[data-wallpaper-remove]");
+    if (remove) void removeWallpaper(remove.dataset.wallpaperRemove);
+  });
   $("#growthPhotoPreview").addEventListener("click", removeGrowthPhoto);
   document.querySelectorAll("[data-growth-quick]").forEach((button) => button.addEventListener("click", () => openGrowthQuick(button.dataset.growthQuick)));
   $("#addBabyButton").addEventListener("click", () => openBabyDialog());
@@ -614,7 +689,7 @@ function finishCalendarSwipe(event) {
   slideMonth(dx < 0 ? 1 : -1);
 }
 function cancelCalendarSwipe() { calendarSwipeState = null; }
-function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth(); switchView(state.activeView); updateSyncBadge(); }
+function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth(); renderWallpapers(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
   const selector = $("#eventMemberSelector");
   const selected = $("#eventMember").value || state.familyMembers[0]?.name || "가족";

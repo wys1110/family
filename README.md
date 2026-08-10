@@ -81,6 +81,8 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 
 기존 성장일기에 상세 기록과 사진 업로드를 추가하려면 SQL Editor에서 [`supabase/migrations/20260715_growth_records_and_photos.sql`](supabase/migrations/20260715_growth_records_and_photos.sql)을 한 번 실행합니다. 이 마이그레이션은 비공개 `growth-photos` 버킷과 가족 단위 Storage RLS 정책도 함께 만듭니다.
 
+일정·성장 카드에 가족 공용 사진 월페이퍼를 사용하려면 [`supabase/migrations/20260810005856_household_wallpapers.sql`](supabase/migrations/20260810005856_household_wallpapers.sql)을 실행합니다. 월페이퍼는 가족 공간별·카드별로 한 장만 저장되며 가족 관리자가 변경 또는 삭제할 수 있습니다.
+
 아기 프로필, 생후 일수, 원터치 수유 기록을 추가하려면 [`supabase/migrations/20260715_baby_profiles_and_quick_logs.sql`](supabase/migrations/20260715_baby_profiles_and_quick_logs.sql)을 SQL Editor에서 한 번 실행합니다.
 
 아기 프로필을 기록·사진 삭제 없이 아카이브하고 복원하려면 [`supabase/migrations/20260717_archive_baby_profiles.sql`](supabase/migrations/20260717_archive_baby_profiles.sql)을 SQL Editor에서 한 번 실행합니다.

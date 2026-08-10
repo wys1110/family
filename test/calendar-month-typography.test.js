@@ -14,6 +14,6 @@ describe("calendar month picker typography", () => {
     expect(calendarSwipe).toContain("font-weight: 760;");
     expect(typography).toContain("label:not(.month-picker-trigger)");
     expect(config).toContain('{ name: "typography-system", version: "20260803-calendar-month-typography-v1", script: false }');
-    expect(index).toContain('config.js?v=20260805-mobile-calendar-v5');
+    expect(index).toContain('config.js?v=20260810-family-wallpapers-v1');
   });
 });

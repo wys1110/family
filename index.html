@@ -14,7 +14,8 @@
         --secondary: #666b70; --tertiary: #979ca1; --separator: rgba(24,27,30,.12);
         --blue: #202124; --green: #65716a; --orange: #9a7657; --red: #a85f61;
         --pink: #9d697b; --indigo: #716d82; --shadow: 0 18px 48px rgba(20,22,24,.08);
-        --theme-accent-rgb: 32,33,36; --theme-hero-start: #17191b; --theme-hero-end: #3b3e42;
+         --theme-accent-rgb: 32,33,36; --theme-hero-start: #17191b; --theme-hero-end: #3b3e42;
+         --theme-wallpaper-text: #fff; --theme-wallpaper-scrim-start: rgba(8,8,8,.72); --theme-wallpaper-scrim-middle: rgba(8,8,8,.44); --theme-wallpaper-scrim-end: rgba(8,8,8,.13); --theme-wallpaper-text-shadow: rgba(0,0,0,.62); --theme-wallpaper-surface: rgba(10,10,10,.52); --theme-wallpaper-border: rgba(255,255,255,.23); --theme-wallpaper-button-border: rgba(255,255,255,.26); --theme-wallpaper-button: rgba(5,5,5,.54); --theme-wallpaper-muted: rgba(255,255,255,.76);
         color-scheme: light;
       }
       html[data-family-theme-choice="white"], html[data-family-theme-choice="white"] body {
@@ -26,7 +27,8 @@
         --secondary: #b8b8b8; --tertiary: #7f7f7f; --separator: rgba(255,255,255,.12);
         --blue: #d7d7d7; --green: #a8b0aa; --orange: #c0a083; --red: #d58e8e;
         --pink: #c89aaa; --indigo: #aaa5b8; --shadow: 0 20px 54px rgba(0,0,0,.48);
-        --theme-accent-rgb: 215,215,215; --theme-hero-start: #111; --theme-hero-end: #303030;
+         --theme-accent-rgb: 215,215,215; --theme-hero-start: #111; --theme-hero-end: #303030;
+         --theme-wallpaper-text: #fff; --theme-wallpaper-scrim-start: rgba(4,4,4,.82); --theme-wallpaper-scrim-middle: rgba(4,4,4,.55); --theme-wallpaper-scrim-end: rgba(4,4,4,.18); --theme-wallpaper-text-shadow: rgba(0,0,0,.62); --theme-wallpaper-surface: rgba(10,10,10,.52); --theme-wallpaper-border: rgba(255,255,255,.23); --theme-wallpaper-button-border: rgba(255,255,255,.26); --theme-wallpaper-button: rgba(5,5,5,.54); --theme-wallpaper-muted: rgba(255,255,255,.76);
         color-scheme: dark;
       }
       html[data-family-theme-choice="black"], html[data-family-theme-choice="black"] body {
@@ -98,7 +100,7 @@
         </nav>
 
         <div id="calendarView">
-        <section class="hero-card">
+        <section class="hero-card wallpaper-surface" data-wallpaper-surface="calendar">
           <span class="album-stamp">FAMILY</span>
           <div>
             <p id="todayLabel"></p>
@@ -110,6 +112,7 @@
             <span class="family-chip mom">수빈</span>
             <span class="family-chip baby">도윤</span>
           </div>
+          <div class="wallpaper-actions"><button type="button" data-wallpaper-change="calendar">사진 변경</button><button type="button" data-wallpaper-remove="calendar" hidden>삭제</button></div>
         </section>
 
         <section class="calendar-card" aria-labelledby="monthLabel">
@@ -179,7 +182,7 @@
 
           <div id="babyJournalContent" hidden>
           <div class="baby-selector" id="babySelector" aria-label="아기 선택"></div>
-          <section class="baby-profile-card baby-care-card" aria-labelledby="activeBabyName">
+          <section class="baby-profile-card baby-care-card wallpaper-surface" data-wallpaper-surface="growth" aria-labelledby="activeBabyName">
             <div class="baby-profile-main">
               <span class="baby-monogram" id="babyMonogram" aria-hidden="true">B</span>
               <div class="baby-profile-copy">
@@ -216,6 +219,7 @@
                 <p class="growth-summary-footer" id="growthSummaryFooter"></p>
               </div>
             </div>
+            <div class="wallpaper-actions"><button type="button" data-wallpaper-change="growth">사진 변경</button><button type="button" data-wallpaper-remove="growth" hidden>삭제</button></div>
           </section>
 
           <section class="recent-photo-section recent-photo-featured" id="recentPhotoSection" hidden>
@@ -519,7 +523,8 @@
       </div>
     </dialog>
 
-    <dialog id="photoViewerDialog" class="photo-viewer-dialog" aria-labelledby="photoViewerTitle">
+     <input id="wallpaperPhotoInput" type="file" accept="image/*" hidden />
+     <dialog id="photoViewerDialog" class="photo-viewer-dialog" aria-labelledby="photoViewerTitle">
       <div class="photo-viewer-panel">
         <button class="photo-viewer-close" type="button" data-close="photoViewerDialog" aria-label="사진 닫기">×</button>
         <figure>
@@ -536,8 +541,8 @@
     <div class="drag-ghost" id="dragGhost" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
     <script src="demo-mode.js?v=20260727-isolated-v1"></script>
-    <script src="config.js?v=20260805-mobile-calendar-v5"></script>
+    <script src="config.js?v=20260810-family-wallpapers-v1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260806-health-pattern-v1"></script>
+    <script src="app.js?v=20260810-family-wallpapers-v1"></script>
   </body>
 </html>
