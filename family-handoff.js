@@ -81,7 +81,9 @@
       <div class="family-handoff-heading"><div><p class="eyebrow">FAMILY HANDOFF</p><h2 id="familyHandoffTitle">지금 이어서 할 일</h2></div><button type="button" data-family-handoff-action></button></div>
       <strong data-family-handoff-summary></strong>
       <small data-family-handoff-detail></small>`;
-    hero.insertAdjacentElement('afterend', card);
+    const onboarding = document.querySelector('[data-family-onboarding-module]');
+    if (onboarding) onboarding.insertAdjacentElement('afterend', card);
+    else hero.insertAdjacentElement('afterend', card);
     card.addEventListener('click', (event) => {
       const action = event.target.closest('[data-family-handoff-action]')?.dataset.familyHandoffAction;
       if (!action) return;

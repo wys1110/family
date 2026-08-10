@@ -1909,6 +1909,7 @@ async function saveBaby(event) {
     state.activeBabyId = baby.id; try { localStorage.setItem(ACTIVE_BABY_KEY, baby.id); } catch { /* 현재 선택 유지 */ }
     if (!state.supabase) { persistLocalBabies(); localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); }
     $("#babyDialog").close(); renderGrowth();
+    window.dispatchEvent(new CustomEvent('family:baby-saved', { detail: { babyId: baby.id, savedAt: new Date().toISOString() } }));
     toast(!legacyLinked ? "프로필은 저장했지만 이전 기록 연결에 실패했어요" : isNew ? `${baby.name}의 성장일기를 시작했어요` : "아기 프로필을 수정했어요");
   } finally {
     babySaveInProgress = false;

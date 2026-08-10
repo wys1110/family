@@ -1,0 +1,84 @@
+.family-onboarding-card {
+  display: grid;
+  gap: 10px;
+  margin: -8px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--separator);
+  border-radius: 20px;
+  color: var(--label);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.family-onboarding-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.family-onboarding-heading > div { min-width: 0; }
+
+.family-onboarding-card h2 {
+  margin: 3px 0 0;
+  color: var(--label);
+  font-size: clamp(17px, 4.4vw, 21px);
+}
+
+.family-onboarding-card ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.family-onboarding-step {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.family-onboarding-step > :first-child {
+  color: var(--tertiary);
+  font-size: 14px;
+}
+
+.family-onboarding-step.complete { color: var(--label); }
+.family-onboarding-step.complete > :first-child { color: var(--green); }
+
+.family-onboarding-step small {
+  overflow: hidden;
+  margin-left: auto;
+  color: var(--tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family-onboarding-action {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--separator);
+  border-radius: 14px;
+  color: var(--label);
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.family-onboarding-action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 70%, transparent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .family-onboarding-card { padding: 14px; }
+}
