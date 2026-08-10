@@ -1957,6 +1957,7 @@ async function archiveBabyProfile() {
   $("#babyDialog").close();
   selectInitialBaby();
   renderGrowth();
+  window.dispatchEvent(new CustomEvent("familybabychange", { detail: { activeBabyId: state.activeBabyId } }));
   toast(`${baby.name} 프로필을 아카이브했어요`);
 }
 
@@ -1978,6 +1979,7 @@ async function restoreBabyFromEvent(event) {
   localStorage.setItem(ACTIVE_BABY_KEY, baby.id);
   $("#babyArchiveDialog").close();
   renderGrowth();
+  window.dispatchEvent(new CustomEvent("familybabychange", { detail: { activeBabyId: state.activeBabyId } }));
   toast(`${baby.name} 프로필을 복원했어요`);
 }
 
@@ -2115,7 +2117,7 @@ async function deleteGrowthEntry() {
     const { error } = await state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id); if (error) return toast("기록을 삭제하지 못했어요");
     if (target?.photoPaths?.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths);
   }
-  state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); toast("성장 기록을 삭제했어요");
+  state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); window.dispatchEvent(new CustomEvent('family:growth-entry-deleted', { detail: { babyId: target?.babyId || null, deletedAt: new Date().toISOString() } })); toast("성장 기록을 삭제했어요");
 }
 
 function openAccountDialog() { renderAccount(); $("#accountDialog").showModal(); }

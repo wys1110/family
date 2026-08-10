@@ -6,19 +6,36 @@
 
   let memberCount = isDemo() ? 2 : null;
   let membershipRequestId = 0;
+  let memberRefreshTimer = null;
   let card = null;
 
-  const getSnapshot = () => {
-    const current = currentState();
+  const deriveSnapshot = (current, currentMemberCount = memberCount) => {
     const hasBaby = Boolean(current?.activeBabyId && (current?.babies || []).some((baby) => baby.id === current.activeBabyId));
     const firstCareRecorded = hasBaby && hasFirstCare(current);
     return {
       hasBaby,
       hasFirstCare: firstCareRecorded,
-      memberCount,
+      memberCount: currentMemberCount,
       isOwner: current?.householdRole === 'owner',
-      complete: Boolean(hasBaby && firstCareRecorded && (memberCount || 0) >= 2),
+      complete: Boolean(hasBaby && firstCareRecorded && (currentMemberCount || 0) >= 2),
     };
+  };
+
+  const getSnapshot = () => deriveSnapshot(currentState());
+
+  const clearMemberRefresh = () => {
+    if (memberRefreshTimer === null) return;
+    window.clearTimeout(memberRefreshTimer);
+    memberRefreshTimer = null;
+  };
+
+  const scheduleMemberRefresh = () => {
+    const current = currentState();
+    if (memberRefreshTimer !== null || memberCount >= 2 || !current?.household || !current?.supabase || !current?.session) return;
+    memberRefreshTimer = window.setTimeout(() => {
+      memberRefreshTimer = null;
+      loadMemberCount();
+    }, 30000);
   };
 
   const nextStep = (snapshot) => {
@@ -63,11 +80,13 @@
     const requestId = ++membershipRequestId;
 
     if (!householdId) {
+      clearMemberRefresh();
       memberCount = null;
       render();
       return;
     }
     if (!isRemote) {
+      clearMemberRefresh();
       memberCount = isDemo() ? 2 : 1;
       render();
       return;
@@ -83,8 +102,11 @@
     if (error) {
       console.warn('가족 구성원 수를 불러오지 못했어요', error);
       memberCount = null;
+      scheduleMemberRefresh();
     } else {
       memberCount = Number(count || 0);
+      if (memberCount >= 2) clearMemberRefresh();
+      else scheduleMemberRefresh();
     }
     render();
   };
@@ -112,13 +134,17 @@
     loadMemberCount();
   };
 
-  ['familycontextchange', 'familybabychange', 'family:growth-entry-saved', 'family:baby-saved'].forEach((eventName) => {
+  ['familycontextchange', 'familybabychange', 'family:growth-entry-saved', 'family:growth-entry-deleted', 'family:baby-saved'].forEach((eventName) => {
     window.addEventListener(eventName, () => {
       if (eventName === 'familycontextchange') return loadMemberCount();
       render();
     });
   });
 
-  window.FAMILY_ONBOARDING_API = { getSnapshot };
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') loadMemberCount();
+  });
+
+  window.FAMILY_ONBOARDING_API = { deriveSnapshot, getSnapshot };
   mount();
 })();
