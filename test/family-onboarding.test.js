@@ -32,6 +32,7 @@ describe('family activation onboarding', () => {
     const config = read('config.js');
 
     expect(source).toContain("'familycontextchange'");
+    expect(source).toContain("'familybabychange'");
     expect(source).toContain("'family:growth-entry-saved'");
     expect(source).toContain("'family:baby-saved'");
     expect(source).toContain("hero.insertAdjacentElement('afterend', card)");

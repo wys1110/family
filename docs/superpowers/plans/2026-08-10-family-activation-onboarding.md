@@ -127,7 +127,7 @@ Expected: PASS and both syntax checks exit 0.
 - Modify: `test/family-onboarding.test.js`
 
 **Interfaces:**
-- Consumes: `familycontextchange`, `family:growth-entry-saved`, `family:baby-saved`.
+- Consumes: `familycontextchange`, `familybabychange`, `family:growth-entry-saved`, `family:baby-saved`.
 - Produces: semantic `family-onboarding-card` and versioned module registration.
 
 - [ ] **Step 1: Extend the failing test**
@@ -135,6 +135,7 @@ Expected: PASS and both syntax checks exit 0.
 ```js
 test('체크리스트는 컨텍스트 변경을 구독하고 버전 모듈로 로드한다', () => {
   expect(source).toContain("'familycontextchange'");
+  expect(source).toContain("'familybabychange'");
   expect(source).toContain("'family:growth-entry-saved'");
   expect(source).toContain("'family:baby-saved'");
   expect(css).toContain('min-height: 44px');

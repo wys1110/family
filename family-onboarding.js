@@ -112,7 +112,7 @@
     loadMemberCount();
   };
 
-  ['familycontextchange', 'family:growth-entry-saved', 'family:baby-saved'].forEach((eventName) => {
+  ['familycontextchange', 'familybabychange', 'family:growth-entry-saved', 'family:baby-saved'].forEach((eventName) => {
     window.addEventListener(eventName, () => {
       if (eventName === 'familycontextchange') return loadMemberCount();
       render();

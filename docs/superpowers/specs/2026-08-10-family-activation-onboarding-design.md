@@ -27,7 +27,7 @@
 - 원격 로그인 가족만 현재 `household_id`의 `household_members` 수를 읽는다. 기존 구성원 조회 RLS가 적용되므로 다른 가족 구성원은 조회하지 않는다.
 - 데모 가족은 이미 공동 가족·기록이 있는 상태로 간주해 카드를 숨긴다. 오프라인 개인 기록은 구성원 한 명으로 계산한다.
 - 비동기 구성원 수 응답은 요청 당시의 `household_id`가 아직 현재 가족일 때만 반영한다.
-- `familycontextchange`, `family:growth-entry-saved`, 새 `family:baby-saved` 이벤트에서 카드가 갱신된다.
+- `familycontextchange`, `familybabychange`, `family:growth-entry-saved`, 새 `family:baby-saved` 이벤트에서 카드가 갱신된다.
 
 ## 범위와 안전 기준
 
