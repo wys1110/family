@@ -1,0 +1,65 @@
+.family-handoff-card {
+  display: grid;
+  gap: 7px;
+  margin: -8px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--separator);
+  border-radius: 20px;
+  color: var(--label);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.family-handoff-card h2 {
+  margin: 3px 0 0;
+  color: var(--label);
+  font-size: clamp(17px, 4.4vw, 21px);
+}
+
+.family-handoff-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.family-handoff-heading > div { min-width: 0; }
+
+.family-handoff-card > strong {
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family-handoff-card > small {
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family-handoff-card [data-family-handoff-action] {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--separator);
+  border-radius: 14px;
+  color: var(--label);
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.family-handoff-card [data-family-handoff-action]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 70%, transparent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .family-handoff-card { padding: 14px; }
+}

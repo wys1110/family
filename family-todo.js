@@ -633,6 +633,7 @@
   window.FAMILY_TODO_API = {
     getSnapshot: () => moduleState.todos.map((todo) => ({ ...todo })),
     open: (todo) => openTodoDialog(todo),
+    toggle: (id) => toggleTodo(moduleState.todos.find((todo) => todo.id === id)),
   };
 
   function decorateCalendar() {

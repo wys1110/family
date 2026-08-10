@@ -4,7 +4,7 @@
 
 **Goal:** 가족이 앱을 열면 현재 아기의 마지막 돌봄, 가장 급한 할 일, 다음 일정을 보고 한 번의 탭으로 이어서 처리하게 한다.
 
-**Architecture:** 새 `family-handoff.js`는 기존 전역 `state`, `FAMILY_TODO_API`, `familycontextchange` 이벤트를 읽기 전용으로 조합해 `today-overview` 아래에 카드 하나를 만든다. 원본 일정·성장 기록·할 일 저장 로직은 바꾸지 않고, 동작 버튼은 기존 성장 빠른 기록·할 일 완료·일정 탭으로만 연결한다.
+**Architecture:** 새 `family-handoff.js`는 기존 전역 `state`, `FAMILY_TODO_API`, `familycontextchange` 이벤트를 읽기 전용으로 조합해 히어로 카드 바로 아래에 카드 하나를 만든다. 원본 일정·성장 기록·할 일 저장 로직은 바꾸지 않고, 동작 버튼은 기존 성장 빠른 기록·할 일 완료·일정 탭으로만 연결한다.
 
 **Tech Stack:** 정적 HTML, 브라우저 JavaScript IIFE 모듈, CSS custom properties, Supabase가 이미 동기화한 `state`, Vitest.
 
@@ -191,7 +191,7 @@ Expected: FAIL because the stylesheet and registered module do not exist.
 });
 ```
 
-Append `{ name: "family-handoff", version: "20260810-v1" }` after `today-overview` in `config.js`, so it loads only after the existing overview module.
+Append `{ name: "family-handoff", version: "20260810-v1" }` after `today-overview` in `config.js`, so it loads after the existing overview module while rendering above it.
 
 - [ ] **Step 4: Run full verification and mobile check**
 
@@ -201,7 +201,7 @@ Expected: all tests pass and no new direct-color violation.
 
 At `?demo=1`, check 390×844 and 430×932:
 
-1. the card appears directly below `오늘 한눈에 보기`;
+1. the card appears directly below the family hero card, before `오늘 한눈에 보기`;
 2. action button is visible without horizontal scrolling;
 3. completing the most urgent todo updates the card;
 4. adding a growth entry updates the latest-care line;
