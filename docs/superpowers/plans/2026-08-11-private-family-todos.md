@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - 기존 할 일은 모두 `family`로 유지한다.
-- 개인 행은 다른 가족 구성원의 SELECT, UPDATE, DELETE 응답에 포함되지 않는다.
+- 개인 행은 다른 가족 구성원의 SELECT, UPDATE, DELETE 응답과 플랫폼 관리자 내보내기에 포함되지 않는다.
 - 새 테이블·비공개 데이터의 가족 검색·개인 데이터를 포함한 가족 인수인계는 추가하지 않는다.
 - 새 UI 동작은 44px 터치 영역과 기존 테마 토큰을 사용한다.
 
@@ -93,6 +93,7 @@ Expected: PASS.
 **Files:**
 - Modify: `family-handoff.js`
 - Modify: `notification-center.js`
+- Create: `supabase/migrations/20260811000001_platform_admin_export_private_todos.sql`
 - Test: `test/private-family-todos.test.js`
 
 **Interfaces:**
@@ -114,7 +115,7 @@ Expected: FAIL because shared surfaces can still read private rows.
 
 - [ ] **Step 3: Implement family-only consumers**
 
-Use `getFamilySnapshot()` in handoff and add the visibility filter to direct notification queries.
+Use `getFamilySnapshot()` in handoff, add the visibility filter to direct notification queries and local fallback, and replace the privileged admin export function so it selects only `visibility = 'family'`.
 
 - [ ] **Step 4: Verify and apply live migration**
 

@@ -132,7 +132,7 @@ window.FAMILY_CONFIG = {
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260722-settings-gear-v3" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
-    { name: "family-todo", version: "20260718-logic-audit-v1" },
+    { name: "family-todo", version: "20260811-private-todos-v1" },
     { name: "notification-center", version: "20260803-layout-fix-v1" },
     { name: "today-overview", version: "20260805-today-overview-v1" },
     { name: "family-onboarding", version: "20260810-v1" },

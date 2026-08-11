@@ -17,7 +17,7 @@
   const getSnapshot = () => {
     const current = currentState();
     const today = dateKey();
-    const todos = window.FAMILY_TODO_API?.getSnapshot?.() || [];
+    const todos = window.FAMILY_TODO_API?.getFamilySnapshot?.() || [];
     const priorityTodo = todos.find(todo => !todo.completed && todo.dueDate && todo.dueDate <= today) || null;
     const nextEvent = (current?.events || [])
       .filter((event) => String(event.endDate || event.date || '') >= today)

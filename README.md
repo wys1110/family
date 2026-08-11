@@ -95,7 +95,7 @@ Google Client Secret은 Supabase에만 입력하고 저장소에는 커밋하지
 
 기능 요청을 Supabase DB에 저장하고 가족 관리자만 조회·상태 변경하도록 하려면 [`supabase/migrations/20260716_feature_requests.sql`](supabase/migrations/20260716_feature_requests.sql)을 SQL Editor에서 한 번 실행합니다. 일반 가족 구성원은 요청 등록만 가능하며 목록 조회 권한은 없습니다.
 
-가족 할 일을 모든 가족 기기에서 공유하려면 [`supabase/migrations/20260716_family_todos.sql`](supabase/migrations/20260716_family_todos.sql)을 SQL Editor에서 한 번 실행합니다. 적용 전에도 기능은 동작하지만 현재 기기의 로컬 저장소에만 임시 저장됩니다.
+가족 할 일을 모든 가족 기기에서 공유하려면 [`supabase/migrations/20260716_family_todos.sql`](supabase/migrations/20260716_family_todos.sql)을 SQL Editor에서 한 번 실행합니다. 이어서 [`supabase/migrations/20260811000000_private_family_todos.sql`](supabase/migrations/20260811000000_private_family_todos.sql)을 적용하면 기존 항목은 가족 할 일로 유지되고, 새 내 할 일은 작성자만 조회·수정·삭제할 수 있습니다. 적용 전에도 기능은 동작하지만 현재 기기의 로컬 저장소에만 임시 저장됩니다.
 
 ## 매일 일정 브리핑 앱 알림 배포
 

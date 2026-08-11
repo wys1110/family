@@ -188,6 +188,7 @@
     title: String(todo.title || ''),
     dueDate: todo.dueDate ?? todo.due_date ?? null,
     assignee: String(todo.assignee || '가족'),
+    visibility: todo.visibility === 'private' ? 'private' : 'family',
     completed: Boolean(todo.completed),
     createdAt: todo.createdAt ?? todo.created_at ?? '',
     updatedAt: todo.updatedAt ?? todo.updated_at ?? '',
@@ -201,7 +202,7 @@
   const loadLocalTodos = () => {
     try {
       const parsed = JSON.parse(localStorage.getItem(localTodoKey()) || '[]');
-      return Array.isArray(parsed) ? parsed.map(normalizeTodo) : [];
+      return Array.isArray(parsed) ? parsed.map(normalizeTodo).filter((todo) => todo.visibility === 'family') : [];
     } catch { return []; }
   };
 
@@ -217,6 +218,7 @@
             .from('family_todos')
             .select('id, title, due_date, assignee, completed, created_at, updated_at')
             .eq('household_id', state.household.id)
+            .eq('visibility', 'family')
             .order('completed', { ascending: true })
             .order('due_date', { ascending: true, nullsFirst: false })
             .limit(500);

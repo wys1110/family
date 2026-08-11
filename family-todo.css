@@ -133,6 +133,32 @@
 .todo-storage-note[data-storage="remote"] { color: var(--green); }
 .todo-storage-note.message { color: var(--blue); font-weight: 700; }
 
+.todo-scope-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 4px;
+  border: 1px solid var(--separator);
+  border-radius: 15px;
+  background: var(--surface-2);
+}
+.todo-scope-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  color: var(--secondary);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 760;
+  cursor: pointer;
+}
+.todo-scope-tabs button.active {
+  color: var(--label);
+  background: var(--surface);
+  box-shadow: 0 2px 9px var(--separator);
+}
+
 .todo-quick-form {
   margin-top: 14px;
   padding: 15px;
@@ -338,6 +364,7 @@
 }
 
 .family-todo-dialog .todo-form-row { grid-template-columns: 1fr 1.15fr; }
+.family-todo-dialog select:disabled { opacity: .65; cursor: not-allowed; }
 .family-todo-dialog .todo-dialog-help {
   margin: 9px 0 0;
   color: var(--secondary);

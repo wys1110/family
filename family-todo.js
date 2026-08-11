@@ -3,8 +3,10 @@
 
   const MODE_KEY = 'family-calendar-mode-v1';
   const FILTER_KEY = 'family-todo-filter-v1';
+  const SCOPE_KEY = 'family-todo-scope-v1';
   const LOCAL_KEY = 'family-todos-v1';
   const VALID_FILTERS = new Set(['today', 'upcoming', 'completed']);
+  const VALID_SCOPES = new Set(['family', 'private']);
   const VALID_RECURRENCES = new Set(['none', 'daily', 'weekly', 'monthly']);
   const DEFAULT_MEMBERS = ['가족', '아빠', '엄마', '도윤'];
 
@@ -16,6 +18,7 @@
   const moduleState = {
     mode: readMode(),
     filter: readFilter(),
+    scope: readScope(),
     todos: [],
     loaded: false,
     loading: false,
@@ -50,7 +53,7 @@
         <div>
           <p class="eyebrow">FAMILY TO-DO</p>
           <h2 id="familyTodoTitle">가족 할 일</h2>
-          <span>함께 해야 할 일을 한곳에서 챙겨요.</span>
+          <span id="familyTodoSubtitle">함께 해야 할 일을 한곳에서 챙겨요.</span>
         </div>
         <button class="todo-refresh-button" id="familyTodoRefresh" type="button" aria-label="할 일 새로고침">↻</button>
       </div>
@@ -62,13 +65,18 @@
       <p class="todo-storage-note" id="todoStorageNote"></p>
     </section>
 
+    <div class="todo-scope-tabs" role="tablist" aria-label="할 일 범위">
+      <button type="button" data-todo-scope="family" role="tab">가족 할 일</button>
+      <button type="button" data-todo-scope="private" role="tab">내 할 일</button>
+    </div>
+
     <form class="todo-quick-form" id="todoQuickForm">
       <label for="todoQuickTitle">빠른 추가</label>
       <div>
         <input id="todoQuickTitle" maxlength="80" autocomplete="off" placeholder="예: 분유 주문하기" required />
         <button type="submit"><span aria-hidden="true">＋</span> 추가</button>
       </div>
-      <small>빠른 추가는 오늘 할 일 · 담당 가족으로 저장돼요.</small>
+      <small id="todoQuickHelp">빠른 추가는 오늘 할 일 · 담당 가족으로 저장돼요.</small>
     </form>
 
     <div class="todo-filter-tabs" role="tablist" aria-label="할 일 필터">
@@ -113,6 +121,10 @@
         <option value="weekly">매주</option>
         <option value="monthly">매월</option>
       </select></label>
+      <label>공개 범위<select id="familyTodoScope">
+        <option value="family">가족 할 일 · 가족 모두에게 보임</option>
+        <option value="private">내 할 일 · 나만 볼 수 있음</option>
+      </select></label>
       <label>메모<textarea id="familyTodoNote" maxlength="500" rows="4" placeholder="준비물이나 상세 내용을 적어두세요"></textarea></label>
       <p class="todo-dialog-help" id="familyTodoDialogHelp">가족 구성원 모두가 확인하고 완료할 수 있어요.</p>
       <div class="dialog-actions">
@@ -134,6 +146,7 @@
   const assigneeInput = dialog.querySelector('#familyTodoAssignee');
   const dueDateInput = dialog.querySelector('#familyTodoDueDate');
   const recurrenceInput = dialog.querySelector('#familyTodoRecurrence');
+  const scopeInput = dialog.querySelector('#familyTodoScope');
   const noteInput = dialog.querySelector('#familyTodoNote');
   const dialogHelp = dialog.querySelector('#familyTodoDialogHelp');
   const deleteButton = dialog.querySelector('#deleteFamilyTodoButton');
@@ -150,6 +163,13 @@
       const value = localStorage.getItem(FILTER_KEY);
       return VALID_FILTERS.has(value) ? value : 'today';
     } catch { return 'today'; }
+  }
+
+  function readScope() {
+    try {
+      const value = localStorage.getItem(SCOPE_KEY);
+      return VALID_SCOPES.has(value) ? value : 'family';
+    } catch { return 'family'; }
   }
 
   function uid() {
@@ -244,6 +264,8 @@
       completed: Boolean(todo.completed),
       completedAt: todo.completedAt ?? todo.completed_at ?? null,
       parentId: todo.parentId ?? todo.recurrence_parent_id ?? null,
+      visibility: todo.visibility === 'private' ? 'private' : 'family',
+      createdBy: todo.createdBy ?? todo.created_by ?? null,
       createdAt: todo.createdAt ?? todo.created_at ?? new Date().toISOString(),
       updatedAt: todo.updatedAt ?? todo.updated_at ?? new Date().toISOString(),
     };
@@ -273,6 +295,7 @@
       completed: Boolean(todo.completed),
       completed_at: todo.completedAt || null,
       recurrence_parent_id: todo.parentId || null,
+      visibility: todo.visibility === 'private' ? 'private' : 'family',
       created_by: context.session.user.id,
       created_at: todo.createdAt || new Date().toISOString(),
       updated_at: todo.updatedAt || new Date().toISOString(),
@@ -295,18 +318,22 @@
 
   function updateStorageNote() {
     if (moduleState.loading) {
-      storageNote.textContent = '가족 할 일을 불러오는 중이에요…';
+      storageNote.textContent = `${moduleState.scope === 'private' ? '내' : '가족'} 할 일을 불러오는 중이에요…`;
       storageNote.dataset.storage = 'loading';
       return;
     }
     if (moduleState.storage === 'remote') {
-      storageNote.textContent = '가족 DB와 동기화 중 · 가족 모두에게 보여요';
+      storageNote.textContent = moduleState.scope === 'private'
+        ? '가족 DB와 동기화 중 · 나만 볼 수 있어요'
+        : '가족 DB와 동기화 중 · 가족 모두에게 보여요';
       storageNote.dataset.storage = 'remote';
     } else if (familyContext()) {
       storageNote.textContent = 'DB 적용 전 · 현재 기기에 임시 저장 중';
       storageNote.dataset.storage = 'local';
     } else {
-      storageNote.textContent = '로그인하면 가족과 함께 공유할 수 있어요';
+      storageNote.textContent = moduleState.scope === 'private'
+        ? '로그인하면 내 할 일을 안전하게 보관할 수 있어요'
+        : '로그인하면 가족과 함께 공유할 수 있어요';
       storageNote.dataset.storage = 'local';
     }
   }
@@ -339,7 +366,7 @@
     try {
       result = await context.supabase
         .from('family_todos')
-        .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
+        .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
         .eq('household_id', context.household.id)
         .order('completed', { ascending: true })
         .order('due_date', { ascending: true, nullsFirst: false })
@@ -373,7 +400,7 @@
         try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
         const { data: refreshedData, error: refreshedError } = await context.supabase
           .from('family_todos')
-          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
+          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
           .eq('household_id', context.household.id)
           .order('completed', { ascending: true })
           .order('due_date', { ascending: true, nullsFirst: false })
@@ -401,6 +428,7 @@
       assignee: input.assignee || '가족',
       note: input.note || '',
       recurrence: input.recurrence || 'none',
+      visibility: input.visibility === 'private' ? 'private' : 'family',
       completed: false,
       parentId: input.parentId || null,
       createdAt: now,
@@ -413,7 +441,7 @@
         const { data, error } = await context.supabase
           .from('family_todos')
           .insert(toRemote(todo, context))
-          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
+          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
           .single();
         if (!error) {
           const saved = normalizeTodo(data);
@@ -445,6 +473,7 @@
     if ('assignee' in patch) mapped.assignee = patch.assignee;
     if ('note' in patch) mapped.note = patch.note || null;
     if ('recurrence' in patch) mapped.recurrence = patch.recurrence;
+    if ('visibility' in patch) mapped.visibility = patch.visibility === 'private' ? 'private' : 'family';
     if ('completed' in patch) mapped.completed = Boolean(patch.completed);
     if ('completedAt' in patch) mapped.completed_at = patch.completedAt || null;
     mapped.updated_at = new Date().toISOString();
@@ -463,7 +492,7 @@
           .update(remotePatch(patch))
           .eq('id', id)
           .eq('household_id', context.household.id)
-          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, created_at, updated_at')
+          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
           .single();
         if (!error) {
           const currentIndex = moduleState.todos.findIndex((todo) => todo.id === id);
@@ -552,7 +581,7 @@
 
   function filteredTodos() {
     const today = dateKey();
-    const items = moduleState.todos.filter((todo) => {
+    const items = scopedTodos().filter((todo) => {
       if (moduleState.filter === 'completed') return todo.completed;
       if (todo.completed) return false;
       if (moduleState.filter === 'today') return Boolean(todo.dueDate && todo.dueDate <= today);
@@ -569,11 +598,16 @@
     });
   }
 
+  function scopedTodos() {
+    return moduleState.todos.filter((todo) => todo.visibility === moduleState.scope);
+  }
+
   function renderStats() {
     const today = dateKey();
-    const todayCount = moduleState.todos.filter((todo) => !todo.completed && todo.dueDate && todo.dueDate <= today).length;
-    const upcomingCount = moduleState.todos.filter((todo) => !todo.completed && (!todo.dueDate || todo.dueDate > today)).length;
-    const completedCount = moduleState.todos.filter((todo) => todo.completed).length;
+    const todos = scopedTodos();
+    const todayCount = todos.filter((todo) => !todo.completed && todo.dueDate && todo.dueDate <= today).length;
+    const upcomingCount = todos.filter((todo) => !todo.completed && (!todo.dueDate || todo.dueDate > today)).length;
+    const completedCount = todos.filter((todo) => todo.completed).length;
     todoView.querySelector('#todoTodayCount').textContent = String(todayCount);
     todoView.querySelector('#todoUpcomingCount').textContent = String(upcomingCount);
     todoView.querySelector('#todoCompletedCount').textContent = String(completedCount);
@@ -582,6 +616,19 @@
   function renderTodos() {
     renderStats();
     updateStorageNote();
+    const isPrivate = moduleState.scope === 'private';
+    todoView.querySelector('#familyTodoTitle').textContent = isPrivate ? '내 할 일' : '가족 할 일';
+    todoView.querySelector('#familyTodoSubtitle').textContent = isPrivate
+      ? '나만 확인할 일을 따로 챙겨요.'
+      : '함께 해야 할 일을 한곳에서 챙겨요.';
+    todoView.querySelector('#todoQuickHelp').textContent = isPrivate
+      ? '빠른 추가는 오늘 내 할 일로 저장돼요.'
+      : '빠른 추가는 오늘 할 일 · 담당 가족으로 저장돼요.';
+    todoView.querySelectorAll('[data-todo-scope]').forEach((button) => {
+      const active = button.dataset.todoScope === moduleState.scope;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
     todoView.querySelectorAll('[data-todo-filter]').forEach((button) => {
       const active = button.dataset.todoFilter === moduleState.filter;
       button.classList.toggle('active', active);
@@ -632,6 +679,7 @@
 
   window.FAMILY_TODO_API = {
     getSnapshot: () => moduleState.todos.map((todo) => ({ ...todo })),
+    getFamilySnapshot: () => moduleState.todos.filter((todo) => todo.visibility === 'family').map((todo) => ({ ...todo })),
     open: (todo) => openTodoDialog(todo),
     toggle: (id) => toggleTodo(moduleState.todos.find((todo) => todo.id === id)),
   };
@@ -639,7 +687,7 @@
   function decorateCalendar() {
     if (!calendarGrid) return;
     const counts = new Map();
-    moduleState.todos.forEach((todo) => {
+    moduleState.todos.filter((todo) => todo.visibility === 'family').forEach((todo) => {
       if (!todo.completed && todo.dueDate) counts.set(todo.dueDate, (counts.get(todo.dueDate) || 0) + 1);
     });
     calendarGrid.querySelectorAll('.calendar-day[data-date]').forEach((button) => {
@@ -696,6 +744,13 @@
     renderTodos();
   }
 
+  function setScope(scope) {
+    if (!VALID_SCOPES.has(scope)) return;
+    moduleState.scope = scope;
+    try { localStorage.setItem(SCOPE_KEY, scope); } catch { /* 현재 화면만 전환 */ }
+    renderTodos();
+  }
+
   function fillAssignees(selected = '가족') {
     const members = [...new Set(currentMembers())];
     if (!members.includes(selected)) members.push(selected);
@@ -706,14 +761,24 @@
     const editing = Boolean(todo);
     todoIdInput.value = todo?.id || '';
     titleInput.value = todo?.title || '';
-    fillAssignees(todo?.assignee || '가족');
+    fillAssignees(todo?.assignee || (moduleState.scope === 'private' ? '나' : '가족'));
     dueDateInput.value = todo?.dueDate || dateKey();
     recurrenceInput.value = todo?.recurrence || 'none';
+    scopeInput.value = todo?.visibility || moduleState.scope;
+    const context = familyContext();
+    const canChangeScope = !editing || !context || todo.createdBy === context.session.user.id;
+    scopeInput.disabled = !canChangeScope;
     noteInput.value = todo?.note || '';
     dialogTitle.textContent = editing ? '할 일 수정' : '새 할 일';
     saveButton.textContent = editing ? '수정 저장' : '할 일 추가';
     deleteButton.hidden = !editing;
-    dialogHelp.textContent = todo?.completed ? '완료된 할 일이에요. 체크를 해제하면 다시 진행할 수 있어요.' : '가족 구성원 모두가 확인하고 완료할 수 있어요.';
+    dialogHelp.textContent = todo?.completed
+      ? '완료된 할 일이에요. 체크를 해제하면 다시 진행할 수 있어요.'
+      : scopeInput.value === 'private'
+        ? '내 할 일은 나만 보고 수정할 수 있어요.'
+        : canChangeScope
+          ? '가족 모두가 확인할 수 있어요. 필요하면 내 할 일로 바꿀 수 있어요.'
+          : '가족 할 일은 가족 모두가 확인하고 완료할 수 있어요.';
     if (!dialog.open) dialog.showModal();
     setTimeout(() => titleInput.focus(), 100);
   }
@@ -740,6 +805,7 @@
               assignee: todo.assignee,
               note: todo.note,
               recurrence: todo.recurrence,
+              visibility: todo.visibility,
               parentId: todo.id,
             }, { quiet: true });
           }
@@ -767,6 +833,11 @@
     if (button) setFilter(button.dataset.todoFilter);
   });
 
+  todoView.querySelector('.todo-scope-tabs').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-todo-scope]');
+    if (button) setScope(button.dataset.todoScope);
+  });
+
   quickForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = quickTitle.value.trim();
@@ -774,7 +845,7 @@
     const button = quickForm.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
-      await createTodo({ title, dueDate: dateKey(), assignee: '가족', recurrence: 'none', note: '' });
+      await createTodo({ title, dueDate: dateKey(), assignee: moduleState.scope === 'private' ? '나' : '가족', recurrence: 'none', note: '', visibility: moduleState.scope });
       quickTitle.value = '';
       setFilter('today');
     } catch { announce('할 일을 추가하지 못했어요.'); }
@@ -795,7 +866,7 @@
     refreshButton.disabled = true;
     try {
       await loadTodos({ silent: true });
-      announce('가족 할 일을 새로고침했어요.');
+      announce(`${moduleState.scope === 'private' ? '내' : '가족'} 할 일을 새로고침했어요.`);
     } catch { announce('할 일을 새로고침하지 못했어요.'); }
     finally { refreshButton.disabled = false; }
   });
@@ -823,9 +894,10 @@
       const values = {
         title,
         dueDate: dueDateInput.value || null,
-        assignee: assigneeInput.value || '가족',
+        assignee: assigneeInput.value || (moduleState.scope === 'private' ? '나' : '가족'),
         recurrence,
         note: noteInput.value.trim(),
+        visibility: scopeInput.value,
       };
       if (todoIdInput.value) await updateTodo(todoIdInput.value, values);
       else await createTodo(values);
@@ -850,6 +922,13 @@
 
   const calendarVisibilityObserver = new MutationObserver(syncFab);
   calendarVisibilityObserver.observe(calendarView, { attributes: true, attributeFilter: ['hidden'] });
+
+  const eventFab = document.querySelector('#addEventButton');
+  if (eventFab) {
+    new MutationObserver(() => {
+      if (moduleState.mode === 'todo' && !eventFab.hidden) syncFab();
+    }).observe(eventFab, { attributes: true, attributeFilter: ['hidden'] });
+  }
 
   if (calendarGrid) {
     const gridObserver = new MutationObserver((mutations) => {
@@ -880,4 +959,5 @@
 
   setMode(moduleState.mode, { persist: false });
   loadTodos({ silent: true });
+  window.addEventListener('family:core-ready', () => setTimeout(syncFab, 0), { once: true });
 })();

@@ -109,6 +109,7 @@ create table public.feature_requests (
 create table public.family_todos (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
+  visibility text not null default 'family' check (visibility in ('family', 'private')),
   title text not null check (char_length(title) between 1 and 80),
   due_date date,
   assignee text not null default '가족' check (char_length(assignee) between 1 and 20),
@@ -130,6 +131,7 @@ create index calendar_members_household_sort_idx on public.calendar_members(hous
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 create index feature_requests_household_created_idx on public.feature_requests(household_id, created_at desc);
 create index family_todos_household_due_idx on public.family_todos(household_id, completed, due_date, created_at desc);
+create index family_todos_household_visibility_creator_idx on public.family_todos(household_id, visibility, created_by, completed, due_date, created_at desc);
 create unique index family_todos_recurrence_parent_unique_idx on public.family_todos(recurrence_parent_id) where recurrence_parent_id is not null;
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
@@ -174,10 +176,22 @@ create policy "owners can delete household wallpapers" on public.household_wallp
 create policy "members can submit feature requests" on public.feature_requests for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid() and status = 'new');
 create policy "owner can view feature requests" on public.feature_requests for select to authenticated using (public.is_household_owner(household_id));
 create policy "owner can update feature requests" on public.feature_requests for update to authenticated using (public.is_household_owner(household_id)) with check (public.is_household_owner(household_id));
-create policy "members can view family todos" on public.family_todos for select to authenticated using (public.is_household_member(household_id));
-create policy "members can create family todos" on public.family_todos for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
-create policy "members can update family todos" on public.family_todos for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));
-create policy "members can delete family todos" on public.family_todos for delete to authenticated using (public.is_household_member(household_id));
+create policy "members can view scoped family todos" on public.family_todos for select to authenticated using ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid())));
+create policy "members can create scoped family todos" on public.family_todos for insert to authenticated with check ((select public.is_household_member(household_id)) and created_by = (select auth.uid()));
+create policy "members can update scoped family todos" on public.family_todos for update to authenticated using ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid()))) with check ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid())));
+create policy "members can delete scoped family todos" on public.family_todos for delete to authenticated using ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid())));
+
+create or replace function public.prevent_family_todo_creator_change()
+returns trigger language plpgsql set search_path = public
+as $$
+begin
+  if new.created_by is distinct from old.created_by then raise exception 'family todo creator cannot change'; end if;
+  return new;
+end;
+$$;
+
+create trigger family_todos_prevent_creator_change before update on public.family_todos
+for each row execute function public.prevent_family_todo_creator_change();
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('growth-photos', 'growth-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
