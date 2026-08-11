@@ -149,7 +149,7 @@
       if (typeof state !== 'undefined') state.activeView = VIEW_NAME;
       try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, VIEW_NAME); } catch { /* 현재 화면만 유지 */ }
 
-      ['calendarView', 'growthView', 'englishView', 'privateView', 'featureRequestView', 'guideView'].forEach((id) => {
+      ['calendarView', 'growthView', 'englishView', 'privateView', 'featureRequestView'].forEach((id) => {
         const target = document.getElementById(id);
         if (target) target.hidden = true;
       });
