@@ -94,19 +94,26 @@ describe('smooth mobile motion policy', () => {
   });
 
   test('skips the previous transition on rapid successive navigation', () => {
+    const callbacks = [];
     const firstTransition = { finished: new Promise(() => {}), skipTransition: vi.fn() };
-    const secondTransition = { finished: Promise.resolve(), skipTransition: vi.fn() };
+    const secondTransition = { finished: new Promise(() => {}), skipTransition: vi.fn() };
     const startViewTransition = vi.fn((callback) => {
-      callback();
+      callbacks.push(callback);
       return startViewTransition.mock.calls.length === 1 ? firstTransition : secondTransition;
     });
     const api = loadMotion({ startViewTransition });
+    const firstUpdate = vi.fn();
+    const secondUpdate = vi.fn();
 
-    api.transitionView('growth', vi.fn(), { currentView: 'calendar' });
-    api.transitionView('settings', vi.fn(), { currentView: 'growth' });
+    api.transitionView('growth', firstUpdate, { currentView: 'calendar' });
+    api.transitionView('settings', secondUpdate, { currentView: 'growth' });
+    callbacks[1]();
+    callbacks[0]();
 
     expect(firstTransition.skipTransition).toHaveBeenCalledOnce();
     expect(startViewTransition).toHaveBeenCalledTimes(2);
+    expect(secondUpdate).toHaveBeenCalledOnce();
+    expect(firstUpdate).not.toHaveBeenCalled();
   });
 
   test('uses the short fade transition when reduced motion is requested', () => {
@@ -123,6 +130,11 @@ describe('smooth mobile motion policy', () => {
     expect(css).toContain('::view-transition-new(family-view-stage)');
     expect(css).toMatch(/::view-transition-group\(family-view-stage\) \{[^}]*animation:\s*none;/s);
     expect(css).toMatch(/animation:\s*family-slide-new-forward\s+\.22s/);
+    expect(css).toMatch(/animation:\s*family-slide-old-forward\s+\.22s/);
+    expect(css).toMatch(/animation:\s*family-slide-new-backward\s+\.22s/);
+    expect(css).toMatch(/animation:\s*family-slide-old-backward\s+\.22s/);
+    expect(css).toMatch(/animation:\s*family-sheet-rise\s+\.24s/);
+    expect(css).toMatch(/family-sheet-rise[^]*from \{ opacity: 0; transform: translateY\(18px\); \}/);
     expect(css).not.toContain('blur(');
     expect(css).not.toMatch(/rotate[XY]\(/);
     expect(css).not.toContain('perspective(');
@@ -131,6 +143,7 @@ describe('smooth mobile motion policy', () => {
     expect(css).not.toContain('family-fab-depth-arrive');
     expect(source).not.toContain('family-motion-entering');
     expect(css).toMatch(/body > #addEventButton\.fab \{[^}]*animation:\s*none;/s);
+    expect(css).toMatch(/#addEventButton\.fab:active \{[^}]*scale\(\.96\)/s);
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');
     expect(css).toMatch(/animation-duration:\s*\.08s/);
   });

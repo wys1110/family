@@ -47,7 +47,10 @@
     document.documentElement.dataset.familyMotionDirection = direction;
 
     try {
-      activeTransition = document.startViewTransition(() => runUpdate(update));
+      activeTransition = document.startViewTransition(() => {
+        if (id !== transitionId) return;
+        return runUpdate(update);
+      });
       Promise.resolve(activeTransition.finished)
         .catch(() => {})
         .finally(() => {
