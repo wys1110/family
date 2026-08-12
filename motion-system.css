@@ -1,169 +1,124 @@
-/* One signature moment: the active family view crosses a neon depth field. */
-main {
-  perspective: 1200px;
-}
-
+/* Fast, quiet motion tuned for mobile Safari compositing. */
 main > [id$="View"]:not([hidden]) {
   view-transition-name: family-view-stage;
-  transform-style: preserve-3d;
 }
 
 ::view-transition-group(family-view-stage) {
   z-index: 20;
-  animation-duration: .42s;
-  animation-timing-function: cubic-bezier(.16, .84, .22, 1);
-  perspective: 1200px;
+  animation-duration: .22s;
+  animation-timing-function: cubic-bezier(.22, .72, .24, 1);
 }
 
 ::view-transition-image-pair(family-view-stage) {
   isolation: isolate;
-  overflow: visible;
-  transform-style: preserve-3d;
+  overflow: hidden;
 }
 
 ::view-transition-old(family-view-stage),
 ::view-transition-new(family-view-stage) {
   height: 100%;
   mix-blend-mode: normal;
-  transform-origin: center 18%;
-  backface-visibility: hidden;
+  transform-origin: center;
 }
 
 html[data-family-motion-direction="forward"]::view-transition-old(family-view-stage) {
-  animation: family-depth-old-forward .42s cubic-bezier(.4, 0, .7, .25) both;
+  animation: family-slide-old-forward .22s cubic-bezier(.4, 0, .7, .25) both;
 }
 
 html[data-family-motion-direction="forward"]::view-transition-new(family-view-stage) {
-  animation: family-depth-new-forward .42s cubic-bezier(.16, .84, .22, 1) both;
+  animation: family-slide-new-forward .22s cubic-bezier(.22, .72, .24, 1) both;
 }
 
 html[data-family-motion-direction="backward"]::view-transition-old(family-view-stage) {
-  animation: family-depth-old-backward .42s cubic-bezier(.4, 0, .7, .25) both;
+  animation: family-slide-old-backward .22s cubic-bezier(.4, 0, .7, .25) both;
 }
 
 html[data-family-motion-direction="backward"]::view-transition-new(family-view-stage) {
-  animation: family-depth-new-backward .42s cubic-bezier(.16, .84, .22, 1) both;
+  animation: family-slide-new-backward .22s cubic-bezier(.22, .72, .24, 1) both;
 }
 
-@keyframes family-depth-old-forward {
-  from { opacity: 1; transform: perspective(1200px) translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0); }
-  to { opacity: .08; transform: perspective(1200px) translate3d(-34%, 0, -190px) rotateY(12deg) scale(.91); filter: blur(5px); }
+@keyframes family-slide-old-forward {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: .82; transform: translateX(-18px); }
 }
 
-@keyframes family-depth-new-forward {
-  from { opacity: .12; transform: perspective(1200px) translate3d(72%, 2%, -170px) rotateY(-17deg) scale(.86); filter: blur(7px) drop-shadow(0 0 24px var(--motion-neon-cyan)); }
-  68% { filter: blur(0) drop-shadow(0 0 34px var(--motion-neon-violet)); }
-  to { opacity: 1; transform: perspective(1200px) translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0) drop-shadow(0 18px 32px var(--motion-depth-shadow)); }
+@keyframes family-slide-new-forward {
+  from { opacity: .82; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes family-depth-old-backward {
-  from { opacity: 1; transform: perspective(1200px) translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0); }
-  to { opacity: .08; transform: perspective(1200px) translate3d(34%, 0, -190px) rotateY(-12deg) scale(.91); filter: blur(5px); }
+@keyframes family-slide-old-backward {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: .82; transform: translateX(18px); }
 }
 
-@keyframes family-depth-new-backward {
-  from { opacity: .12; transform: perspective(1200px) translate3d(-72%, 2%, -170px) rotateY(17deg) scale(.86); filter: blur(7px) drop-shadow(0 0 24px var(--motion-neon-pink)); }
-  68% { filter: blur(0) drop-shadow(0 0 34px var(--motion-neon-violet)); }
-  to { opacity: 1; transform: perspective(1200px) translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0) drop-shadow(0 18px 32px var(--motion-depth-shadow)); }
-}
-
-.family-motion-entering > :is(section, article, header, .settings-card, .feature-request-card) {
-  animation: family-card-depth-arrive .54s cubic-bezier(.18, 1.12, .24, 1) both;
-}
-
-.family-motion-entering > :is(section, article, header, .settings-card, .feature-request-card):nth-child(2) { animation-delay: .04s; }
-.family-motion-entering > :is(section, article, header, .settings-card, .feature-request-card):nth-child(3) { animation-delay: .08s; }
-.family-motion-entering > :is(section, article, header, .settings-card, .feature-request-card):nth-child(4) { animation-delay: .12s; }
-
-@keyframes family-card-depth-arrive {
-  from { opacity: .15; transform: perspective(900px) translate3d(0, 24px, -60px) rotateX(4deg) scale(.975); filter: saturate(.7); }
-  72% { filter: drop-shadow(0 0 15px var(--motion-neon-glow)); }
-  to { opacity: 1; transform: perspective(900px) translate3d(0, 0, 0) rotateX(0) scale(1); filter: none; }
-}
-
-body:has(dialog[open]) .app-shell {
-  transform: perspective(1100px) translateZ(-34px) scale(.985);
-  filter: saturate(.86) brightness(.82);
-  transition: transform .3s cubic-bezier(.16, .84, .22, 1), filter .3s ease;
+@keyframes family-slide-new-backward {
+  from { opacity: .82; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 dialog.sheet-dialog[open],
 dialog.completion-dialog[open] {
-  animation: family-sheet-depth-rise .38s cubic-bezier(.18, 1.08, .24, 1) both;
+  animation: family-sheet-rise .24s cubic-bezier(.22, .72, .24, 1) both;
   transform-origin: center bottom;
 }
 
 dialog.sheet-dialog[open]::backdrop,
 dialog.completion-dialog[open]::backdrop {
-  animation: family-backdrop-neon .3s ease both;
+  animation: family-backdrop-fade .2s ease both;
 }
 
-@keyframes family-sheet-depth-rise {
-  from { opacity: 0; transform: perspective(1000px) translate3d(0, 78px, -100px) rotateX(9deg) scale(.92); filter: blur(6px); }
-  72% { filter: blur(0) drop-shadow(0 0 20px var(--motion-neon-glow)); }
-  to { opacity: 1; transform: perspective(1000px) translate3d(0, 0, 0) rotateX(0) scale(1); filter: none; }
+@keyframes family-sheet-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes family-backdrop-neon {
+@keyframes family-backdrop-fade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 .completion-dialog.family-motion-saved {
-  animation: family-saved-surface .68s cubic-bezier(.18, 1.18, .24, 1) both;
+  animation: family-saved-surface .2s ease-out both;
 }
 
 .completion-dialog.family-motion-saved .completion-check {
-  animation: family-saved-check .68s cubic-bezier(.18, 1.3, .24, 1) both;
+  animation: family-saved-check .24s cubic-bezier(.22, .72, .24, 1) both;
 }
 
 @keyframes family-saved-surface {
-  0% { box-shadow: 0 0 0 transparent; }
-  45% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--motion-neon-cyan) 45%, transparent), 0 0 45px var(--motion-neon-glow); }
-  100% { box-shadow: var(--shadow); }
+  from { opacity: .9; transform: scale(.99); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes family-saved-check {
-  0% { opacity: 0; transform: rotate(-80deg) scale(.28); filter: blur(5px); }
-  55% { opacity: 1; transform: rotate(8deg) scale(1.18); filter: drop-shadow(0 0 18px var(--motion-neon-cyan)); }
-  100% { opacity: 1; transform: rotate(0) scale(1); filter: none; }
+  from { opacity: 0; transform: scale(.82); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 body > #addEventButton.fab {
-  animation: family-fab-depth-arrive .58s cubic-bezier(.18, 1.24, .24, 1) both;
+  transition: transform .12s ease-out;
 }
 
 body > #addEventButton.fab:active {
-  transform: translateX(-50%) translateZ(12px) scale(.9) !important;
-  filter: drop-shadow(0 0 17px var(--motion-neon-glow));
-}
-
-@keyframes family-fab-depth-arrive {
-  from { opacity: 0; transform: translateX(-50%) translate3d(0, 34px, -80px) rotate(-28deg) scale(.5); filter: blur(5px); }
-  68% { opacity: 1; transform: translateX(-50%) translate3d(0, -4px, 8px) rotate(4deg) scale(1.06); filter: drop-shadow(0 0 18px var(--motion-neon-glow)); }
-  to { opacity: 1; transform: translateX(-50%) translate3d(0, 0, 0) rotate(0) scale(1); filter: none; }
+  transform: translateX(-50%) scale(.96) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(family-view-stage),
   ::view-transition-old(family-view-stage),
   ::view-transition-new(family-view-stage),
-  .family-motion-entering > *,
   dialog.sheet-dialog[open],
   dialog.completion-dialog[open],
   .completion-dialog.family-motion-saved,
-  .completion-dialog.family-motion-saved .completion-check,
-  body > #addEventButton.fab {
+  .completion-dialog.family-motion-saved .completion-check {
     animation-name: family-motion-fade !important;
     animation-duration: .08s !important;
     animation-delay: 0s !important;
     transform: none;
-    filter: none;
   }
 
-  body:has(dialog[open]) .app-shell {
-    transform: none;
-    filter: none;
+  body > #addEventButton.fab {
     transition-duration: .08s;
   }
 }

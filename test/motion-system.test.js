@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 const source = readFileSync('motion-system.js', 'utf8');
 const css = readFileSync('motion-system.css', 'utf8');
 const app = readFileSync('app.js', 'utf8');
-const theme = readFileSync('theme-critical.css', 'utf8');
+const config = readFileSync('config.js', 'utf8');
 
 function loadMotion({ reduce = false, startViewTransition } = {}) {
   const listeners = new Map();
@@ -50,7 +50,7 @@ function loadMotionContext({ reduce = false, startViewTransition, switchView = v
   return { api: window.FAMILY_MOTION_API, window };
 }
 
-describe('neon depth motion policy', () => {
+describe('smooth mobile motion policy', () => {
   test('uses navigation order to choose motion direction', () => {
     const api = loadMotion();
     expect(api.directionBetween('calendar', 'growth')).toBe('forward');
@@ -117,13 +117,23 @@ describe('neon depth motion policy', () => {
     expect(update).toHaveBeenCalledOnce();
   });
 
-  test('defines themed neon depth visuals and reduced motion', () => {
-    expect(theme).toContain('--motion-neon-violet: #8d7bff');
-    expect(css).toContain('var(--motion-neon-violet)');
+  test('uses short two-dimensional motion without mobile blur or stagger', () => {
     expect(css).toContain('::view-transition-old(family-view-stage)');
     expect(css).toContain('::view-transition-new(family-view-stage)');
+    expect(css).toMatch(/animation-duration:\s*\.22s/);
+    expect(css).not.toContain('blur(');
+    expect(css).not.toMatch(/rotate[XY]\(/);
+    expect(css).not.toContain('perspective(');
+    expect(css).not.toContain('motion-neon');
+    expect(css).not.toContain('family-card-depth-arrive');
+    expect(css).not.toContain('family-fab-depth-arrive');
+    expect(source).not.toContain('family-motion-entering');
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');
     expect(css).toMatch(/animation-duration:\s*\.08s/);
+  });
+
+  test('ships the smooth motion under a fresh asset version', () => {
+    expect(config).toContain('{ name: "motion-system", version: "20260812-smooth-mobile-v1" }');
   });
 
   test('marks growth completion for save feedback', () => {

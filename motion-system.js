@@ -6,7 +6,6 @@
   let wrappedSwitchView = null;
   let activeTransition = null;
   let transitionId = 0;
-  let entranceTimer = 0;
   let transitionUpdateDepth = 0;
 
   const currentView = () => document.querySelector('.view-tab.active[data-view]')?.dataset.view || '';
@@ -17,18 +16,6 @@
     const toIndex = VIEW_ORDER.indexOf(to);
     if (fromIndex < 0 || toIndex < 0) return 'forward';
     return toIndex > fromIndex ? 'forward' : 'backward';
-  };
-
-  const activeView = () => document.querySelector('main > [id$="View"]:not([hidden])');
-
-  const animateEntrance = () => {
-    const view = activeView();
-    if (!view || reduceMotion?.matches) return;
-    window.clearTimeout(entranceTimer);
-    view.classList.remove('family-motion-entering');
-    void view.offsetWidth;
-    view.classList.add('family-motion-entering');
-    entranceTimer = window.setTimeout(() => view.classList.remove('family-motion-entering'), 720);
   };
 
   const clearDirection = (id) => {
@@ -52,7 +39,6 @@
     const direction = directionBetween(from, requestedView);
     if (direction === 'none' || reduceMotion?.matches || typeof document.startViewTransition !== 'function') {
       runUpdate(update);
-      if (direction !== 'none') animateEntrance();
       return null;
     }
 
@@ -66,14 +52,12 @@
         .catch(() => {})
         .finally(() => {
           clearDirection(id);
-          animateEntrance();
         });
       return activeTransition;
     } catch (error) {
       console.warn('화면 전환 모션을 건너뛰었어요', error);
       runUpdate(update);
       clearDirection(id);
-      animateEntrance();
       return null;
     }
   };
