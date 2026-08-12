@@ -103,6 +103,7 @@ function showGrowthComplete(message) {
   $("#growthCompleteMessage").textContent = message;
   const dialog = $("#growthCompleteDialog");
   if (!dialog.open) dialog.showModal();
+  window.FAMILY_MOTION_API?.markSaved(dialog);
 }
 
 function dispatchGrowthEntrySaved(entry) {

@@ -27,6 +27,11 @@ html[data-family-theme-choice="white"] {
   --theme-wallpaper-button-border: rgba(255, 255, 255, .26);
   --theme-wallpaper-button: rgba(5, 5, 5, .54);
   --theme-wallpaper-muted: rgba(255, 255, 255, .76);
+  --motion-neon-violet: #8d7bff;
+  --motion-neon-cyan: #68dcff;
+  --motion-neon-pink: #ff759b;
+  --motion-neon-glow: rgba(104, 220, 255, .28);
+  --motion-depth-shadow: rgba(30, 26, 78, .16);
   color-scheme: light;
 }
 
@@ -66,6 +71,11 @@ html[data-family-theme-choice="black"] {
   --theme-wallpaper-button-border: rgba(255, 255, 255, .26);
   --theme-wallpaper-button: rgba(5, 5, 5, .54);
   --theme-wallpaper-muted: rgba(255, 255, 255, .76);
+  --motion-neon-violet: #8d7bff;
+  --motion-neon-cyan: #68dcff;
+  --motion-neon-pink: #ff759b;
+  --motion-neon-glow: rgba(141, 123, 255, .48);
+  --motion-depth-shadow: rgba(0, 0, 0, .72);
   color-scheme: dark;
 }
 

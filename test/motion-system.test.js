@@ -3,6 +3,9 @@ import vm from 'node:vm';
 import { describe, expect, test, vi } from 'vitest';
 
 const source = readFileSync('motion-system.js', 'utf8');
+const css = readFileSync('motion-system.css', 'utf8');
+const app = readFileSync('app.js', 'utf8');
+const theme = readFileSync('theme-critical.css', 'utf8');
 
 function loadMotion({ reduce = false, startViewTransition } = {}) {
   const listeners = new Map();
@@ -46,5 +49,18 @@ describe('neon depth motion policy', () => {
     loadMotion({ reduce: true, startViewTransition }).transitionView('growth', update, { currentView: 'calendar' });
     expect(startViewTransition).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledOnce();
+  });
+
+  test('defines themed neon depth visuals and reduced motion', () => {
+    expect(theme).toContain('--motion-neon-violet: #8d7bff');
+    expect(css).toContain('var(--motion-neon-violet)');
+    expect(css).toContain('::view-transition-old(family-view-stage)');
+    expect(css).toContain('::view-transition-new(family-view-stage)');
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(css).toMatch(/animation-duration:\s*\.08s/);
+  });
+
+  test('marks growth completion for save feedback', () => {
+    expect(app).toContain('window.FAMILY_MOTION_API?.markSaved(dialog)');
   });
 });
