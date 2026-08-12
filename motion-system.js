@@ -101,6 +101,8 @@
     return true;
   };
 
+  const activate = () => ensureWrapped();
+
   const markSaved = (target) => {
     if (!target?.classList) return;
     target.classList.remove('family-motion-saved');
@@ -114,12 +116,10 @@
     transitionView,
     markSaved,
     ensureWrapped,
+    activate,
   });
 
   document.addEventListener('click', (event) => {
     if (event.target?.closest?.('.view-tab[data-view]')) ensureWrapped();
   }, true);
-  window.addEventListener?.('family:core-ready', ensureWrapped);
-  if (document.readyState !== 'loading') ensureWrapped();
-  else document.addEventListener('DOMContentLoaded', ensureWrapped, { once: true });
 })();

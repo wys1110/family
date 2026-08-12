@@ -27,6 +27,29 @@ function loadMotion({ reduce = false, startViewTransition } = {}) {
   return window.FAMILY_MOTION_API;
 }
 
+function loadMotionContext({ reduce = false, startViewTransition, switchView = vi.fn() } = {}) {
+  const listeners = new Map();
+  const activeView = { classList: { add: vi.fn(), remove: vi.fn() }, offsetWidth: 0 };
+  const document = {
+    documentElement: { dataset: {} },
+    readyState: 'complete',
+    addEventListener: (name, callback) => listeners.set(name, callback),
+    querySelector: (selector) => selector.startsWith('main >') ? activeView : { dataset: { view: 'calendar' } },
+    querySelectorAll: () => [],
+    startViewTransition,
+  };
+  const window = {
+    document,
+    switchView,
+    matchMedia: () => ({ matches: reduce }),
+    setTimeout: (callback) => callback(),
+    clearTimeout: () => {},
+    addEventListener: (name, callback) => listeners.set(name, callback),
+  };
+  vm.runInNewContext(source, { window, document, console, CustomEvent: class {} });
+  return { api: window.FAMILY_MOTION_API, window };
+}
+
 describe('neon depth motion policy', () => {
   test('uses navigation order to choose motion direction', () => {
     const api = loadMotion();
@@ -43,6 +66,20 @@ describe('neon depth motion policy', () => {
     expect(update).toHaveBeenCalledOnce();
   });
 
+  test('does not animate bootstrap render before activation', () => {
+    const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
+    const switchView = vi.fn();
+    const context = loadMotionContext({ startViewTransition, switchView });
+
+    context.window.switchView('growth');
+    expect(startViewTransition).not.toHaveBeenCalled();
+
+    context.api.activate();
+    context.window.switchView('growth');
+    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(switchView).toHaveBeenCalledTimes(2);
+  });
+
   test('folds nested view wrappers into one transition', () => {
     const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
     const api = loadMotion({ startViewTransition });
@@ -54,6 +91,22 @@ describe('neon depth motion policy', () => {
 
     expect(startViewTransition).toHaveBeenCalledOnce();
     expect(update).toHaveBeenCalledOnce();
+  });
+
+  test('skips the previous transition on rapid successive navigation', () => {
+    const firstTransition = { finished: new Promise(() => {}), skipTransition: vi.fn() };
+    const secondTransition = { finished: Promise.resolve(), skipTransition: vi.fn() };
+    const startViewTransition = vi.fn((callback) => {
+      callback();
+      return startViewTransition.mock.calls.length === 1 ? firstTransition : secondTransition;
+    });
+    const api = loadMotion({ startViewTransition });
+
+    api.transitionView('growth', vi.fn(), { currentView: 'calendar' });
+    api.transitionView('settings', vi.fn(), { currentView: 'growth' });
+
+    expect(firstTransition.skipTransition).toHaveBeenCalledOnce();
+    expect(startViewTransition).toHaveBeenCalledTimes(2);
   });
 
   test('updates immediately when reduced motion is requested', () => {

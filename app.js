@@ -230,6 +230,7 @@ async function init() {
     ]);
   }
   await bootstrapData();
+  window.FAMILY_MOTION_API?.activate();
 }
 
 function authSessionKey(session) {

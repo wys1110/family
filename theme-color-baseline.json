@@ -3,8 +3,8 @@
   "policy": "No new direct color literals outside canonical theme palette files",
   "paletteFiles": [
     "index.html",
-    "theme-bootstrap.js",
     "theme-calendar-exception.css",
+    "theme-bootstrap.js",
     "theme-critical.css",
     "theme-system.css",
     "theme-v2.css"
