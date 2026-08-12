@@ -14,9 +14,9 @@ html[data-family-theme-choice] .wallpaper-surface.has-wallpaper {
   background-image: linear-gradient(90deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 45%, var(--theme-wallpaper-scrim-end) 72%, transparent 100%), var(--wallpaper-image) !important;
   background-position: center 38%;
 }
-.baby-profile-card.wallpaper-surface.has-wallpaper::before,
-.baby-profile-card.wallpaper-surface.has-wallpaper::after { content: none; }
-.baby-profile-card.wallpaper-surface.has-wallpaper :is(
+.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]::before,
+.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]::after { content: none; }
+.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] :is(
   .baby-profile-copy p,
   .baby-profile-copy h2,
   .baby-profile-copy > span,
@@ -24,6 +24,13 @@ html[data-family-theme-choice] .wallpaper-surface.has-wallpaper {
   .baby-dday strong,
   .baby-edit-button
 ) { color: var(--theme-wallpaper-text) !important; }
+.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-dday {
+  padding: 7px 8px;
+  border: 1px solid var(--theme-wallpaper-border);
+  border-radius: 14px;
+  background: var(--theme-wallpaper-surface) !important;
+  backdrop-filter: blur(8px);
+}
 .wallpaper-actions { position: absolute; z-index: 3; right: 14px; bottom: 12px; display: flex; gap: 6px; }
 .wallpaper-actions button { min-height: 30px; padding: 0 9px; border: 1px solid var(--theme-wallpaper-button-border); border-radius: 999px; color: var(--theme-wallpaper-text); background: var(--theme-wallpaper-button); box-shadow: none; font-size: 10px; font-weight: 700; backdrop-filter: blur(8px); }
 .wallpaper-actions button:last-child { color: var(--theme-wallpaper-muted); }

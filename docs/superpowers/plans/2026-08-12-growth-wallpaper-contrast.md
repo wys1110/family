@@ -62,4 +62,3 @@ Open demo mode at 390×844, apply a representative bright photo to the growth ca
 git add family-wallpapers.css test/household-wallpapers.test.js docs/superpowers
 git commit -m "fix: restore growth wallpaper contrast"
 ```
-

@@ -29,11 +29,15 @@ describe('family wallpaper', () => {
   });
 
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {
-    expect(css).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]');
+    const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
+    expect(css).toContain(growthSelector);
     expect(css).toMatch(/linear-gradient\(90deg,[^;]+var\(--wallpaper-image\)/s);
-    expect(css).toContain('color: var(--theme-wallpaper-text) !important');
     expect(css).toContain('background-position: center 38%');
-    expect(css).toMatch(/\.baby-profile-card\.wallpaper-surface\.has-wallpaper::(?:before|after)[^}]+content:\s*none/s);
+    expect(css).toContain(`${growthSelector}::before,`);
+    expect(css).toContain(`${growthSelector}::after { content: none; }`);
+    expect(css).toContain(`${growthSelector} :is(`);
+    expect(css).toMatch(/\[data-wallpaper-surface="growth"\] :is\([^)]+\.baby-edit-button\s*\) \{ color: var\(--theme-wallpaper-text\) !important; \}/s);
+    expect(css).toMatch(/\[data-wallpaper-surface="growth"\] \.baby-dday \{[^}]+background: var\(--theme-wallpaper-surface\) !important;/s);
   });
 
   test('ships the contrast fix under a fresh wallpaper asset version', () => {
