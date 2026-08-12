@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 const read = (path) => readFileSync(path, "utf8");
 const config = read("config.js");
 const settings = read("settings.js");
-const storybook = read("storybook-theme.js");
-const ghibli = read("ghibli-theme.js");
 
 describe("demo theme boundary", () => {
   test("uses demo-only theme storage and a two-theme catalog", () => {
@@ -36,12 +34,14 @@ describe("demo theme boundary", () => {
     expect(settings).not.toContain("id: 'night'");
     expect(config).not.toContain('{ name: "storybook-theme"');
     expect(config).not.toContain('{ name: "ghibli-theme"');
-    expect(storybook).toContain("const THEME_ID = 'storybook';");
-    expect(ghibli).toContain("const THEME_ID = 'ghibli';");
+    expect(existsSync("storybook-theme.js")).toBe(false);
+    expect(existsSync("storybook-theme.css")).toBe(false);
+    expect(existsSync("ghibli-theme.js")).toBe(false);
+    expect(existsSync("ghibli-theme.css")).toBe(false);
   });
 
-  test("does not add storybook or ghibli choices in demo mode", () => {
-    expect(storybook).toContain("if (window.FAMILY_DEMO_MODE === true) return;");
-    expect(ghibli).toContain("if (window.FAMILY_DEMO_MODE === true) return;");
+  test("removes retired theme implementations instead of hiding them", () => {
+    expect(config).not.toContain("storybook-theme");
+    expect(config).not.toContain("ghibli-theme");
   });
 });
