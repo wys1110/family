@@ -48,7 +48,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/settings-data-export.js") ||
     url.pathname.endsWith("/calendar-mobile-polish.css") ||
     url.pathname.endsWith("/invite-link.css") ||
-    url.pathname.endsWith("/invite-link.js");
+    url.pathname.endsWith("/invite-link.js") ||
+    url.pathname.endsWith("/motion-system.css") ||
+    url.pathname.endsWith("/motion-system.js");
   if (!forceNetwork) return;
 
   event.respondWith(fetch(event.request, { cache: "no-store" }));

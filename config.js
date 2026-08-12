@@ -185,6 +185,7 @@ window.FAMILY_CONFIG = {
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },
     { name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v5", script: false },
     { name: "family-wallpapers", version: "20260810-v1", script: false },
+    { name: "motion-system", version: "20260812-neon-depth-v1" },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
