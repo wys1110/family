@@ -32,7 +32,7 @@ describe('family wallpaper', () => {
     const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
     expect(css).toContain(growthSelector);
     expect(css).toMatch(/linear-gradient\(90deg,[^;]+var\(--wallpaper-image\)/s);
-    expect(css).toContain('background-position: center 38%');
+    expect(css).not.toContain('background-position: center 38%');
     expect(css).toContain(`${growthSelector}::before,`);
     expect(css).toContain(`${growthSelector}::after { content: none; }`);
     expect(css).toContain(`${growthSelector} :is(`);
@@ -40,7 +40,14 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\[data-wallpaper-surface="growth"\] \.baby-dday \{[^}]+background: var\(--theme-wallpaper-surface\) !important;/s);
   });
 
+  test('shows the full calendar and growth wallpaper without cropping', () => {
+    expect(css).toContain('background-position: center, right center;');
+    expect(css).toContain('background-size: 100% 100%, contain;');
+    expect(css).toContain('background-repeat: no-repeat;');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v1", script: false }');
+  });
+
   test('ships the contrast fix under a fresh wallpaper asset version', () => {
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260812-growth-contrast-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v1", script: false }');
   });
 });
