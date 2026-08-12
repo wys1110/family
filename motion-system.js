@@ -37,7 +37,7 @@
     if (transitionUpdateDepth > 0) return update();
     const from = options.currentView ?? currentView();
     const direction = directionBetween(from, requestedView);
-    if (direction === 'none' || reduceMotion?.matches || typeof document.startViewTransition !== 'function') {
+    if (direction === 'none' || typeof document.startViewTransition !== 'function') {
       runUpdate(update);
       return null;
     }

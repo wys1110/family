@@ -109,18 +109,19 @@ describe('smooth mobile motion policy', () => {
     expect(startViewTransition).toHaveBeenCalledTimes(2);
   });
 
-  test('updates immediately when reduced motion is requested', () => {
+  test('uses the short fade transition when reduced motion is requested', () => {
     const update = vi.fn();
-    const startViewTransition = vi.fn();
+    const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
     loadMotion({ reduce: true, startViewTransition }).transitionView('growth', update, { currentView: 'calendar' });
-    expect(startViewTransition).not.toHaveBeenCalled();
+    expect(startViewTransition).toHaveBeenCalledOnce();
     expect(update).toHaveBeenCalledOnce();
   });
 
   test('uses short two-dimensional motion without mobile blur or stagger', () => {
     expect(css).toContain('::view-transition-old(family-view-stage)');
     expect(css).toContain('::view-transition-new(family-view-stage)');
-    expect(css).toMatch(/animation-duration:\s*\.22s/);
+    expect(css).toMatch(/::view-transition-group\(family-view-stage\) \{[^}]*animation:\s*none;/s);
+    expect(css).toMatch(/animation:\s*family-slide-new-forward\s+\.22s/);
     expect(css).not.toContain('blur(');
     expect(css).not.toMatch(/rotate[XY]\(/);
     expect(css).not.toContain('perspective(');
