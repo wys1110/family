@@ -97,6 +97,7 @@ dialog.completion-dialog[open]::backdrop {
 }
 
 body > #addEventButton.fab {
+  animation: none;
   transition: transform .12s ease-out;
 }
 

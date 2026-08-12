@@ -128,6 +128,7 @@ describe('smooth mobile motion policy', () => {
     expect(css).not.toContain('family-card-depth-arrive');
     expect(css).not.toContain('family-fab-depth-arrive');
     expect(source).not.toContain('family-motion-entering');
+    expect(css).toMatch(/body > #addEventButton\.fab \{[^}]*animation:\s*none;/s);
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');
     expect(css).toMatch(/animation-duration:\s*\.08s/);
   });
