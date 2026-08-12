@@ -27,6 +27,6 @@ describe('family owner/member permission boundary', () => {
     expect(exportSource).toContain('canManage');
     expect(appSource).toContain('householdRole');
     expect(appSource).toContain('detail: {');
-    expect(config).toContain('{ name: "family-permissions", version: "20260805-family-permissions-v1" }');
+    expect(config).toContain('{ name: "family-permissions", version: "20260805-family-permissions-v1", style: false }');
   });
 });
