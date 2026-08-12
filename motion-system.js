@@ -37,7 +37,15 @@
     if (transitionUpdateDepth > 0) return update();
     const from = options.currentView ?? currentView();
     const direction = directionBetween(from, requestedView);
-    if (direction === 'none' || typeof document.startViewTransition !== 'function') {
+    if (direction === 'none') {
+      activeTransition?.skipTransition?.();
+      transitionId += 1;
+      activeTransition = null;
+      delete document.documentElement.dataset.familyMotionDirection;
+      runUpdate(update);
+      return null;
+    }
+    if (typeof document.startViewTransition !== 'function') {
       runUpdate(update);
       return null;
     }

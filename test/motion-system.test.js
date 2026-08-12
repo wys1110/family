@@ -116,6 +116,26 @@ describe('smooth mobile motion policy', () => {
     expect(firstUpdate).not.toHaveBeenCalled();
   });
 
+  test('cancels a pending transition when navigation returns to the current tab', () => {
+    const callbacks = [];
+    const pendingTransition = { finished: new Promise(() => {}), skipTransition: vi.fn() };
+    const startViewTransition = vi.fn((callback) => {
+      callbacks.push(callback);
+      return pendingTransition;
+    });
+    const api = loadMotion({ startViewTransition });
+    const pendingUpdate = vi.fn();
+    const returnUpdate = vi.fn();
+
+    api.transitionView('growth', pendingUpdate, { currentView: 'calendar' });
+    api.transitionView('calendar', returnUpdate, { currentView: 'calendar' });
+    callbacks[0]();
+
+    expect(pendingTransition.skipTransition).toHaveBeenCalledOnce();
+    expect(returnUpdate).toHaveBeenCalledOnce();
+    expect(pendingUpdate).not.toHaveBeenCalled();
+  });
+
   test('uses the short fade transition when reduced motion is requested', () => {
     const update = vi.fn();
     const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
