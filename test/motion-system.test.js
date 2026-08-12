@@ -43,6 +43,19 @@ describe('neon depth motion policy', () => {
     expect(update).toHaveBeenCalledOnce();
   });
 
+  test('folds nested view wrappers into one transition', () => {
+    const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
+    const api = loadMotion({ startViewTransition });
+    const update = vi.fn();
+
+    api.transitionView('growth', () => {
+      api.transitionView('growth', update, { currentView: 'calendar' });
+    }, { currentView: 'calendar' });
+
+    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledOnce();
+  });
+
   test('updates immediately when reduced motion is requested', () => {
     const update = vi.fn();
     const startViewTransition = vi.fn();

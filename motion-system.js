@@ -7,6 +7,7 @@
   let activeTransition = null;
   let transitionId = 0;
   let entranceTimer = 0;
+  let transitionUpdateDepth = 0;
 
   const currentView = () => document.querySelector('.view-tab.active[data-view]')?.dataset.view || '';
 
@@ -36,11 +37,21 @@
     activeTransition = null;
   };
 
+  const runUpdate = (update) => {
+    transitionUpdateDepth += 1;
+    try {
+      return update();
+    } finally {
+      transitionUpdateDepth -= 1;
+    }
+  };
+
   const transitionView = (requestedView, update, options = {}) => {
+    if (transitionUpdateDepth > 0) return update();
     const from = options.currentView ?? currentView();
     const direction = directionBetween(from, requestedView);
     if (direction === 'none' || reduceMotion?.matches || typeof document.startViewTransition !== 'function') {
-      update();
+      runUpdate(update);
       if (direction !== 'none') animateEntrance();
       return null;
     }
@@ -50,7 +61,7 @@
     document.documentElement.dataset.familyMotionDirection = direction;
 
     try {
-      activeTransition = document.startViewTransition(() => update());
+      activeTransition = document.startViewTransition(() => runUpdate(update));
       Promise.resolve(activeTransition.finished)
         .catch(() => {})
         .finally(() => {
@@ -60,7 +71,7 @@
       return activeTransition;
     } catch (error) {
       console.warn('화면 전환 모션을 건너뛰었어요', error);
-      update();
+      runUpdate(update);
       clearDirection(id);
       animateEntrance();
       return null;
