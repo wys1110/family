@@ -118,6 +118,7 @@ describe('smooth mobile motion policy', () => {
   });
 
   test('uses short two-dimensional motion without mobile blur or stagger', () => {
+    expect(css).toMatch(/:root\s*\{[^}]*view-transition-name:\s*none;/s);
     expect(css).toContain('::view-transition-old(family-view-stage)');
     expect(css).toContain('::view-transition-new(family-view-stage)');
     expect(css).toMatch(/::view-transition-group\(family-view-stage\) \{[^}]*animation:\s*none;/s);

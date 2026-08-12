@@ -1,4 +1,8 @@
 /* Fast, quiet motion tuned for mobile Safari compositing. */
+:root {
+  view-transition-name: none;
+}
+
 main > [id$="View"]:not([hidden]) {
   view-transition-name: family-view-stage;
 }
