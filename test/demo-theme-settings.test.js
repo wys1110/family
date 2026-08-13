@@ -11,7 +11,7 @@ describe("demo theme boundary", () => {
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
     expect(config).toContain('{ name: "settings", version: "20260804-settings-notification-cards-v1" }');
-    expect(read("index.html")).toContain('config.js?v=20260810-family-wallpapers-v1');
+    expect(read("index.html")).toContain('config.js?v=20260813-wallpaper-cache-v2');
     expect(settings).toContain("const AVAILABLE_THEMES = THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");

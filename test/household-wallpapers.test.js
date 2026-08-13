@@ -7,6 +7,7 @@ const html = read('index.html');
 const migration = read('supabase/migrations/20260810005856_household_wallpapers.sql');
 const css = read('family-wallpapers.css');
 const config = read('config.js');
+const serviceWorker = read('service-worker.js');
 
 describe('family wallpaper', () => {
   test('keeps one shared wallpaper per household and surface', () => {
@@ -44,10 +45,12 @@ describe('family wallpaper', () => {
     expect(css).toContain('background-position: center, right center;');
     expect(css).toContain('background-size: 100% 100%, contain;');
     expect(css).toContain('background-repeat: no-repeat;');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v2", script: false }');
   });
 
-  test('ships the contrast fix under a fresh wallpaper asset version', () => {
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v1", script: false }');
+  test('delivers the full-fit stylesheet past mobile and PWA caches', () => {
+    expect(html).toContain('config.js?v=20260813-wallpaper-cache-v2');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v2", script: false }');
+    expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');
   });
 });
