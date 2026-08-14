@@ -9,6 +9,36 @@ const css = read('family-wallpapers.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 
+function createWallpaperHarness(url) {
+  const attributes = new Map();
+  const classes = new Set();
+  const image = {
+    dataset: {},
+    hidden: true,
+    onerror: null,
+    srcAssignments: 0,
+    getAttribute(name) { return attributes.get(name) || null; },
+    removeAttribute(name) { attributes.delete(name); },
+    set src(value) { attributes.set('src', value); this.srcAssignments += 1; },
+  };
+  const removeButton = { hidden: true };
+  const node = {
+    dataset: { wallpaperSurface: 'calendar' },
+    classList: {
+      contains(name) { return classes.has(name); },
+      remove(name) { classes.delete(name); },
+      toggle(name, force) { if (force) classes.add(name); else classes.delete(name); },
+    },
+    querySelector(selector) { return selector === '[data-wallpaper-image]' ? image : removeButton; },
+  };
+  const document = { querySelectorAll() { return [node]; } };
+  const state = { wallpapers: { calendar: { url } } };
+  const start = app.indexOf('function renderWallpapers()');
+  const end = app.indexOf('async function hydrateWallpaperUrls', start);
+  const createRenderer = new Function('document', 'state', `${app.slice(start, end)}\nreturn renderWallpapers;`);
+  return { image, node, state, render: createRenderer(document, state) };
+}
+
 describe('family wallpaper', () => {
   test('keeps one shared wallpaper per household and surface', () => {
     expect(migration).toContain("surface text not null check (surface in ('calendar', 'growth'))");
@@ -35,15 +65,35 @@ describe('family wallpaper', () => {
     expect(html.match(/class="wallpaper-scrim"/g)).toHaveLength(2);
     expect(app).toContain('const image = node.querySelector("[data-wallpaper-image]")');
     expect(app).toContain('image.src = url');
-    expect(app).toContain('image.hidden = !url');
+    expect(app).toContain('image.hidden = !showImage');
     expect(app).not.toContain('node.style.setProperty("--wallpaper-image"');
   });
 
   test('falls back to the default card when a wallpaper image fails', () => {
-    expect(app).toContain('image.onerror = url ? () =>');
+    expect(app).toContain('image.onerror = showImage ? () =>');
     expect(app).toContain('node.classList.remove("has-wallpaper")');
     expect(app).toContain('image.hidden = true');
-    expect(app).toMatch(/image\.onerror = url \? \(\) => \{[^}]+image\.hidden = true;\s+image\.removeAttribute\("src"\);/s);
+    expect(app).toMatch(/image\.onerror = showImage \? \(\) => \{[^}]+image\.hidden = true;\s+image\.removeAttribute\("src"\);/s);
+  });
+
+  test('does not retry a failed wallpaper until its signed URL changes', () => {
+    const harness = createWallpaperHarness('https://example.test/old-signed-url');
+    harness.render();
+    expect(harness.image.srcAssignments).toBe(1);
+    harness.image.onerror();
+    expect(harness.image.hidden).toBe(true);
+    expect(harness.node.classList.contains('has-wallpaper')).toBe(false);
+
+    harness.render();
+    expect(harness.image.srcAssignments).toBe(1);
+    expect(harness.image.hidden).toBe(true);
+    expect(harness.node.classList.contains('has-wallpaper')).toBe(false);
+
+    harness.state.wallpapers.calendar.url = 'https://example.test/new-signed-url';
+    harness.render();
+    expect(harness.image.srcAssignments).toBe(2);
+    expect(harness.image.hidden).toBe(false);
+    expect(harness.node.classList.contains('has-wallpaper')).toBe(true);
   });
 
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {

@@ -515,16 +515,19 @@ function renderWallpapers() {
     const wallpaper = state.wallpapers[surface];
     const url = wallpaper?.url || "";
     const image = node.querySelector("[data-wallpaper-image]");
-    node.classList.toggle("has-wallpaper", Boolean(url));
-    image.hidden = !url;
-    image.onerror = url ? () => {
+    if (image.dataset.failedSrc && image.dataset.failedSrc !== url) delete image.dataset.failedSrc;
+    const showImage = Boolean(url) && image.dataset.failedSrc !== url;
+    node.classList.toggle("has-wallpaper", showImage);
+    image.hidden = !showImage;
+    image.onerror = showImage ? () => {
       if (image.getAttribute("src") !== url) return;
+      image.dataset.failedSrc = url;
       image.hidden = true;
       image.removeAttribute("src");
       node.classList.remove("has-wallpaper");
     } : null;
-    if (url && image.getAttribute("src") !== url) image.src = url;
-    if (!url) image.removeAttribute("src");
+    if (showImage && image.getAttribute("src") !== url) image.src = url;
+    if (!showImage) image.removeAttribute("src");
     node.querySelector("[data-wallpaper-remove]").hidden = !url;
   });
 }
