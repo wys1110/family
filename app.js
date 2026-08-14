@@ -511,9 +511,19 @@ function persistLocalWallpapers() { try { localStorage.setItem(WALLPAPER_STORAGE
 function wallpaperPathIsOwned(path, householdId, surface) { return typeof path === "string" && path.startsWith(`${householdId}/wallpapers/${surface}/`); }
 function renderWallpapers() {
   document.querySelectorAll("[data-wallpaper-surface]").forEach((node) => {
-    const surface = node.dataset.wallpaperSurface; const wallpaper = state.wallpapers[surface]; const url = wallpaper?.url || "";
+    const surface = node.dataset.wallpaperSurface;
+    const wallpaper = state.wallpapers[surface];
+    const url = wallpaper?.url || "";
+    const image = node.querySelector("[data-wallpaper-image]");
     node.classList.toggle("has-wallpaper", Boolean(url));
-    node.style.setProperty("--wallpaper-image", url ? `url(${JSON.stringify(url)})` : "none");
+    image.hidden = !url;
+    image.onerror = url ? () => {
+      if (image.getAttribute("src") !== url) return;
+      image.hidden = true;
+      node.classList.remove("has-wallpaper");
+    } : null;
+    if (url && image.getAttribute("src") !== url) image.src = url;
+    if (!url) image.removeAttribute("src");
     node.querySelector("[data-wallpaper-remove]").hidden = !url;
   });
 }

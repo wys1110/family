@@ -29,6 +29,22 @@ describe('family wallpaper', () => {
     expect(html).toContain('id="wallpaperPhotoInput"');
   });
 
+  test('renders each wallpaper through an explicit decorative image layer', () => {
+    expect(html.match(/data-wallpaper-image=/g)).toHaveLength(2);
+    expect(html.match(/class="wallpaper-image"/g)).toHaveLength(2);
+    expect(html.match(/class="wallpaper-scrim"/g)).toHaveLength(2);
+    expect(app).toContain('const image = node.querySelector("[data-wallpaper-image]")');
+    expect(app).toContain('image.src = url');
+    expect(app).toContain('image.hidden = !url');
+    expect(app).not.toContain('node.style.setProperty("--wallpaper-image"');
+  });
+
+  test('falls back to the default card when a wallpaper image fails', () => {
+    expect(app).toContain('image.onerror = url ? () =>');
+    expect(app).toContain('node.classList.remove("has-wallpaper")');
+    expect(app).toContain('image.hidden = true');
+  });
+
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {
     const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
     expect(css).toContain(growthSelector);
