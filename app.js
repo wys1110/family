@@ -520,6 +520,7 @@ function renderWallpapers() {
     image.onerror = url ? () => {
       if (image.getAttribute("src") !== url) return;
       image.hidden = true;
+      image.removeAttribute("src");
       node.classList.remove("has-wallpaper");
     } : null;
     if (url && image.getAttribute("src") !== url) image.src = url;

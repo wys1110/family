@@ -43,6 +43,7 @@ describe('family wallpaper', () => {
     expect(app).toContain('image.onerror = url ? () =>');
     expect(app).toContain('node.classList.remove("has-wallpaper")');
     expect(app).toContain('image.hidden = true');
+    expect(app).toMatch(/image\.onerror = url \? \(\) => \{[^}]+image\.hidden = true;\s+image\.removeAttribute\("src"\);/s);
   });
 
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {
