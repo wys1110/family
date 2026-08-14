@@ -48,7 +48,7 @@ describe('family wallpaper', () => {
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {
     const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
     expect(css).toContain(growthSelector);
-    expect(css).toMatch(/linear-gradient\(90deg,[^;]+var\(--wallpaper-image\)/s);
+    expect(css).toMatch(/\.baby-profile-card\[data-wallpaper-surface="growth"\] \.wallpaper-scrim \{[^}]+linear-gradient\(90deg,/s);
     expect(css).not.toContain('background-position: center 38%');
     expect(css).toContain(`${growthSelector}::before,`);
     expect(css).toContain(`${growthSelector}::after { content: none; }`);
@@ -57,16 +57,18 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\[data-wallpaper-surface="growth"\] \.baby-dday \{[^}]+background: var\(--theme-wallpaper-surface\) !important;/s);
   });
 
-  test('shows the full calendar and growth wallpaper without cropping', () => {
-    expect(css).toContain('background-position: center, right center;');
-    expect(css).toContain('background-size: 100% 100%, contain;');
-    expect(css).toContain('background-repeat: no-repeat;');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v2", script: false }');
+  test('shows the full calendar and growth wallpaper without cropping or mascot overlap', () => {
+    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-fit:\s*contain;/s);
+    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-position:\s*right center;/s);
+    expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
+    expect(css).not.toContain('var(--wallpaper-image)');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260814-image-layer-v1", script: false }');
   });
 
   test('delivers the full-fit stylesheet past mobile and PWA caches', () => {
-    expect(html).toContain('config.js?v=20260813-wallpaper-cache-v2');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260813-full-fit-v2", script: false }');
+    expect(html).toContain('config.js?v=20260814-wallpaper-image-layer-v1');
+    expect(html).toContain('app.js?v=20260814-wallpaper-image-layer-v1');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260814-image-layer-v1", script: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');
   });
 });

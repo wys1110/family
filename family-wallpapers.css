@@ -1,19 +1,34 @@
-/* Shared family photos stay decorative; the scrim owns text legibility. */
+/* Explicit image and scrim layers keep the full photo visible behind readable content. */
 .wallpaper-surface { position: relative; isolation: isolate; overflow: hidden; }
-html[data-family-theme-choice] .wallpaper-surface.has-wallpaper {
-  color: var(--theme-wallpaper-text);
-  background-image: linear-gradient(105deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 52%, var(--theme-wallpaper-scrim-end) 100%), var(--wallpaper-image) !important;
-  background-position: center, right center;
-  background-size: 100% 100%, contain;
-  background-repeat: no-repeat;
+.wallpaper-image,
+.wallpaper-scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
+.wallpaper-image {
+  z-index: 0;
+  object-fit: contain;
+  object-position: right center;
+}
+.wallpaper-scrim {
+  z-index: 1;
+  display: none;
+  background: linear-gradient(105deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 52%, var(--theme-wallpaper-scrim-end) 100%);
+}
+.wallpaper-surface.has-wallpaper .wallpaper-scrim { display: block; }
+.baby-profile-card[data-wallpaper-surface="growth"] .wallpaper-scrim {
+  background: linear-gradient(90deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 45%, var(--theme-wallpaper-scrim-end) 72%, transparent 100%);
+}
+.wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim) { z-index: 2; }
+html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--theme-wallpaper-text); }
+.wallpaper-surface.has-wallpaper .family-mascot { display: none; }
 .wallpaper-surface.has-wallpaper :is(h2, h3, p, span, strong, small) { color: inherit; text-shadow: 0 1px 12px var(--theme-wallpaper-text-shadow); }
 .wallpaper-surface.has-wallpaper .family-chip,
 .wallpaper-surface.has-wallpaper .baby-edit-button,
 .wallpaper-surface.has-wallpaper .today-care-grid article { background: var(--theme-wallpaper-surface) !important; border-color: var(--theme-wallpaper-border) !important; backdrop-filter: blur(8px); }
-.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] {
-  background-image: linear-gradient(90deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 45%, var(--theme-wallpaper-scrim-end) 72%, transparent 100%), var(--wallpaper-image) !important;
-}
 .baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]::before,
 .baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]::after { content: none; }
 .baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] :is(

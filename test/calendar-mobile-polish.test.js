@@ -10,7 +10,7 @@ describe("mobile calendar polish", () => {
   test("loads a cache-busted mobile calendar stylesheet", () => {
     expect(config).toContain('{ name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v5", script: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/calendar-mobile-polish.css")');
-    expect(index).toContain('config.js?v=20260813-wallpaper-cache-v2');
+    expect(index).toContain('config.js?v=20260814-wallpaper-image-layer-v1');
   });
 
   test("keeps mobile navigation and calendar controls readable", () => {
