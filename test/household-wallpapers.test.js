@@ -10,17 +10,21 @@ const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 
 function createWallpaperHarness(url) {
-  const attributes = new Map();
   const classes = new Set();
-  const image = {
-    dataset: {},
-    hidden: true,
-    onerror: null,
-    srcAssignments: 0,
-    getAttribute(name) { return attributes.get(name) || null; },
-    removeAttribute(name) { attributes.delete(name); },
-    set src(value) { attributes.set('src', value); this.srcAssignments += 1; },
+  const createImage = () => {
+    const attributes = new Map();
+    return {
+      dataset: {},
+      hidden: true,
+      onerror: null,
+      srcAssignments: 0,
+      getAttribute(name) { return attributes.get(name) || null; },
+      removeAttribute(name) { attributes.delete(name); },
+      set src(value) { attributes.set('src', value); this.srcAssignments += 1; },
+    };
   };
+  const backdrop = createImage();
+  const image = createImage();
   const removeButton = { hidden: true };
   const node = {
     dataset: { wallpaperSurface: 'calendar' },
@@ -29,14 +33,18 @@ function createWallpaperHarness(url) {
       remove(name) { classes.delete(name); },
       toggle(name, force) { if (force) classes.add(name); else classes.delete(name); },
     },
-    querySelector(selector) { return selector === '[data-wallpaper-image]' ? image : removeButton; },
+    querySelector(selector) {
+      if (selector === '[data-wallpaper-backdrop]') return backdrop;
+      if (selector === '[data-wallpaper-image]') return image;
+      return removeButton;
+    },
   };
   const document = { querySelectorAll() { return [node]; } };
   const state = { wallpapers: { calendar: { url } } };
   const start = app.indexOf('function renderWallpapers()');
   const end = app.indexOf('async function hydrateWallpaperUrls', start);
   const createRenderer = new Function('document', 'state', `${app.slice(start, end)}\nreturn renderWallpapers;`);
-  return { image, node, state, render: createRenderer(document, state) };
+  return { backdrop, image, node, state, render: createRenderer(document, state) };
 }
 
 describe('family wallpaper', () => {
@@ -69,11 +77,48 @@ describe('family wallpaper', () => {
     expect(app).not.toContain('node.style.setProperty("--wallpaper-image"');
   });
 
+  test('renders one blurred backdrop and one full image for each wallpaper surface', () => {
+    expect(html.match(/data-wallpaper-backdrop=/g)).toHaveLength(2);
+    expect(html.match(/class="wallpaper-backdrop"/g)).toHaveLength(2);
+    const harness = createWallpaperHarness('https://example.test/signed-url');
+    harness.render();
+    expect(harness.backdrop.srcAssignments).toBe(1);
+    expect(harness.image.srcAssignments).toBe(1);
+    expect(harness.backdrop.hidden).toBe(false);
+    expect(harness.image.hidden).toBe(false);
+  });
+
+  test('keeps the full image when only the blurred backdrop fails', () => {
+    const harness = createWallpaperHarness('https://example.test/signed-url');
+    harness.render();
+    harness.backdrop.onerror();
+    harness.render();
+    expect(harness.backdrop.srcAssignments).toBe(1);
+    expect(harness.backdrop.hidden).toBe(true);
+    expect(harness.image.hidden).toBe(false);
+    expect(harness.node.classList.contains('has-wallpaper')).toBe(true);
+  });
+
+  test('hides both layers when the full image fails and retries both for a new URL', () => {
+    const harness = createWallpaperHarness('https://example.test/old-url');
+    harness.render();
+    harness.image.onerror();
+    harness.render();
+    expect(harness.backdrop.hidden).toBe(true);
+    expect(harness.image.hidden).toBe(true);
+    expect(harness.backdrop.srcAssignments).toBe(1);
+    expect(harness.image.srcAssignments).toBe(1);
+    harness.state.wallpapers.calendar.url = 'https://example.test/new-url';
+    harness.render();
+    expect(harness.backdrop.srcAssignments).toBe(2);
+    expect(harness.image.srcAssignments).toBe(2);
+  });
+
   test('falls back to the default card when a wallpaper image fails', () => {
     expect(app).toContain('image.onerror = showImage ? () =>');
     expect(app).toContain('node.classList.remove("has-wallpaper")');
     expect(app).toContain('image.hidden = true');
-    expect(app).toMatch(/image\.onerror = showImage \? \(\) => \{[^}]+image\.hidden = true;\s+image\.removeAttribute\("src"\);/s);
+    expect(app).toMatch(/image\.onerror = showImage \? \(\) => \{[^}]+backdrop\.hidden = true;\s+image\.hidden = true;\s+backdrop\.removeAttribute\("src"\);\s+image\.removeAttribute\("src"\);/s);
   });
 
   test('does not retry a failed wallpaper until its signed URL changes', () => {

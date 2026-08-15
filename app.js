@@ -514,19 +514,33 @@ function renderWallpapers() {
     const surface = node.dataset.wallpaperSurface;
     const wallpaper = state.wallpapers[surface];
     const url = wallpaper?.url || "";
+    const backdrop = node.querySelector("[data-wallpaper-backdrop]");
     const image = node.querySelector("[data-wallpaper-image]");
+    if (backdrop.dataset.failedSrc && backdrop.dataset.failedSrc !== url) delete backdrop.dataset.failedSrc;
     if (image.dataset.failedSrc && image.dataset.failedSrc !== url) delete image.dataset.failedSrc;
     const showImage = Boolean(url) && image.dataset.failedSrc !== url;
+    const showBackdrop = showImage && backdrop.dataset.failedSrc !== url;
     node.classList.toggle("has-wallpaper", showImage);
+    backdrop.hidden = !showBackdrop;
     image.hidden = !showImage;
+    backdrop.onerror = showBackdrop ? () => {
+      if (backdrop.getAttribute("src") !== url) return;
+      backdrop.dataset.failedSrc = url;
+      backdrop.hidden = true;
+      backdrop.removeAttribute("src");
+    } : null;
     image.onerror = showImage ? () => {
       if (image.getAttribute("src") !== url) return;
       image.dataset.failedSrc = url;
+      backdrop.hidden = true;
       image.hidden = true;
+      backdrop.removeAttribute("src");
       image.removeAttribute("src");
       node.classList.remove("has-wallpaper");
     } : null;
+    if (showBackdrop && backdrop.getAttribute("src") !== url) backdrop.src = url;
     if (showImage && image.getAttribute("src") !== url) image.src = url;
+    if (!showBackdrop) backdrop.removeAttribute("src");
     if (!showImage) image.removeAttribute("src");
     node.querySelector("[data-wallpaper-remove]").hidden = !url;
   });
