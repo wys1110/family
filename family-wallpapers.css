@@ -1,5 +1,6 @@
-/* Explicit image and scrim layers keep the full photo visible behind readable content. */
+/* Explicit backdrop, image, and scrim layers keep the full photo visible behind readable content. */
 .wallpaper-surface { position: relative; isolation: isolate; overflow: hidden; }
+.wallpaper-backdrop,
 .wallpaper-image,
 .wallpaper-scrim {
   position: absolute;
@@ -8,13 +9,19 @@
   height: 100%;
   pointer-events: none;
 }
-.wallpaper-image {
+.wallpaper-backdrop {
   z-index: 0;
+  object-fit: cover;
+  transform: scale(1.08);
+  filter: blur(16px) brightness(.46) saturate(.72);
+}
+.wallpaper-image {
+  z-index: 1;
   object-fit: contain;
   object-position: right center;
 }
 .wallpaper-scrim {
-  z-index: 1;
+  z-index: 2;
   display: none;
   background: linear-gradient(105deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 52%, var(--theme-wallpaper-scrim-end) 100%);
 }
@@ -22,7 +29,7 @@
 .baby-profile-card[data-wallpaper-surface="growth"] .wallpaper-scrim {
   background: linear-gradient(90deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 45%, var(--theme-wallpaper-scrim-end) 72%, transparent 100%);
 }
-.wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim) { z-index: 2; }
+.wallpaper-surface > :not(.wallpaper-backdrop):not(.wallpaper-image):not(.wallpaper-scrim) { z-index: 3; }
 html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--theme-wallpaper-text); }
 .wallpaper-surface.has-wallpaper .family-mascot { display: none; }
 .wallpaper-surface.has-wallpaper :is(h2, h3, p, span, strong, small) { color: inherit; text-shadow: 0 1px 12px var(--theme-wallpaper-text-shadow); }
@@ -46,7 +53,7 @@ html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--t
   background: var(--theme-wallpaper-surface) !important;
   backdrop-filter: blur(8px);
 }
-.wallpaper-actions { position: absolute; z-index: 3; right: 14px; bottom: 12px; display: flex; gap: 6px; }
+.wallpaper-actions { position: absolute; z-index: 4; right: 14px; bottom: 12px; display: flex; gap: 6px; }
 .wallpaper-actions button { min-height: 30px; padding: 0 9px; border: 1px solid var(--theme-wallpaper-button-border); border-radius: 999px; color: var(--theme-wallpaper-text); background: var(--theme-wallpaper-button); box-shadow: none; font-size: 10px; font-weight: 700; backdrop-filter: blur(8px); }
 .wallpaper-actions button:last-child { color: var(--theme-wallpaper-muted); }
 .wallpaper-surface[data-wallpaper-surface="calendar"] .wallpaper-actions { top: 10px; right: 78px; bottom: auto; }

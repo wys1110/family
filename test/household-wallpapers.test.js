@@ -154,17 +154,20 @@ describe('family wallpaper', () => {
   });
 
   test('shows the full calendar and growth wallpaper without cropping or mascot overlap', () => {
+    expect(css).toMatch(/\.wallpaper-backdrop\s*\{[^}]*object-fit:\s*cover;/s);
+    expect(css).toMatch(/\.wallpaper-backdrop\s*\{[^}]*filter:\s*blur\(/s);
     expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-fit:\s*contain;/s);
     expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-position:\s*right center;/s);
+    expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*2;/s);
     expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
     expect(css).not.toContain('var(--wallpaper-image)');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260814-image-layer-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-dual-layer-v1", script: false }');
   });
 
   test('delivers the full-fit stylesheet past mobile and PWA caches', () => {
-    expect(html).toContain('config.js?v=20260814-wallpaper-image-layer-v1');
-    expect(html).toContain('app.js?v=20260814-wallpaper-image-layer-v1');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260814-image-layer-v1", script: false }');
+    expect(html).toContain('config.js?v=20260815-wallpaper-dual-layer-v1');
+    expect(html).toContain('app.js?v=20260815-wallpaper-dual-layer-v1');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-dual-layer-v1", script: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');
   });
 });

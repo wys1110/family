@@ -184,7 +184,7 @@ window.FAMILY_CONFIG = {
     { name: "theme-v2", version: "20260803-shadow-v3", script: false },
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },
     { name: "calendar-mobile-polish", version: "20260805-mobile-calendar-v5", script: false },
-    { name: "family-wallpapers", version: "20260814-image-layer-v1", script: false },
+    { name: "family-wallpapers", version: "20260815-dual-layer-v1", script: false },
     { name: "motion-system", version: "20260812-smooth-mobile-v1" },
   ];
 
