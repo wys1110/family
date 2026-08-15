@@ -392,8 +392,9 @@ describe('family wallpaper', () => {
 
   test('removes legacy hero decorations from active calendar wallpapers', () => {
     const calendarSelector = '.hero-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="calendar"]';
+    const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
     expect(css).toContain(`${calendarSelector}::before,`);
-    expect(css).toContain(`${calendarSelector}::after { content: none; }`);
+    expect(css).toContain(`${calendarSelector}::after,\n${growthSelector}::before,`);
   });
 
   test('fills calendar and growth cards with one sharp cover image', () => {
@@ -404,7 +405,7 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*1;/s);
     expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
     expect(css).not.toContain('var(--wallpaper-image)');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-editor-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-overlay-cleanup-v1", script: false }');
   });
 
   test('keeps wallpaper actions above the content layer', () => {
@@ -426,9 +427,9 @@ describe('family wallpaper', () => {
   });
 
   test('delivers the wallpaper editor assets past mobile and PWA caches', () => {
-    expect(html).toContain('config.js?v=20260815-wallpaper-editor-v1');
+    expect(html).toContain('config.js?v=20260815-overlay-cleanup-v1');
     expect(html).toContain('app.js?v=20260815-wallpaper-editor-v1');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-editor-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-overlay-cleanup-v1", script: false }');
     expect(config).toContain('{ name: "wallpaper-editor", version: "20260815-v1" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');
   });
