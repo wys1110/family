@@ -391,10 +391,7 @@ describe('family wallpaper', () => {
   });
 
   test('removes legacy hero decorations from active calendar wallpapers', () => {
-    const calendarSelector = '.hero-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="calendar"]';
-    const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
-    expect(css).toContain(`${calendarSelector}::before,`);
-    expect(css).toContain(`${calendarSelector}::after,\n${growthSelector}::before,`);
+    expect(css).toMatch(/\.hero-card\.wallpaper-surface\.has-wallpaper\[data-wallpaper-surface="calendar"\]::before,\s*\.hero-card\.wallpaper-surface\.has-wallpaper\[data-wallpaper-surface="calendar"\]::after,\s*\.baby-profile-card\.wallpaper-surface\.has-wallpaper\[data-wallpaper-surface="growth"\]::before,\s*\.baby-profile-card\.wallpaper-surface\.has-wallpaper\[data-wallpaper-surface="growth"\]::after\s*\{\s*content:\s*none;\s*\}/s);
   });
 
   test('fills calendar and growth cards with one sharp cover image', () => {
