@@ -154,9 +154,10 @@ describe('family wallpaper', () => {
     expect(app).toContain('function applyWallpaperCrop(image, wallpaper)');
     expect(app).toContain('function openWallpaperEditor(surface, file)');
     expect(app).toContain('async function saveWallpaperDraft(draft)');
-    expect(app).toMatch(/await window\.FAMILY_MODULES_READY;\s+initializeWallpaperEditor\(\);/s);
+    expect(app).toContain('await waitForWallpaperEditor();');
+    expect(app).toMatch(/modulesReady\.then\(\(\) => \{\s+if \(initializeWallpaperEditor\(\)\) renderWallpapers\(\);/s);
     expect(app).toContain('state.wallpapers[draft.surface] = { path: existing?.path || "", url, ...crop };');
-    expect(app).toMatch(/state\.wallpapers\[draft\.surface\][\s\S]*?persistLocalWallpapers\(\);\s+renderWallpapers\(\);/);
+    expect(app).toMatch(/if \(!persistLocalWallpapers\(\)\) \{\s+state\.wallpapers\[draft\.surface\] = existing;\s+return false;/s);
   });
 
   test('delivers the full-fit stylesheet past mobile and PWA caches', () => {

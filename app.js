@@ -62,6 +62,7 @@ const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Da
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
 let wallpaperEditorController = null;
+let wallpaperPhotoSelectionGeneration = 0;
 let dragState = null;
 let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], newPhotos: [] };
 let activeQuickCategory = null;
@@ -224,10 +225,24 @@ async function init() {
   state.authReady = true;
   window.__familyCoreReady = true;
   window.dispatchEvent(new CustomEvent("family:core-ready"));
-  if (window.FAMILY_MODULES_READY) await window.FAMILY_MODULES_READY;
-  initializeWallpaperEditor();
+  await waitForWallpaperEditor();
   await bootstrapData();
   window.FAMILY_MOTION_API?.activate();
+}
+
+async function waitForWallpaperEditor() {
+  const modulesReady = window.FAMILY_MODULES_READY;
+  if (!modulesReady) {
+    initializeWallpaperEditor();
+    return;
+  }
+  modulesReady.then(() => {
+    if (initializeWallpaperEditor()) renderWallpapers();
+  });
+  await Promise.race([
+    modulesReady,
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ]);
 }
 
 function authSessionKey(session) {
@@ -504,7 +519,15 @@ function readLocalWallpapers() {
     return Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => [surface, typeof saved[surface]?.url === "string" ? saved[surface] : null]));
   } catch { return { calendar: null, growth: null }; }
 }
-function persistLocalWallpapers() { try { localStorage.setItem(WALLPAPER_STORAGE_KEY, JSON.stringify(state.wallpapers)); } catch { toast("사진을 이 기기에 저장하지 못했어요"); } }
+function persistLocalWallpapers() {
+  try {
+    localStorage.setItem(WALLPAPER_STORAGE_KEY, JSON.stringify(state.wallpapers));
+    return true;
+  } catch {
+    toast("사진을 이 기기에 저장하지 못했어요");
+    return false;
+  }
+}
 function wallpaperPathIsOwned(path, householdId, surface) { return typeof path === "string" && path.startsWith(`${householdId}/wallpapers/${surface}/`); }
 function applyWallpaperCrop(image, wallpaper) {
   if (!window.FAMILY_WALLPAPER_EDITOR) return;
@@ -564,7 +587,9 @@ async function saveWallpaper(surface, file) {
 function chooseWallpaperPhoto(surface) {
   if (!WALLPAPER_SURFACES.has(surface)) return;
   const input = $("#wallpaperPhotoInput");
+  wallpaperPhotoSelectionGeneration += 1;
   input.dataset.surface = surface;
+  input.dataset.wallpaperSelectionGeneration = String(wallpaperPhotoSelectionGeneration);
   input.click();
 }
 function openWallpaperEditor(surface, file) {
@@ -580,16 +605,20 @@ async function saveWallpaperDraft(draft) {
   const existing = state.wallpapers[draft.surface];
   if (!state.supabase || !state.session || !state.household) {
     const url = draft.file ? await photoDataUrl(draft.file) : existing?.url;
-    if (!url) return;
+    if (!url) return false;
     state.wallpapers[draft.surface] = { path: existing?.path || "", url, ...crop };
-    persistLocalWallpapers();
+    if (!persistLocalWallpapers()) {
+      state.wallpapers[draft.surface] = existing;
+      return false;
+    }
     renderWallpapers();
-    return toast("이 기기에 월페이퍼를 설정했어요");
+    toast("이 기기에 월페이퍼를 설정했어요");
+    return true;
   }
   if (draft.file) await saveWallpaper(draft.surface, draft.file);
 }
 function initializeWallpaperEditor() {
-  if (!window.FAMILY_WALLPAPER_EDITOR) return;
+  if (wallpaperEditorController || !window.FAMILY_WALLPAPER_EDITOR) return false;
   wallpaperEditorController = window.FAMILY_WALLPAPER_EDITOR.createController({
     dialog: $("#wallpaperEditorDialog"),
     preview: $("#wallpaperEditorPreview"),
@@ -598,11 +627,26 @@ function initializeWallpaperEditor() {
     onSave: saveWallpaperDraft,
     onChoosePhoto: chooseWallpaperPhoto,
   });
+  return true;
+}
+function invalidateWallpaperPhotoSelection() {
+  wallpaperPhotoSelectionGeneration += 1;
+}
+async function prepareWallpaperEditorPhoto(surface, file, generation) {
+  const prepared = await prepareGrowthPhoto(file);
+  if (generation !== wallpaperPhotoSelectionGeneration) return false;
+  openWallpaperEditor(surface, prepared);
+  return true;
 }
 async function removeWallpaper(surface) {
   if (!WALLPAPER_SURFACES.has(surface) || !state.wallpapers[surface]) return;
   const previous = state.wallpapers[surface];
-  if (!state.supabase || !state.session || !state.household) { state.wallpapers[surface] = null; persistLocalWallpapers(); renderWallpapers(); return toast("월페이퍼를 삭제했어요"); }
+  if (!state.supabase || !state.session || !state.household) {
+    state.wallpapers[surface] = null;
+    if (!persistLocalWallpapers()) { state.wallpapers[surface] = previous; return; }
+    renderWallpapers();
+    return toast("월페이퍼를 삭제했어요");
+  }
   const { error } = await state.supabase.from("household_wallpapers").delete().eq("household_id", state.household.id).eq("surface", surface);
   if (error) return toast("월페이퍼를 삭제하지 못했어요");
   state.wallpapers[surface] = null; renderWallpapers();
@@ -651,13 +695,14 @@ function bindUi() {
   $("#growthPhotos").addEventListener("change", addGrowthPhotos);
   $("#wallpaperPhotoInput").addEventListener("change", async (event) => {
     const surface = event.currentTarget.dataset.surface; const [file] = event.currentTarget.files;
-    event.currentTarget.value = ""; delete event.currentTarget.dataset.surface;
+    const generation = Number(event.currentTarget.dataset.wallpaperSelectionGeneration);
+    event.currentTarget.value = ""; delete event.currentTarget.dataset.surface; delete event.currentTarget.dataset.wallpaperSelectionGeneration;
     if (!file || !WALLPAPER_SURFACES.has(surface)) return;
     if (!ALLOWED_GROWTH_PHOTO_TYPES.has(file.type)) return toast("JPG, PNG, WebP 또는 HEIC 사진만 올릴 수 있어요");
     if (file.size > MAX_PHOTO_BYTES) return toast("사진은 10MB 이하만 올릴 수 있어요");
-    const prepared = await prepareGrowthPhoto(file);
-    openWallpaperEditor(surface, prepared);
+    await prepareWallpaperEditorPhoto(surface, file, generation);
   });
+  $("#wallpaperEditorDialog").addEventListener("close", invalidateWallpaperPhotoSelection);
   document.addEventListener("click", (event) => {
     const change = event.target.closest("[data-wallpaper-change]");
     if (change) return openWallpaperEditor(change.dataset.wallpaperChange);

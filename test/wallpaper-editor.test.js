@@ -76,6 +76,68 @@ function createHarness() {
   };
 }
 
+function appSlice(startMarker, endMarker) {
+  const start = app.indexOf(startMarker);
+  const end = app.indexOf(endMarker, start);
+  return app.slice(start, end);
+}
+
+function createModuleWaitHarness(modulesReady) {
+  let releaseTimeout;
+  const initializeWallpaperEditor = vi.fn(() => true);
+  const renderWallpapers = vi.fn();
+  const setTimeout = vi.fn((resolve) => { releaseTimeout = resolve; });
+  const source = appSlice("async function waitForWallpaperEditor()", "function authSessionKey");
+  const createWaiter = new Function(
+    "window", "initializeWallpaperEditor", "renderWallpapers", "setTimeout",
+    `${source}\nreturn waitForWallpaperEditor;`,
+  );
+  return {
+    wait: createWaiter({ FAMILY_MODULES_READY: modulesReady }, initializeWallpaperEditor, renderWallpapers, setTimeout),
+    initializeWallpaperEditor,
+    renderWallpapers,
+    releaseTimeout: () => releaseTimeout(),
+  };
+}
+
+function createLocalSaveHarness({ persistFails = false } = {}) {
+  const previous = { path: "", url: "old.jpg", positionX: 50, positionY: 50, zoom: 1 };
+  const state = { wallpapers: { calendar: previous }, supabase: null, session: null, household: null };
+  const localStorage = {
+    setItem: vi.fn(() => { if (persistFails) throw new Error("quota"); }),
+  };
+  const toast = vi.fn();
+  const renderWallpapers = vi.fn();
+  const normalizeCrop = (value) => ({ positionX: value.positionX, positionY: value.positionY, zoom: value.zoom });
+  const source = [
+    appSlice("function persistLocalWallpapers()", "function wallpaperPathIsOwned"),
+    appSlice("async function saveWallpaperDraft(draft)", "function initializeWallpaperEditor"),
+  ].join("\n");
+  const createRuntime = new Function(
+    "localStorage", "WALLPAPER_STORAGE_KEY", "state", "toast", "renderWallpapers",
+    "window", "WALLPAPER_SURFACES", "photoDataUrl",
+    `${source}\nreturn { persistLocalWallpapers, saveWallpaperDraft };`,
+  );
+  const runtime = createRuntime(
+    localStorage, "wallpapers", state, toast, renderWallpapers,
+    { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } }, new Set(["calendar"]), vi.fn(),
+  );
+  return { ...runtime, previous, state, localStorage, toast, renderWallpapers };
+}
+
+function createPhotoPreparationHarness(prepareGrowthPhoto) {
+  const openWallpaperEditor = vi.fn();
+  const source = [
+    appSlice("function invalidateWallpaperPhotoSelection()", "async function prepareWallpaperEditorPhoto"),
+    appSlice("async function prepareWallpaperEditorPhoto", "async function removeWallpaper"),
+  ].join("\n");
+  const createRuntime = new Function(
+    "prepareGrowthPhoto", "openWallpaperEditor", "wallpaperPhotoSelectionGeneration",
+    `${source}\nreturn { invalidateWallpaperPhotoSelection, prepareWallpaperEditorPhoto };`,
+  );
+  return { ...createRuntime(prepareGrowthPhoto, openWallpaperEditor, 1), openWallpaperEditor };
+}
+
 describe("wallpaper editor core", () => {
   test("loads without a document and normalizes legacy or out-of-range crop values", () => {
     const api = loadApi();
@@ -172,11 +234,61 @@ describe("wallpaper editor surface", () => {
 
   test("initializes one app controller only after the module is ready", () => {
     expect(app.match(/FAMILY_WALLPAPER_EDITOR\.createController\(/g)).toHaveLength(1);
-    expect(app).toMatch(/await window\.FAMILY_MODULES_READY;\s+initializeWallpaperEditor\(\);/s);
+    expect(app).toContain("await waitForWallpaperEditor();");
   });
 
   test("keeps the app usable when the editor module fails to load", () => {
-    expect(app.match(/if \(!window\.FAMILY_WALLPAPER_EDITOR\) return;/g)).toHaveLength(2);
+    expect(app.match(/if \(!window\.FAMILY_WALLPAPER_EDITOR\) return;/g)).toHaveLength(1);
+    expect(app).toContain("if (wallpaperEditorController || !window.FAMILY_WALLPAPER_EDITOR) return false;");
     expect(app).toContain("if (!wallpaperEditorController) return;");
+  });
+
+  test("bounds core bootstrap but initializes and rerenders after late module readiness", async () => {
+    let resolveModules;
+    const modulesReady = new Promise((resolve) => { resolveModules = resolve; });
+    const harness = createModuleWaitHarness(modulesReady);
+
+    const waiting = harness.wait();
+    harness.releaseTimeout();
+    await waiting;
+    expect(harness.initializeWallpaperEditor).not.toHaveBeenCalled();
+
+    resolveModules();
+    await modulesReady;
+    await Promise.resolve();
+    expect(harness.initializeWallpaperEditor).toHaveBeenCalledTimes(1);
+    expect(harness.renderWallpapers).toHaveBeenCalledTimes(1);
+  });
+
+  test("rolls back a local draft and reports no success when persistence fails", async () => {
+    const failed = createLocalSaveHarness({ persistFails: true });
+    const result = await failed.saveWallpaperDraft({ surface: "calendar", positionX: 25, positionY: 80, zoom: 1.6 });
+    expect(result).toBe(false);
+    expect(failed.state.wallpapers.calendar).toBe(failed.previous);
+    expect(failed.renderWallpapers).not.toHaveBeenCalled();
+    expect(failed.toast).toHaveBeenCalledTimes(1);
+    expect(failed.toast).toHaveBeenCalledWith("사진을 이 기기에 저장하지 못했어요");
+    expect(failed.toast).not.toHaveBeenCalledWith("이 기기에 월페이퍼를 설정했어요");
+
+    const saved = createLocalSaveHarness();
+    expect(await saved.saveWallpaperDraft({ surface: "calendar", positionX: 25, positionY: 80, zoom: 1.6 })).toBe(true);
+    expect(saved.state.wallpapers.calendar).toEqual({ path: "", url: "old.jpg", positionX: 25, positionY: 80, zoom: 1.6 });
+    expect(saved.renderWallpapers).toHaveBeenCalledTimes(1);
+    expect(saved.toast).toHaveBeenCalledWith("이 기기에 월페이퍼를 설정했어요");
+  });
+
+  test("does not reopen the editor when photo preparation finishes after close", async () => {
+    expect(app).toContain('await prepareWallpaperEditorPhoto(surface, file, generation);');
+    expect(app).toContain('$("#wallpaperEditorDialog").addEventListener("close", invalidateWallpaperPhotoSelection);');
+    let resolvePreparation;
+    const prepareGrowthPhoto = vi.fn(() => new Promise((resolve) => { resolvePreparation = resolve; }));
+    const harness = createPhotoPreparationHarness(prepareGrowthPhoto);
+    const pending = harness.prepareWallpaperEditorPhoto("calendar", { name: "large.jpg" }, 1);
+
+    harness.invalidateWallpaperPhotoSelection();
+    resolvePreparation({ name: "prepared.jpg" });
+
+    expect(await pending).toBe(false);
+    expect(harness.openWallpaperEditor).not.toHaveBeenCalled();
   });
 });
