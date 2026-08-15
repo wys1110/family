@@ -529,6 +529,37 @@ function persistLocalWallpapers() {
   }
 }
 function wallpaperPathIsOwned(path, householdId, surface) { return typeof path === "string" && path.startsWith(`${householdId}/wallpapers/${surface}/`); }
+function normalizeWallpaperCrop(value = {}) {
+  if (window.FAMILY_WALLPAPER_EDITOR?.normalizeCrop) return window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(value);
+  const clamp = (input, fallback, min, max) => {
+    const number = Number(input ?? fallback);
+    return Math.min(max, Math.max(min, Number.isFinite(number) ? number : fallback));
+  };
+  return {
+    positionX: clamp(value.positionX ?? value.position_x, 50, 0, 100),
+    positionY: clamp(value.positionY ?? value.position_y, 50, 0, 100),
+    zoom: clamp(value.zoom, 1, 1, 3),
+  };
+}
+function captureWallpaperContext(surface) {
+  const context = {
+    supabase: state.supabase,
+    householdId: state.household?.id,
+    userId: state.session?.user?.id,
+    surface,
+    previous: state.wallpapers[surface],
+  };
+  return context.supabase && context.householdId && context.userId ? context : null;
+}
+function wallpaperSessionIsCurrent(context) {
+  return Boolean(context
+    && state.supabase === context.supabase
+    && state.household?.id === context.householdId
+    && state.session?.user?.id === context.userId);
+}
+function wallpaperMutationIsCurrent(context) {
+  return wallpaperSessionIsCurrent(context) && state.wallpapers[context.surface] === context.previous;
+}
 function applyWallpaperCrop(image, wallpaper) {
   if (!window.FAMILY_WALLPAPER_EDITOR) return;
   const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(wallpaper);
@@ -561,70 +592,94 @@ function renderWallpapers() {
   });
 }
 async function hydrateWallpaperUrls(rows, householdId) {
+  const context = {
+    supabase: state.supabase,
+    householdId,
+    userId: state.session?.user?.id,
+    wallpapers: state.wallpapers,
+  };
+  if (!wallpaperSessionIsCurrent(context)) return false;
   const valid = (rows || []).filter((row) => WALLPAPER_SURFACES.has(row.surface) && row.household_id === householdId && wallpaperPathIsOwned(row.photo_path, householdId, row.surface));
   const paths = valid.map((row) => row.photo_path);
-  if (!paths.length) { state.wallpapers = { calendar: null, growth: null }; return renderWallpapers(); }
-  const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600); if (error) return;
+  if (!paths.length) {
+    if (!wallpaperSessionIsCurrent(context) || state.wallpapers !== context.wallpapers) return false;
+    state.wallpapers = { calendar: null, growth: null };
+    renderWallpapers();
+    return true;
+  }
+  const { data, error } = await context.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600);
+  if (error || !wallpaperSessionIsCurrent(context) || state.wallpapers !== context.wallpapers) return false;
   const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
   state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => {
     const row = valid.find((item) => item.surface === surface);
     if (!row) return [surface, null];
-    const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(row);
+    const crop = normalizeWallpaperCrop(row);
     return [surface, { path: row.photo_path, url: urls.get(row.photo_path) || "", ...crop }];
   }));
   renderWallpapers();
+  return true;
 }
 async function photoDataUrl(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
 function wallpaperExtension(file) { const type = file.type || "image/jpeg"; return type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg"; }
 async function saveWallpaper(surface, file, crop) {
   if (!WALLPAPER_SURFACES.has(surface) || !file) return false;
-  const path = `${state.household.id}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
-  const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
-  if (uploadError) { toast("사진을 올리지 못했어요. 다시 시도해 주세요"); return false; }
-  const previous = state.wallpapers[surface];
+  const context = captureWallpaperContext(surface);
+  if (!context) return false;
+  const path = `${context.householdId}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
+  const storage = context.supabase.storage.from(GROWTH_PHOTO_BUCKET);
+  const cleanupNewUpload = () => storage.remove([path]);
+  const { error: uploadError } = await storage.upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
+  if (uploadError) {
+    if (wallpaperMutationIsCurrent(context)) toast("사진을 올리지 못했어요. 다시 시도해 주세요");
+    return false;
+  }
+  if (!wallpaperMutationIsCurrent(context)) { await cleanupNewUpload(); return false; }
   let signedUrl = "";
   try {
-    const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrl(path, 3600);
+    const { data, error } = await storage.createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) throw error || new Error("Signed URL is missing");
     signedUrl = data.signedUrl;
   } catch {
-    await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]);
-    toast("사진을 표시할 준비를 하지 못했어요. 다시 시도해 주세요");
+    await cleanupNewUpload();
+    if (wallpaperMutationIsCurrent(context)) toast("사진을 표시할 준비를 하지 못했어요. 다시 시도해 주세요");
     return false;
   }
-  const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({
-    household_id: state.household.id,
+  if (!wallpaperMutationIsCurrent(context)) { await cleanupNewUpload(); return false; }
+  const { error: saveError } = await context.supabase.from("household_wallpapers").upsert({
+    household_id: context.householdId,
     surface,
     photo_path: path,
     position_x: crop.positionX,
     position_y: crop.positionY,
     zoom: crop.zoom,
-    created_by: state.session.user.id,
+    created_by: context.userId,
   }).select().single();
   if (saveError) {
-    await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]);
-    toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
+    await cleanupNewUpload();
+    if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
     return false;
   }
+  if (context.previous?.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await storage.remove([context.previous.path]);
+  if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = { path, url: signedUrl, ...crop }; renderWallpapers();
-  if (previous?.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
   toast("가족 월페이퍼를 바꿨어요");
   return true;
 }
 async function saveWallpaperCrop(surface, crop) {
-  const existing = state.wallpapers[surface];
-  if (!existing?.path || !wallpaperPathIsOwned(existing.path, state.household.id, surface)) return false;
-  const { error } = await state.supabase.from("household_wallpapers")
+  const context = captureWallpaperContext(surface);
+  if (!context?.previous?.path || !wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) return false;
+  const { error } = await context.supabase.from("household_wallpapers")
     .update({ position_x: crop.positionX, position_y: crop.positionY, zoom: crop.zoom })
-    .eq("household_id", state.household.id)
+    .eq("household_id", context.householdId)
     .eq("surface", surface)
     .select("household_id")
     .single();
   if (error) {
-    toast("월페이퍼 위치를 저장하지 못했어요. 다시 시도해 주세요");
+    if (wallpaperMutationIsCurrent(context)) toast("월페이퍼 위치를 저장하지 못했어요. 다시 시도해 주세요");
     return false;
   }
-  state.wallpapers[surface] = { ...existing, ...crop };
+  if (!wallpaperMutationIsCurrent(context)) return false;
+  state.wallpapers[surface] = { ...context.previous, ...crop };
   renderWallpapers();
   toast("월페이퍼 위치를 저장했어요");
   return true;
@@ -646,7 +701,7 @@ function openWallpaperEditor(surface, file) {
 }
 async function saveWallpaperDraft(draft) {
   if (!WALLPAPER_SURFACES.has(draft.surface)) return;
-  const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(draft);
+  const crop = normalizeWallpaperCrop(draft);
   const existing = state.wallpapers[draft.surface];
   if (!state.supabase || !state.session || !state.household) {
     const url = draft.file ? await photoDataUrl(draft.file) : existing?.url;
@@ -693,11 +748,18 @@ async function removeWallpaper(surface) {
     renderWallpapers();
     return toast("월페이퍼를 삭제했어요");
   }
-  const { error } = await state.supabase.from("household_wallpapers").delete().eq("household_id", state.household.id).eq("surface", surface);
-  if (error) return toast("월페이퍼를 삭제하지 못했어요");
+  const context = captureWallpaperContext(surface);
+  if (!context) return false;
+  const { error } = await context.supabase.from("household_wallpapers").delete().eq("household_id", context.householdId).eq("surface", surface);
+  if (error) {
+    if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 삭제하지 못했어요");
+    return false;
+  }
+  if (context.previous.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await context.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([context.previous.path]);
+  if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = null; renderWallpapers();
-  if (previous.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
   toast("월페이퍼를 삭제했어요");
+  return true;
 }
 
 function releaseTouchTabFocus(event) {

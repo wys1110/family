@@ -13,6 +13,12 @@ const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 const editorSource = read('wallpaper-editor.js');
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => { resolve = done; });
+  return { promise, resolve };
+}
+
 function createWallpaperHarness(wallpaper) {
   const classes = new Set();
   const attributes = new Map();
@@ -49,7 +55,7 @@ function createWallpaperHarness(wallpaper) {
   return { image, node, state, render: createRenderer(document, state, window) };
 }
 
-function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } = {}) {
+function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false, signedUrlDeferred = null, updateDeferred = null, deleteDeferred = null } = {}) {
   const previous = { path: 'household-1/wallpapers/calendar/old.jpg', url: 'old-signed.jpg', positionX: 50, positionY: 50, zoom: 1 };
   const state = {
     wallpapers: { calendar: previous, growth: null },
@@ -57,6 +63,7 @@ function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } =
     session: { user: { id: 'user-1' } },
   };
   const filters = [];
+  const deleteFilters = [];
   const table = {
     upsert: vi.fn((payload) => ({
       select: () => ({ single: async () => ({ error: saveFails ? new Error('db') : null, data: payload }) }),
@@ -64,7 +71,15 @@ function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } =
     update: vi.fn(() => {
       const chain = {
         eq(column, value) { filters.push([column, value]); return chain; },
-        select: () => ({ single: async () => ({ error: saveFails ? new Error('db') : null }) }),
+        select: () => ({ single: async () => updateDeferred?.promise || ({ error: saveFails ? new Error('db') : null }) }),
+      };
+      return chain;
+    }),
+    delete: vi.fn(() => {
+      const result = deleteDeferred?.promise || Promise.resolve({ error: saveFails ? new Error('db') : null });
+      const chain = {
+        eq(column, value) { deleteFilters.push([column, value]); return chain; },
+        then(resolve, reject) { return result.then(resolve, reject); },
       };
       return chain;
     }),
@@ -72,24 +87,27 @@ function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } =
   const storage = {
     upload: vi.fn(async () => ({ error: null })),
     remove: vi.fn(async () => ({ error: null })),
-    createSignedUrl: vi.fn(async () => signedUrlFails
+    createSignedUrl: vi.fn(async () => signedUrlDeferred?.promise || (signedUrlFails
       ? ({ data: null, error: new Error('signed url') })
-      : ({ data: { signedUrl: 'new-signed.jpg' }, error: null })),
+      : ({ data: { signedUrl: 'new-signed.jpg' }, error: null }))),
   };
-  state.supabase = {
+  const supabase = {
     from: vi.fn(() => table),
     storage: { from: vi.fn(() => storage) },
   };
+  state.supabase = supabase;
   const toast = vi.fn();
   const renderWallpapers = vi.fn();
   const source = [
+    app.slice(app.indexOf('function normalizeWallpaperCrop'), app.indexOf('function applyWallpaperCrop')),
     app.slice(app.indexOf('function wallpaperExtension(file)'), app.indexOf('function chooseWallpaperPhoto(surface)')),
     app.slice(app.indexOf('async function saveWallpaperDraft(draft)'), app.indexOf('function initializeWallpaperEditor()')),
+    app.slice(app.indexOf('async function removeWallpaper(surface)'), app.indexOf('function releaseTouchTabFocus(event)')),
   ].join('\n');
   const createRuntime = new Function(
     'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'uid', 'toast', 'renderWallpapers',
     'window', 'photoDataUrl', 'persistLocalWallpapers', 'wallpaperPathIsOwned',
-    `${source}\nreturn { saveWallpaper, saveWallpaperDraft };`,
+    `${source}\nreturn { saveWallpaper, saveWallpaperDraft, removeWallpaper };`,
   );
   const normalizeCrop = (value) => ({ positionX: value.positionX, positionY: value.positionY, zoom: value.zoom });
   const runtime = createRuntime(
@@ -97,7 +115,36 @@ function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } =
     { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } }, vi.fn(), vi.fn(),
     (path, householdId, surface) => path.startsWith(`${householdId}/wallpapers/${surface}/`),
   );
-  return { ...runtime, state, previous, table, storage, filters, toast, renderWallpapers };
+  return { ...runtime, state, previous, supabase, table, storage, filters, deleteFilters, toast, renderWallpapers };
+}
+
+function createHydrationHarness({ editorAvailable = true } = {}) {
+  const signedUrls = deferred();
+  const h1Wallpapers = { calendar: null, growth: null };
+  const state = {
+    wallpapers: h1Wallpapers,
+    household: { id: 'household-1' },
+    session: { user: { id: 'user-1' } },
+  };
+  const storage = { createSignedUrls: vi.fn(() => signedUrls.promise) };
+  const supabase = { storage: { from: vi.fn(() => storage) } };
+  state.supabase = supabase;
+  const renderWallpapers = vi.fn();
+  const normalizeCrop = (value) => ({ positionX: value.position_x, positionY: value.position_y, zoom: value.zoom });
+  const source = [
+    app.slice(app.indexOf('function normalizeWallpaperCrop'), app.indexOf('function applyWallpaperCrop')),
+    app.slice(app.indexOf('async function hydrateWallpaperUrls'), app.indexOf('async function photoDataUrl')),
+  ].join('\n');
+  const createRuntime = new Function(
+    'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'wallpaperPathIsOwned', 'renderWallpapers', 'window',
+    `${source}\nreturn hydrateWallpaperUrls;`,
+  );
+  const hydrateWallpaperUrls = createRuntime(
+    state, new Set(['calendar', 'growth']), 'growth-photos',
+    (path, householdId, surface) => path.startsWith(`${householdId}/wallpapers/${surface}/`),
+    renderWallpapers, editorAvailable ? { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } } : {},
+  );
+  return { state, supabase, storage, signedUrls, h1Wallpapers, renderWallpapers, hydrateWallpaperUrls };
 }
 
 describe('family wallpaper', () => {
@@ -109,7 +156,7 @@ describe('family wallpaper', () => {
   });
 
   test('uses household-scoped storage paths and the active household only', () => {
-    expect(app).toContain("`${state.household.id}/wallpapers/${surface}/");
+    expect(app).toContain("`${context.householdId}/wallpapers/${surface}/");
     expect(app).toContain('from("household_wallpapers")');
     expect(app).toContain('row.household_id === householdId');
   });
@@ -126,15 +173,47 @@ describe('family wallpaper', () => {
   });
 
   test('hydrates remote crop values through the shared normalizer', () => {
-    expect(app).toContain('const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(row);');
+    expect(app).toContain('const crop = normalizeWallpaperCrop(row);');
     expect(app).toContain('{ path: row.photo_path, url: urls.get(row.photo_path) || "", ...crop }');
+  });
+
+  test('hydrates safely without the optional editor module', async () => {
+    const harness = createHydrationHarness({ editorAvailable: false });
+    const pending = harness.hydrateWallpaperUrls([{
+      household_id: 'household-1', surface: 'calendar',
+      photo_path: 'household-1/wallpapers/calendar/photo.jpg', position_x: 25, position_y: 75, zoom: 1.5,
+    }], 'household-1');
+    harness.signedUrls.resolve({ data: [{ path: 'household-1/wallpapers/calendar/photo.jpg', signedUrl: 'signed.jpg' }], error: null });
+
+    await expect(pending).resolves.toBe(true);
+    expect(harness.state.wallpapers.calendar).toEqual({
+      path: 'household-1/wallpapers/calendar/photo.jpg', url: 'signed.jpg', positionX: 25, positionY: 75, zoom: 1.5,
+    });
+  });
+
+  test('does not let late H1 hydration overwrite H2 wallpaper state', async () => {
+    const harness = createHydrationHarness();
+    const pending = harness.hydrateWallpaperUrls([{
+      household_id: 'household-1', surface: 'calendar',
+      photo_path: 'household-1/wallpapers/calendar/photo.jpg', position_x: 50, position_y: 50, zoom: 1,
+    }], 'household-1');
+    const h2Wallpapers = { calendar: { path: 'h2.jpg', url: 'h2-signed.jpg' }, growth: null };
+    harness.state.supabase = { storage: { from: vi.fn() } };
+    harness.state.household = { id: 'household-2' };
+    harness.state.session = { user: { id: 'user-2' } };
+    harness.state.wallpapers = h2Wallpapers;
+    harness.signedUrls.resolve({ data: [{ path: 'household-1/wallpapers/calendar/photo.jpg', signedUrl: 'h1-signed.jpg' }], error: null });
+
+    expect(await pending).toBe(false);
+    expect(harness.state.wallpapers).toBe(h2Wallpapers);
+    expect(harness.renderWallpapers).not.toHaveBeenCalled();
   });
 
   test('persists new-photo crop metadata and scopes crop-only updates to household and surface', () => {
     expect(app).toContain('position_x: crop.positionX');
     expect(app).toContain('position_y: crop.positionY');
     expect(app).toContain('zoom: crop.zoom');
-    expect(app).toMatch(/\.update\(\{ position_x: crop\.positionX, position_y: crop\.positionY, zoom: crop\.zoom \}\)[\s\S]*?\.eq\("household_id", state\.household\.id\)[\s\S]*?\.eq\("surface", surface\)/);
+    expect(app).toMatch(/\.update\(\{ position_x: crop\.positionX, position_y: crop\.positionY, zoom: crop\.zoom \}\)[\s\S]*?\.eq\("household_id", context\.householdId\)[\s\S]*?\.eq\("surface", surface\)/);
   });
 
   test('keeps remote state unchanged and cleans up an uploaded photo when its row save fails', async () => {
@@ -178,6 +257,66 @@ describe('family wallpaper', () => {
       ['surface', 'calendar'],
     ]);
     expect(harness.state.wallpapers.calendar).toEqual({ ...harness.previous, positionX: 30, positionY: 65, zoom: 2.1 });
+  });
+
+  test('cleans an H1 upload without touching H2 when signed URL work finishes late', async () => {
+    const signedUrlDeferred = deferred();
+    const harness = createRemoteSaveHarness({ signedUrlDeferred });
+    const pending = harness.saveWallpaperDraft({
+      surface: 'calendar', file: { type: 'image/jpeg' }, positionX: 20, positionY: 70, zoom: 1.8,
+    });
+    await vi.waitFor(() => expect(harness.storage.createSignedUrl).toHaveBeenCalled());
+    const h2Wallpaper = { path: 'household-2/wallpapers/calendar/h2.jpg', url: 'h2.jpg' };
+    const h2Upsert = vi.fn(() => ({ select: () => ({ single: async () => ({ error: null }) }) }));
+    const h2Storage = { remove: vi.fn(async () => ({ error: null })) };
+    harness.state.supabase = { from: () => ({ upsert: h2Upsert }), storage: { from: () => h2Storage } };
+    harness.state.household = { id: 'household-2' };
+    harness.state.session = { user: { id: 'user-2' } };
+    harness.state.wallpapers = { calendar: h2Wallpaper, growth: null };
+    signedUrlDeferred.resolve({ data: { signedUrl: 'h1-new.jpg' }, error: null });
+
+    expect(await pending).toBe(false);
+    expect(h2Upsert).not.toHaveBeenCalled();
+    expect(harness.storage.remove).toHaveBeenCalledWith(['household-1/wallpapers/calendar/new-id.jpg']);
+    expect(h2Storage.remove).not.toHaveBeenCalled();
+    expect(harness.state.wallpapers.calendar).toBe(h2Wallpaper);
+  });
+
+  test('does not let an H1 crop update completion mutate H2', async () => {
+    const updateDeferred = deferred();
+    const harness = createRemoteSaveHarness({ updateDeferred });
+    const pending = harness.saveWallpaperDraft({ surface: 'calendar', positionX: 30, positionY: 65, zoom: 2.1 });
+    await vi.waitFor(() => expect(harness.table.update).toHaveBeenCalled());
+    const h2Wallpaper = { path: 'household-2/wallpapers/calendar/h2.jpg', url: 'h2.jpg' };
+    harness.state.supabase = { from: vi.fn(), storage: { from: vi.fn() } };
+    harness.state.household = { id: 'household-2' };
+    harness.state.session = { user: { id: 'user-2' } };
+    harness.state.wallpapers = { calendar: h2Wallpaper, growth: null };
+    updateDeferred.resolve({ error: null });
+
+    expect(await pending).toBe(false);
+    expect(harness.state.wallpapers.calendar).toBe(h2Wallpaper);
+    expect(harness.renderWallpapers).not.toHaveBeenCalled();
+  });
+
+  test('finishes H1 delete cleanup without clearing H2 state', async () => {
+    const deleteDeferred = deferred();
+    const harness = createRemoteSaveHarness({ deleteDeferred });
+    const pending = harness.removeWallpaper('calendar');
+    await vi.waitFor(() => expect(harness.table.delete).toHaveBeenCalled());
+    const h2Wallpaper = { path: 'household-2/wallpapers/calendar/h2.jpg', url: 'h2.jpg' };
+    const h2Storage = { remove: vi.fn(async () => ({ error: null })) };
+    harness.state.supabase = { from: vi.fn(), storage: { from: () => h2Storage } };
+    harness.state.household = { id: 'household-2' };
+    harness.state.session = { user: { id: 'user-2' } };
+    harness.state.wallpapers = { calendar: h2Wallpaper, growth: null };
+    deleteDeferred.resolve({ error: null });
+
+    expect(await pending).toBe(false);
+    expect(harness.storage.remove).toHaveBeenCalledWith(['household-1/wallpapers/calendar/old.jpg']);
+    expect(h2Storage.remove).not.toHaveBeenCalled();
+    expect(harness.state.wallpapers.calendar).toBe(h2Wallpaper);
+    expect(harness.renderWallpapers).not.toHaveBeenCalled();
   });
 
   test('provides photo change controls on both hero surfaces', () => {
@@ -265,6 +404,7 @@ describe('family wallpaper', () => {
   test('keeps wallpaper actions above the content layer', () => {
     expect(css).toContain('.wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 2; }');
     expect(css).toMatch(/\.wallpaper-actions\s*\{[^}]*z-index:\s*3;/s);
+    expect(css).toMatch(/\.wallpaper-actions button\s*\{[^}]*min-height:\s*44px;/s);
   });
 
   test('wires the editor to module-ready runtime state and local draft saves', () => {

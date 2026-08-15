@@ -45,6 +45,11 @@
     const resetButton = options.resetButton || find("#wallpaperEditorReset");
     const cancelButton = options.cancelButton || find("#wallpaperEditorCancel");
     const applyButton = options.applyButton || find("#wallpaperEditorApply");
+    const positionXInput = options.positionXInput || find("#wallpaperEditorPositionX");
+    const positionYInput = options.positionYInput || find("#wallpaperEditorPositionY");
+    const positionXOutput = options.positionXOutput || find("#wallpaperEditorPositionXValue");
+    const positionYOutput = options.positionYOutput || find("#wallpaperEditorPositionYValue");
+    const previewStatus = options.previewStatus || find("#wallpaperEditorPreviewStatus");
     const closeButtons = options.closeButtons || Array.from(dialog.querySelectorAll?.('[data-close="wallpaperEditorDialog"]') || []);
     const pointers = new Map();
     let draft = { surface: "calendar", url: "", file: undefined, ...normalizeCrop() };
@@ -52,6 +57,8 @@
     let pinchStart = null;
     let saveInFlight = false;
     let editGeneration = 0;
+    let previewReady = true;
+    let previewSource = "";
 
     const pointerDistance = () => {
       const [first, second] = [...pointers.values()];
@@ -70,8 +77,46 @@
       zoomInput.value = String(draft.zoom);
       zoomOutput.value = draft.zoom.toFixed(2);
       zoomOutput.textContent = `${draft.zoom.toFixed(2)}×`;
+      positionXInput.value = String(draft.positionX);
+      positionYInput.value = String(draft.positionY);
+      positionXOutput.value = draft.positionX;
+      positionYOutput.value = draft.positionY;
+      positionXOutput.textContent = `${Math.round(draft.positionX)}%`;
+      positionYOutput.textContent = `${Math.round(draft.positionY)}%`;
       preview.dataset.surface = draft.surface;
       dialog.dataset.surface = draft.surface;
+    };
+
+    const syncApplyAvailability = () => {
+      const disabled = saveInFlight || !previewReady;
+      applyButton.disabled = disabled;
+      applyButton.setAttribute("aria-disabled", String(disabled));
+    };
+
+    const setPreviewStatus = (message = "") => {
+      previewStatus.textContent = message;
+      previewStatus.hidden = !message;
+    };
+
+    const setPreviewReadiness = (generation, ready) => {
+      if (generation !== editGeneration) return;
+      previewReady = ready;
+      setPreviewStatus(ready ? "" : "이 사진을 표시할 수 없어요. 다른 사진을 선택해 주세요.");
+      syncApplyAvailability();
+    };
+
+    const decodeNewPreview = (generation) => {
+      if (!draft.file || typeof previewImage.decode !== "function") return;
+      let decoding;
+      try {
+        decoding = previewImage.decode();
+      } catch {
+        setPreviewReadiness(generation, false);
+        return;
+      }
+      Promise.resolve(decoding)
+        .then(() => setPreviewReadiness(generation, true))
+        .catch(() => setPreviewReadiness(generation, false));
     };
 
     const close = (force = false) => {
@@ -82,10 +127,10 @@
 
     const setSaving = (saving) => {
       saveInFlight = saving;
-      for (const control of [cancelButton, ...closeButtons, chooseButton, resetButton, zoomInput]) {
+      for (const control of [cancelButton, ...closeButtons, chooseButton, resetButton, zoomInput, positionXInput, positionYInput]) {
         control.disabled = saving;
       }
-      applyButton.disabled = saving;
+      syncApplyAvailability();
       applyButton.setAttribute("aria-busy", String(saving));
     };
 
@@ -93,6 +138,25 @@
       if (saveInFlight) return;
       draft = { ...draft, zoom: normalizeCrop({ ...draft, zoom: zoomInput.value }).zoom };
       render();
+    });
+    positionXInput.addEventListener("input", () => {
+      if (saveInFlight) return;
+      draft = { ...draft, ...normalizeCrop({ ...draft, positionX: positionXInput.value }) };
+      render();
+    });
+    positionYInput.addEventListener("input", () => {
+      if (saveInFlight) return;
+      draft = { ...draft, ...normalizeCrop({ ...draft, positionY: positionYInput.value }) };
+      render();
+    });
+
+    previewImage.addEventListener("load", () => {
+      if (previewImage.src !== previewSource || (draft.file && typeof previewImage.decode === "function")) return;
+      setPreviewReadiness(editGeneration, true);
+    });
+    previewImage.addEventListener("error", () => {
+      if (previewImage.src !== previewSource || (draft.file && typeof previewImage.decode === "function")) return;
+      setPreviewReadiness(editGeneration, false);
     });
 
     preview.addEventListener("pointerdown", (event) => {
@@ -153,7 +217,7 @@
       if (saveInFlight) event.preventDefault();
     });
     applyButton.addEventListener("click", async () => {
-      if (saveInFlight) return;
+      if (saveInFlight || !previewReady) return;
       const saveGeneration = editGeneration;
       setSaving(true);
       try {
@@ -188,8 +252,13 @@
         if (draft.file && window.URL?.createObjectURL) {
           objectUrl = window.URL.createObjectURL(draft.file);
         }
+        previewReady = !draft.file;
+        setPreviewStatus(draft.file ? "사진을 확인하는 중이에요…" : "");
         previewImage.src = objectUrl || draft.url;
+        previewSource = previewImage.src;
         render();
+        syncApplyAvailability();
+        decodeNewPreview(editGeneration);
         if (!dialog.open) dialog.showModal();
         return true;
       },

@@ -31,14 +31,14 @@ function eventTarget(initial = {}) {
   };
 }
 
-function createHarness() {
+function createHarness({ decode } = {}) {
   const dialog = eventTarget({
     dataset: {},
     open: false,
     showModal: vi.fn(function showModal() { this.open = true; }),
     close: vi.fn(function close() { this.open = false; this.dispatch("close"); }),
   });
-  const previewImage = eventTarget({ style: {}, src: "" });
+  const previewImage = eventTarget({ style: {}, src: "", ...(decode ? { decode } : {}) });
   const preview = eventTarget({
     dataset: {},
     querySelector: () => previewImage,
@@ -48,6 +48,11 @@ function createHarness() {
   });
   const zoomInput = eventTarget({ value: "1" });
   const zoomOutput = { value: "", textContent: "" };
+  const positionXInput = eventTarget({ value: "50" });
+  const positionYInput = eventTarget({ value: "50" });
+  const positionXOutput = { value: "", textContent: "" };
+  const positionYOutput = { value: "", textContent: "" };
+  const previewStatus = { textContent: "", hidden: true };
   const choose = eventTarget({ disabled: false });
   const reset = eventTarget({ disabled: false });
   const cancel = eventTarget({ disabled: false });
@@ -63,6 +68,11 @@ function createHarness() {
     preview,
     zoomInput,
     zoomOutput,
+    positionXInput,
+    positionYInput,
+    positionXOutput,
+    positionYOutput,
+    previewStatus,
     chooseButton: choose,
     resetButton: reset,
     cancelButton: cancel,
@@ -73,6 +83,7 @@ function createHarness() {
   });
   return {
     api, controller, dialog, preview, previewImage, zoomInput, zoomOutput,
+    positionXInput, positionYInput, positionXOutput, positionYOutput, previewStatus,
     choose, reset, cancel, footerCancel, apply, onSave, onChoosePhoto, createObjectURL, revokeObjectURL,
   };
 }
@@ -112,6 +123,7 @@ function createLocalSaveHarness({ persistFails = false } = {}) {
   const normalizeCrop = (value) => ({ positionX: value.positionX, positionY: value.positionY, zoom: value.zoom });
   const source = [
     appSlice("function persistLocalWallpapers()", "function wallpaperPathIsOwned"),
+    appSlice("function normalizeWallpaperCrop", "function captureWallpaperContext"),
     appSlice("async function saveWallpaperDraft(draft)", "function initializeWallpaperEditor"),
   ].join("\n");
   const createRuntime = new Function(
@@ -204,7 +216,7 @@ describe("wallpaper editor controller", () => {
     expect(harness.dialog.open).toBe(true);
     expect(harness.apply.disabled).toBe(false);
     expect(harness.apply.setAttribute).toHaveBeenLastCalledWith("aria-busy", "false");
-    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput]) {
+    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput, harness.positionXInput, harness.positionYInput]) {
       expect(control.disabled).toBe(false);
     }
   });
@@ -230,7 +242,7 @@ describe("wallpaper editor controller", () => {
     expect(footerEvent.preventDefault).toHaveBeenCalled();
     expect(footerEvent.stopPropagation).toHaveBeenCalled();
     expect(escapeEvent.preventDefault).toHaveBeenCalled();
-    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput]) {
+    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput, harness.positionXInput, harness.positionYInput]) {
       expect(control.disabled).toBe(true);
     }
 
@@ -271,6 +283,59 @@ describe("wallpaper editor controller", () => {
     harness.preview.dispatch("pointermove", { pointerId: 2, clientX: 180, clientY: 20 });
     expect(Number(harness.zoomInput.value)).toBeGreaterThan(1);
   });
+
+  test("supports non-drag X and Y positioning controls", async () => {
+    const harness = createHarness();
+    harness.controller.open({ surface: "calendar", url: "photo.jpg", positionX: 50, positionY: 50, zoom: 1 });
+    harness.positionXInput.value = "22";
+    await harness.positionXInput.dispatch("input");
+    harness.positionYInput.value = "78";
+    await harness.positionYInput.dispatch("input");
+
+    expect(harness.previewImage.style.objectPosition).toBe("22% 78%");
+    expect(harness.positionXOutput.textContent).toBe("22%");
+    expect(harness.positionYOutput.textContent).toBe("78%");
+    await harness.apply.dispatch("click");
+    expect(harness.onSave).toHaveBeenCalledWith(expect.objectContaining({ positionX: 22, positionY: 78 }));
+  });
+
+  test("blocks Apply when a new-photo preview fails and restores it after a valid replacement loads", async () => {
+    const harness = createHarness();
+    harness.controller.open({ surface: "calendar", file: { name: "broken.heic" }, zoom: 1 });
+
+    expect(harness.apply.disabled).toBe(true);
+    await harness.previewImage.dispatch("error");
+    await harness.apply.dispatch("click");
+    expect(harness.onSave).not.toHaveBeenCalled();
+    expect(harness.previewStatus.hidden).toBe(false);
+    expect(harness.previewStatus.textContent).toContain("표시할 수 없어요");
+
+    harness.controller.open({ surface: "calendar", file: { name: "valid.jpg" }, zoom: 1 });
+    await harness.previewImage.dispatch("load");
+    expect(harness.apply.disabled).toBe(false);
+    expect(harness.previewStatus.hidden).toBe(true);
+  });
+
+  test("ignores a late decode result from a replaced photo edit", async () => {
+    let resolveFirst;
+    let resolveSecond;
+    const decode = vi.fn()
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+    const harness = createHarness({ decode });
+
+    harness.controller.open({ surface: "calendar", file: { name: "first.jpg" }, zoom: 1 });
+    harness.controller.open({ surface: "calendar", file: { name: "second.jpg" }, zoom: 1 });
+    resolveFirst();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(harness.apply.disabled).toBe(true);
+    resolveSecond();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(harness.apply.disabled).toBe(false);
+  });
 });
 
 describe("wallpaper editor surface", () => {
@@ -279,10 +344,13 @@ describe("wallpaper editor surface", () => {
     expect(html).toContain("다른 사진 선택");
     for (const id of [
       "wallpaperEditorDialog", "wallpaperEditorPreview", "wallpaperEditorZoom",
+      "wallpaperEditorPositionX", "wallpaperEditorPositionY", "wallpaperEditorPreviewStatus",
       "wallpaperEditorZoomValue", "wallpaperEditorChoose", "wallpaperEditorReset",
       "wallpaperEditorCancel", "wallpaperEditorApply",
     ]) expect(html).toContain(`id="${id}"`);
     expect(html).toMatch(/id="wallpaperEditorZoom"[^>]*type="range"[^>]*min="1"[^>]*max="3"[^>]*step="0\.01"/);
+    expect(html).toMatch(/id="wallpaperEditorPositionX"[^>]*type="range"[^>]*min="0"[^>]*max="100"/);
+    expect(html).toMatch(/id="wallpaperEditorPositionY"[^>]*type="range"[^>]*min="0"[^>]*max="100"/);
     expect(html).toContain("초기화");
     expect(html).toContain("취소");
     expect(html).toContain("적용");

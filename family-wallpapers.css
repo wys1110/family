@@ -46,12 +46,12 @@ html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--t
   backdrop-filter: blur(8px);
 }
 .wallpaper-actions { position: absolute; z-index: 3; right: 14px; bottom: 12px; display: flex; gap: 6px; }
-.wallpaper-actions button { min-height: 30px; padding: 0 9px; border: 1px solid var(--theme-wallpaper-button-border); border-radius: 999px; color: var(--theme-wallpaper-text); background: var(--theme-wallpaper-button); box-shadow: none; font-size: 10px; font-weight: 700; backdrop-filter: blur(8px); }
+.wallpaper-actions button { min-height: 44px; padding: 0 11px; border: 1px solid var(--theme-wallpaper-button-border); border-radius: 999px; color: var(--theme-wallpaper-text); background: var(--theme-wallpaper-button); box-shadow: none; font-size: 10px; font-weight: 700; backdrop-filter: blur(8px); }
 .wallpaper-actions button:last-child { color: var(--theme-wallpaper-muted); }
 .wallpaper-surface[data-wallpaper-surface="calendar"] .wallpaper-actions { top: 10px; right: 78px; bottom: auto; }
 .wallpaper-surface[data-wallpaper-surface="growth"] .wallpaper-actions { bottom: 11px; }
 @media (max-width: 520px) {
   .wallpaper-actions { right: 10px; bottom: 9px; }
   .wallpaper-surface[data-wallpaper-surface="calendar"] .wallpaper-actions { top: 9px; right: 75px; bottom: auto; }
-  .wallpaper-actions button { min-height: 28px; padding: 0 8px; font-size: 9px; }
+  .wallpaper-actions button { min-height: 44px; padding: 0 10px; font-size: 9px; }
 }

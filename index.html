@@ -545,7 +545,20 @@
            <i class="wallpaper-editor-crop-corner" aria-hidden="true"></i>
            <i class="wallpaper-editor-crop-corner" aria-hidden="true"></i>
          </div>
+         <p id="wallpaperEditorPreviewStatus" class="wallpaper-editor-preview-status" role="status" aria-live="polite" hidden></p>
          <p class="wallpaper-editor-gesture-hint">한 손가락으로 이동 · 두 손가락으로 확대</p>
+         <div class="wallpaper-editor-position" role="group" aria-label="사진 위치 조절">
+           <div class="wallpaper-editor-control-row">
+             <label for="wallpaperEditorPositionX">가로</label>
+             <input id="wallpaperEditorPositionX" type="range" min="0" max="100" step="1" value="50" aria-label="사진 가로 위치" />
+             <output id="wallpaperEditorPositionXValue" for="wallpaperEditorPositionX">50%</output>
+           </div>
+           <div class="wallpaper-editor-control-row">
+             <label for="wallpaperEditorPositionY">세로</label>
+             <input id="wallpaperEditorPositionY" type="range" min="0" max="100" step="1" value="50" aria-label="사진 세로 위치" />
+             <output id="wallpaperEditorPositionYValue" for="wallpaperEditorPositionY">50%</output>
+           </div>
+         </div>
          <div class="wallpaper-editor-zoom-row">
            <label for="wallpaperEditorZoom">확대</label>
            <input id="wallpaperEditorZoom" type="range" min="1" max="3" step="0.01" value="1" />

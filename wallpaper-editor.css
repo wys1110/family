@@ -48,9 +48,15 @@
 .wallpaper-editor-crop-corner:nth-of-type(3) { right: 8px; bottom: 8px; border-right: 2px solid; border-bottom: 2px solid; }
 .wallpaper-editor-crop-corner:nth-of-type(4) { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
 .wallpaper-editor-gesture-hint { margin: 9px 2px 17px; color: var(--secondary); font-size: 10px; text-align: center; }
-.wallpaper-editor-zoom-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 54px; align-items: center; gap: 11px; }
+.wallpaper-editor-preview-status { margin: 8px 2px 0; color: var(--red); font-size: 11px; font-weight: 700; text-align: center; }
+.wallpaper-editor-position { display: grid; gap: 2px; margin-bottom: 2px; }
+.wallpaper-editor-control-row,
+.wallpaper-editor-zoom-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 46px; align-items: center; gap: 9px; }
+.wallpaper-editor-control-row label,
 .wallpaper-editor-zoom-row label { margin: 0; color: var(--label); font-size: 11px; }
+.wallpaper-editor-control-row input,
 .wallpaper-editor-zoom-row input { min-height: 44px; margin: 0; padding: 0; accent-color: var(--blue); box-shadow: none; }
+.wallpaper-editor-control-row output,
 .wallpaper-editor-zoom-row output { color: var(--label); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 750; text-align: right; }
 .wallpaper-editor-tools,
 .wallpaper-editor-actions { display: flex; gap: 8px; }
