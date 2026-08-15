@@ -390,6 +390,12 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\[data-wallpaper-surface="growth"\] \.baby-dday \{[^}]+background: var\(--theme-wallpaper-surface\) !important;/s);
   });
 
+  test('removes legacy hero decorations from active calendar wallpapers', () => {
+    const calendarSelector = '.hero-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="calendar"]';
+    expect(css).toContain(`${calendarSelector}::before,`);
+    expect(css).toContain(`${calendarSelector}::after { content: none; }`);
+  });
+
   test('fills calendar and growth cards with one sharp cover image', () => {
     expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-fit:\s*cover;/s);
     expect(css).not.toContain('.wallpaper-backdrop');
