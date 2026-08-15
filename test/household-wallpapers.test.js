@@ -164,6 +164,11 @@ describe('family wallpaper', () => {
     expect(config).toContain('{ name: "family-wallpapers", version: "20260815-dual-layer-v1", script: false }');
   });
 
+  test('keeps wallpaper actions above the content layer', () => {
+    expect(css).toContain('.wallpaper-surface > :not(.wallpaper-backdrop):not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 3; }');
+    expect(css).toMatch(/\.wallpaper-actions\s*\{[^}]*z-index:\s*4;/s);
+  });
+
   test('delivers the full-fit stylesheet past mobile and PWA caches', () => {
     expect(html).toContain('config.js?v=20260815-wallpaper-dual-layer-v1');
     expect(html).toContain('app.js?v=20260815-wallpaper-dual-layer-v1');
