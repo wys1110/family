@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const read = (path) => existsSync(path) ? readFileSync(path, "utf8") : "";
 const source = read("wallpaper-editor.js");
+const app = read("app.js");
 const html = read("index.html");
 const css = read("wallpaper-editor.css");
 const config = read("config.js");
@@ -167,5 +168,15 @@ describe("wallpaper editor surface", () => {
     expect(css).toContain("min-height: 44px");
     expect(css).toMatch(/\.wallpaper-editor-dialog \.close-button\s*\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/s);
     expect(css).toContain(".wallpaper-editor-crop-corner");
+  });
+
+  test("initializes one app controller only after the module is ready", () => {
+    expect(app.match(/FAMILY_WALLPAPER_EDITOR\.createController\(/g)).toHaveLength(1);
+    expect(app).toMatch(/await window\.FAMILY_MODULES_READY;\s+initializeWallpaperEditor\(\);/s);
+  });
+
+  test("keeps the app usable when the editor module fails to load", () => {
+    expect(app.match(/if \(!window\.FAMILY_WALLPAPER_EDITOR\) return;/g)).toHaveLength(2);
+    expect(app).toContain("if (!wallpaperEditorController) return;");
   });
 });

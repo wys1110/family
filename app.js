@@ -61,6 +61,7 @@ const FAMILY_VERSES = [
 const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 const $ = (selector) => document.querySelector(selector);
 const config = window.FAMILY_CONFIG || {};
+let wallpaperEditorController = null;
 let dragState = null;
 let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], newPhotos: [] };
 let activeQuickCategory = null;
@@ -223,12 +224,8 @@ async function init() {
   state.authReady = true;
   window.__familyCoreReady = true;
   window.dispatchEvent(new CustomEvent("family:core-ready"));
-  if (window.FAMILY_MODULES_READY) {
-    await Promise.race([
-      window.FAMILY_MODULES_READY,
-      new Promise((resolve) => setTimeout(resolve, 5000)),
-    ]);
-  }
+  if (window.FAMILY_MODULES_READY) await window.FAMILY_MODULES_READY;
+  initializeWallpaperEditor();
   await bootstrapData();
   window.FAMILY_MOTION_API?.activate();
 }
@@ -509,38 +506,33 @@ function readLocalWallpapers() {
 }
 function persistLocalWallpapers() { try { localStorage.setItem(WALLPAPER_STORAGE_KEY, JSON.stringify(state.wallpapers)); } catch { toast("사진을 이 기기에 저장하지 못했어요"); } }
 function wallpaperPathIsOwned(path, householdId, surface) { return typeof path === "string" && path.startsWith(`${householdId}/wallpapers/${surface}/`); }
+function applyWallpaperCrop(image, wallpaper) {
+  if (!window.FAMILY_WALLPAPER_EDITOR) return;
+  const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(wallpaper);
+  const style = window.FAMILY_WALLPAPER_EDITOR.cropStyle(crop);
+  image.style.objectPosition = style.objectPosition;
+  image.style.transform = style.transform;
+  image.style.transformOrigin = style.transformOrigin;
+}
 function renderWallpapers() {
   document.querySelectorAll("[data-wallpaper-surface]").forEach((node) => {
     const surface = node.dataset.wallpaperSurface;
     const wallpaper = state.wallpapers[surface];
     const url = wallpaper?.url || "";
-    const backdrop = node.querySelector("[data-wallpaper-backdrop]");
     const image = node.querySelector("[data-wallpaper-image]");
-    if (backdrop.dataset.failedSrc && backdrop.dataset.failedSrc !== url) delete backdrop.dataset.failedSrc;
     if (image.dataset.failedSrc && image.dataset.failedSrc !== url) delete image.dataset.failedSrc;
     const showImage = Boolean(url) && image.dataset.failedSrc !== url;
-    const showBackdrop = showImage && backdrop.dataset.failedSrc !== url;
     node.classList.toggle("has-wallpaper", showImage);
-    backdrop.hidden = !showBackdrop;
     image.hidden = !showImage;
-    backdrop.onerror = showBackdrop ? () => {
-      if (backdrop.getAttribute("src") !== url) return;
-      backdrop.dataset.failedSrc = url;
-      backdrop.hidden = true;
-      backdrop.removeAttribute("src");
-    } : null;
     image.onerror = showImage ? () => {
       if (image.getAttribute("src") !== url) return;
       image.dataset.failedSrc = url;
-      backdrop.hidden = true;
       image.hidden = true;
-      backdrop.removeAttribute("src");
       image.removeAttribute("src");
       node.classList.remove("has-wallpaper");
     } : null;
-    if (showBackdrop && backdrop.getAttribute("src") !== url) backdrop.src = url;
+    if (showImage) applyWallpaperCrop(image, wallpaper);
     if (showImage && image.getAttribute("src") !== url) image.src = url;
-    if (!showBackdrop) backdrop.removeAttribute("src");
     if (!showImage) image.removeAttribute("src");
     node.querySelector("[data-wallpaper-remove]").hidden = !url;
   });
@@ -558,12 +550,8 @@ async function photoDataUrl(file) { return new Promise((resolve, reject) => { co
 function wallpaperExtension(file) { const type = file.type || "image/jpeg"; return type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg"; }
 async function saveWallpaper(surface, file) {
   if (!WALLPAPER_SURFACES.has(surface) || !file) return;
-  if (!ALLOWED_GROWTH_PHOTO_TYPES.has(file.type)) return toast("JPG, PNG, WebP 또는 HEIC 사진만 올릴 수 있어요");
-  if (file.size > MAX_PHOTO_BYTES) return toast("사진은 10MB 이하만 올릴 수 있어요");
-  const prepared = await prepareGrowthPhoto(file);
-  if (!state.supabase || !state.session || !state.household) { state.wallpapers[surface] = { path: "", url: await photoDataUrl(prepared) }; persistLocalWallpapers(); renderWallpapers(); return toast("이 기기에 월페이퍼를 설정했어요"); }
-  const path = `${state.household.id}/wallpapers/${surface}/${uid()}.${wallpaperExtension(prepared)}`;
-  const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, prepared, { contentType: prepared.type || "image/jpeg", cacheControl: "3600", upsert: false });
+  const path = `${state.household.id}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
+  const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
   if (uploadError) return toast("사진을 올리지 못했어요. 다시 시도해 주세요");
   const previous = state.wallpapers[surface];
   const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({ household_id: state.household.id, surface, photo_path: path, created_by: state.session.user.id }).select().single();
@@ -572,6 +560,44 @@ async function saveWallpaper(surface, file) {
   state.wallpapers[surface] = { path, url: data?.signedUrl || "" }; renderWallpapers();
   if (previous?.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
   toast("가족 월페이퍼를 바꿨어요");
+}
+function chooseWallpaperPhoto(surface) {
+  if (!WALLPAPER_SURFACES.has(surface)) return;
+  const input = $("#wallpaperPhotoInput");
+  input.dataset.surface = surface;
+  input.click();
+}
+function openWallpaperEditor(surface, file) {
+  if (!WALLPAPER_SURFACES.has(surface)) return;
+  if (!wallpaperEditorController) return;
+  const existing = state.wallpapers[surface];
+  if (!file && !existing?.url) return chooseWallpaperPhoto(surface);
+  wallpaperEditorController.open({ surface, ...(file ? { file } : existing) });
+}
+async function saveWallpaperDraft(draft) {
+  if (!WALLPAPER_SURFACES.has(draft.surface)) return;
+  const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(draft);
+  const existing = state.wallpapers[draft.surface];
+  if (!state.supabase || !state.session || !state.household) {
+    const url = draft.file ? await photoDataUrl(draft.file) : existing?.url;
+    if (!url) return;
+    state.wallpapers[draft.surface] = { path: existing?.path || "", url, ...crop };
+    persistLocalWallpapers();
+    renderWallpapers();
+    return toast("이 기기에 월페이퍼를 설정했어요");
+  }
+  if (draft.file) await saveWallpaper(draft.surface, draft.file);
+}
+function initializeWallpaperEditor() {
+  if (!window.FAMILY_WALLPAPER_EDITOR) return;
+  wallpaperEditorController = window.FAMILY_WALLPAPER_EDITOR.createController({
+    dialog: $("#wallpaperEditorDialog"),
+    preview: $("#wallpaperEditorPreview"),
+    zoomInput: $("#wallpaperEditorZoom"),
+    zoomOutput: $("#wallpaperEditorZoomValue"),
+    onSave: saveWallpaperDraft,
+    onChoosePhoto: chooseWallpaperPhoto,
+  });
 }
 async function removeWallpaper(surface) {
   if (!WALLPAPER_SURFACES.has(surface) || !state.wallpapers[surface]) return;
@@ -626,11 +652,15 @@ function bindUi() {
   $("#wallpaperPhotoInput").addEventListener("change", async (event) => {
     const surface = event.currentTarget.dataset.surface; const [file] = event.currentTarget.files;
     event.currentTarget.value = ""; delete event.currentTarget.dataset.surface;
-    await saveWallpaper(surface, file);
+    if (!file || !WALLPAPER_SURFACES.has(surface)) return;
+    if (!ALLOWED_GROWTH_PHOTO_TYPES.has(file.type)) return toast("JPG, PNG, WebP 또는 HEIC 사진만 올릴 수 있어요");
+    if (file.size > MAX_PHOTO_BYTES) return toast("사진은 10MB 이하만 올릴 수 있어요");
+    const prepared = await prepareGrowthPhoto(file);
+    openWallpaperEditor(surface, prepared);
   });
   document.addEventListener("click", (event) => {
     const change = event.target.closest("[data-wallpaper-change]");
-    if (change) { $("#wallpaperPhotoInput").dataset.surface = change.dataset.wallpaperChange; return $("#wallpaperPhotoInput").click(); }
+    if (change) return openWallpaperEditor(change.dataset.wallpaperChange);
     const remove = event.target.closest("[data-wallpaper-remove]");
     if (remove) void removeWallpaper(remove.dataset.wallpaperRemove);
   });

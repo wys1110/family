@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import fs from 'node:fs';
+import vm from 'node:vm';
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const app = read('app.js');
@@ -8,23 +9,21 @@ const migration = read('supabase/migrations/20260810005856_household_wallpapers.
 const css = read('family-wallpapers.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
+const editorSource = read('wallpaper-editor.js');
 
-function createWallpaperHarness(url) {
+function createWallpaperHarness(wallpaper) {
   const classes = new Set();
-  const createImage = () => {
-    const attributes = new Map();
-    return {
-      dataset: {},
-      hidden: true,
-      onerror: null,
-      srcAssignments: 0,
-      getAttribute(name) { return attributes.get(name) || null; },
-      removeAttribute(name) { attributes.delete(name); },
-      set src(value) { attributes.set('src', value); this.srcAssignments += 1; },
-    };
+  const attributes = new Map();
+  const image = {
+    dataset: {},
+    hidden: true,
+    onerror: null,
+    srcAssignments: 0,
+    style: {},
+    getAttribute(name) { return attributes.get(name) || null; },
+    removeAttribute(name) { attributes.delete(name); },
+    set src(value) { attributes.set('src', value); this.srcAssignments += 1; },
   };
-  const backdrop = createImage();
-  const image = createImage();
   const removeButton = { hidden: true };
   const node = {
     dataset: { wallpaperSurface: 'calendar' },
@@ -34,17 +33,18 @@ function createWallpaperHarness(url) {
       toggle(name, force) { if (force) classes.add(name); else classes.delete(name); },
     },
     querySelector(selector) {
-      if (selector === '[data-wallpaper-backdrop]') return backdrop;
       if (selector === '[data-wallpaper-image]') return image;
       return removeButton;
     },
   };
   const document = { querySelectorAll() { return [node]; } };
-  const state = { wallpapers: { calendar: { url } } };
-  const start = app.indexOf('function renderWallpapers()');
+  const state = { wallpapers: { calendar: wallpaper } };
+  const window = {};
+  vm.runInNewContext(editorSource, { window });
+  const start = app.indexOf('function applyWallpaperCrop(image, wallpaper)');
   const end = app.indexOf('async function hydrateWallpaperUrls', start);
-  const createRenderer = new Function('document', 'state', `${app.slice(start, end)}\nreturn renderWallpapers;`);
-  return { backdrop, image, node, state, render: createRenderer(document, state) };
+  const createRenderer = new Function('document', 'state', 'window', `${app.slice(start, end)}\nreturn renderWallpapers;`);
+  return { image, node, state, render: createRenderer(document, state, window) };
 }
 
 describe('family wallpaper', () => {
@@ -68,6 +68,7 @@ describe('family wallpaper', () => {
   });
 
   test('renders each wallpaper through an explicit decorative image layer', () => {
+    expect(html).not.toContain('data-wallpaper-backdrop');
     expect(html.match(/data-wallpaper-image=/g)).toHaveLength(2);
     expect(html.match(/class="wallpaper-image"/g)).toHaveLength(2);
     expect(html.match(/class="wallpaper-scrim"/g)).toHaveLength(2);
@@ -77,52 +78,30 @@ describe('family wallpaper', () => {
     expect(app).not.toContain('node.style.setProperty("--wallpaper-image"');
   });
 
-  test('renders one blurred backdrop and one full image for each wallpaper surface', () => {
-    expect(html.match(/data-wallpaper-backdrop=/g)).toHaveLength(2);
-    expect(html.match(/class="wallpaper-backdrop"/g)).toHaveLength(2);
-    const harness = createWallpaperHarness('https://example.test/signed-url');
+  test('renders one cover image with the saved crop for each wallpaper surface', () => {
+    const harness = createWallpaperHarness({
+      url: 'https://example.test/signed-url',
+      positionX: 25,
+      positionY: 80,
+      zoom: 1.6,
+    });
     harness.render();
-    expect(harness.backdrop.srcAssignments).toBe(1);
     expect(harness.image.srcAssignments).toBe(1);
-    expect(harness.backdrop.hidden).toBe(false);
     expect(harness.image.hidden).toBe(false);
-  });
-
-  test('keeps the full image when only the blurred backdrop fails', () => {
-    const harness = createWallpaperHarness('https://example.test/signed-url');
-    harness.render();
-    harness.backdrop.onerror();
-    harness.render();
-    expect(harness.backdrop.srcAssignments).toBe(1);
-    expect(harness.backdrop.hidden).toBe(true);
-    expect(harness.image.hidden).toBe(false);
-    expect(harness.node.classList.contains('has-wallpaper')).toBe(true);
-  });
-
-  test('hides both layers when the full image fails and retries both for a new URL', () => {
-    const harness = createWallpaperHarness('https://example.test/old-url');
-    harness.render();
-    harness.image.onerror();
-    harness.render();
-    expect(harness.backdrop.hidden).toBe(true);
-    expect(harness.image.hidden).toBe(true);
-    expect(harness.backdrop.srcAssignments).toBe(1);
-    expect(harness.image.srcAssignments).toBe(1);
-    harness.state.wallpapers.calendar.url = 'https://example.test/new-url';
-    harness.render();
-    expect(harness.backdrop.srcAssignments).toBe(2);
-    expect(harness.image.srcAssignments).toBe(2);
+    expect(harness.image.style.objectPosition).toBe('25% 80%');
+    expect(harness.image.style.transform).toBe('scale(1.6)');
+    expect(harness.image.style.transformOrigin).toBe('25% 80%');
   });
 
   test('falls back to the default card when a wallpaper image fails', () => {
     expect(app).toContain('image.onerror = showImage ? () =>');
     expect(app).toContain('node.classList.remove("has-wallpaper")');
     expect(app).toContain('image.hidden = true');
-    expect(app).toMatch(/image\.onerror = showImage \? \(\) => \{[^}]+backdrop\.hidden = true;\s+image\.hidden = true;\s+backdrop\.removeAttribute\("src"\);\s+image\.removeAttribute\("src"\);/s);
+    expect(app).toMatch(/image\.onerror = showImage \? \(\) => \{[^}]+image\.hidden = true;\s+image\.removeAttribute\("src"\);/s);
   });
 
   test('does not retry a failed wallpaper until its signed URL changes', () => {
-    const harness = createWallpaperHarness('https://example.test/old-signed-url');
+    const harness = createWallpaperHarness({ url: 'https://example.test/old-signed-url' });
     harness.render();
     expect(harness.image.srcAssignments).toBe(1);
     harness.image.onerror();
@@ -153,20 +132,31 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\[data-wallpaper-surface="growth"\] \.baby-dday \{[^}]+background: var\(--theme-wallpaper-surface\) !important;/s);
   });
 
-  test('shows the full calendar and growth wallpaper without cropping or mascot overlap', () => {
-    expect(css).toMatch(/\.wallpaper-backdrop\s*\{[^}]*object-fit:\s*cover;/s);
-    expect(css).toMatch(/\.wallpaper-backdrop\s*\{[^}]*filter:\s*blur\(/s);
-    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-fit:\s*contain;/s);
-    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-position:\s*right center;/s);
-    expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*2;/s);
+  test('fills calendar and growth cards with one sharp cover image', () => {
+    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*object-fit:\s*cover;/s);
+    expect(css).not.toContain('.wallpaper-backdrop');
+    expect(css).not.toContain('blur(16px)');
+    expect(css).toMatch(/\.wallpaper-image\s*\{[^}]*z-index:\s*0;/s);
+    expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*1;/s);
     expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
     expect(css).not.toContain('var(--wallpaper-image)');
     expect(config).toContain('{ name: "family-wallpapers", version: "20260815-dual-layer-v1", script: false }');
   });
 
   test('keeps wallpaper actions above the content layer', () => {
-    expect(css).toContain('.wallpaper-surface > :not(.wallpaper-backdrop):not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 3; }');
-    expect(css).toMatch(/\.wallpaper-actions\s*\{[^}]*z-index:\s*4;/s);
+    expect(css).toContain('.wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 2; }');
+    expect(css).toMatch(/\.wallpaper-actions\s*\{[^}]*z-index:\s*3;/s);
+  });
+
+  test('wires the editor to module-ready runtime state and local draft saves', () => {
+    expect(app).toContain('FAMILY_WALLPAPER_EDITOR.cropStyle');
+    expect(app).toContain('openWallpaperEditor(change.dataset.wallpaperChange)');
+    expect(app).toContain('function applyWallpaperCrop(image, wallpaper)');
+    expect(app).toContain('function openWallpaperEditor(surface, file)');
+    expect(app).toContain('async function saveWallpaperDraft(draft)');
+    expect(app).toMatch(/await window\.FAMILY_MODULES_READY;\s+initializeWallpaperEditor\(\);/s);
+    expect(app).toContain('state.wallpapers[draft.surface] = { path: existing?.path || "", url, ...crop };');
+    expect(app).toMatch(/state\.wallpapers\[draft\.surface\][\s\S]*?persistLocalWallpapers\(\);\s+renderWallpapers\(\);/);
   });
 
   test('delivers the full-fit stylesheet past mobile and PWA caches', () => {
