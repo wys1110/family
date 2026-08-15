@@ -30,6 +30,23 @@ describe('theme bootstrap prevents refresh flash', () => {
     expect(critical).toContain('background-image:');
   });
 
+  test('keeps wallpaper scrims brighter and identical across first-paint sources', () => {
+    const values = [
+      ['8', '8', '8', '.46'],
+      ['8', '8', '8', '.24'],
+      ['8', '8', '8', '.05'],
+      ['4', '4', '4', '.58'],
+      ['4', '4', '4', '.32'],
+      ['4', '4', '4', '.08'],
+    ];
+
+    values.forEach(([red, green, blue, alpha]) => {
+      const declaration = new RegExp(`rgba\\(${red},\\s*${green},\\s*${blue},\\s*\\${alpha}\\)`);
+      expect(index).toMatch(declaration);
+      expect(critical).toMatch(declaration);
+    });
+  });
+
   test('forces the bootstrap assets to network for installed-app refreshes', () => {
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-bootstrap.js")');
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-critical.css")');
