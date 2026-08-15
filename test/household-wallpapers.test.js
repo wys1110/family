@@ -49,7 +49,7 @@ function createWallpaperHarness(wallpaper) {
   return { image, node, state, render: createRenderer(document, state, window) };
 }
 
-function createRemoteSaveHarness({ saveFails = false } = {}) {
+function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false } = {}) {
   const previous = { path: 'household-1/wallpapers/calendar/old.jpg', url: 'old-signed.jpg', positionX: 50, positionY: 50, zoom: 1 };
   const state = {
     wallpapers: { calendar: previous, growth: null },
@@ -72,7 +72,9 @@ function createRemoteSaveHarness({ saveFails = false } = {}) {
   const storage = {
     upload: vi.fn(async () => ({ error: null })),
     remove: vi.fn(async () => ({ error: null })),
-    createSignedUrl: vi.fn(async () => ({ data: { signedUrl: 'new-signed.jpg' }, error: null })),
+    createSignedUrl: vi.fn(async () => signedUrlFails
+      ? ({ data: null, error: new Error('signed url') })
+      : ({ data: { signedUrl: 'new-signed.jpg' }, error: null })),
   };
   state.supabase = {
     from: vi.fn(() => table),
@@ -147,6 +149,20 @@ describe('family wallpaper', () => {
     }));
     expect(harness.storage.remove).toHaveBeenCalledWith(['household-1/wallpapers/calendar/new-id.jpg']);
     expect(harness.state.wallpapers.calendar).toBe(harness.previous);
+  });
+
+  test('does not change the row or remove the previous photo when a signed URL cannot be prepared', async () => {
+    const harness = createRemoteSaveHarness({ signedUrlFails: true });
+    const saved = await harness.saveWallpaperDraft({
+      surface: 'calendar', file: { type: 'image/jpeg' }, positionX: 20, positionY: 70, zoom: 1.8,
+    });
+
+    expect(saved).toBe(false);
+    expect(harness.table.upsert).not.toHaveBeenCalled();
+    expect(harness.storage.remove).toHaveBeenCalledTimes(1);
+    expect(harness.storage.remove).toHaveBeenCalledWith(['household-1/wallpapers/calendar/new-id.jpg']);
+    expect(harness.state.wallpapers.calendar).toBe(harness.previous);
+    expect(harness.toast).toHaveBeenCalledWith('사진을 표시할 준비를 하지 못했어요. 다시 시도해 주세요');
   });
 
   test('updates crop metadata for only the current household surface before mutating memory', async () => {

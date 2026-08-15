@@ -51,7 +51,7 @@ function createHarness() {
   const choose = eventTarget();
   const reset = eventTarget();
   const cancel = eventTarget();
-  const apply = eventTarget();
+  const apply = eventTarget({ disabled: false, setAttribute: vi.fn() });
   const onSave = vi.fn();
   const onChoosePhoto = vi.fn();
   const createObjectURL = vi.fn(() => "blob:editor-preview");
@@ -181,6 +181,27 @@ describe("wallpaper editor controller", () => {
 
     expect(harness.dialog.close).not.toHaveBeenCalled();
     expect(harness.dialog.open).toBe(true);
+  });
+
+  test("allows only one Apply save at a time and restores the control after failure", async () => {
+    const harness = createHarness();
+    let finishSave;
+    harness.onSave.mockImplementation(() => new Promise((resolve) => { finishSave = resolve; }));
+    harness.controller.open({ surface: "calendar", url: "old.jpg", zoom: 1 });
+
+    const firstApply = harness.apply.dispatch("click");
+    const repeatedApply = harness.apply.dispatch("click");
+
+    expect(harness.onSave).toHaveBeenCalledTimes(1);
+    expect(harness.apply.disabled).toBe(true);
+    expect(harness.apply.setAttribute).toHaveBeenCalledWith("aria-busy", "true");
+
+    finishSave(false);
+    await Promise.all([firstApply, repeatedApply]);
+
+    expect(harness.dialog.open).toBe(true);
+    expect(harness.apply.disabled).toBe(false);
+    expect(harness.apply.setAttribute).toHaveBeenLastCalledWith("aria-busy", "false");
   });
 
   test("resets crop, requests a replacement, and revokes only its own object URLs", () => {

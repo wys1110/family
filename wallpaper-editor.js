@@ -49,6 +49,7 @@
     let draft = { surface: "calendar", url: "", file: undefined, ...normalizeCrop() };
     let objectUrl = "";
     let pinchStart = null;
+    let saveInFlight = false;
 
     const pointerDistance = () => {
       const [first, second] = [...pointers.values()];
@@ -125,12 +126,22 @@
     });
     cancelButton.addEventListener("click", close);
     applyButton.addEventListener("click", async () => {
-      const saved = await onSave({
-        surface: draft.surface,
-        file: draft.file,
-        ...normalizeCrop(draft),
-      });
-      if (saved !== false) close();
+      if (saveInFlight) return;
+      saveInFlight = true;
+      applyButton.disabled = true;
+      applyButton.setAttribute("aria-busy", "true");
+      try {
+        const saved = await onSave({
+          surface: draft.surface,
+          file: draft.file,
+          ...normalizeCrop(draft),
+        });
+        if (saved !== false) close();
+      } finally {
+        saveInFlight = false;
+        applyButton.disabled = false;
+        applyButton.setAttribute("aria-busy", "false");
+      }
     });
     dialog.addEventListener("close", () => {
       pointers.clear();

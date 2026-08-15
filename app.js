@@ -582,6 +582,16 @@ async function saveWallpaper(surface, file, crop) {
   const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
   if (uploadError) { toast("사진을 올리지 못했어요. 다시 시도해 주세요"); return false; }
   const previous = state.wallpapers[surface];
+  let signedUrl = "";
+  try {
+    const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) throw error || new Error("Signed URL is missing");
+    signedUrl = data.signedUrl;
+  } catch {
+    await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]);
+    toast("사진을 표시할 준비를 하지 못했어요. 다시 시도해 주세요");
+    return false;
+  }
   const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({
     household_id: state.household.id,
     surface,
@@ -596,8 +606,7 @@ async function saveWallpaper(surface, file, crop) {
     toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
     return false;
   }
-  const { data } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrl(path, 3600);
-  state.wallpapers[surface] = { path, url: data?.signedUrl || "", ...crop }; renderWallpapers();
+  state.wallpapers[surface] = { path, url: signedUrl, ...crop }; renderWallpapers();
   if (previous?.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
   toast("가족 월페이퍼를 바꿨어요");
   return true;
