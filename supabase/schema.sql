@@ -89,9 +89,15 @@ create table public.household_wallpapers (
   household_id uuid not null references public.households(id) on delete cascade,
   surface text not null check (surface in ('calendar', 'growth')),
   photo_path text not null check (photo_path like household_id::text || '/wallpapers/' || surface || '/%'),
+  position_x double precision not null default 50,
+  position_y double precision not null default 50,
+  zoom double precision not null default 1,
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint household_wallpapers_position_x_check check (position_x between 0 and 100),
+  constraint household_wallpapers_position_y_check check (position_y between 0 and 100),
+  constraint household_wallpapers_zoom_check check (zoom between 1 and 3),
   primary key (household_id, surface)
 );
 

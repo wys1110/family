@@ -566,23 +566,59 @@ async function hydrateWallpaperUrls(rows, householdId) {
   if (!paths.length) { state.wallpapers = { calendar: null, growth: null }; return renderWallpapers(); }
   const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600); if (error) return;
   const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
-  state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => { const row = valid.find((item) => item.surface === surface); return [surface, row ? { path: row.photo_path, url: urls.get(row.photo_path) || "" } : null]; }));
+  state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => {
+    const row = valid.find((item) => item.surface === surface);
+    if (!row) return [surface, null];
+    const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(row);
+    return [surface, { path: row.photo_path, url: urls.get(row.photo_path) || "", ...crop }];
+  }));
   renderWallpapers();
 }
 async function photoDataUrl(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
 function wallpaperExtension(file) { const type = file.type || "image/jpeg"; return type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg"; }
-async function saveWallpaper(surface, file) {
-  if (!WALLPAPER_SURFACES.has(surface) || !file) return;
+async function saveWallpaper(surface, file, crop) {
+  if (!WALLPAPER_SURFACES.has(surface) || !file) return false;
   const path = `${state.household.id}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
   const { error: uploadError } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
-  if (uploadError) return toast("사진을 올리지 못했어요. 다시 시도해 주세요");
+  if (uploadError) { toast("사진을 올리지 못했어요. 다시 시도해 주세요"); return false; }
   const previous = state.wallpapers[surface];
-  const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({ household_id: state.household.id, surface, photo_path: path, created_by: state.session.user.id }).select().single();
-  if (saveError) { await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]); return toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요"); }
+  const { error: saveError } = await state.supabase.from("household_wallpapers").upsert({
+    household_id: state.household.id,
+    surface,
+    photo_path: path,
+    position_x: crop.positionX,
+    position_y: crop.positionY,
+    zoom: crop.zoom,
+    created_by: state.session.user.id,
+  }).select().single();
+  if (saveError) {
+    await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([path]);
+    toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
+    return false;
+  }
   const { data } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrl(path, 3600);
-  state.wallpapers[surface] = { path, url: data?.signedUrl || "" }; renderWallpapers();
+  state.wallpapers[surface] = { path, url: data?.signedUrl || "", ...crop }; renderWallpapers();
   if (previous?.path && wallpaperPathIsOwned(previous.path, state.household.id, surface)) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([previous.path]);
   toast("가족 월페이퍼를 바꿨어요");
+  return true;
+}
+async function saveWallpaperCrop(surface, crop) {
+  const existing = state.wallpapers[surface];
+  if (!existing?.path || !wallpaperPathIsOwned(existing.path, state.household.id, surface)) return false;
+  const { error } = await state.supabase.from("household_wallpapers")
+    .update({ position_x: crop.positionX, position_y: crop.positionY, zoom: crop.zoom })
+    .eq("household_id", state.household.id)
+    .eq("surface", surface)
+    .select("household_id")
+    .single();
+  if (error) {
+    toast("월페이퍼 위치를 저장하지 못했어요. 다시 시도해 주세요");
+    return false;
+  }
+  state.wallpapers[surface] = { ...existing, ...crop };
+  renderWallpapers();
+  toast("월페이퍼 위치를 저장했어요");
+  return true;
 }
 function chooseWallpaperPhoto(surface) {
   if (!WALLPAPER_SURFACES.has(surface)) return;
@@ -615,7 +651,8 @@ async function saveWallpaperDraft(draft) {
     toast("이 기기에 월페이퍼를 설정했어요");
     return true;
   }
-  if (draft.file) await saveWallpaper(draft.surface, draft.file);
+  if (draft.file) return saveWallpaper(draft.surface, draft.file, crop);
+  return saveWallpaperCrop(draft.surface, crop);
 }
 function initializeWallpaperEditor() {
   if (wallpaperEditorController || !window.FAMILY_WALLPAPER_EDITOR) return false;

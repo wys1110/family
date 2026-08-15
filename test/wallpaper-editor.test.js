@@ -25,9 +25,8 @@ function eventTarget(initial = {}) {
       listeners.set(type, typeListeners);
     },
     dispatch(type, event = {}) {
-      for (const listener of listeners.get(type) || []) {
-        listener({ preventDefault() {}, ...event, currentTarget: this });
-      }
+      return Promise.all((listeners.get(type) || []).map((listener) =>
+        listener({ preventDefault() {}, ...event, currentTarget: this })));
     },
   };
 }
@@ -171,6 +170,17 @@ describe("wallpaper editor controller", () => {
     harness.controller.open({ surface: "growth", url: "growth.jpg", positionX: 40, positionY: 60, zoom: 1.2 });
     harness.apply.dispatch("click");
     expect(harness.onSave).toHaveBeenCalledWith({ surface: "growth", file: undefined, positionX: 40, positionY: 60, zoom: 1.2 });
+  });
+
+  test("keeps the editor open when persistence fails", async () => {
+    const harness = createHarness();
+    harness.onSave.mockResolvedValue(false);
+    harness.controller.open({ surface: "calendar", url: "old.jpg", zoom: 1 });
+
+    await harness.apply.dispatch("click");
+
+    expect(harness.dialog.close).not.toHaveBeenCalled();
+    expect(harness.dialog.open).toBe(true);
   });
 
   test("resets crop, requests a replacement, and revokes only its own object URLs", () => {

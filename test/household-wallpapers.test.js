@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -6,6 +6,8 @@ const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), '
 const app = read('app.js');
 const html = read('index.html');
 const migration = read('supabase/migrations/20260810005856_household_wallpapers.sql');
+const cropMigration = read('supabase/migrations/20260815024221_family_wallpaper_crop.sql');
+const schema = read('supabase/schema.sql');
 const css = read('family-wallpapers.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
@@ -47,6 +49,55 @@ function createWallpaperHarness(wallpaper) {
   return { image, node, state, render: createRenderer(document, state, window) };
 }
 
+function createRemoteSaveHarness({ saveFails = false } = {}) {
+  const previous = { path: 'household-1/wallpapers/calendar/old.jpg', url: 'old-signed.jpg', positionX: 50, positionY: 50, zoom: 1 };
+  const state = {
+    wallpapers: { calendar: previous, growth: null },
+    household: { id: 'household-1' },
+    session: { user: { id: 'user-1' } },
+  };
+  const filters = [];
+  const table = {
+    upsert: vi.fn((payload) => ({
+      select: () => ({ single: async () => ({ error: saveFails ? new Error('db') : null, data: payload }) }),
+    })),
+    update: vi.fn(() => {
+      const chain = {
+        eq(column, value) { filters.push([column, value]); return chain; },
+        select: () => ({ single: async () => ({ error: saveFails ? new Error('db') : null }) }),
+      };
+      return chain;
+    }),
+  };
+  const storage = {
+    upload: vi.fn(async () => ({ error: null })),
+    remove: vi.fn(async () => ({ error: null })),
+    createSignedUrl: vi.fn(async () => ({ data: { signedUrl: 'new-signed.jpg' }, error: null })),
+  };
+  state.supabase = {
+    from: vi.fn(() => table),
+    storage: { from: vi.fn(() => storage) },
+  };
+  const toast = vi.fn();
+  const renderWallpapers = vi.fn();
+  const source = [
+    app.slice(app.indexOf('function wallpaperExtension(file)'), app.indexOf('function chooseWallpaperPhoto(surface)')),
+    app.slice(app.indexOf('async function saveWallpaperDraft(draft)'), app.indexOf('function initializeWallpaperEditor()')),
+  ].join('\n');
+  const createRuntime = new Function(
+    'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'uid', 'toast', 'renderWallpapers',
+    'window', 'photoDataUrl', 'persistLocalWallpapers', 'wallpaperPathIsOwned',
+    `${source}\nreturn { saveWallpaper, saveWallpaperDraft };`,
+  );
+  const normalizeCrop = (value) => ({ positionX: value.positionX, positionY: value.positionY, zoom: value.zoom });
+  const runtime = createRuntime(
+    state, new Set(['calendar', 'growth']), 'growth-photos', () => 'new-id', toast, renderWallpapers,
+    { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } }, vi.fn(), vi.fn(),
+    (path, householdId, surface) => path.startsWith(`${householdId}/wallpapers/${surface}/`),
+  );
+  return { ...runtime, state, previous, table, storage, filters, toast, renderWallpapers };
+}
+
 describe('family wallpaper', () => {
   test('keeps one shared wallpaper per household and surface', () => {
     expect(migration).toContain("surface text not null check (surface in ('calendar', 'growth'))");
@@ -59,6 +110,58 @@ describe('family wallpaper', () => {
     expect(app).toContain("`${state.household.id}/wallpapers/${surface}/");
     expect(app).toContain('from("household_wallpapers")');
     expect(app).toContain('row.household_id === householdId');
+  });
+
+  test('stores bounded crop metadata with safe defaults in migrations and the canonical schema', () => {
+    for (const sql of [cropMigration, schema]) {
+      expect(sql).toMatch(/position_x double precision not null default 50/);
+      expect(sql).toMatch(/position_y double precision not null default 50/);
+      expect(sql).toMatch(/zoom double precision not null default 1/);
+      expect(sql).toMatch(/household_wallpapers_position_x_check check \(position_x between 0 and 100\)/);
+      expect(sql).toMatch(/household_wallpapers_position_y_check check \(position_y between 0 and 100\)/);
+      expect(sql).toMatch(/household_wallpapers_zoom_check check \(zoom between 1 and 3\)/);
+    }
+  });
+
+  test('hydrates remote crop values through the shared normalizer', () => {
+    expect(app).toContain('const crop = window.FAMILY_WALLPAPER_EDITOR.normalizeCrop(row);');
+    expect(app).toContain('{ path: row.photo_path, url: urls.get(row.photo_path) || "", ...crop }');
+  });
+
+  test('persists new-photo crop metadata and scopes crop-only updates to household and surface', () => {
+    expect(app).toContain('position_x: crop.positionX');
+    expect(app).toContain('position_y: crop.positionY');
+    expect(app).toContain('zoom: crop.zoom');
+    expect(app).toMatch(/\.update\(\{ position_x: crop\.positionX, position_y: crop\.positionY, zoom: crop\.zoom \}\)[\s\S]*?\.eq\("household_id", state\.household\.id\)[\s\S]*?\.eq\("surface", surface\)/);
+  });
+
+  test('keeps remote state unchanged and cleans up an uploaded photo when its row save fails', async () => {
+    const harness = createRemoteSaveHarness({ saveFails: true });
+    const saved = await harness.saveWallpaperDraft({
+      surface: 'calendar', file: { type: 'image/jpeg' }, positionX: 20, positionY: 70, zoom: 1.8,
+    });
+
+    expect(saved).toBe(false);
+    expect(harness.table.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      household_id: 'household-1', surface: 'calendar', position_x: 20, position_y: 70, zoom: 1.8,
+    }));
+    expect(harness.storage.remove).toHaveBeenCalledWith(['household-1/wallpapers/calendar/new-id.jpg']);
+    expect(harness.state.wallpapers.calendar).toBe(harness.previous);
+  });
+
+  test('updates crop metadata for only the current household surface before mutating memory', async () => {
+    const harness = createRemoteSaveHarness();
+    const saved = await harness.saveWallpaperDraft({
+      surface: 'calendar', positionX: 30, positionY: 65, zoom: 2.1,
+    });
+
+    expect(saved).toBe(true);
+    expect(harness.table.update).toHaveBeenCalledWith({ position_x: 30, position_y: 65, zoom: 2.1 });
+    expect(harness.filters).toEqual([
+      ['household_id', 'household-1'],
+      ['surface', 'calendar'],
+    ]);
+    expect(harness.state.wallpapers.calendar).toEqual({ ...harness.previous, positionX: 30, positionY: 65, zoom: 2.1 });
   });
 
   test('provides photo change controls on both hero surfaces', () => {

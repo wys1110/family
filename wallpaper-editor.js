@@ -125,12 +125,12 @@
     });
     cancelButton.addEventListener("click", close);
     applyButton.addEventListener("click", async () => {
-      await onSave({
+      const saved = await onSave({
         surface: draft.surface,
         file: draft.file,
         ...normalizeCrop(draft),
       });
-      close();
+      if (saved !== false) close();
     });
     dialog.addEventListener("close", () => {
       pointers.clear();
