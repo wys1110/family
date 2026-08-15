@@ -31,19 +31,29 @@ describe('theme bootstrap prevents refresh flash', () => {
   });
 
   test('keeps wallpaper scrims brighter and identical across first-paint sources', () => {
-    const values = [
-      ['8', '8', '8', '.46'],
-      ['8', '8', '8', '.24'],
-      ['8', '8', '8', '.05'],
-      ['4', '4', '4', '.58'],
-      ['4', '4', '4', '.32'],
-      ['4', '4', '4', '.08'],
-    ];
+    const themes = {
+      white: {
+        start: 'rgba(8, 8, 8, .46)',
+        middle: 'rgba(8, 8, 8, .24)',
+        end: 'rgba(8, 8, 8, .05)',
+      },
+      black: {
+        start: 'rgba(4, 4, 4, .58)',
+        middle: 'rgba(4, 4, 4, .32)',
+        end: 'rgba(4, 4, 4, .08)',
+      },
+    };
 
-    values.forEach(([red, green, blue, alpha]) => {
-      const declaration = new RegExp(`rgba\\(${red},\\s*${green},\\s*${blue},\\s*\\${alpha}\\)`);
-      expect(index).toMatch(declaration);
-      expect(critical).toMatch(declaration);
+    [index, critical].forEach((source) => {
+      Object.entries(themes).forEach(([theme, scrims]) => {
+        const rule = source.match(new RegExp(`html\\[data-family-theme-choice="${theme}"\\]\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
+
+        expect(rule).not.toBeNull();
+        Object.entries(scrims).forEach(([position, value]) => {
+          const declaration = `--theme-wallpaper-scrim-${position}:${value.replace(/\s/g, '')};`;
+          expect(rule[1].replace(/\s/g, '')).toContain(declaration);
+        });
+      });
     });
   });
 
