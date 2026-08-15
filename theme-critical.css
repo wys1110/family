@@ -18,9 +18,9 @@ html[data-family-theme-choice="white"] {
   --theme-hero-start: #17191b;
   --theme-hero-end: #3b3e42;
   --theme-wallpaper-text: #ffffff;
-  --theme-wallpaper-scrim-start: rgba(8, 8, 8, .72);
-  --theme-wallpaper-scrim-middle: rgba(8, 8, 8, .44);
-  --theme-wallpaper-scrim-end: rgba(8, 8, 8, .13);
+  --theme-wallpaper-scrim-start: rgba(8, 8, 8, .46);
+  --theme-wallpaper-scrim-middle: rgba(8, 8, 8, .24);
+  --theme-wallpaper-scrim-end: rgba(8, 8, 8, .05);
   --theme-wallpaper-text-shadow: rgba(0, 0, 0, .62);
   --theme-wallpaper-surface: rgba(10, 10, 10, .52);
   --theme-wallpaper-border: rgba(255, 255, 255, .23);
@@ -62,9 +62,9 @@ html[data-family-theme-choice="black"] {
   --theme-hero-start: #111111;
   --theme-hero-end: #303030;
   --theme-wallpaper-text: #ffffff;
-  --theme-wallpaper-scrim-start: rgba(4, 4, 4, .82);
-  --theme-wallpaper-scrim-middle: rgba(4, 4, 4, .55);
-  --theme-wallpaper-scrim-end: rgba(4, 4, 4, .18);
+  --theme-wallpaper-scrim-start: rgba(4, 4, 4, .58);
+  --theme-wallpaper-scrim-middle: rgba(4, 4, 4, .32);
+  --theme-wallpaper-scrim-end: rgba(4, 4, 4, .08);
   --theme-wallpaper-text-shadow: rgba(0, 0, 0, .62);
   --theme-wallpaper-surface: rgba(10, 10, 10, .52);
   --theme-wallpaper-border: rgba(255, 255, 255, .23);

@@ -402,7 +402,7 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*1;/s);
     expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
     expect(css).not.toContain('var(--wallpaper-image)');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-overlay-cleanup-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260815-brightness-v1", script: false }');
   });
 
   test('keeps wallpaper actions above the content layer', () => {
