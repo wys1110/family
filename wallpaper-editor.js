@@ -45,11 +45,13 @@
     const resetButton = options.resetButton || find("#wallpaperEditorReset");
     const cancelButton = options.cancelButton || find("#wallpaperEditorCancel");
     const applyButton = options.applyButton || find("#wallpaperEditorApply");
+    const closeButtons = options.closeButtons || Array.from(dialog.querySelectorAll?.('[data-close="wallpaperEditorDialog"]') || []);
     const pointers = new Map();
     let draft = { surface: "calendar", url: "", file: undefined, ...normalizeCrop() };
     let objectUrl = "";
     let pinchStart = null;
     let saveInFlight = false;
+    let editGeneration = 0;
 
     const pointerDistance = () => {
       const [first, second] = [...pointers.values()];
@@ -72,16 +74,29 @@
       dialog.dataset.surface = draft.surface;
     };
 
-    const close = () => {
+    const close = (force = false) => {
+      if (saveInFlight && !force) return false;
       if (dialog.open) dialog.close();
+      return true;
+    };
+
+    const setSaving = (saving) => {
+      saveInFlight = saving;
+      for (const control of [cancelButton, ...closeButtons, chooseButton, resetButton, zoomInput]) {
+        control.disabled = saving;
+      }
+      applyButton.disabled = saving;
+      applyButton.setAttribute("aria-busy", String(saving));
     };
 
     zoomInput.addEventListener("input", () => {
+      if (saveInFlight) return;
       draft = { ...draft, zoom: normalizeCrop({ ...draft, zoom: zoomInput.value }).zoom };
       render();
     });
 
     preview.addEventListener("pointerdown", (event) => {
+      if (saveInFlight) return;
       event.preventDefault();
       preview.setPointerCapture?.(event.pointerId);
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -91,6 +106,7 @@
     });
 
     preview.addEventListener("pointermove", (event) => {
+      if (saveInFlight) return;
       const previous = pointers.get(event.pointerId);
       if (!previous) return;
       event.preventDefault();
@@ -119,31 +135,40 @@
     preview.addEventListener("pointerup", endPointer);
     preview.addEventListener("pointercancel", endPointer);
 
-    chooseButton.addEventListener("click", () => onChoosePhoto(draft.surface));
+    chooseButton.addEventListener("click", () => {
+      if (!saveInFlight) onChoosePhoto(draft.surface);
+    });
     resetButton.addEventListener("click", () => {
+      if (saveInFlight) return;
       draft = { ...draft, ...normalizeCrop() };
       render();
     });
-    cancelButton.addEventListener("click", close);
+    cancelButton.addEventListener("click", () => close());
+    closeButtons.forEach((button) => button.addEventListener("click", (event) => {
+      if (!saveInFlight) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }));
+    dialog.addEventListener("cancel", (event) => {
+      if (saveInFlight) event.preventDefault();
+    });
     applyButton.addEventListener("click", async () => {
       if (saveInFlight) return;
-      saveInFlight = true;
-      applyButton.disabled = true;
-      applyButton.setAttribute("aria-busy", "true");
+      const saveGeneration = editGeneration;
+      setSaving(true);
       try {
         const saved = await onSave({
           surface: draft.surface,
           file: draft.file,
           ...normalizeCrop(draft),
         });
-        if (saved !== false) close();
+        if (saved !== false && saveGeneration === editGeneration) close(true);
       } finally {
-        saveInFlight = false;
-        applyButton.disabled = false;
-        applyButton.setAttribute("aria-busy", "false");
+        setSaving(false);
       }
     });
     dialog.addEventListener("close", () => {
+      editGeneration += 1;
       pointers.clear();
       pinchStart = null;
       releaseObjectUrl();
@@ -151,6 +176,8 @@
 
     return {
       open(value = {}) {
+        if (saveInFlight) return false;
+        editGeneration += 1;
         releaseObjectUrl();
         draft = {
           surface: value.surface || "calendar",
@@ -164,6 +191,7 @@
         previewImage.src = objectUrl || draft.url;
         render();
         if (!dialog.open) dialog.showModal();
+        return true;
       },
     };
   }

@@ -48,9 +48,10 @@ function createHarness() {
   });
   const zoomInput = eventTarget({ value: "1" });
   const zoomOutput = { value: "", textContent: "" };
-  const choose = eventTarget();
-  const reset = eventTarget();
-  const cancel = eventTarget();
+  const choose = eventTarget({ disabled: false });
+  const reset = eventTarget({ disabled: false });
+  const cancel = eventTarget({ disabled: false });
+  const footerCancel = eventTarget({ disabled: false });
   const apply = eventTarget({ disabled: false, setAttribute: vi.fn() });
   const onSave = vi.fn();
   const onChoosePhoto = vi.fn();
@@ -65,13 +66,14 @@ function createHarness() {
     chooseButton: choose,
     resetButton: reset,
     cancelButton: cancel,
+    closeButtons: [footerCancel],
     applyButton: apply,
     onSave,
     onChoosePhoto,
   });
   return {
     api, controller, dialog, preview, previewImage, zoomInput, zoomOutput,
-    choose, reset, cancel, apply, onSave, onChoosePhoto, createObjectURL, revokeObjectURL,
+    choose, reset, cancel, footerCancel, apply, onSave, onChoosePhoto, createObjectURL, revokeObjectURL,
   };
 }
 
@@ -202,6 +204,41 @@ describe("wallpaper editor controller", () => {
     expect(harness.dialog.open).toBe(true);
     expect(harness.apply.disabled).toBe(false);
     expect(harness.apply.setAttribute).toHaveBeenLastCalledWith("aria-busy", "false");
+    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput]) {
+      expect(control.disabled).toBe(false);
+    }
+  });
+
+  test("locks close and replacement lifecycle while saving and closes only the originating edit", async () => {
+    const harness = createHarness();
+    let finishSave;
+    harness.onSave.mockImplementation(() => new Promise((resolve) => { finishSave = resolve; }));
+    expect(harness.controller.open({ surface: "calendar", url: "calendar.jpg", zoom: 1 })).toBe(true);
+    const pending = harness.apply.dispatch("click");
+
+    await harness.cancel.dispatch("click");
+    await harness.choose.dispatch("click");
+    const footerEvent = { preventDefault: vi.fn(), stopPropagation: vi.fn() };
+    await harness.footerCancel.dispatch("click", footerEvent);
+    const escapeEvent = { preventDefault: vi.fn() };
+    await harness.dialog.dispatch("cancel", escapeEvent);
+    const reopened = harness.controller.open({ surface: "growth", url: "growth.jpg", zoom: 2 });
+
+    expect(reopened).toBe(false);
+    expect(harness.dialog.close).not.toHaveBeenCalled();
+    expect(harness.onChoosePhoto).not.toHaveBeenCalled();
+    expect(footerEvent.preventDefault).toHaveBeenCalled();
+    expect(footerEvent.stopPropagation).toHaveBeenCalled();
+    expect(escapeEvent.preventDefault).toHaveBeenCalled();
+    for (const control of [harness.cancel, harness.footerCancel, harness.choose, harness.reset, harness.zoomInput]) {
+      expect(control.disabled).toBe(true);
+    }
+
+    finishSave(true);
+    await pending;
+
+    expect(harness.dialog.close).toHaveBeenCalledTimes(1);
+    expect(harness.previewImage.src).toBe("calendar.jpg");
   });
 
   test("resets crop, requests a replacement, and revokes only its own object URLs", () => {
