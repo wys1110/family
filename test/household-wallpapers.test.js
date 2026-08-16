@@ -11,6 +11,7 @@ const schema = read('supabase/schema.sql');
 const css = read('family-wallpapers.css');
 const baseCss = read('styles.css');
 const responsiveCss = read('responsive-layout.css');
+const typographyCss = read('typography-system.css');
 const config = read('config.js');
 const serviceWorker = read('service-worker.js');
 const editorSource = read('wallpaper-editor.js');
@@ -398,12 +399,14 @@ describe('family wallpaper', () => {
     expect(app).not.toContain('$("#babyMonogram")');
     expect(baseCss).not.toContain('.baby-monogram');
     expect(responsiveCss).not.toContain('.baby-monogram');
+    expect(typographyCss).not.toContain('.baby-monogram');
     expect(baseCss).toMatch(/\.baby-profile-main\s*\{[^}]*grid-template-columns:minmax\(0,1fr\) auto;/s);
     expect(baseCss).toContain('.baby-care-card .baby-edit-button { margin:12px 0 0 22px; }');
     expect(css).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-profile-main { padding-left: calc(22px + 72px); }');
     expect(css).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-edit-button { margin-left: calc(22px + 72px); }');
-    expect(css).toContain('padding-left: calc(18px + 63px);');
-    expect(css).toContain('margin-left: calc(18px + 63px);');
+    const mobileWallpaperCss = css.slice(css.indexOf('@media (max-width: 520px)'));
+    expect(mobileWallpaperCss).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-profile-main { padding-left: calc(18px + 63px); }');
+    expect(mobileWallpaperCss).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-edit-button { margin-left: calc(18px + 63px); }');
   });
 
   test('removes legacy hero decorations from active calendar wallpapers', () => {
