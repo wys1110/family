@@ -82,6 +82,7 @@ git commit -m "test: cover growth monogram removal"
 - Modify: `styles.css`
 - Modify: `responsive-layout.css`
 - Modify: `typography-system.css`
+- Modify: `growth-layout.css`
 - Modify: `family-wallpapers.css`
 - Modify: `config.js`
 - Modify: `test/calendar-font-settings.test.js`
@@ -141,6 +142,17 @@ In `typography-system.css`, remove `.baby-monogram` from the shared selector so 
 }
 ```
 
+In `growth-layout.css`, remove the later-loaded monogram-era offsets so the final cascade preserves normal content-edge alignment:
+
+```css
+.baby-care-card .baby-edit-button { min-height: 32px; margin: 12px 0 0 22px; padding: 0 10px; }
+
+@media (max-width: 520px) {
+  .baby-care-card .baby-profile-main { padding: 19px 18px 0; }
+  .baby-care-card .baby-edit-button { margin-left: 18px; }
+}
+```
+
 - [ ] **Step 3: Add wallpaper-only photo-safe offsets**
 
 In `family-wallpapers.css`, add:
@@ -162,10 +174,12 @@ Inside its existing `@media (max-width: 520px)` block, add:
 Use `20260816-growth-monogram-v1` for:
 
 - `styles.css`, `config.js`, and `app.js` URLs in `index.html`.
-- `responsive-layout`, `typography-system`, and `family-wallpapers` module versions in `config.js`.
+- `responsive-layout`, `growth-layout`, `typography-system`, and `family-wallpapers` module versions in `config.js`.
 - Every test that asserts the previous exact versions.
 
 Keep all unrelated module and wallpaper-editor versions unchanged.
+
+Extend the household wallpaper regression test to load `growth-layout.css`, assert that `94px` and `79px` monogram-era edit offsets are absent, assert the final desktop/mobile normal alignments above, and require the `growth-layout` config version to equal `20260816-growth-monogram-v1`.
 
 - [ ] **Step 5: Run focused tests and verify GREEN**
 
@@ -182,7 +196,7 @@ Expected: all checks and tests pass; `git diff --check` prints no output.
 - [ ] **Step 7: Commit the implementation**
 
 ```bash
-git add index.html app.js styles.css responsive-layout.css typography-system.css family-wallpapers.css config.js test/calendar-font-settings.test.js test/calendar-mobile-polish.test.js test/calendar-month-typography.test.js test/demo-theme-settings.test.js test/global-design-harmony.test.js test/household-wallpapers.test.js test/storybook-typography-emoji.test.js test/upcoming-events.test.js
+git add index.html app.js styles.css responsive-layout.css typography-system.css growth-layout.css family-wallpapers.css config.js test/calendar-font-settings.test.js test/calendar-mobile-polish.test.js test/calendar-month-typography.test.js test/demo-theme-settings.test.js test/global-design-harmony.test.js test/household-wallpapers.test.js test/storybook-typography-emoji.test.js test/upcoming-events.test.js
 git commit -m "fix: remove growth profile monogram"
 ```
 
