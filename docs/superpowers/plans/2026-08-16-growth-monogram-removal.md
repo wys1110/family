@@ -26,7 +26,7 @@
 - Modify: `test/household-wallpapers.test.js`
 
 **Interfaces:**
-- Consumes: `index.html`, `app.js`, `styles.css`, `responsive-layout.css`, and `family-wallpapers.css` as source strings.
+- Consumes: `index.html`, `app.js`, `styles.css`, `responsive-layout.css`, `typography-system.css`, and `family-wallpapers.css` as source strings.
 - Produces: Regression assertions for full monogram removal, two-column base layout, and wallpaper-only safe-zone layout.
 
 - [ ] **Step 1: Load the affected base and responsive styles in the test**
@@ -36,6 +36,7 @@ Add these source strings beside the existing `css` constant:
 ```js
 const baseCss = read('styles.css');
 const responsiveCss = read('responsive-layout.css');
+const typographyCss = read('typography-system.css');
 ```
 
 - [ ] **Step 2: Add a failing removal and layout test**
@@ -49,12 +50,14 @@ test('removes the baby monogram and reserves photo space only for active growth 
   expect(app).not.toContain('$("#babyMonogram")');
   expect(baseCss).not.toContain('.baby-monogram');
   expect(responsiveCss).not.toContain('.baby-monogram');
+  expect(typographyCss).not.toContain('.baby-monogram');
   expect(baseCss).toMatch(/\.baby-profile-main\s*\{[^}]*grid-template-columns:minmax\(0,1fr\) auto;/s);
   expect(baseCss).toContain('.baby-care-card .baby-edit-button { margin:12px 0 0 22px; }');
   expect(css).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-profile-main { padding-left: calc(22px + 72px); }');
   expect(css).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-edit-button { margin-left: calc(22px + 72px); }');
-  expect(css).toContain('padding-left: calc(18px + 63px);');
-  expect(css).toContain('margin-left: calc(18px + 63px);');
+  const mobileWallpaperCss = css.slice(css.indexOf('@media (max-width: 520px)'));
+  expect(mobileWallpaperCss).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-profile-main { padding-left: calc(18px + 63px); }');
+  expect(mobileWallpaperCss).toContain('.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"] .baby-edit-button { margin-left: calc(18px + 63px); }');
 });
 ```
 
@@ -78,6 +81,7 @@ git commit -m "test: cover growth monogram removal"
 - Modify: `app.js`
 - Modify: `styles.css`
 - Modify: `responsive-layout.css`
+- Modify: `typography-system.css`
 - Modify: `family-wallpapers.css`
 - Modify: `config.js`
 - Modify: `test/calendar-font-settings.test.js`
@@ -86,6 +90,7 @@ git commit -m "test: cover growth monogram removal"
 - Modify: `test/demo-theme-settings.test.js`
 - Modify: `test/global-design-harmony.test.js`
 - Modify: `test/household-wallpapers.test.js`
+- Modify: `test/storybook-typography-emoji.test.js`
 - Modify: `test/upcoming-events.test.js`
 
 **Interfaces:**
@@ -126,6 +131,16 @@ In `responsive-layout.css`, change the wide `.baby-profile-main` declaration to:
 
 Delete the wide `.baby-monogram` block entirely.
 
+In `typography-system.css`, remove `.baby-monogram` from the shared selector so the remaining rule targets only `.baby-empty-mark`:
+
+```css
+#growthView .baby-empty-mark {
+  font-size: 31px;
+  font-weight: var(--type-weight-regular);
+  line-height: 1.5;
+}
+```
+
 - [ ] **Step 3: Add wallpaper-only photo-safe offsets**
 
 In `family-wallpapers.css`, add:
@@ -147,7 +162,7 @@ Inside its existing `@media (max-width: 520px)` block, add:
 Use `20260816-growth-monogram-v1` for:
 
 - `styles.css`, `config.js`, and `app.js` URLs in `index.html`.
-- `responsive-layout` and `family-wallpapers` module versions in `config.js`.
+- `responsive-layout`, `typography-system`, and `family-wallpapers` module versions in `config.js`.
 - Every test that asserts the previous exact versions.
 
 Keep all unrelated module and wallpaper-editor versions unchanged.
@@ -167,7 +182,7 @@ Expected: all checks and tests pass; `git diff --check` prints no output.
 - [ ] **Step 7: Commit the implementation**
 
 ```bash
-git add index.html app.js styles.css responsive-layout.css family-wallpapers.css config.js test/calendar-font-settings.test.js test/calendar-mobile-polish.test.js test/calendar-month-typography.test.js test/demo-theme-settings.test.js test/global-design-harmony.test.js test/household-wallpapers.test.js test/upcoming-events.test.js
+git add index.html app.js styles.css responsive-layout.css typography-system.css family-wallpapers.css config.js test/calendar-font-settings.test.js test/calendar-mobile-polish.test.js test/calendar-month-typography.test.js test/demo-theme-settings.test.js test/global-design-harmony.test.js test/household-wallpapers.test.js test/storybook-typography-emoji.test.js test/upcoming-events.test.js
 git commit -m "fix: remove growth profile monogram"
 ```
 
