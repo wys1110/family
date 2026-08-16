@@ -370,7 +370,7 @@ input[type="datetime-local"],
   line-height: 1;
 }
 
-#growthView :is(.baby-monogram, .baby-empty-mark) {
+#growthView .baby-empty-mark {
   font-size: 31px;
   font-weight: var(--type-weight-regular);
   line-height: 1.5;

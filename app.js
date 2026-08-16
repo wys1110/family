@@ -1483,7 +1483,6 @@ function activeBabyEntries() {
 function renderBabyProfile(baby) {
   $("#babySelector").hidden = state.babies.length < 2;
   $("#babySelector").innerHTML = state.babies.map((item) => `<button type="button" class="${item.id === baby.id ? "active" : ""}" data-baby-id="${item.id}"><span>${escapeHtml(item.name.charAt(0))}</span>${escapeHtml(item.name)}</button>`).join("");
-  $("#babyMonogram").textContent = baby.name.charAt(0);
   $("#activeBabyName").textContent = baby.name;
   const days = daysFromBirth(baby.birthDate);
   const birth = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(parseDate(baby.birthDate));
