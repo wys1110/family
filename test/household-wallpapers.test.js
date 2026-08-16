@@ -3,6 +3,10 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+const productionSource = fs.readdirSync(new URL('..', import.meta.url), { withFileTypes: true })
+  .filter((entry) => entry.isFile() && /\.(?:css|js|html)$/.test(entry.name))
+  .map((entry) => read(entry.name))
+  .join('\n');
 const app = read('app.js');
 const html = read('index.html');
 const migration = read('supabase/migrations/20260810005856_household_wallpapers.sql');
@@ -395,6 +399,8 @@ describe('family wallpaper', () => {
   });
 
   test('removes the baby monogram and reserves photo space only for active growth wallpapers', () => {
+    expect(productionSource).not.toContain('babyMonogram');
+    expect(productionSource).not.toContain('.baby-monogram');
     expect(html).not.toContain('id="babyMonogram"');
     expect(html).not.toContain('class="baby-monogram"');
     expect(app).not.toContain('$("#babyMonogram")');
