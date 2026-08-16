@@ -38,7 +38,7 @@
 }
 
 .baby-care-card .baby-profile-main { padding: 22px 22px 0; }
-.baby-care-card .baby-edit-button { min-height: 32px; margin: 10px 0 0 94px; padding: 0 10px; }
+.baby-care-card .baby-edit-button { min-height: 32px; margin: 12px 0 0 22px; padding: 0 10px; }
 
 .care-timer-card,
 .care-pattern-section,
@@ -167,8 +167,8 @@
   .growth-page-header { min-height: 56px; }
   .growth-diary-mascot { display: none; }
   .baby-archive-button { min-height: 42px; padding: 0 9px; font-size: 9px; }
-  .baby-care-card .baby-profile-main { padding: 19px 17px 0; }
-  .baby-care-card .baby-edit-button { margin-left: 79px; }
+  .baby-care-card .baby-profile-main { padding: 19px 18px 0; }
+  .baby-care-card .baby-edit-button { margin-left: 18px; }
   .care-timer-card,
   .care-pattern-section,
   .integrated-care-summary.standalone-growth-summary,

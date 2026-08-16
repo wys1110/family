@@ -143,7 +143,7 @@ window.FAMILY_CONFIG = {
     { name: "feeding-db-compat", version: "20260717-db-check-fix-v1", style: false },
     { name: "responsive-layout", version: "20260816-growth-monogram-v1", script: false },
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
-    { name: "growth-layout", version: "20260717-baby-archive-v1", script: false },
+    { name: "growth-layout", version: "20260816-growth-monogram-v1", script: false },
     { name: "growth-dialog-simple", version: "20260718-submit-label-v2", style: false },
     { name: "growth-photo-recovery", version: "20260718-signed-url-refresh-v1", style: false },
     { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
