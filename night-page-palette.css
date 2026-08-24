@@ -482,7 +482,7 @@ html[data-family-theme="night"] #settingsView .theme-preview {
 }
 
 html[data-family-theme="night"] #settingsView .theme-save-note,
-html[data-family-theme="night"] #settingsView :is(.feeding-reminder-form, .daily-briefing-form, .family-profile-photo-control, .family-profile-preview) {
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-form, .event-change-push-status, .event-change-push-ios-note, .family-profile-photo-control, .family-profile-preview) {
   color: #b7c6da;
   border-color: rgba(134, 175, 255, .14);
   background: rgba(20, 43, 73, .76);
@@ -494,19 +494,19 @@ html[data-family-theme="night"] #settingsView :is(input, select, textarea) {
   background: #102440;
 }
 
-html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission, .daily-briefing-actions button, .family-profile-photo-actions button) {
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission, #eventChangePushToggle, .family-profile-photo-actions button) {
   color: #b8d3ff;
   border-color: rgba(121, 170, 255, .20);
   background: rgba(32, 67, 112, .62);
 }
 
-html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button.active, .daily-briefing-actions .primary-button) {
+html[data-family-theme="night"] #settingsView :is(.feeding-reminder-presets button.active, #eventChangePushToggle.active) {
   color: #061124;
   border-color: transparent;
   background: linear-gradient(145deg, #9ec6ff, #78a8f1);
 }
 
-html[data-family-theme="night"] #settingsView :is(.feeding-reminder-switch, .daily-briefing-switch) {
+html[data-family-theme="night"] #settingsView .feeding-reminder-switch {
   border-color: rgba(134, 175, 255, .16);
   background: rgba(20, 43, 73, .78);
 }

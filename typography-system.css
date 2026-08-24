@@ -484,11 +484,7 @@ input[type="datetime-local"],
 /* Shared compact utility controls keep one accessible touch target. */
 #calendarView :is(.icon-button, .today-button),
 #growthView :is(.baby-care-card .baby-edit-button, .care-day-mode-control button, .recent-photo-actions button),
-#settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission) {
-  min-height: var(--control-touch-min);
-}
-
-#settingsView #dailyBriefingSettings .daily-briefing-actions button {
+#settingsView :is(.feeding-reminder-presets button, .feeding-reminder-permission, #eventChangePushToggle) {
   min-height: var(--control-touch-min);
 }
 

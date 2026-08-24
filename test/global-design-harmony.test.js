@@ -66,8 +66,7 @@ describe("global design harmony", () => {
     expect(typographyCss).toMatch(/#calendarView :is\(\.icon-button, \.today-button\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
     expect(typographyCss).toMatch(/#growthView :is\(\.baby-care-card \.baby-edit-button, \.care-day-mode-control button, \.recent-photo-actions button\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
     expect(typographyCss).toMatch(/#englishView \.english-sentence > button[^{]*\{[^}]*min-width:\s*var\(--control-touch-min\);[^}]*min-height:\s*var\(--control-touch-min\);/s);
-    expect(typographyCss).toMatch(/#settingsView :is\(\.feeding-reminder-presets button, \.feeding-reminder-permission\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
-    expect(typographyCss).toMatch(/#settingsView #dailyBriefingSettings \.daily-briefing-actions button[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
+    expect(typographyCss).toMatch(/#settingsView :is\(\.feeding-reminder-presets button, \.feeding-reminder-permission, #eventChangePushToggle\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
   });
 
   test("updates every affected stylesheet cache version", () => {
@@ -78,6 +77,6 @@ describe("global design harmony", () => {
     expect(config).toContain('{ name: "settings", version: "20260804-settings-notification-cards-v1" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
-    expect(config).toContain('{ name: "typography-system", version: "20260816-growth-monogram-v1", script: false }');
+    expect(config).toContain('{ name: "typography-system", version: "20260824-event-change-push-v1", script: false }');
   });
 });

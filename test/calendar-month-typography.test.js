@@ -13,7 +13,7 @@ describe("calendar month picker typography", () => {
     expect(calendarSwipe).toContain("font-size: 21px;");
     expect(calendarSwipe).toContain("font-weight: 760;");
     expect(typography).toContain("label:not(.month-picker-trigger)");
-    expect(config).toContain('{ name: "typography-system", version: "20260816-growth-monogram-v1", script: false }');
-    expect(index).toContain('config.js?v=20260816-growth-monogram-v1');
+    expect(config).toContain('{ name: "typography-system", version: "20260824-event-change-push-v1", script: false }');
+    expect(index).toContain('config.js?v=20260824-event-change-push-v1');
   });
 });

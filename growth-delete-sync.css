@@ -344,7 +344,8 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #featureReques
 html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(
   .settings-card,
   .feeding-reminder-form,
-  .daily-briefing-form,
+  .event-change-push-status,
+  .event-change-push-ios-note,
   .family-profile-photo-control,
   .family-profile-preview,
   .theme-save-note
@@ -363,9 +364,8 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView 
   .settings-mark,
   .settings-current-theme,
   .feeding-reminder-switch,
-  .daily-briefing-switch,
   .feeding-reminder-presets,
-  .daily-briefing-actions
+  #eventChangePushToggle
 ) {
   color: #e5e5e5 !important;
   border-color: rgba(255, 255, 255, .11) !important;
@@ -405,7 +405,7 @@ html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView 
 
 html[data-family-theme="night"][data-family-theme-choice="black"] #settingsView :is(
   .feeding-reminder-presets button.active,
-  .daily-briefing-actions .primary-button,
+  #eventChangePushToggle.active,
   .settings-refresh-action
 ) {
   color: #fff !important;

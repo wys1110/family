@@ -167,7 +167,6 @@ body,
 
 #settingsView > [data-settings-refresh-module],
 #settingsView > [data-activity-disclosure],
-#settingsView > #dailyBriefingSettings,
 #settingsView > #feedingReminderSettings {
   display: none !important;
   pointer-events: none !important;

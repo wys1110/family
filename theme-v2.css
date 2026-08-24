@@ -278,7 +278,7 @@ html[data-family-theme-v2="true"] #settingsView :is(
   .family-photo-picker,
   .feeding-reminder-presets button,
   .feeding-reminder-permission,
-  #dailyBriefingSettings button
+  #eventChangePushSettings button
 ) {
   color: var(--color-text-secondary) !important;
 }

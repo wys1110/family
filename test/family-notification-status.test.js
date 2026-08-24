@@ -8,13 +8,13 @@ describe('family notification delivery status', () => {
   test('푸시 설정이 없을 때 성공으로 표시하지 않는다', () => {
     expect(source).toContain('not-configured');
     expect(briefingSource).toContain('VAPID');
-    expect(briefingSource).toContain('알림 연결 상태');
+    expect(briefingSource).toContain('이 기기에서는 아직 알림을 받지 않아요.');
     expect(source).toContain('getDeliveryStatus');
   });
 
   test('읽지 않은 수와 상태 API를 외부 모듈에 제공한다', () => {
     expect(source).toContain('FAMILY_NOTIFICATION_API');
     expect(source).toContain('family:notification-count-changed');
-    expect(briefingSource).toContain('FAMILY_DAILY_BRIEFING_API');
+    expect(briefingSource).toContain('FAMILY_EVENT_CHANGE_PUSH_API');
   });
 });

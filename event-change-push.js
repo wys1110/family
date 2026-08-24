@@ -184,28 +184,10 @@
     return true;
   };
 
-  const updateSettingsCopy = () => {
-    const card = document.querySelector("#dailyBriefingSettings");
-    if (!card) return false;
-    const heading = card.querySelector(".settings-heading h2");
-    const description = card.querySelector(".settings-heading div > span");
-    if (heading) heading.textContent = "가족 일정 앱 알림";
-    if (description) description.textContent = "아침 브리핑과 일정 변경 소식을 가족 기기로 보내요.";
-    if (!card.querySelector("#eventChangePushNote")) {
-      const note = document.createElement("p");
-      note.id = "eventChangePushNote";
-      note.className = "daily-briefing-install-note";
-      note.innerHTML = "<strong>변경 알림</strong><span>일정 추가·수정·이동·삭제 시 변경한 사람을 제외한 가족에게 즉시 알려줘요.</span>";
-      card.querySelector(".daily-briefing-form")?.appendChild(note);
-    }
-    return true;
-  };
-
   const install = (attempt = 0) => {
     const patched = patchClient();
     const dateReady = openNotificationDate();
-    const copyReady = updateSettingsCopy();
-    if ((!patched || !dateReady || !copyReady) && attempt < 50) setTimeout(() => install(attempt + 1), 100);
+    if ((!patched || !dateReady) && attempt < 50) setTimeout(() => install(attempt + 1), 100);
   };
 
   window.addEventListener("familycontextchange", () => install());

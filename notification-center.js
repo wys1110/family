@@ -375,36 +375,6 @@
     })];
   });
 
-  const readBriefingSettings = () => {
-    let key = 'family-daily-briefing-v1:device';
-    if (typeof state !== 'undefined' && state.session?.user?.id && state.household?.id) {
-      key = `family-daily-briefing-v1:${state.session.user.id}:${state.household.id}`;
-    }
-    try { return JSON.parse(localStorage.getItem(key) || 'null') || null; }
-    catch { return null; }
-  };
-
-  const buildBriefingItem = () => {
-    const settings = readBriefingSettings();
-    if (!settings?.enabled || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(settings.time || '')) return [];
-    const scheduled = parseLocalDateTime(dateKey(), settings.time);
-    if (!scheduled) return [];
-    if (scheduled.getTime() <= Date.now()) scheduled.setDate(scheduled.getDate() + 1);
-    const scheduledAt = scheduled.getTime();
-    return [createLocalItem({
-      id: `briefing:${dateKey(scheduled)}:${settings.time}`,
-      kind: 'briefing',
-      icon: '🔔',
-      title: '아침 일정 브리핑',
-      body: settings.pushReady ? '오늘 일정을 앱 알림으로 요약해요.' : '알림 서버 연결을 확인해 주세요.',
-      scheduledAt,
-      sourceId: 'dailyBriefingSettings',
-      deliverable: false,
-      configurable: false,
-      virtual: true,
-    })];
-  };
-
   const feedingStorageKey = () => {
     const babyId = typeof state !== 'undefined' ? state.activeBabyId || 'no-baby' : 'no-baby';
     if (typeof state !== 'undefined' && state.session?.user?.id && state.household?.id) {
@@ -613,15 +583,15 @@
   };
 
   const getDeliveryStatus = () => {
-    const briefingStatus = window.FAMILY_DAILY_BRIEFING_API?.getStatus?.();
-    const permission = briefingStatus?.permission || ('Notification' in window ? Notification.permission : 'unsupported');
-    const serviceWorker = briefingStatus?.serviceWorker ?? ('serviceWorker' in navigator);
-    const pushReady = Boolean(briefingStatus?.pushReady);
+    const pushStatus = window.FAMILY_EVENT_CHANGE_PUSH_API?.getStatus?.();
+    const permission = pushStatus?.permission || ('Notification' in window ? Notification.permission : 'unsupported');
+    const serviceWorker = pushStatus?.serviceWorker ?? ('serviceWorker' in navigator);
+    const pushReady = Boolean(pushStatus?.pushReady);
     return {
       permission,
       serviceWorker,
       pushReady,
-      mode: pushReady ? 'push-ready' : briefingStatus?.supported ? 'not-configured' : 'in-app',
+      mode: pushReady ? 'push-ready' : pushStatus?.supported ? 'not-configured' : 'in-app',
     };
   };
 
@@ -645,7 +615,6 @@
       ...buildEventItems(now),
       ...buildTodoItems(now),
       ...buildFeedingItem(now),
-      ...buildBriefingItem(),
     ].filter((item) => !item.dismissed);
     pruneStore();
     persist();
@@ -742,7 +711,7 @@
     }
     if (item.kind === 'briefing') {
       if (typeof window.switchView === 'function') window.switchView('settings');
-      setTimeout(() => document.querySelector('#dailyBriefingSettings')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+      setTimeout(() => document.querySelector('#eventChangePushSettings')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
     }
   };
 
@@ -1006,7 +975,7 @@
     if (document.visibilityState === 'visible') refresh({ forceTodos: true, forceRemote: true });
   });
   window.addEventListener('storage', (event) => {
-    if (!event.key || event.key.startsWith(STORAGE_PREFIX) || event.key.startsWith('family-feeding-reminder-v1') || event.key.startsWith('family-daily-briefing-v1')) {
+    if (!event.key || event.key.startsWith(STORAGE_PREFIX) || event.key.startsWith('family-feeding-reminder-v1') || event.key.startsWith('family-event-change-push-v1')) {
       store = null;
       ensureScope();
       refresh({ forceTodos: true, forceRemote: true });

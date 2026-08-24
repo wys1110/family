@@ -9,7 +9,7 @@ const settings = read("settings.js");
 describe("starry-night page palette", () => {
   test("loads the unified palette after every legacy night override", () => {
     const legacyIndex = config.indexOf('{ name: "care-color-separation"');
-    const paletteIndex = config.indexOf('{ name: "night-page-palette", version: "20260727-page-audit-v1", script: false }');
+    const paletteIndex = config.indexOf('{ name: "night-page-palette", version: "20260824-event-change-push-v1", script: false }');
 
     expect(legacyIndex).toBeGreaterThan(-1);
     expect(paletteIndex).toBeGreaterThan(legacyIndex);

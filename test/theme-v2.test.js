@@ -9,7 +9,7 @@ const serviceWorker = readFileSync("service-worker.js", "utf8");
 describe("Theme v2 shadow rollout", () => {
   test("loads last but remains gated until explicitly enabled", () => {
     const currentThemeIndex = config.indexOf('{ name: "black-theme-final"');
-    const v2Index = config.indexOf('{ name: "theme-v2", version: "20260803-shadow-v3", script: false }');
+    const v2Index = config.indexOf('{ name: "theme-v2", version: "20260824-event-change-push-v1", script: false }');
 
     expect(v2Index).toBeGreaterThan(currentThemeIndex);
     expect(config).toContain('get("theme-v2")');

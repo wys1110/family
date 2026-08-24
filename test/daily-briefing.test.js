@@ -8,11 +8,11 @@ const migration = readFileSync("supabase/migrations/20260719_daily_briefing_push
 const notificationChannelsMigration = readFileSync("supabase/migrations/202607220001_schedule_notification_channels.sql", "utf8");
 const cron = readFileSync("supabase/daily-briefing-cron.sql", "utf8");
 
-test("매일 오전 9시 일정 브리핑 모듈을 설정 화면에 연결한다", () => {
+test("가족 일정 변경 푸시 모듈을 설정 화면에 연결한다", () => {
   const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "daily-briefing", version: "20260722-notification-channels-v3" }');
-  expect(client).toContain('const DEFAULT_TIME = "09:00"');
-  expect(client).toContain('card.id = "dailyBriefingSettings"');
+  expect(config).toContain('{ name: "daily-briefing", version: "20260824-event-change-push-v1" }');
+  expect(client).toContain('const SUBSCRIPTION_TIME = "09:00"');
+  expect(client).toContain('card.id = "eventChangePushSettings"');
   expect(client).toContain('Notification.requestPermission()');
 });
 
@@ -26,17 +26,14 @@ test("Edge Function의 실제 오류 코드를 읽어 원인별로 안내한다"
   expect(client).toContain("context.clone().json()");
   expect(client).toContain('code.includes("PUSH_NOT_CONFIGURED")');
   expect(client).toContain('code.includes("SUBSCRIBE_FAILED")');
-  expect(client).toContain('code.includes("SUBSCRIPTION_NOT_FOUND")');
   expect(client).toContain("네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
 });
 
-test("구독 저장 실패 시 켜짐 상태를 남기지 않고 테스트 실패는 연결 상태와 분리한다", () => {
-  expect(client).toContain("await syncSubscription(subscription, { briefingEnabled: true })");
-  expect(client).toContain("pushEnabled: true");
-  expect(client).toContain("briefingEnabled");
-  expect(client).toContain("briefing.enabled = false;");
-  expect(client).toContain("await sendTest(subscription);");
-  expect(client).toContain("일정 브리핑 테스트 발송 실패");
+test("구독 저장 실패 시 켜짐 상태를 남기지 않고 브리핑은 항상 끈다", () => {
+  expect(client).toContain("await syncSubscription(subscription, { pushEnabled: true })");
+  expect(client).toContain("briefingEnabled: false");
+  expect(client).toContain("pushSettings.enabled = false;");
+  expect(client).not.toContain("sendTest");
 });
 
 test("서비스 워커가 백그라운드 푸시를 표시하고 일정 화면을 연다", () => {
@@ -64,9 +61,9 @@ test("서버는 가족 구성원만 등록하고 오늘 범위 일정을 브리�
   expect(edge).toContain("x-daily-briefing-cron");
 });
 
-test("아침 브리핑을 꺼도 가족 일정 변경 알림 구독은 유지한다", () => {
-  expect(client).toContain("await syncSubscription(subscription, { briefingEnabled: false })");
-  expect(client).toContain("가족 일정 변경 알림은 계속 받아요");
+test("가족 일정 변경 알림을 끄면 현재 기기 구독을 비활성화한다", () => {
+  expect(client).toContain("await syncSubscription(subscription, { pushEnabled: false })");
+  expect(client).toContain("이 기기의 가족 일정 변경 알림을 껐어요");
   expect(edge).toContain("briefing_enabled: briefingEnabled");
 });
 
