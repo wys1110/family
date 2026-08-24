@@ -40,4 +40,12 @@ describe("family event push settings", () => {
     expect(edge).toContain('.eq("household_id", householdId)');
     expect(edge).toContain('.eq("endpoint", endpoint)');
   });
+
+  it("discards stale subscription status after the family context changes", () => {
+    expect(client).toContain("reconcileGeneration");
+    expect(client).toContain("generation !== reconcileGeneration");
+    expect(client).toContain("state.supabase !== client");
+    expect(client).toContain("state.session?.user?.id !== userId");
+    expect(client).toContain("state.household?.id !== householdId");
+  });
 });

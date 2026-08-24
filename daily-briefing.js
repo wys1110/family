@@ -33,6 +33,7 @@
   let serviceWorkerRegistration = null;
   let publicKeyCache = "";
   let busy = false;
+  let reconcileGeneration = 0;
 
   const notificationPermission = () => {
     try { return "Notification" in window ? Notification.permission : "unsupported"; }
@@ -147,22 +148,36 @@
     timezone: resolvedTimezone(),
   });
 
-  const loadSubscriptionStatus = async (subscription) => invoke({
-    action: "subscription-status",
-    householdId: state.household.id,
-    endpoint: subscription.endpoint,
-  });
+  const loadSubscriptionStatus = async (client, householdId, subscription) => {
+    const { data, error } = await client.functions.invoke(FUNCTION_NAME, {
+      body: {
+        action: "subscription-status",
+        householdId,
+        endpoint: subscription.endpoint,
+      },
+    });
+    if (error) throw new Error(await functionErrorCode(error));
+    if (data?.error) throw new Error(data.error);
+    return data || {};
+  };
 
   const reconcileSubscriptionState = async () => {
+    const generation = ++reconcileGeneration;
     if (demoMode || typeof state === "undefined" || !state.supabase || !state.session || !state.household?.id || !pushSupported()) return;
+    const client = state.supabase;
+    const userId = state.session.user.id;
+    const householdId = state.household.id;
     try {
       const subscription = await currentSubscription();
-      if (!subscription) {
-        pushSettings.enabled = false;
-      } else {
-        const status = await loadSubscriptionStatus(subscription);
-        pushSettings.enabled = Boolean(status.enabled);
-      }
+      const enabled = subscription
+        ? Boolean((await loadSubscriptionStatus(client, householdId, subscription)).enabled)
+        : false;
+      if (generation !== reconcileGeneration
+        || typeof state === "undefined"
+        || state.supabase !== client
+        || state.session?.user?.id !== userId
+        || state.household?.id !== householdId) return;
+      pushSettings.enabled = enabled;
       persist();
       updateControls();
     } catch (error) {
