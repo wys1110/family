@@ -5,6 +5,7 @@
   const MANIFEST_URL = "manifest.webmanifest";
   const SUBSCRIPTION_TIME = "09:00";
   const DEFAULT_TIMEZONE = "Asia/Seoul";
+  const demoMode = window.FAMILY_DEMO_MODE === true;
 
   const resolvedTimezone = () => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE; }
@@ -146,6 +147,29 @@
     timezone: resolvedTimezone(),
   });
 
+  const loadSubscriptionStatus = async (subscription) => invoke({
+    action: "subscription-status",
+    householdId: state.household.id,
+    endpoint: subscription.endpoint,
+  });
+
+  const reconcileSubscriptionState = async () => {
+    if (demoMode || typeof state === "undefined" || !state.supabase || !state.session || !state.household?.id || !pushSupported()) return;
+    try {
+      const subscription = await currentSubscription();
+      if (!subscription) {
+        pushSettings.enabled = false;
+      } else {
+        const status = await loadSubscriptionStatus(subscription);
+        pushSettings.enabled = Boolean(status.enabled);
+      }
+      persist();
+      updateControls();
+    } catch (error) {
+      console.warn("가족 일정 변경 알림 상태 확인 실패", error);
+    }
+  };
+
   const friendlyError = (error) => {
     const code = String(error?.message || error || "");
     if (code.includes("LOGIN_REQUIRED") || code.includes("UNAUTHORIZED")) return "로그인 후 가족 공간에서 사용할 수 있어요.";
@@ -165,7 +189,7 @@
     busy = next;
     const toggle = card?.querySelector("#eventChangePushToggle");
     if (toggle) {
-      toggle.disabled = next;
+      toggle.disabled = demoMode || next;
       toggle.setAttribute("aria-busy", String(next));
     }
   };
@@ -178,7 +202,10 @@
       status.textContent = message;
       return;
     }
-    if (!pushSupported()) {
+    if (demoMode) {
+      status.textContent = "테스트 모드에서는 실제 기기 알림을 설정하지 않아요.";
+      status.classList.add("guide");
+    } else if (!pushSupported()) {
       status.textContent = "현재 브라우저에서는 앱 알림을 지원하지 않아요.";
       status.classList.add("error");
     } else if (isIos() && !isStandalone()) {
@@ -199,15 +226,20 @@
     if (!card) return;
     const toggle = card.querySelector("#eventChangePushToggle");
     if (toggle) {
-      toggle.textContent = pushSettings.enabled ? "알림 끄기" : "알림 받기";
+      toggle.textContent = demoMode ? "실제 앱에서 설정" : pushSettings.enabled ? "알림 끄기" : "알림 받기";
       toggle.classList.toggle("active", pushSettings.enabled);
       toggle.setAttribute("aria-pressed", String(pushSettings.enabled));
+      toggle.disabled = demoMode || busy;
     }
     updateStatus();
   }
 
   const enablePush = async () => {
     if (busy) return false;
+    if (demoMode) {
+      updateStatus("테스트 모드에서는 실제 알림 권한을 요청하지 않아요.", "guide");
+      return false;
+    }
     if (!pushSupported()) {
       updateStatus("이 브라우저는 시스템 알림을 지원하지 않아요.", "error");
       return false;
@@ -216,7 +248,7 @@
       updateStatus("iPhone에서는 홈 화면에 추가한 앱으로 열어야 알림을 받을 수 있어요.", "guide");
       return false;
     }
-    if (typeof state === "undefined" || !state.session || !state.household?.id) {
+    if (typeof state === "undefined" || !state.supabase || !state.session || !state.household?.id) {
       updateStatus("로그인 후 가족 공간에서 알림을 켜 주세요.", "error");
       return false;
     }
@@ -317,14 +349,19 @@
 
   const install = (attempt = 0) => {
     ensurePwaMetadata();
-    registerServiceWorker().catch(() => { /* 사용자가 켤 때 구체적인 상태를 안내 */ });
-    if (!installSettingsCard() && attempt < 40) setTimeout(() => install(attempt + 1), 100);
+    if (!demoMode) registerServiceWorker().catch(() => { /* 사용자가 켤 때 구체적인 상태를 안내 */ });
+    if (!installSettingsCard()) {
+      if (attempt < 40) setTimeout(() => install(attempt + 1), 100);
+      return;
+    }
+    reconcileSubscriptionState();
   };
 
   const reloadForContext = () => {
     pushSettings = readSettings();
     publicKeyCache = "";
     updateControls();
+    reconcileSubscriptionState();
   };
 
   window.addEventListener("familycontextchange", reloadForContext);

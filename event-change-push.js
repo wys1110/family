@@ -72,13 +72,17 @@
     context.notified = true;
     const change = normalizedChange(context);
     if (!change?.date) return;
-    if (typeof state === "undefined" || !state.supabase || !state.session || !state.household?.id) return;
+    if (!context.client || !context.userId || !context.householdId) return;
+    if (typeof state === "undefined"
+      || state.supabase !== context.client
+      || state.household?.id !== context.householdId
+      || state.session?.user?.id !== context.userId) return;
 
     try {
-      const { data, error } = await state.supabase.functions.invoke(FUNCTION_NAME, {
+      const { data, error } = await context.client.functions.invoke(FUNCTION_NAME, {
         body: {
           action: "event-change",
-          householdId: state.household.id,
+          householdId: context.householdId,
           change,
         },
       });
@@ -130,6 +134,9 @@
 
           return (...args) => {
             const context = {
+              householdId: state.household?.id,
+              userId: state.session?.user?.id,
+              client: state.supabase,
               operation: String(property),
               payload: args[0] || null,
               filters: {},

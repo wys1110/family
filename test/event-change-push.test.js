@@ -42,3 +42,12 @@ test("일정 변경 데이터는 서버에서 길이와 날짜 형식을 검증�
   expect(edge).toContain("normalizeDate(change.date)");
   expect(edge).toContain("cleanText(change.title, 80)");
 });
+
+test("저장 도중 가족 컨텍스트가 바뀌면 이전 가족 일정을 발송하지 않는다", () => {
+  expect(client).toContain("householdId: state.household?.id");
+  expect(client).toContain("userId: state.session?.user?.id");
+  expect(client).toContain("client: state.supabase");
+  expect(client).toContain("state.supabase !== context.client");
+  expect(client).toContain("state.household?.id !== context.householdId");
+  expect(client).toContain("state.session?.user?.id !== context.userId");
+});

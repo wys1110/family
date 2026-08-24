@@ -61,6 +61,23 @@ Deno.serve(async (request: Request) => {
     return json({ error: "HOUSEHOLD_NOT_FOUND" }, 403);
   }
 
+  if (body.action === "subscription-status") {
+    const endpoint = typeof body.endpoint === "string" ? body.endpoint.trim().slice(0, 2048) : "";
+    if (!endpoint) return json({ error: "INVALID_SUBSCRIPTION" }, 400);
+    const { data, error } = await serviceClient.from("push_subscriptions")
+      .select("enabled,briefing_enabled")
+      .eq("user_id", user.id)
+      .eq("household_id", householdId)
+      .eq("endpoint", endpoint)
+      .maybeSingle();
+    if (error) return json({ error: "SUBSCRIPTION_LOAD_FAILED" }, 500);
+    return json({
+      ok: true,
+      enabled: Boolean(data?.enabled),
+      briefingEnabled: Boolean(data?.briefing_enabled),
+    });
+  }
+
   if (body.action === "subscribe") {
     if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
     const subscription = normalizeSubscription(body.subscription);
