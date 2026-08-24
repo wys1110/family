@@ -45,7 +45,7 @@
 
 #eventChangePushToggle.active {
   color: var(--green);
-  background: rgba(95, 128, 105, .10);
+  background: rgba(var(--theme-accent-rgb), .10);
 }
 
 #eventChangePushToggle:active {
@@ -69,7 +69,7 @@
 
 .event-change-push-status.active {
   color: var(--green);
-  background: rgba(95, 128, 105, .10);
+  background: rgba(var(--theme-accent-rgb), .10);
 }
 
 .event-change-push-status.error {
