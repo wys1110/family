@@ -29,7 +29,7 @@ describe('storybook typography and emoji system', () => {
   it('bumps the dynamic module versions so browsers receive the new design', () => {
     const config = read('config.js');
     expect(config).toContain('{ name: "growth-dedup", version: "20260722-heading-icon-v1" }');
-    expect(config).toContain('{ name: "tab-emojis", version: "20260722-settings-gear-v3" }');
+    expect(config).toContain('{ name: "tab-emojis", version: "20260824-settings-request-v1" }');
     expect(config).toContain('{ name: "typography-system", version: "20260816-growth-monogram-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
   });

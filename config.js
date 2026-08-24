@@ -112,7 +112,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-dedup", version: "20260722-heading-icon-v1" },
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
-    { name: "feature-request", version: "20260722-korean-labels-v2" },
+    { name: "feature-request", version: "20260824-settings-request-v1" },
     { name: "refresh-button", version: "20260722-bottom-refresh-v6" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "family-permissions", version: "20260805-family-permissions-v1", style: false },
@@ -128,7 +128,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-briefing", version: "20260722-notification-channels-v3" },
     { name: "event-change-push", version: "20260720-v1", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
-    { name: "tab-emojis", version: "20260722-settings-gear-v3" },
+    { name: "tab-emojis", version: "20260824-settings-request-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20260811-private-todos-v1" },
     { name: "notification-center", version: "20260803-layout-fix-v1" },
@@ -204,7 +204,7 @@ window.FAMILY_CONFIG = {
     const navigationStyle = document.createElement("style");
     navigationStyle.dataset.module = "navigation-layout";
     navigationStyle.textContent = `
-      .view-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .view-tabs { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-columns: none; }
       .view-tab { padding-inline: .18rem; font-size: 10px; white-space: nowrap; }
       @media (min-width: 768px) {
         .view-tab { min-height: 46px; padding-inline: 10px; font-size: 14px; }

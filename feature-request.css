@@ -41,10 +41,84 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.feature-request-heading [data-close-feature-request] {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--separator);
+  border-radius: 13px;
+  color: var(--label);
+  background: var(--surface);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.feature-request-heading [data-close-feature-request]:active {
+  transform: scale(.97);
+}
+
+.feature-request-settings-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.feature-request-settings-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.feature-request-settings-copy > span {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+  font-size: 21px;
+}
+
+.feature-request-settings-copy h2,
+.feature-request-settings-copy p {
+  margin: 0;
+}
+
+.feature-request-settings-copy h2 {
+  color: var(--label);
+  font-size: 16px;
+}
+
+.feature-request-settings-copy p {
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.feature-request-settings-entry [data-open-feature-request] {
+  min-width: 68px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--separator);
+  border-radius: 14px;
+  color: var(--label);
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
 }
 
 .feature-request-mark {
@@ -325,6 +399,25 @@
   .feature-request-message {
     grid-column: 1 / -1;
     margin-top: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .feature-request-heading {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .feature-request-heading [data-close-feature-request] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .feature-request-settings-entry {
+    padding: 16px;
+  }
+
+  .feature-request-settings-copy p {
+    max-width: 22ch;
   }
 }
 

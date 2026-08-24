@@ -17,16 +17,6 @@
   const navigation = document.querySelector('.view-tabs');
   if (!main || !navigation) return;
 
-  let tab = navigation.querySelector(`[data-view="${VIEW_NAME}"]`);
-  if (!tab) {
-    tab = document.createElement('button');
-    tab.className = 'view-tab';
-    tab.dataset.view = VIEW_NAME;
-    tab.type = 'button';
-    tab.textContent = '기능 요청';
-    navigation.appendChild(tab);
-  }
-
   const view = document.createElement('div');
   view.id = 'featureRequestView';
   view.className = 'feature-request-view';
@@ -41,6 +31,7 @@
           <h2 id="featureRequestTitle">필요한 기능 요청</h2>
           <span>불편한 점이나 새로 필요한 기능을 편하게 남겨주세요.</span>
         </div>
+        <button type="button" data-close-feature-request>설정으로 돌아가기</button>
       </div>
       <form class="feature-request-form" id="featureRequestForm">
         <label for="featureRequestText">어떤 기능이 필요하세요?</label>
@@ -82,6 +73,36 @@
   let requestLoadId = 0;
   let submitInProgress = false;
   let messageTimer = null;
+
+  const installSettingsEntry = () => {
+    const settingsView = document.querySelector('#settingsView');
+    if (!settingsView) return false;
+    if (settingsView.querySelector('[data-feature-request-settings-entry]')) return true;
+
+    const entry = document.createElement('section');
+    entry.className = 'settings-card feature-request-settings-entry';
+    entry.setAttribute('data-feature-request-settings-entry', '');
+    entry.innerHTML = `
+      <div class="feature-request-settings-copy">
+        <span aria-hidden="true">💡</span>
+        <div>
+          <h2>기능 요청</h2>
+          <p>필요한 기능이나 개선 의견을 남겨요.</p>
+        </div>
+      </div>
+      <button type="button" data-open-feature-request>열기</button>
+    `;
+    entry.querySelector('[data-open-feature-request]').addEventListener('click', () => {
+      if (typeof window.switchView === 'function') window.switchView(VIEW_NAME);
+    });
+    settingsView.appendChild(entry);
+    return true;
+  };
+
+  const installSettingsEntryWithRetry = (attempt = 0) => {
+    if (installSettingsEntry()) return;
+    if (attempt < 40) setTimeout(() => installSettingsEntryWithRetry(attempt + 1), 100);
+  };
 
   const contextKey = (context = getFamilyContext()) => context
     ? `${context.session.user.id}:${context.household.id}`
@@ -253,18 +274,18 @@
 
       previousSwitchView('calendar');
       if (typeof state !== 'undefined') state.activeView = VIEW_NAME;
-      try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, VIEW_NAME); } catch { /* 현재 화면만 유지 */ }
+      try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, 'settings'); } catch { /* 현재 화면만 유지 */ }
 
-      ['calendarView', 'growthView', 'englishView', 'privateView'].forEach((id) => {
+      ['calendarView', 'growthView', 'englishView', 'privateView', 'settingsView'].forEach((id) => {
         const target = document.getElementById(id);
         if (target) target.hidden = true;
       });
       if (featureView) featureView.hidden = false;
-      document.querySelectorAll('.view-tab').forEach((button) => {
-        const active = button.dataset.view === VIEW_NAME;
-        button.classList.toggle('active', active);
-        button.setAttribute('role', 'tab');
-        button.setAttribute('aria-selected', String(active));
+      document.querySelectorAll('.view-tab').forEach((tab) => {
+        const active = tab.dataset.view === 'settings';
+        tab.classList.toggle('active', active);
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-selected', String(active));
       });
       if (addButton) addButton.hidden = true;
       initializeAdmin();
@@ -285,7 +306,9 @@
     }
     let savedView = null;
     try { savedView = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY); } catch { /* 기본 탭 유지 */ }
-    if (savedView === VIEW_NAME) switchView(VIEW_NAME);
+    if (savedView === VIEW_NAME) {
+      try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, 'settings'); } catch { /* 기본 탭 유지 */ }
+    }
   };
 
   textarea.value = readDraft();
@@ -296,8 +319,8 @@
     saveDraft(textarea.value);
   });
 
-  tab.addEventListener('click', () => {
-    if (typeof switchView === 'function') switchView(VIEW_NAME);
+  view.querySelector('[data-close-feature-request]').addEventListener('click', () => {
+    if (typeof window.switchView === 'function') window.switchView('settings');
   });
 
   refreshButton.addEventListener('click', loadRequests);
@@ -389,4 +412,5 @@
   });
 
   restoreFeatureRequestView();
+  installSettingsEntryWithRetry();
 })();
