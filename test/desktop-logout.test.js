@@ -20,3 +20,17 @@ test("계정 팝업 로그아웃은 오류를 처리하는 공통 함수를 쓴�
   expect(invite).toContain("signOutCurrentUser(event.currentTarget)");
   expect(invite).not.toContain("state.supabase.auth.signOut()");
 });
+
+test("가족 공간이 없어도 계정 팝업에서 로그아웃할 수 있다", () => {
+  const app = readFileSync("app.js", "utf8");
+  const noHouseholdBranch = app.match(/if \(!state\.household\) \{([\s\S]*?)\n  \}\n  root\.innerHTML/)?.[1] || "";
+
+  expect(noHouseholdBranch).toContain('id="logoutButton"');
+  expect(noHouseholdBranch).toContain("signOutCurrentUser(event.currentTarget)");
+});
+
+test("가족 공간 조회에 실패하면 미가입 안내 팝업을 자동으로 열지 않는다", () => {
+  const app = readFileSync("app.js", "utf8");
+
+  expect(app).toContain("if (loaded && state.session && !state.household && !state.onboardingPrompted)");
+});

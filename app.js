@@ -352,7 +352,7 @@ async function bootstrapData() {
       remote: Boolean(state.supabase && state.session),
     },
   }));
-  if (state.session && !state.household && !state.onboardingPrompted) {
+  if (loaded && state.session && !state.household && !state.onboardingPrompted) {
     state.onboardingPrompted = true;
     setTimeout(openAccountDialog, 250);
   }
@@ -2406,8 +2406,8 @@ function renderAccount() {
     $("#accountGoogleSignIn").addEventListener("click", signInWithGoogle); $("#loginForm").addEventListener("submit", sendMagicLink); return;
   }
   if (!state.household) {
-    root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="6자리 코드" maxlength="6" required /><button>참여하기</button></form></div>`;
-    $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); return;
+    root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="6자리 코드" maxlength="6" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+    $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget)); return;
   }
   root.innerHTML = `<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
   $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));

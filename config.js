@@ -180,7 +180,7 @@ window.FAMILY_CONFIG = {
     { name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" },
     { name: "care-color-separation", version: "20260806-health-pattern-v1", script: false },
     { name: "night-page-palette", version: "20260824-event-change-push-v1", script: false },
-    { name: "monochrome-theme", version: "20260801-white-black-v1", script: false },
+    { name: "monochrome-theme", version: "20260830-black-empty-card-v1", script: false },
     { name: "black-theme-final", version: "20260809-feeding-neutral-v1", script: false },
     { name: "theme-v2", version: "20260824-event-change-push-v1", script: false },
     { name: "mobile-demo-calendar-polish", version: "20260803-v1", script: false },

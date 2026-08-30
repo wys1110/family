@@ -15,7 +15,7 @@ const serviceWorker = read("service-worker.js");
 describe("white and black themes", () => {
   test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
-    const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260801-white-black-v1", script: false }');
+    const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260830-black-empty-card-v1", script: false }');
     const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260809-feeding-neutral-v1", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
@@ -161,6 +161,10 @@ describe("white and black themes", () => {
     expect(palette).toContain('html[data-family-theme="white"] .baby-care-card.baby-profile-card');
     expect(palette).toContain('color: var(--label);');
     expect(palette).toContain('background: linear-gradient(145deg, var(--theme-surface), var(--theme-surface-raised));');
+  });
+
+  test("keeps the black baby onboarding card readable", () => {
+    expect(palette).toMatch(/html\[data-family-theme="night"\]\[data-family-theme-choice="black"\] #growthView \.baby-empty-card \{[\s\S]*?color: var\(--theme-text\) !important;[\s\S]*?background: linear-gradient\(145deg, var\(--theme-surface\), var\(--theme-canvas\)\) !important;/);
   });
 
   test("keeps white care category icons on colored tokens", () => {
