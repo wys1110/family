@@ -162,6 +162,29 @@ describe('family auth recovery', () => {
     expect(events.map((event) => event.type)).toEqual(['family:auth-session-refreshed']);
   });
 
+  test('does not return stale success data when context changes during retry', async () => {
+    const { api } = loadApi();
+    let calls = 0;
+    let current = true;
+    const operation = vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) return { data: null, error: { status: 401 } };
+      current = false;
+      return { data: ['stale'], error: null };
+    });
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: { refreshSession: async () => ({
+        data: { session: { user: { id: 'user-1' } } },
+        error: null,
+      }) } },
+      userId: 'user-1',
+      isCurrent: () => current,
+    });
+
+    expect(result.error.status).toBe(401);
+    expect(result.data).toBeNull();
+  });
+
   test('connects auth recovery to the app and every remote activity reader', () => {
     const app = read('app.js');
     const activityLog = read('activity-log.js');

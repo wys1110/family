@@ -224,7 +224,8 @@
     return { supabase: state.supabase, session: state.session, household: state.household };
   }
 
-  function withAuthRecovery(operation, context) {
+  function withAuthRecovery(operation, context = familyContext()) {
+    if (!context) return Promise.resolve({ data: null, error: new Error('FAMILY_CONTEXT_REQUIRED') });
     return window.FAMILY_AUTH_API.withRecovery(operation, {
       supabase: context.supabase,
       userId: context.session.user.id,

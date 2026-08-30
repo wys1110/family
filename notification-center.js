@@ -47,6 +47,7 @@
   const withAuthRecovery = (operation, context = {}) => {
     const supabase = context.supabase || state.supabase;
     const userId = context.userId || state.session?.user?.id;
+    const householdId = context.householdId || state.household?.id;
     return window.FAMILY_AUTH_API.withRecovery(operation, {
       supabase,
       userId,
@@ -54,7 +55,7 @@
         typeof state !== 'undefined'
         && state.supabase === supabase
         && state.session?.user?.id === userId
-        && (!context.householdId || state.household?.id === context.householdId),
+        && (!householdId || state.household?.id === householdId),
       ),
     });
   };

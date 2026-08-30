@@ -270,11 +270,14 @@ function authSessionKey(session) {
   return session?.user?.id || "signed-out";
 }
 
-function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id, isCurrent = () => state.supabase === supabase && state.session?.user?.id === userId) {
+function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id, isCurrent) {
+  const householdId = state.household?.id;
   return window.FAMILY_AUTH_API.withRecovery(operation, {
     supabase,
     userId,
-    isCurrent,
+    isCurrent: isCurrent || (() => state.supabase === supabase
+      && state.session?.user?.id === userId
+      && (!householdId || state.household?.id === householdId)),
   });
 }
 

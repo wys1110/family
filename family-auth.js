@@ -72,9 +72,11 @@
     if (typeof options.isCurrent === 'function' && !options.isCurrent()) return result;
     try {
       const retryResult = await operation();
+      if (typeof options.isCurrent === 'function' && !options.isCurrent()) return result;
       if (isAuthError(retryResult?.error)) expired(options);
       return retryResult;
     } catch (error) {
+      if (typeof options.isCurrent === 'function' && !options.isCurrent()) return result;
       if (!isAuthError(error)) throw error;
       expired(options);
       return { data: null, error };
