@@ -146,6 +146,17 @@
     return { supabase: state.supabase, session: state.session, household: state.household };
   };
 
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => {
+      const current = getFamilyContext();
+      return current?.supabase === context.supabase
+        && current.session.user.id === context.session.user.id
+        && current.household.id === context.household.id;
+    },
+  });
+
   const waitForFamilyContext = async () => {
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const context = getFamilyContext();
@@ -206,12 +217,12 @@
     refreshButton.disabled = true;
     refreshButton.textContent = '불러오는 중…';
     try {
-      const { data, error } = await context.supabase
+      const { data, error } = await withAuthRecovery(() => context.supabase
         .from('feature_requests')
         .select('id, content, status, requester_name, created_at, updated_at')
         .eq('household_id', context.household.id)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(100), context);
       if (loadId !== requestLoadId || expectedContext !== adminContextKey || expectedContext !== contextKey()) return;
       if (error) {
         adminCount.textContent = '요청을 불러오지 못했어요.';
@@ -244,12 +255,12 @@
     admin.hidden = true;
     requestList.innerHTML = '';
 
-    const { data, error } = await context.supabase
+    const { data, error } = await withAuthRecovery(() => context.supabase
       .from('household_members')
       .select('role')
       .eq('household_id', context.household.id)
       .eq('user_id', context.session.user.id)
-      .maybeSingle();
+      .maybeSingle(), context);
 
     if (expectedContext !== contextKey()) return;
     adminInitialized = true;
@@ -338,11 +349,11 @@
     const expectedContext = contextKey(context);
     select.disabled = true;
     try {
-      const { error } = await context.supabase
+      const { error } = await withAuthRecovery(() => context.supabase
         .from('feature_requests')
         .update({ status: nextStatus, updated_at: new Date().toISOString() })
         .eq('id', item.dataset.requestId)
-        .eq('household_id', context.household.id);
+        .eq('household_id', context.household.id), context);
       if (error || expectedContext !== contextKey()) throw error || new Error('family context changed');
       item.dataset.status = nextStatus;
       showMessage(`요청 상태를 ‘${statusLabel(nextStatus)}’로 변경했어요.`);
@@ -372,13 +383,13 @@
         return;
       }
       const expectedContext = contextKey(context);
-      const { error } = await context.supabase.from('feature_requests').insert({
+      const { error } = await withAuthRecovery(() => context.supabase.from('feature_requests').insert({
         household_id: context.household.id,
         content: request,
         status: 'new',
         requester_name: requesterName(context.session),
         created_by: context.session.user.id,
-      });
+      }), context);
       if (error || expectedContext !== contextKey()) {
         const migrationMissing = error?.code === '42P01' || /feature_requests/i.test(error?.message || '');
         showMessage(migrationMissing ? '기능 요청 DB가 아직 준비되지 않았어요.' : '요청을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');

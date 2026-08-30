@@ -111,7 +111,19 @@
     if (typeof state === "undefined" || !state.supabase || !state.session || !state.household?.id) {
       throw new Error("LOGIN_REQUIRED");
     }
-    const { data, error } = await state.supabase.functions.invoke(FUNCTION_NAME, { body });
+    const supabase = state.supabase;
+    const userId = state.session.user.id;
+    const householdId = state.household.id;
+    const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
+      () => supabase.functions.invoke(FUNCTION_NAME, { body }),
+      {
+        supabase,
+        userId,
+        isCurrent: () => state.supabase === supabase
+          && state.session?.user?.id === userId
+          && state.household?.id === householdId,
+      },
+    );
     if (error) throw new Error(await functionErrorCode(error));
     if (data?.error) throw new Error(data.error);
     return data || {};
@@ -149,13 +161,23 @@
   });
 
   const loadSubscriptionStatus = async (client, householdId, subscription) => {
-    const { data, error } = await client.functions.invoke(FUNCTION_NAME, {
-      body: {
-        action: "subscription-status",
-        householdId,
-        endpoint: subscription.endpoint,
+    const userId = state.session.user.id;
+    const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
+      () => client.functions.invoke(FUNCTION_NAME, {
+        body: {
+          action: "subscription-status",
+          householdId,
+          endpoint: subscription.endpoint,
+        },
+      }),
+      {
+        supabase: client,
+        userId,
+        isCurrent: () => state.supabase === client
+          && state.session?.user?.id === userId
+          && state.household?.id === householdId,
       },
-    });
+    );
     if (error) throw new Error(await functionErrorCode(error));
     if (data?.error) throw new Error(data.error);
     return data || {};

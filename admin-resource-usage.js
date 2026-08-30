@@ -16,6 +16,13 @@
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user) return null;
     return { supabase: state.supabase, session: state.session };
   };
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => typeof state !== 'undefined'
+      && state.supabase === context.supabase
+      && state.session?.user?.id === context.session.user.id,
+  });
 
   const waitForContext = async () => {
     for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -205,7 +212,7 @@
     const context = await waitForContext();
     if (!context) return false;
     try {
-      const { data, error } = await context.supabase.rpc('is_platform_admin');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('is_platform_admin'), context);
       if (error) throw error;
       return data === true;
     } catch {
@@ -225,7 +232,7 @@
     status.hidden = false;
     status.textContent = '사용량을 불러오는 중이에요.';
     try {
-      const { data, error } = await context.supabase.rpc('get_platform_resource_usage');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('get_platform_resource_usage'), context);
       if (error) throw error;
       if (currentLoadId === loadId) render(data || {});
     } catch (error) {

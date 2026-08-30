@@ -47,7 +47,14 @@
         p_activity_type: type,
         p_feature_name: feature,
         p_household_id: context.householdId,
-      }), { supabase: context.supabase, userId: context.userId });
+      }), {
+        supabase: context.supabase,
+        userId: context.userId,
+        isCurrent: () => typeof state !== 'undefined'
+          && state.supabase === context.supabase
+          && state.session?.user?.id === context.userId
+          && state.household?.id === context.householdId,
+      });
       if (error) throw error;
       return true;
     } catch (error) {

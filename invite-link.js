@@ -202,9 +202,15 @@
     button.setAttribute("aria-busy", "true");
     const originalLabel = button.textContent;
     button.textContent = "참여 중…";
+    const supabase = state.supabase;
+    const userId = state.session.user.id;
 
     try {
-      const { error } = await state.supabase.rpc("join_household", { code });
+      const { error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.rpc("join_household", { code }), {
+        supabase,
+        userId,
+        isCurrent: () => state.supabase === supabase && state.session?.user?.id === userId && !state.household,
+      });
       if (error) {
         console.error("초대 링크 참여 실패", error);
         showToast("초대 링크를 확인해 주세요");

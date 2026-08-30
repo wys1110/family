@@ -50,6 +50,12 @@
     return window.FAMILY_AUTH_API.withRecovery(operation, {
       supabase,
       userId,
+      isCurrent: () => Boolean(
+        typeof state !== 'undefined'
+        && state.supabase === supabase
+        && state.session?.user?.id === userId
+        && (!context.householdId || state.household?.id === context.householdId),
+      ),
     });
   };
 

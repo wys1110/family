@@ -19,7 +19,7 @@ const loadApi = () => {
 
 describe('settings family management', () => {
   test('loads a compact settings module and style', () => {
-    expect(config).toContain('{ name: "settings-family-management", version: "20260808-atomic-backup-restore-v1" }');
+    expect(config).toContain('{ name: "settings-family-management", version: "20260830-auth-recovery-v2" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-family-management.js")');
     expect(source).toContain('data-settings-family-members');
     expect(css).toContain('.settings-family-members-card');

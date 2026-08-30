@@ -89,6 +89,14 @@
   const context = () => (typeof state !== 'undefined' && state.supabase && state.session)
     ? { supabase: state.supabase, session: state.session }
     : null;
+  const withAuthRecovery = (operation, current) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: current.supabase,
+    userId: current.session.user.id,
+    isCurrent: () => {
+      const latest = context();
+      return latest?.supabase === current.supabase && latest.session.user.id === current.session.user.id;
+    },
+  });
   const waitContext = async () => {
     for (let i = 0; i < 80; i += 1) {
       const current = context();
@@ -118,7 +126,7 @@
   const verify = async (current) => {
     if (!current) return false;
     try {
-      const { data: result, error } = await current.supabase.rpc('is_platform_admin');
+      const { data: result, error } = await withAuthRecovery(() => current.supabase.rpc('is_platform_admin'), current);
       if (error) throw error;
       return result === true;
     } catch (error) {
@@ -211,7 +219,7 @@
     }
     setAllowed(true);
     try {
-      const { data: result, error } = await current.supabase.rpc('get_global_admin_overview');
+      const { data: result, error } = await withAuthRecovery(() => current.supabase.rpc('get_global_admin_overview'), current);
       if (error) throw error;
       if (id === loadId) render(result || {});
     } catch (error) {
@@ -301,7 +309,7 @@
 
   if (!document.querySelector('script[data-admin-operations-module]')) {
     const operationsScript = document.createElement('script');
-    operationsScript.src = 'admin-ops.js?v=20260804-operations-v1';
+    operationsScript.src = 'admin-ops.js?v=20260830-auth-recovery-v2';
     operationsScript.dataset.adminOperationsModule = '';
     document.head.appendChild(operationsScript);
   }

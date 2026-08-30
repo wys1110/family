@@ -14,6 +14,16 @@
 
     const target = state.growthEntries.find((entry) => String(entry.id) === String(id));
     const remote = Boolean(state.supabase && state.session && state.household?.id);
+    const supabase = state.supabase;
+    const userId = state.session?.user?.id;
+    const householdId = state.household?.id;
+    const withAuthRecovery = (operation) => window.FAMILY_AUTH_API.withRecovery(operation, {
+      supabase,
+      userId,
+      isCurrent: () => state.supabase === supabase
+        && state.session?.user?.id === userId
+        && state.household?.id === householdId,
+    });
     deleting = true;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
@@ -21,39 +31,39 @@
 
     try {
       if (remote) {
-        const { data: deletedRows, error: deleteError } = await state.supabase
+        const { data: deletedRows, error: deleteError } = await withAuthRecovery(() => supabase
           .from("growth_entries")
           .delete()
           .eq("id", id)
-          .eq("household_id", state.household.id)
-          .select("id");
+          .eq("household_id", householdId)
+          .select("id"));
 
         if (deleteError) throw deleteError;
 
         const deleted = (deletedRows || []).some((row) => String(row.id) === String(id));
         if (!deleted) {
-          const { data: existing, error: verifyError } = await state.supabase
+          const { data: existing, error: verifyError } = await withAuthRecovery(() => supabase
             .from("growth_entries")
             .select("id")
             .eq("id", id)
-            .eq("household_id", state.household.id)
-            .maybeSingle();
+            .eq("household_id", householdId)
+            .maybeSingle());
           if (verifyError) throw verifyError;
           if (existing) throw new Error("Growth entry deletion was not applied");
         }
 
         if (target?.photoPaths?.length) {
-          const { error: photoError } = await state.supabase.storage
+          const { error: photoError } = await withAuthRecovery(() => supabase.storage
             .from(GROWTH_PHOTO_BUCKET)
-            .remove(target.photoPaths);
+            .remove(target.photoPaths));
           if (photoError) console.warn("성장 기록 사진 정리 실패", photoError);
         }
 
-        const { data: refreshedRows, error: refreshError } = await state.supabase
+        const { data: refreshedRows, error: refreshError } = await withAuthRecovery(() => supabase
           .from("growth_entries")
           .select("*")
-          .eq("household_id", state.household.id)
-          .order("entry_date", { ascending: false });
+          .eq("household_id", householdId)
+          .order("entry_date", { ascending: false }));
 
         if (refreshError) {
           state.growthEntries = state.growthEntries.filter((entry) => String(entry.id) !== String(id));

@@ -23,6 +23,13 @@
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user) return null;
     return { supabase: state.supabase, session: state.session };
   };
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => typeof state !== 'undefined'
+      && state.supabase === context.supabase
+      && state.session?.user?.id === context.session.user.id,
+  });
 
   const waitForContext = async () => {
     for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -215,12 +222,12 @@
 
   const logAction = async (context, action, targetType = null, targetId = null, metadata = {}) => {
     if (!OPERATION_ACTIONS.has(action) && action !== 'feature_request_status') return;
-    const { error } = await context.supabase.rpc('log_platform_admin_action', {
+    const { error } = await withAuthRecovery(() => context.supabase.rpc('log_platform_admin_action', {
       p_action: action,
       p_target_type: targetType,
       p_target_id: targetId,
       p_metadata: metadata,
-    });
+    }), context);
     if (error) throw error;
   };
 
@@ -236,8 +243,8 @@
     error.hidden = true;
     try {
       const [{ data: operations, error: operationsError }, { data: logs, error: logsError }] = await Promise.all([
-        context.supabase.rpc('get_platform_admin_operations'),
-        context.supabase.rpc('list_platform_admin_audit_logs', { p_row_limit: 20 }),
+        withAuthRecovery(() => context.supabase.rpc('get_platform_admin_operations'), context),
+        withAuthRecovery(() => context.supabase.rpc('list_platform_admin_audit_logs', { p_row_limit: 20 }), context),
       ]);
       if (operationsError) throw operationsError;
       if (logsError) throw logsError;
@@ -288,7 +295,7 @@
     button.disabled = true;
     button.textContent = '준비 중…';
     try {
-      const { data, error } = await context.supabase.rpc('get_platform_admin_export');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('get_platform_admin_export'), context);
       if (error) throw error;
       const content = format === 'json'
         ? JSON.stringify(data || {}, null, 2)
@@ -310,7 +317,7 @@
     const context = await waitForContext();
     if (!context) return false;
     try {
-      const { data, error } = await context.supabase.rpc('is_platform_admin');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('is_platform_admin'), context);
       if (error) throw error;
       return data === true;
     } catch {

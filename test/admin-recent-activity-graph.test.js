@@ -25,6 +25,6 @@ describe("admin recent activity user graph", () => {
   });
 
   test("busts the cached module after the graph release", () => {
-    expect(moduleLoader).toContain("admin-recent-activity.js?v=20260804-dashboard-v1");
+    expect(moduleLoader).toContain("admin-recent-activity.js?v=20260830-auth-recovery-v2");
   });
 });

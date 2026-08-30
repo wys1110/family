@@ -122,6 +122,7 @@ describe('family auth recovery', () => {
       'family:auth-session-refreshed',
       'family:auth-expired',
     ]);
+    expect(events[1].detail.userId).toBe('user-1');
   });
 
   test('expires the session when refresh returns a different user', async () => {
@@ -144,6 +145,23 @@ describe('family auth recovery', () => {
     expect(events.map((event) => event.type)).toEqual(['family:auth-expired']);
   });
 
+  test('does not retry an operation after its context changes during refresh', async () => {
+    const { api, events } = loadApi();
+    const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: { refreshSession: async () => ({
+        data: { session: { user: { id: 'user-1' } } },
+        error: null,
+      }) } },
+      userId: 'user-1',
+      isCurrent: () => false,
+    });
+
+    expect(result.error.status).toBe(401);
+    expect(operation).toHaveBeenCalledTimes(1);
+    expect(events.map((event) => event.type)).toEqual(['family:auth-session-refreshed']);
+  });
+
   test('connects auth recovery to the app and every remote activity reader', () => {
     const app = read('app.js');
     const activityLog = read('activity-log.js');
@@ -151,13 +169,35 @@ describe('family auth recovery', () => {
     const notifications = read('notification-center.js');
 
     expect(app).toContain("window.addEventListener('family:auth-session-refreshed'");
+    expect(app).toContain('event.detail?.supabase');
     expect(app).toContain("if (!state.session?.user?.id || state.session.user.id !== session.user.id) return;");
-    expect(app).toContain("window.addEventListener('family:auth-expired'");
+    expect(app).toContain("window.addEventListener('family:auth-expired', (event)");
+    expect(app).toContain('detail.userId');
     expect(app).toContain('window.FAMILY_AUTH_API.withRecovery');
     expect(app).toContain('if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");');
     expect(activityLog).toContain('window.FAMILY_AUTH_API.withRecovery');
     expect(familyTodo).toContain('window.FAMILY_AUTH_API.withRecovery');
     expect(notifications).toContain('window.FAMILY_AUTH_API.withRecovery');
+  });
+
+  test('keeps every authenticated remote module behind the recovery API', () => {
+    const modules = [
+      'growth-delete-sync.js',
+      'growth-photo-recovery.js',
+      'daily-briefing.js',
+      'event-change-push.js',
+      'family-onboarding.js',
+      'invite-link.js',
+      'feature-request.js',
+      'settings-family-management.js',
+      'settings-data-export.js',
+      'family-admin.js',
+      'admin-resource-usage.js',
+      'admin-recent-activity.js',
+      'admin-ops.js',
+      'platform-request-admin.js',
+    ];
+    modules.forEach((module) => expect(read(module), module).toContain('FAMILY_AUTH_API.withRecovery'));
   });
 
   test('loads the recovery module before app startup and refreshes stale PWA assets', () => {

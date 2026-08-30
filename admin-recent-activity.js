@@ -33,6 +33,13 @@
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user) return null;
     return { supabase: state.supabase, session: state.session };
   };
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => typeof state !== 'undefined'
+      && state.supabase === context.supabase
+      && state.session?.user?.id === context.session.user.id,
+  });
 
   const waitForContext = async () => {
     for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -78,7 +85,7 @@
     const context = await waitForContext();
     if (!context) return false;
     try {
-      const { data, error } = await context.supabase.rpc('is_platform_admin');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('is_platform_admin'), context);
       if (error) throw error;
       return data === true;
     } catch {
@@ -326,10 +333,10 @@
     button.textContent = '불러오는 중…';
     try {
       const since = new Date(Date.now() - days * 86400000).toISOString();
-      const { data, error } = await context.supabase.rpc('list_platform_recent_activity', {
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('list_platform_recent_activity', {
         p_since_at: since,
         p_row_limit: 500,
-      });
+      }), context);
       if (currentLoadId !== loadId) return;
       if (error) throw error;
       activities = Array.isArray(data) ? data : [];

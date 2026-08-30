@@ -228,6 +228,12 @@
     return window.FAMILY_AUTH_API.withRecovery(operation, {
       supabase: context.supabase,
       userId: context.session.user.id,
+      isCurrent: () => {
+        const current = familyContext();
+        return current?.supabase === context.supabase
+          && current.session.user.id === context.session.user.id
+          && current.household.id === context.household.id;
+      },
     });
   }
 

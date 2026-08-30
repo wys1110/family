@@ -91,13 +91,16 @@ const MAX_CALENDAR_EVENT_LANES = 4;
 window.addEventListener('family:auth-session-refreshed', (event) => {
   const session = event.detail?.session;
   if (!session?.user?.id) return;
+  if (event.detail?.supabase && state.supabase !== event.detail.supabase) return;
   if (!state.session?.user?.id || state.session.user.id !== session.user.id) return;
   state.session = session;
   lastAuthSessionKey = authSessionKey(session);
 });
 
-window.addEventListener('family:auth-expired', () => {
-  if (!state.session) return;
+window.addEventListener('family:auth-expired', (event) => {
+  const detail = event.detail || {};
+  if (!state.session?.user?.id || !detail.userId || state.session.user.id !== detail.userId) return;
+  if (detail.supabase && state.supabase !== detail.supabase) return;
   state.session = null;
   lastAuthSessionKey = authSessionKey(null);
   state.onboardingPrompted = false;
@@ -267,10 +270,11 @@ function authSessionKey(session) {
   return session?.user?.id || "signed-out";
 }
 
-function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id) {
+function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id, isCurrent = () => state.supabase === supabase && state.session?.user?.id === userId) {
   return window.FAMILY_AUTH_API.withRecovery(operation, {
     supabase,
     userId,
+    isCurrent,
   });
 }
 
@@ -433,7 +437,7 @@ function seedDemoData() {
 
 async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
-  const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey);
+  const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey, () => isCurrentBootstrap(requestId, sessionKey) && state.household?.id === householdId);
   const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
     remoteQuery(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date")),
     remoteQuery(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date")),
@@ -634,7 +638,7 @@ async function hydrateWallpaperUrls(rows, householdId) {
     renderWallpapers();
     return true;
   }
-  const { data, error } = await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600), context.supabase, context.userId);
+  const { data, error } = await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600), context.supabase, context.userId, () => wallpaperSessionIsCurrent(context));
   if (error || !wallpaperSessionIsCurrent(context) || state.wallpapers !== context.wallpapers) return false;
   const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
   state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => {
@@ -654,8 +658,8 @@ async function saveWallpaper(surface, file, crop) {
   if (!context) return false;
   const path = `${context.householdId}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
   const storage = context.supabase.storage.from(GROWTH_PHOTO_BUCKET);
-  const cleanupNewUpload = () => withAuthRecovery(() => storage.remove([path]), context.supabase, context.userId);
-  const { error: uploadError } = await withAuthRecovery(() => storage.upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false }), context.supabase, context.userId);
+  const cleanupNewUpload = () => withAuthRecovery(() => storage.remove([path]), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
+  const { error: uploadError } = await withAuthRecovery(() => storage.upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false }), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (uploadError) {
     if (wallpaperMutationIsCurrent(context)) toast("사진을 올리지 못했어요. 다시 시도해 주세요");
     return false;
@@ -663,7 +667,7 @@ async function saveWallpaper(surface, file, crop) {
   if (!wallpaperMutationIsCurrent(context)) { await cleanupNewUpload(); return false; }
   let signedUrl = "";
   try {
-    const { data, error } = await withAuthRecovery(() => storage.createSignedUrl(path, 3600), context.supabase, context.userId);
+    const { data, error } = await withAuthRecovery(() => storage.createSignedUrl(path, 3600), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
     if (error || !data?.signedUrl) throw error || new Error("Signed URL is missing");
     signedUrl = data.signedUrl;
   } catch {
@@ -680,13 +684,13 @@ async function saveWallpaper(surface, file, crop) {
     position_y: crop.positionY,
     zoom: crop.zoom,
     created_by: context.userId,
-  }).select().single(), context.supabase, context.userId);
+  }).select().single(), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (saveError) {
     await cleanupNewUpload();
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
     return false;
   }
-  if (context.previous?.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => storage.remove([context.previous.path]), context.supabase, context.userId);
+  if (context.previous?.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => storage.remove([context.previous.path]), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = { path, url: signedUrl, ...crop }; renderWallpapers();
   toast("가족 월페이퍼를 바꿨어요");
@@ -700,7 +704,7 @@ async function saveWallpaperCrop(surface, crop) {
     .eq("household_id", context.householdId)
     .eq("surface", surface)
     .select("household_id")
-    .single(), context.supabase, context.userId);
+    .single(), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (error) {
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼 위치를 저장하지 못했어요. 다시 시도해 주세요");
     return false;
@@ -777,12 +781,12 @@ async function removeWallpaper(surface) {
   }
   const context = captureWallpaperContext(surface);
   if (!context) return false;
-  const { error } = await withAuthRecovery(() => context.supabase.from("household_wallpapers").delete().eq("household_id", context.householdId).eq("surface", surface), context.supabase, context.userId);
+  const { error } = await withAuthRecovery(() => context.supabase.from("household_wallpapers").delete().eq("household_id", context.householdId).eq("surface", surface), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (error) {
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 삭제하지 못했어요");
     return false;
   }
-  if (context.previous.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([context.previous.path]), context.supabase, context.userId);
+  if (context.previous.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([context.previous.path]), context.supabase, context.userId, () => wallpaperMutationIsCurrent(context));
   if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = null; renderWallpapers();
   toast("월페이퍼를 삭제했어요");

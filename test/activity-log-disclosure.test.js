@@ -12,5 +12,5 @@ test('keeps activity logging available while hiding the settings disclosure', ()
 });
 
 test('bumps the activity log asset version for the hidden disclosure change', () => {
-  expect(tabLoader).toContain("activity-log.js?v=20260803-settings-disclosure-v1");
+  expect(tabLoader).toContain("activity-log.js?v=20260830-auth-recovery-v2");
 });

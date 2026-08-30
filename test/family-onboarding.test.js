@@ -78,7 +78,7 @@ describe('family activation onboarding', () => {
     expect(source).toContain("hero.insertAdjacentElement('afterend', card)");
     expect(css).toContain('min-height: 44px');
     expect(css).toContain('var(--surface)');
-    expect(config).toContain('{ name: "family-onboarding", version: "20260810-v1" }');
+    expect(config).toContain('{ name: "family-onboarding", version: "20260830-auth-recovery-v2" }');
     expect(appSource).toContain("new CustomEvent('family:growth-entry-deleted'");
   });
 });

@@ -10,7 +10,7 @@ const cron = readFileSync("supabase/daily-briefing-cron.sql", "utf8");
 
 test("가족 일정 변경 푸시 모듈을 설정 화면에 연결한다", () => {
   const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "daily-briefing", version: "20260824-event-change-push-v1" }');
+  expect(config).toContain('{ name: "daily-briefing", version: "20260830-auth-recovery-v2" }');
   expect(client).toContain('const SUBSCRIPTION_TIME = "09:00"');
   expect(client).toContain('card.id = "eventChangePushSettings"');
   expect(client).toContain('Notification.requestPermission()');

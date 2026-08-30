@@ -93,7 +93,7 @@ describe("request tab layout harmony", () => {
   });
 
   test("updates both affected stylesheet cache versions", () => {
-    expect(config).toContain('{ name: "feature-request", version: "20260824-settings-request-v1" }');
+    expect(config).toContain('{ name: "feature-request", version: "20260830-auth-recovery-v2" }');
     expect(config).toContain('{ name: "night-feature-request-polish", version: "20260722-layout-harmony-v1", script: false }');
   });
 });

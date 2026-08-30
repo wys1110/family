@@ -8,7 +8,7 @@ const edge = readFileSync("supabase/functions/daily-briefing-push/index.ts", "ut
 const pkg = readFileSync("package.json", "utf8");
 
 test("일정 추가·수정·이동·삭제를 가족 푸시 모듈이 감지한다", () => {
-  expect(config).toContain('{ name: "event-change-push", version: "20260824-event-change-push-v1", style: false }');
+  expect(config).toContain('{ name: "event-change-push", version: "20260830-auth-recovery-v2", style: false }');
   expect(client).toContain('const MUTATIONS = new Set(["insert", "upsert", "update", "delete"])');
   expect(client).toContain('action: "event-change"');
   expect(client).toContain('kind: moved ? "moved" : "updated"');

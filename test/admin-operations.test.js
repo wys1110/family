@@ -37,7 +37,7 @@ describe('admin operations dashboard', () => {
   });
 
   test('loads the module and bypasses stale service-worker copies', () => {
-    expect(admin).toContain('admin-ops.js?v=20260804-operations-v1');
+    expect(admin).toContain('admin-ops.js?v=20260830-auth-recovery-v2');
     expect(serviceWorker).toContain('url.pathname.endsWith("/admin-ops.js")');
   });
 

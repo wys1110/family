@@ -79,13 +79,23 @@
       || state.session?.user?.id !== context.userId) return;
 
     try {
-      const { data, error } = await context.client.functions.invoke(FUNCTION_NAME, {
-        body: {
-          action: "event-change",
-          householdId: context.householdId,
-          change,
+      const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
+        () => context.client.functions.invoke(FUNCTION_NAME, {
+          body: {
+            action: "event-change",
+            householdId: context.householdId,
+            change,
+          },
+        }),
+        {
+          supabase: context.client,
+          userId: context.userId,
+          isCurrent: () => typeof state !== "undefined"
+            && state.supabase === context.client
+            && state.household?.id === context.householdId
+            && state.session?.user?.id === context.userId,
         },
-      });
+      );
       if (error) throw new Error(await functionErrorCode(error));
       if (data?.error) throw new Error(data.error);
     } catch (error) {

@@ -79,10 +79,10 @@
   };
 
   loadModule('english-story-name', 'english-story-name.js?v=20260801-v1', '영어동화 이름 편집 모듈을 불러오지 못했어요.');
-  loadModule('family-admin', 'family-admin.js?v=20260804-dashboard-v1', '가족 관리자 모듈을 불러오지 못했어요.');
-  loadModule('admin-resource-usage', 'admin-resource-usage.js?v=20260804-dashboard-v1', 'Supabase 사용량 관리자 모듈을 불러오지 못했어요.');
-  loadModule('platform-request-admin', 'platform-request-admin.js?v=20260804-dashboard-v1', '플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
-  loadModule('activity-log', 'activity-log.js?v=20260803-settings-disclosure-v1', '최근 활동 기록 모듈을 불러오지 못했어요.');
-  loadModule('admin-recent-activity', 'admin-recent-activity.js?v=20260804-dashboard-v1', '최근 활동 관리자 모듈을 불러오지 못했어요.');
+  loadModule('family-admin', 'family-admin.js?v=20260830-auth-recovery-v2', '가족 관리자 모듈을 불러오지 못했어요.');
+  loadModule('admin-resource-usage', 'admin-resource-usage.js?v=20260830-auth-recovery-v2', 'Supabase 사용량 관리자 모듈을 불러오지 못했어요.');
+  loadModule('platform-request-admin', 'platform-request-admin.js?v=20260830-auth-recovery-v2', '플랫폼 요청 관리자 모듈을 불러오지 못했어요.');
+  loadModule('activity-log', 'activity-log.js?v=20260830-auth-recovery-v2', '최근 활동 기록 모듈을 불러오지 못했어요.');
+  loadModule('admin-recent-activity', 'admin-recent-activity.js?v=20260830-auth-recovery-v2', '최근 활동 관리자 모듈을 불러오지 못했어요.');
   restorePersistedAdminView();
 })();

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "check": "npm run check:theme-colors && node --check app.js && node --check config.js && node --check family-auth.js && node --check daily-briefing.js && node --check event-change-push.js && node --check notification-center.js && node --check service-worker.js && node --check platform-request-admin.js && tsc --noEmit -p tsconfig.json",
+    "check": "npm run check:theme-colors && node --check app.js && node --check config.js && node --check family-auth.js && node --check activity-log.js && node --check admin-ops.js && node --check admin-resource-usage.js && node --check admin-recent-activity.js && node --check daily-briefing.js && node --check event-change-push.js && node --check family-admin.js && node --check family-onboarding.js && node --check family-todo.js && node --check feature-request.js && node --check growth-delete-sync.js && node --check growth-photo-recovery.js && node --check invite-link.js && node --check notification-center.js && node --check platform-request-admin.js && node --check settings-data-export.js && node --check settings-family-management.js && node --check service-worker.js && node --check tab-emojis.js && tsc --noEmit -p tsconfig.json",
     "check:theme-colors": "node scripts/check-theme-colors.mjs"
   },
   "devDependencies": {

@@ -14,9 +14,19 @@
       return;
     }
 
-    const { data, error } = await state.supabase.storage
+    const supabase = state.supabase;
+    const userId = state.session?.user?.id;
+    const householdId = state.household?.id;
+    const { data, error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.storage
       .from(GROWTH_PHOTO_BUCKET)
-      .createSignedUrls(paths, PHOTO_URL_TTL_SECONDS);
+      .createSignedUrls(paths, PHOTO_URL_TTL_SECONDS), {
+        supabase,
+        userId,
+        isCurrent: () => state.supabase === supabase
+          && state.session?.user?.id === userId
+          && state.household?.id === householdId
+          && state.growthEntries === entries,
+      });
 
     if (error) throw error;
 

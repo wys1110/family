@@ -210,7 +210,7 @@
 
   const getContext = () => {
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user || !state.household?.id) return null;
-    return { supabase: state.supabase, householdId: state.household.id };
+    return { supabase: state.supabase, householdId: state.household.id, userId: state.session.user.id };
   };
   const canManage = () => Boolean(window.FAMILY_PERMISSIONS_API?.isOwner?.());
 
@@ -275,7 +275,17 @@
   };
 
   const readSheet = async (sheet, context) => {
-    const { data, error } = await sheet.query(context.supabase, context.householdId);
+    const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
+      () => sheet.query(context.supabase, context.householdId),
+      {
+        supabase: context.supabase,
+        userId: context.userId,
+        isCurrent: () => typeof state !== 'undefined'
+          && state.supabase === context.supabase
+          && state.session?.user?.id === context.userId
+          && state.household?.id === context.householdId,
+      },
+    );
     if (error) throw error;
     return { name: sheet.name, headers: sheet.headers, rows: sheet.rows(Array.isArray(data) ? data : []) };
   };

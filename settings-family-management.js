@@ -130,6 +130,17 @@
     const remote = Boolean(state.supabase && state.session && state.household?.id);
     return { mode: remote ? 'remote' : 'local', householdId, session: state.session, supabase: remote ? state.supabase : null };
   };
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => {
+      const current = currentContext();
+      return current.mode === 'remote'
+        && current.supabase === context.supabase
+        && current.session.user.id === context.session.user.id
+        && current.householdId === context.householdId;
+    },
+  });
   const canManage = () => Boolean(window.FAMILY_PERMISSIONS_API?.isOwner?.());
   const ownerOnlyMessage = '가족 관리자만 사용할 수 있어요.';
   const archivedStorageKey = (householdId) => `${LOCAL_KEYS.archivedMembers}:${householdId}`;
@@ -176,8 +187,8 @@
   const loadMembers = async () => {
     const context = currentContext();
     if (context.mode === 'remote') {
-      const { data, error } = await context.supabase.from('calendar_members')
-        .select('*').eq('household_id', context.householdId).order('sort_order');
+      const { data, error } = await withAuthRecovery(() => context.supabase.from('calendar_members')
+        .select('*').eq('household_id', context.householdId).order('sort_order'), context);
       if (error) throw error;
       replaceStateMembers(Array.isArray(data) ? data : [], context.householdId);
       return;
@@ -194,19 +205,19 @@
 
     if (context.mode === 'remote') {
       if (memberId) {
-        const { data, error } = await context.supabase.from('calendar_members')
+        const { data, error } = await withAuthRecovery(() => context.supabase.from('calendar_members')
           .update({ name: normalized.name, color: normalized.color, updated_at: new Date().toISOString() })
-          .eq('household_id', context.householdId).eq('id', memberId).select().single();
+          .eq('household_id', context.householdId).eq('id', memberId).select().single(), context);
         if (error) throw error;
         replaceStateMembers([...members.filter((member) => member.id !== memberId), data], context.householdId);
       } else {
-        const { data, error } = await context.supabase.from('calendar_members').insert({
+        const { data, error } = await withAuthRecovery(() => context.supabase.from('calendar_members').insert({
           household_id: context.householdId,
           name: normalized.name,
           color: normalized.color,
           sort_order: members.length,
           created_by: context.session.user.id,
-        }).select().single();
+        }).select().single(), context);
         if (error) throw error;
         replaceStateMembers([...members, data], context.householdId);
       }
@@ -227,9 +238,9 @@
     if (member.name === '가족' && listMembers().length <= 1) throw new Error('기본 구성원은 보관할 수 없어요.');
     if (!window.confirm(`${member.name} 구성원을 보관할까요?${decision.reason === 'referenced' ? '\n기존 일정은 그대로 유지됩니다.' : ''}`)) return false;
     if (context.mode === 'remote' && member.id) {
-      const { error } = await context.supabase.from('calendar_members')
+      const { error } = await withAuthRecovery(() => context.supabase.from('calendar_members')
         .update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-        .eq('household_id', context.householdId).eq('id', member.id);
+        .eq('household_id', context.householdId).eq('id', member.id), context);
       if (error) {
         if (!/archived_at|column/i.test(error.message || '')) throw error;
         setArchivedLocally(member, context.householdId);
@@ -253,7 +264,7 @@
       };
     }
     const results = await Promise.all(BACKUP_TABLES.map(async (table) => {
-      const { data, error } = await context.supabase.from(table).select('*').eq('household_id', context.householdId);
+      const { data, error } = await withAuthRecovery(() => context.supabase.from(table).select('*').eq('household_id', context.householdId), context);
       if (error) throw error;
       return [table, Array.isArray(data) ? data : []];
     }));
@@ -323,11 +334,11 @@
       householdId: context.householdId,
       userId: context.session.user.id,
     });
-    const { data, error } = await context.supabase.rpc('restore_household_backup', {
+    const { data, error } = await withAuthRecovery(() => context.supabase.rpc('restore_household_backup', {
       target_household_id: context.householdId,
       p_backup_id: backupId,
       p_tables: normalizedTables,
-    });
+    }), context);
     if (error) {
       if (/restore_household_backup|relation|schema cache|household_backup_imports/i.test(error.message || '')) {
         throw new Error('backup-registry-missing');

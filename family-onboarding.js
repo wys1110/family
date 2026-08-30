@@ -94,10 +94,18 @@
 
     memberCount = null;
     render();
-    const { count, error } = await current.supabase
+    const supabase = current.supabase;
+    const userId = current.session.user.id;
+    const { count, error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase
       .from('household_members')
       .select('user_id', { count: 'exact', head: true })
-      .eq('household_id', householdId);
+      .eq('household_id', householdId), {
+        supabase,
+        userId,
+        isCurrent: () => state.supabase === supabase
+          && state.session?.user?.id === userId
+          && state.household?.id === householdId,
+      });
     if (requestId !== membershipRequestId || state.household?.id !== householdId) return;
     if (error) {
       console.warn('가족 구성원 수를 불러오지 못했어요', error);

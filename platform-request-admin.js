@@ -26,6 +26,13 @@
     if (typeof state === 'undefined' || !state.supabase || !state.session?.user) return null;
     return { supabase: state.supabase, session: state.session };
   };
+  const withAuthRecovery = (operation, context) => window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase: context.supabase,
+    userId: context.session.user.id,
+    isCurrent: () => typeof state !== 'undefined'
+      && state.supabase === context.supabase
+      && state.session?.user?.id === context.session.user.id,
+  });
 
   const waitForContext = async () => {
     for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -312,11 +319,11 @@
     refreshButton.disabled = true;
     refreshButton.textContent = '불러오는 중…';
     try {
-      const { data, error } = await context.supabase.rpc('list_platform_feature_requests', {
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('list_platform_feature_requests', {
         status_filter: null,
         search_text: null,
         row_limit: MAX_REQUESTS,
-      });
+      }), context);
       if (currentLoadId !== loadId) return;
       if (error) throw error;
       allRequests = Array.isArray(data) ? data : [];
@@ -335,7 +342,7 @@
     const context = await waitForContext();
     if (!context) return;
     try {
-      const { data, error } = await context.supabase.rpc('is_platform_admin');
+      const { data, error } = await withAuthRecovery(() => context.supabase.rpc('is_platform_admin'), context);
       if (error) throw error;
       platformAdmin = data === true;
     } catch (error) {
@@ -377,21 +384,21 @@
       }
       select.disabled = true;
       try {
-        const { error } = await context.supabase.rpc('update_platform_feature_request_status', {
+        const { error } = await withAuthRecovery(() => context.supabase.rpc('update_platform_feature_request_status', {
           request_id: request.id,
           next_status: nextStatus,
-        });
+        }), context);
         if (error) throw error;
         request.status = nextStatus;
         item.dataset.status = nextStatus;
         updateSummary(section);
         try {
-          await context.supabase.rpc('log_platform_admin_action', {
+          await withAuthRecovery(() => context.supabase.rpc('log_platform_admin_action', {
             p_action: 'feature_request_status',
             p_target_type: 'feature_request',
             p_target_id: request.id,
             p_metadata: { next_status: nextStatus },
-          });
+          }), context);
         } catch {
           // 상태 변경 자체는 성공했으므로 감사 로그 실패가 작업을 되돌리지는 않아요.
         }
