@@ -30,6 +30,7 @@ describe('family auth recovery', () => {
 
     expect(api.isAuthError({ status: 401 })).toBe(true);
     expect(api.isAuthError({ code: 'PGRST301', message: 'JWT expired' })).toBe(true);
+    expect(api.isAuthError({ code: 'PGRST303', message: 'JWT issued at future' })).toBe(true);
     expect(api.isAuthError({ status: 403, message: 'permission denied' })).toBe(false);
     expect(api.isAuthError({ code: '23505', message: 'duplicate key' })).toBe(false);
   });
@@ -115,6 +116,28 @@ describe('family auth recovery', () => {
     expect(getSession).toHaveBeenCalledTimes(1);
     expect(refreshSession).toHaveBeenCalledTimes(1);
     expect(operation).toHaveBeenCalledTimes(3);
+  });
+
+  test('does not rotate or expire a session for a JWT clock-skew response', async () => {
+    const { api, events } = loadApi();
+    const getSession = vi.fn(async () => ({
+      data: { session: { user: { id: 'user-1' }, expires_at: Math.floor(Date.now() / 1000) + 300 } },
+      error: null,
+    }));
+    const refreshSession = vi.fn();
+    const error = { code: 'PGRST303', message: 'JWT issued at future' };
+    const operation = vi.fn(async () => ({ data: null, error }));
+
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: { getSession, refreshSession } },
+      userId: 'user-1',
+    });
+
+    expect(result.error).toBe(error);
+    expect(getSession).not.toHaveBeenCalled();
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(operation).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([]);
   });
 
   test('coalesces concurrent refreshes while retrying each request once', async () => {
@@ -281,7 +304,7 @@ describe('family auth recovery', () => {
   test('retries a transient remote bootstrap failure without looping forever', () => {
     const app = read('app.js');
 
-    expect(app).toContain('const BOOTSTRAP_RETRY_DELAYS = [1000, 3000];');
+    expect(app).toContain('const BOOTSTRAP_RETRY_DELAYS = [1000, 3000, 10000, 30000];');
     expect(app).toContain('function scheduleBootstrapRetry(attempt, sessionKey)');
     expect(app).toContain('async function bootstrapData(attempt = 0)');
     expect(app).toContain('scheduleBootstrapRetry(attempt, sessionKey);');
@@ -321,11 +344,11 @@ describe('family auth recovery', () => {
     const packageJson = read('package.json');
     const serviceWorker = read('service-worker.js');
 
-    expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v1" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20260830-data-load-v2"></script>');
-    expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v1", style: false }');
+    expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v3" data-module="family-auth"></script>');
+    expect(index).toContain('<script src="app.js?v=20260830-data-load-v3"></script>');
+    expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v3", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
-    expect(index).toContain('config.js?v=20260830-data-load-v1');
+    expect(index).toContain('config.js?v=20260830-data-load-v3');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });
 });

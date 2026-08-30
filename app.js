@@ -88,7 +88,7 @@ let eventSaveInProgress = false;
 let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
-const BOOTSTRAP_RETRY_DELAYS = [1000, 3000];
+const BOOTSTRAP_RETRY_DELAYS = [1000, 3000, 10000, 30000];
 
 window.addEventListener('family:auth-session-refreshed', (event) => {
   const session = event.detail?.session;

@@ -12,7 +12,14 @@
     const message = String(error.message || error.details || '');
     return status === 401
       || code === 'PGRST301'
-      || /jwt expired|invalid jwt|invalid token|unauthorized|not authenticated/i.test(message);
+      || code === 'PGRST303'
+      || /jwt expired|invalid jwt|invalid token|jwt issued at future|unauthorized|not authenticated/i.test(message);
+  };
+
+  const isTransientAuthError = (error) => {
+    const code = String(error?.code || '').toUpperCase();
+    const message = String(error?.message || error?.details || '');
+    return code === 'PGRST303' || /jwt issued at future/i.test(message);
   };
 
   const emit = (type, detail = {}) => {
@@ -92,6 +99,7 @@
       result = { data: null, error };
     }
     if (!isAuthError(result?.error)) return result;
+    if (isTransientAuthError(result.error)) return result;
 
     const recovery = await recoverSession(options);
     if (!recovery.recovered) {
