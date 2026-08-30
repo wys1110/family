@@ -39,6 +39,20 @@ window.FAMILY_CONFIG = {
 
 anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema.sql`의 Row Level Security 정책이 담당합니다. `service_role` 키는 절대 넣지 마세요.
 
+## 로그인은 됐는데 가족 데이터가 안 보일 때
+
+로그인 화면은 사라졌지만 가족 일정·성장 기록이 비어 있고, 브라우저 로그에 `JWT issued at future`, `PGRST303` 또는 인증 요청 `401`이 반복되면 세션 자체보다 Supabase Data API가 JWT를 거부하는 상태일 수 있습니다.
+
+다음 순서로 복구합니다.
+
+1. [Supabase Dashboard](https://supabase.com/dashboard)에서 가족 앱 프로젝트를 엽니다.
+2. **Project Settings → General → Restart project**를 선택하고 확인합니다.
+3. 프로젝트 상태가 `ACTIVE_HEALTHY`가 될 때까지 기다립니다. 재시작 중 `521`·`503`은 일시적인 정상 현상입니다.
+4. 앱을 완전히 닫았다가 다시 열고 새로고침합니다. 앱도 데이터 로딩 오류를 약 44초 동안 자동 재시도합니다.
+5. 가족 데이터가 표시되는지 확인합니다.
+
+`Pause project`, `Delete project`, 데이터베이스 초기화는 선택하지 않습니다. 재시작 후에도 `401` 또는 `PGRST303`이 계속되면 Supabase **Logs → API**에서 발생 시각과 요청 경로를 확인해 [Supabase 지원팀](https://supabase.com/support)에 문의합니다. 액세스 토큰·리프레시 토큰은 로그나 채팅에 붙여 넣지 않습니다.
+
 ## GitHub Pages
 
 `main` 브랜치에 반영되면 `.github/workflows/pages.yml`이 정적 사이트를 자동 배포합니다. 저장소의 **Settings → Pages → Source**가 **GitHub Actions**로 설정되어 있어야 합니다.
