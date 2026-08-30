@@ -4,7 +4,7 @@
 
 **Goal:** Supabase 요청이 만료 토큰으로 `401`을 반환해도 세션을 한 번 갱신하고 원래 요청을 재시도하며, 복구 불가 시 로그인 상태로 명확히 전환한다.
 
-**Architecture:** `family-auth.js`가 인증 오류 판별과 single-flight `refreshSession()`을 제공한다. `app.js`는 세션 갱신/만료 이벤트를 앱 상태와 연결하고, 가족 데이터·일정·성장·아기·월페이퍼 DB/Storage/RPC 요청은 공통 복구 함수를 사용한다. 할 일·알림·활동 로그도 같은 API를 사용해 인증 오류의 반복과 401 폭주를 막는다.
+**Architecture:** `family-auth.js`가 인증 오류 판별과 single-flight `refreshSession()`을 제공한다. `app.js`와 동적 모듈은 가족 데이터·일정·성장·아기·월페이퍼 DB/Storage/RPC 및 Edge Function 요청을 공통 복구 함수로 실행한다. 할 일·알림·활동 로그·관리자 도구도 같은 API를 사용해 인증 오류의 반복과 401 폭주를 막는다.
 
 **Tech Stack:** Vanilla JavaScript, Supabase JS v2, Vitest, GitHub Pages service worker.
 
@@ -13,6 +13,7 @@
 - 기존 Supabase RLS와 브라우저의 publishable key 경계를 변경하지 않는다.
 - 인증 오류만 갱신·재시도하고 다른 DB 오류의 기존 처리와 메시지는 유지한다.
 - 요청별 재시도는 최대 1회이며 동시 갱신은 하나만 허용한다.
+- 갱신 후 사용자·Supabase client·가족 컨텍스트가 바뀐 요청은 재시도하지 않는다.
 - 기존 미추적 파일 `.superpowers/`, `HANDOFF.md`, `supabase/.temp/`는 스테이징하지 않는다.
 
 ---
@@ -106,11 +107,11 @@
   Run: `npm run check && git diff --check`
   Expected: exit code 0.
 
-- [ ] **Step 3: Verify the deployed assets**
+- [x] **Step 3: Verify the deployed assets**
 
   Confirm the public HTML loads the new `family-auth.js` before `app.js`, the public config contains the new manifest version, and a fresh authenticated page no longer leaves the generic network-error state after a recoverable token rejection.
 
-- [ ] **Step 4: Review and deliver**
+- [x] **Step 4: Review and deliver**
 
   Run: `git status --short --branch && git log --oneline -3`
   Report local/remote sync separately and leave unrelated untracked files untouched.
