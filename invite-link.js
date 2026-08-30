@@ -258,6 +258,7 @@
           </form>
         </div>
         ${inviteCode ? "" : '<p class="invite-link-help">초대받았다면 가족이 보내준 링크를 열어주세요.</p>'}
+        <button class="secondary-button" id="logoutButton" type="button">로그아웃</button>
       `;
       bindAccountActions(root);
       return true;

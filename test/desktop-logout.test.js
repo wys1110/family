@@ -29,6 +29,13 @@ test("가족 공간이 없어도 계정 팝업에서 로그아웃할 수 있다"
   expect(noHouseholdBranch).toContain("signOutCurrentUser(event.currentTarget)");
 });
 
+test("초대 링크 계정 팝업도 가족 공간이 없어도 로그아웃할 수 있다", () => {
+  const invite = readFileSync("invite-link.js", "utf8");
+  const noHouseholdBranch = invite.match(/if \(!state\.household\) \{([\s\S]*?)\n      bindAccountActions\(root\);/)?.[1] || "";
+
+  expect(noHouseholdBranch).toContain('id="logoutButton"');
+});
+
 test("가족 공간 조회에 실패하면 미가입 안내 팝업을 자동으로 열지 않는다", () => {
   const app = readFileSync("app.js", "utf8");
 
