@@ -287,6 +287,14 @@ describe('family auth recovery', () => {
     expect(app).toContain('scheduleBootstrapRetry(attempt, sessionKey);');
   });
 
+  test('records a safe remote load error summary for the next failure', () => {
+    const app = read('app.js');
+
+    expect(app).toContain('function describeRemoteError(error)');
+    expect(app).toContain('가족 기록 불러오기 실패: ${describeRemoteError(error)}');
+    expect(app).not.toContain('access_token');
+  });
+
   test('keeps every authenticated remote module behind the recovery API', () => {
     const modules = [
       'growth-delete-sync.js',
@@ -314,7 +322,7 @@ describe('family auth recovery', () => {
     const serviceWorker = read('service-worker.js');
 
     expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v1" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20260830-data-load-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20260830-data-load-v2"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v1", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
     expect(index).toContain('config.js?v=20260830-data-load-v1');

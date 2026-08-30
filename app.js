@@ -310,6 +310,18 @@ function renderDailyVerse() {
   $("#dailyVerseReference").textContent = verse.reference;
 }
 
+function describeRemoteError(error) {
+  if (!error) return "알 수 없는 오류";
+  const status = error.status ?? error.context?.status ?? error.response?.status;
+  const code = error.code;
+  const message = error.message || error.details;
+  return [
+    status ? `status=${status}` : "",
+    code ? `code=${code}` : "",
+    message ? `message=${String(message).slice(0, 160)}` : "",
+  ].filter(Boolean).join(", ") || error.name || "알 수 없는 오류";
+}
+
 function scheduleBootstrapRetry(attempt, sessionKey) {
   if (!state.supabase || !state.session || attempt >= BOOTSTRAP_RETRY_DELAYS.length) return;
   clearTimeout(bootstrapRetryTimer);
@@ -363,7 +375,7 @@ async function bootstrapData(attempt = 0) {
   } catch (error) {
     if (!isCurrentBootstrap(requestId, sessionKey)) return false;
     loaded = false;
-    console.error("가족 기록 불러오기 실패", error);
+    console.error(`가족 기록 불러오기 실패: ${describeRemoteError(error)}`, error);
     if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
   if (!isCurrentBootstrap(requestId, sessionKey)) return false;
