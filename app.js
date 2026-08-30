@@ -91,7 +91,7 @@ const MAX_CALENDAR_EVENT_LANES = 4;
 window.addEventListener('family:auth-session-refreshed', (event) => {
   const session = event.detail?.session;
   if (!session?.user?.id) return;
-  if (state.session?.user?.id && state.session.user.id !== session.user.id) return;
+  if (!state.session?.user?.id || state.session.user.id !== session.user.id) return;
   state.session = session;
   lastAuthSessionKey = authSessionKey(session);
 });
@@ -267,10 +267,10 @@ function authSessionKey(session) {
   return session?.user?.id || "signed-out";
 }
 
-function withAuthRecovery(operation, supabase = state.supabase) {
+function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id) {
   return window.FAMILY_AUTH_API.withRecovery(operation, {
     supabase,
-    userId: state.session?.user?.id,
+    userId,
   });
 }
 
@@ -304,7 +304,7 @@ async function bootstrapData() {
       state.activeBabyId = null;
       render();
       updateAuthGate();
-      const { data: memberships, error } = await withAuthRecovery(() => state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1));
+      const { data: memberships, error } = await withAuthRecovery(() => state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1), state.supabase, sessionKey);
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
       if (error) throw error;
       state.householdRole = memberships?.[0]?.role || null;
@@ -329,7 +329,7 @@ async function bootstrapData() {
     if (!isCurrentBootstrap(requestId, sessionKey)) return false;
     loaded = false;
     console.error("가족 기록 불러오기 실패", error);
-    toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
+    if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
   if (!isCurrentBootstrap(requestId, sessionKey)) return false;
   selectInitialBaby();
@@ -433,7 +433,7 @@ function seedDemoData() {
 
 async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
-  const remoteQuery = (operation) => withAuthRecovery(operation, supabase);
+  const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey);
   const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
     remoteQuery(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date")),
     remoteQuery(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date")),
@@ -442,6 +442,7 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
     remoteQuery(() => supabase.from("household_wallpapers").select("*").eq("household_id", householdId)),
   ]);
   if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
+  if ([babiesResult, eventsResult, growthResult, membersResult, wallpapersResult].some((result) => window.FAMILY_AUTH_API.isAuthError(result.error))) return false;
   if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요");
   else {
     const babies = babiesResult.data.map(fromBabyRemote);
@@ -533,7 +534,7 @@ function validateCareTimerContext() {
 async function hydrateGrowthPhotoUrls(entries) {
   const paths = [...new Set(entries.flatMap((entry) => entry.photoPaths || []))];
   if (!state.supabase || !paths.length) return;
-  const { data, error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600);
+  const { data, error } = await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600));
   if (error) return;
   const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
   entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
@@ -633,7 +634,7 @@ async function hydrateWallpaperUrls(rows, householdId) {
     renderWallpapers();
     return true;
   }
-  const { data, error } = await context.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600);
+  const { data, error } = await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600), context.supabase, context.userId);
   if (error || !wallpaperSessionIsCurrent(context) || state.wallpapers !== context.wallpapers) return false;
   const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
   state.wallpapers = Object.fromEntries([...WALLPAPER_SURFACES].map((surface) => {
@@ -653,8 +654,8 @@ async function saveWallpaper(surface, file, crop) {
   if (!context) return false;
   const path = `${context.householdId}/wallpapers/${surface}/${uid()}.${wallpaperExtension(file)}`;
   const storage = context.supabase.storage.from(GROWTH_PHOTO_BUCKET);
-  const cleanupNewUpload = () => storage.remove([path]);
-  const { error: uploadError } = await storage.upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false });
+  const cleanupNewUpload = () => withAuthRecovery(() => storage.remove([path]), context.supabase, context.userId);
+  const { error: uploadError } = await withAuthRecovery(() => storage.upload(path, file, { contentType: file.type || "image/jpeg", cacheControl: "3600", upsert: false }), context.supabase, context.userId);
   if (uploadError) {
     if (wallpaperMutationIsCurrent(context)) toast("사진을 올리지 못했어요. 다시 시도해 주세요");
     return false;
@@ -662,7 +663,7 @@ async function saveWallpaper(surface, file, crop) {
   if (!wallpaperMutationIsCurrent(context)) { await cleanupNewUpload(); return false; }
   let signedUrl = "";
   try {
-    const { data, error } = await storage.createSignedUrl(path, 3600);
+    const { data, error } = await withAuthRecovery(() => storage.createSignedUrl(path, 3600), context.supabase, context.userId);
     if (error || !data?.signedUrl) throw error || new Error("Signed URL is missing");
     signedUrl = data.signedUrl;
   } catch {
@@ -671,7 +672,7 @@ async function saveWallpaper(surface, file, crop) {
     return false;
   }
   if (!wallpaperMutationIsCurrent(context)) { await cleanupNewUpload(); return false; }
-  const { error: saveError } = await context.supabase.from("household_wallpapers").upsert({
+  const { error: saveError } = await withAuthRecovery(() => context.supabase.from("household_wallpapers").upsert({
     household_id: context.householdId,
     surface,
     photo_path: path,
@@ -679,13 +680,13 @@ async function saveWallpaper(surface, file, crop) {
     position_y: crop.positionY,
     zoom: crop.zoom,
     created_by: context.userId,
-  }).select().single();
+  }).select().single(), context.supabase, context.userId);
   if (saveError) {
     await cleanupNewUpload();
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 저장하지 못했어요. DB 업데이트를 확인해 주세요");
     return false;
   }
-  if (context.previous?.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await storage.remove([context.previous.path]);
+  if (context.previous?.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => storage.remove([context.previous.path]), context.supabase, context.userId);
   if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = { path, url: signedUrl, ...crop }; renderWallpapers();
   toast("가족 월페이퍼를 바꿨어요");
@@ -694,12 +695,12 @@ async function saveWallpaper(surface, file, crop) {
 async function saveWallpaperCrop(surface, crop) {
   const context = captureWallpaperContext(surface);
   if (!context?.previous?.path || !wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) return false;
-  const { error } = await context.supabase.from("household_wallpapers")
+  const { error } = await withAuthRecovery(() => context.supabase.from("household_wallpapers")
     .update({ position_x: crop.positionX, position_y: crop.positionY, zoom: crop.zoom })
     .eq("household_id", context.householdId)
     .eq("surface", surface)
     .select("household_id")
-    .single();
+    .single(), context.supabase, context.userId);
   if (error) {
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼 위치를 저장하지 못했어요. 다시 시도해 주세요");
     return false;
@@ -776,12 +777,12 @@ async function removeWallpaper(surface) {
   }
   const context = captureWallpaperContext(surface);
   if (!context) return false;
-  const { error } = await context.supabase.from("household_wallpapers").delete().eq("household_id", context.householdId).eq("surface", surface);
+  const { error } = await withAuthRecovery(() => context.supabase.from("household_wallpapers").delete().eq("household_id", context.householdId).eq("surface", surface), context.supabase, context.userId);
   if (error) {
     if (wallpaperMutationIsCurrent(context)) toast("월페이퍼를 삭제하지 못했어요");
     return false;
   }
-  if (context.previous.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await context.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([context.previous.path]);
+  if (context.previous.path && wallpaperPathIsOwned(context.previous.path, context.householdId, surface)) await withAuthRecovery(() => context.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove([context.previous.path]), context.supabase, context.userId);
   if (!wallpaperMutationIsCurrent(context)) return false;
   state.wallpapers[surface] = null; renderWallpapers();
   toast("월페이퍼를 삭제했어요");
@@ -1240,7 +1241,7 @@ async function saveBulkEvents(event) {
   if (errors.length || !items.length) return renderBulkEventPreview();
   const submit = $("#bulkEventSubmit"); submit.disabled = true; submit.textContent = "저장 중…";
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").insert(items.map(toRemote));
+    const { error } = await withAuthRecovery(() => state.supabase.from("events").insert(items.map(toRemote)));
     if (error) { submit.disabled = false; renderBulkEventPreview(); return toast("일정을 한꺼번에 저장하지 못했어요"); }
   }
   state.events.push(...items); persistLocal();
@@ -1275,7 +1276,7 @@ async function saveFamilyMember(event) {
   const member = { id: uid(), name, color };
   if (state.supabase && state.session) {
     if (!state.household) return toast("먼저 가족 공간을 만들어주세요");
-    const { data, error } = await state.supabase.from("calendar_members").insert({ id: member.id, household_id: state.household.id, name, color, sort_order: state.familyMembers.length, created_by: state.session.user.id }).select().single();
+    const { data, error } = await withAuthRecovery(() => state.supabase.from("calendar_members").insert({ id: member.id, household_id: state.household.id, name, color, sort_order: state.familyMembers.length, created_by: state.session.user.id }).select().single());
     if (error) return toast(error.message?.includes("calendar_members") ? "Supabase 가족 구성원 업데이트가 필요해요" : "가족 구성원을 추가하지 못했어요");
     member.id = data.id;
   }
@@ -1356,7 +1357,7 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
   state.viewDate = startOfMonth(parseDate(targetDate));
   render();
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("household_id", state.household.id).eq("id", id);
+    const { error } = await withAuthRecovery(() => state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("household_id", state.household.id).eq("id", id));
     if (error) {
       event.date = previousDate;
       event.endDate = previousEndDate;
@@ -1374,7 +1375,7 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
 
 async function storeEvent(item) {
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("events").upsert(toRemote(item));
+    const { error } = await withAuthRecovery(() => state.supabase.from("events").upsert(toRemote(item)));
     if (error) {
       toast(error.message?.includes("event_end_date") ? "Supabase 날짜 범위 업데이트가 필요해요" : "저장하지 못했어요");
       return false;
@@ -1465,7 +1466,7 @@ async function saveEvent(event) {
 
 async function deleteEvent() {
   const id = $("#eventId").value; if (!id || !confirm("이 일정을 삭제할까요?")) return;
-  if (state.supabase && state.session) { const { error } = await state.supabase.from("events").delete().eq("household_id", state.household.id).eq("id", id); if (error) return toast("삭제하지 못했어요"); }
+  if (state.supabase && state.session) { const { error } = await withAuthRecovery(() => state.supabase.from("events").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("삭제하지 못했어요"); }
   state.events = state.events.filter((event) => event.id !== id); persistLocal(); $("#eventDialog").close(); render(); toast("일정을 삭제했어요");
 }
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
@@ -1657,7 +1658,7 @@ async function stopCareTimer() {
   try {
     if (finishedTimer.contextKey !== careTimerContextKey() || !state.babies.some((baby) => baby.id === finishedTimer.babyId)) throw new Error("timer context changed");
     if (state.supabase && state.session) {
-      const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+      const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
       if (error) throw error;
     }
     state.growthEntries.push(entry);
@@ -2064,7 +2065,7 @@ async function saveGrowthPresetFromEvent(event) {
     sleepMinutes: preset.sleepMinutes || null, temperature: preset.temperature || null, diaperKind: preset.diaperKind || "", note: "", photoPaths: [], photoUrls: [],
   };
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+    const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
     if (error) { button.disabled = false; return toast("기록하지 못했어요. DB 업데이트를 확인해 주세요"); }
   }
   state.growthEntries.push(entry);
@@ -2135,10 +2136,10 @@ async function saveBaby(event) {
   let legacyLinked = true;
   try {
     if (state.supabase && state.session) {
-      const { error } = await state.supabase.from("babies").upsert(toBabyRemote(baby));
+      const { error } = await withAuthRecovery(() => state.supabase.from("babies").upsert(toBabyRemote(baby)));
       if (error) return toast("아기 프로필을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
       if (isNew && state.babies.length === 0) {
-        const { error: linkError } = await state.supabase.from("growth_entries").update({ baby_id: baby.id }).eq("household_id", state.household.id).is("baby_id", null);
+        const { error: linkError } = await withAuthRecovery(() => state.supabase.from("growth_entries").update({ baby_id: baby.id }).eq("household_id", state.household.id).is("baby_id", null));
         legacyLinked = !linkError;
       }
     }
@@ -2186,7 +2187,7 @@ async function archiveBabyProfile() {
   if (!confirm(`${baby.name} 프로필을 아카이브할까요?\n성장 기록과 사진은 삭제되지 않으며 언제든 복원할 수 있어요.`)) return;
   const archivedAt = new Date().toISOString();
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("babies").update({ archived_at: archivedAt, updated_at: archivedAt }).eq("id", id).eq("household_id", state.household.id);
+    const { error } = await withAuthRecovery(() => state.supabase.from("babies").update({ archived_at: archivedAt, updated_at: archivedAt }).eq("id", id).eq("household_id", state.household.id));
     if (error) return toast("아카이브하지 못했어요. DB 업데이트를 확인해 주세요");
   }
   state.babies = state.babies.filter((item) => item.id !== id);
@@ -2207,7 +2208,7 @@ async function restoreBabyFromEvent(event) {
   if (!baby) return;
   button.disabled = true;
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("babies").update({ archived_at: null, updated_at: new Date().toISOString() }).eq("id", baby.id).eq("household_id", state.household.id);
+    const { error } = await withAuthRecovery(() => state.supabase.from("babies").update({ archived_at: null, updated_at: new Date().toISOString() }).eq("id", baby.id).eq("household_id", state.household.id));
     if (error) { button.disabled = false; return toast("프로필을 복원하지 못했어요"); }
   }
   state.archivedBabies = state.archivedBabies.filter((item) => item.id !== baby.id);
@@ -2280,9 +2281,9 @@ async function uploadGrowthPhotos(entryId) {
   for (const photo of growthPhotoDraft.newPhotos) {
     const type = photo.file.type || "image/jpeg"; const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg";
     const path = `${state.household.id}/${entryId}/${uid()}.${extension}`;
-    const { error } = await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, photo.file, { contentType: type, cacheControl: "3600", upsert: false });
+    const { error } = await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, photo.file, { contentType: type, cacheControl: "3600", upsert: false }));
     if (error) {
-      if (uploaded.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploaded);
+      if (uploaded.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploaded));
       throw error;
     }
     uploaded.push(path);
@@ -2318,12 +2319,12 @@ async function saveGrowthEntry(event) {
     if (state.supabase && state.session) {
       try { uploadedPaths = await uploadGrowthPhotos(entry.id); } catch { return toast("사진을 올리지 못했어요. 다시 시도해 주세요"); }
       entry.photoPaths.push(...uploadedPaths);
-      const { error } = await state.supabase.from("growth_entries").upsert(toGrowthRemote(entry));
+      const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
       if (error) {
-        if (uploadedPaths.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploadedPaths);
+        if (uploadedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploadedPaths));
         return toast("성장 기록을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
       }
-      if (growthPhotoDraft.removedPaths.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(growthPhotoDraft.removedPaths);
+      if (growthPhotoDraft.removedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(growthPhotoDraft.removedPaths));
       try {
         await hydrateGrowthPhotoUrls([entry]);
       } catch (error) {
@@ -2352,8 +2353,8 @@ async function deleteGrowthEntry() {
   const id = $("#growthId").value; if (!id || !confirm("이 성장 기록을 삭제할까요?")) return;
   const target = state.growthEntries.find((entry) => entry.id === id);
   if (state.supabase && state.session) {
-    const { error } = await state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id); if (error) return toast("기록을 삭제하지 못했어요");
-    if (target?.photoPaths?.length) await state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths);
+    const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("기록을 삭제하지 못했어요");
+    if (target?.photoPaths?.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths));
   }
   state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); window.dispatchEvent(new CustomEvent('family:growth-entry-deleted', { detail: { babyId: target?.babyId || null, deletedAt: new Date().toISOString() } })); toast("성장 기록을 삭제했어요");
 }
@@ -2410,8 +2411,8 @@ async function signInWithGoogle() {
   if (error) toast("Google 로그인을 시작하지 못했어요");
 }
 async function sendMagicLink(event) { event.preventDefault(); const email = event.currentTarget.querySelector('input[type="email"]').value; const { error } = await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirectUrl() } }); if (error) return toast("로그인 링크를 보내지 못했어요"); toast("이메일을 확인해 주세요"); event.currentTarget.reset(); }
-async function createHousehold(event) { event.preventDefault(); const { error } = await state.supabase.rpc("create_household", { household_name: $("#householdName").value.trim() }); if (error) return toast("가족 공간을 만들지 못했어요"); await bootstrapData(); renderAccount(); toast("가족 공간을 만들었어요"); }
-async function joinHousehold(event) { event.preventDefault(); const { error } = await state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() }); if (error) return toast("초대 코드를 확인해 주세요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
+async function createHousehold(event) { event.preventDefault(); const { error } = await withAuthRecovery(() => state.supabase.rpc("create_household", { household_name: $("#householdName").value.trim() })); if (error) return toast("가족 공간을 만들지 못했어요"); await bootstrapData(); renderAccount(); toast("가족 공간을 만들었어요"); }
+async function joinHousehold(event) { event.preventDefault(); const { error } = await withAuthRecovery(() => state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() })); if (error) return toast("초대 코드를 확인해 주세요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
 
 init().catch((error) => {
   console.error("가족 앱 시작 실패", error);

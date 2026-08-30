@@ -114,13 +114,13 @@ function createRemoteSaveHarness({ saveFails = false, signedUrlFails = false, si
   ].join('\n');
   const createRuntime = new Function(
     'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'uid', 'toast', 'renderWallpapers',
-    'window', 'photoDataUrl', 'persistLocalWallpapers', 'wallpaperPathIsOwned',
+    'window', 'withAuthRecovery', 'photoDataUrl', 'persistLocalWallpapers', 'wallpaperPathIsOwned',
     `${source}\nreturn { saveWallpaper, saveWallpaperDraft, removeWallpaper };`,
   );
   const normalizeCrop = (value) => ({ positionX: value.positionX, positionY: value.positionY, zoom: value.zoom });
   const runtime = createRuntime(
     state, new Set(['calendar', 'growth']), 'growth-photos', () => 'new-id', toast, renderWallpapers,
-    { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } }, vi.fn(), vi.fn(),
+    { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } }, (operation) => operation(), vi.fn(), vi.fn(),
     (path, householdId, surface) => path.startsWith(`${householdId}/wallpapers/${surface}/`),
   );
   return { ...runtime, state, previous, supabase, table, storage, filters, deleteFilters, toast, renderWallpapers };
@@ -144,13 +144,13 @@ function createHydrationHarness({ editorAvailable = true } = {}) {
     app.slice(app.indexOf('async function hydrateWallpaperUrls'), app.indexOf('async function photoDataUrl')),
   ].join('\n');
   const createRuntime = new Function(
-    'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'wallpaperPathIsOwned', 'renderWallpapers', 'window',
+    'state', 'WALLPAPER_SURFACES', 'GROWTH_PHOTO_BUCKET', 'wallpaperPathIsOwned', 'renderWallpapers', 'window', 'withAuthRecovery',
     `${source}\nreturn hydrateWallpaperUrls;`,
   );
   const hydrateWallpaperUrls = createRuntime(
     state, new Set(['calendar', 'growth']), 'growth-photos',
     (path, householdId, surface) => path.startsWith(`${householdId}/wallpapers/${surface}/`),
-    renderWallpapers, editorAvailable ? { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } } : {},
+    renderWallpapers, editorAvailable ? { FAMILY_WALLPAPER_EDITOR: { normalizeCrop } } : {}, (operation) => operation(),
   );
   return { state, supabase, storage, signedUrls, h1Wallpapers, renderWallpapers, hydrateWallpaperUrls };
 }

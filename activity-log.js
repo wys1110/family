@@ -53,7 +53,7 @@
     } catch (error) {
       recent.delete(dedupeKey);
       const missingMigration = error?.code === '42883' || /log_app_activity|schema cache/i.test(error?.message || '');
-      if (!missingMigration) console.warn('최근 활동 기록 실패', error);
+      if (!missingMigration && !window.FAMILY_AUTH_API.isAuthError(error)) console.warn('최근 활동 기록 실패', error);
       return false;
     }
   };

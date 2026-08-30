@@ -300,7 +300,7 @@
         remoteRows = (data || []).map(normalizeRemoteNotification);
       } catch (error) {
         remoteRows = [];
-        if (remoteSupported) console.warn('알림 이력을 불러오지 못했어요', error);
+        if (remoteSupported && !window.FAMILY_AUTH_API.isAuthError(error)) console.warn('알림 이력을 불러오지 못했어요', error);
       }
       return remoteRows;
     })().finally(() => { remoteLoadPromise = null; });
@@ -640,7 +640,7 @@
       .eq('user_id', state.session.user.id)
       .eq('household_id', state.household.id));
     if (error) {
-      console.warn('알림 상태를 동기화하지 못했어요', error);
+      if (!window.FAMILY_AUTH_API.isAuthError(error)) console.warn('알림 상태를 동기화하지 못했어요', error);
       return false;
     }
     return true;
@@ -786,7 +786,7 @@
         .in('id', remoteIds)
         .eq('user_id', state.session.user.id)
         .eq('household_id', state.household.id));
-      if (error) console.warn('모두 읽음 상태를 동기화하지 못했어요', error);
+      if (error && !window.FAMILY_AUTH_API.isAuthError(error)) console.warn('모두 읽음 상태를 동기화하지 못했어요', error);
     }
   });
   list.addEventListener('click', (event) => {

@@ -101,6 +101,49 @@ describe('family auth recovery', () => {
     expect(events.map((event) => event.type)).toEqual(['family:auth-expired']);
   });
 
+  test('expires the session when the refreshed token is rejected again', async () => {
+    const { api, events } = loadApi();
+    const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
+    const result = await api.withRecovery(operation, {
+      supabase: {
+        auth: {
+          refreshSession: async () => ({
+            data: { session: { user: { id: 'user-1' }, access_token: 'still-rejected' } },
+            error: null,
+          }),
+        },
+      },
+      userId: 'user-1',
+    });
+
+    expect(result.error.status).toBe(401);
+    expect(operation).toHaveBeenCalledTimes(2);
+    expect(events.map((event) => event.type)).toEqual([
+      'family:auth-session-refreshed',
+      'family:auth-expired',
+    ]);
+  });
+
+  test('expires the session when refresh returns a different user', async () => {
+    const { api, events } = loadApi();
+    const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
+    const result = await api.withRecovery(operation, {
+      supabase: {
+        auth: {
+          refreshSession: async () => ({
+            data: { session: { user: { id: 'user-2' }, access_token: 'wrong-user' } },
+            error: null,
+          }),
+        },
+      },
+      userId: 'user-1',
+    });
+
+    expect(result.error.status).toBe(401);
+    expect(operation).toHaveBeenCalledTimes(1);
+    expect(events.map((event) => event.type)).toEqual(['family:auth-expired']);
+  });
+
   test('connects auth recovery to the app and every remote activity reader', () => {
     const app = read('app.js');
     const activityLog = read('activity-log.js');
@@ -108,8 +151,10 @@ describe('family auth recovery', () => {
     const notifications = read('notification-center.js');
 
     expect(app).toContain("window.addEventListener('family:auth-session-refreshed'");
+    expect(app).toContain("if (!state.session?.user?.id || state.session.user.id !== session.user.id) return;");
     expect(app).toContain("window.addEventListener('family:auth-expired'");
     expect(app).toContain('window.FAMILY_AUTH_API.withRecovery');
+    expect(app).toContain('if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");');
     expect(activityLog).toContain('window.FAMILY_AUTH_API.withRecovery');
     expect(familyTodo).toContain('window.FAMILY_AUTH_API.withRecovery');
     expect(notifications).toContain('window.FAMILY_AUTH_API.withRecovery');
@@ -118,11 +163,13 @@ describe('family auth recovery', () => {
   test('loads the recovery module before app startup and refreshes stale PWA assets', () => {
     const index = read('index.html');
     const config = read('config.js');
+    const packageJson = read('package.json');
     const serviceWorker = read('service-worker.js');
 
     expect(index).toContain('<script src="family-auth.js?v=20260830-auth-recovery-v1" data-module="family-auth"></script>');
     expect(index).toContain('<script src="app.js?v=20260830-auth-recovery-v1"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20260830-auth-recovery-v1", style: false }');
+    expect(packageJson).toContain('node --check family-auth.js');
     expect(index).toContain('config.js?v=20260830-auth-recovery-v1');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });

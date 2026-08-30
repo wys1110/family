@@ -2,6 +2,7 @@
   if (window.FAMILY_AUTH_API) return;
 
   let refreshPromise = null;
+  let refreshSupabase = null;
   let refreshUserId = null;
 
   const isAuthError = (error) => {
@@ -24,14 +25,13 @@
       return false;
     }
 
-    if (!refreshPromise || refreshUserId !== userId) {
-      refreshUserId = userId || null;
-      refreshPromise = (async () => {
+    if (!refreshPromise || refreshSupabase !== supabase || refreshUserId !== userId) {
+      const flight = (async () => {
         try {
           const { data, error } = await supabase.auth.refreshSession();
           const session = data?.session;
           if (error || !session || (userId && session.user?.id !== userId)) {
-            if (!session || error) emit('family:auth-expired');
+            emit('family:auth-expired');
             return false;
           }
           emit('family:auth-session-refreshed', { session });
@@ -40,8 +40,14 @@
           emit('family:auth-expired');
           return false;
         }
-      })().finally(() => {
+      })();
+      refreshSupabase = supabase;
+      refreshUserId = userId || null;
+      refreshPromise = flight;
+      flight.then(() => {
+        if (refreshPromise !== flight) return;
         refreshPromise = null;
+        refreshSupabase = null;
         refreshUserId = null;
       });
     }
@@ -61,7 +67,15 @@
 
     const refreshed = await refreshSession(options);
     if (!refreshed) return result;
-    return operation();
+    try {
+      const retryResult = await operation();
+      if (isAuthError(retryResult?.error)) emit('family:auth-expired');
+      return retryResult;
+    } catch (error) {
+      if (!isAuthError(error)) throw error;
+      emit('family:auth-expired');
+      return { data: null, error };
+    }
   };
 
   window.FAMILY_AUTH_API = { isAuthError, withRecovery };
