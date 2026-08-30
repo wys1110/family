@@ -44,6 +44,15 @@
     && state.household?.id,
   );
 
+  const withAuthRecovery = (operation, context = {}) => {
+    const supabase = context.supabase || state.supabase;
+    const userId = context.userId || state.session?.user?.id;
+    return window.FAMILY_AUTH_API.withRecovery(operation, {
+      supabase,
+      userId,
+    });
+  };
+
   const emptyStore = () => ({
     version: 2,
     filter: 'new',
@@ -214,14 +223,14 @@
     todoLoadPromise = (async () => {
       if (typeof state !== 'undefined' && state.supabase && state.session && state.household?.id) {
         try {
-          const { data, error } = await state.supabase
+          const { data, error } = await withAuthRecovery(() => state.supabase
             .from('family_todos')
             .select('id, title, due_date, assignee, completed, created_at, updated_at')
             .eq('household_id', state.household.id)
             .eq('visibility', 'family')
             .order('completed', { ascending: true })
             .order('due_date', { ascending: true, nullsFirst: false })
-            .limit(500);
+            .limit(500));
           todoSnapshot = error ? loadLocalTodos() : (data || []).map(normalizeTodo);
         } catch {
           todoSnapshot = loadLocalTodos();
@@ -275,7 +284,7 @@
     remoteLoadPromise = (async () => {
       const cutoff = new Date(Date.now() - HISTORY_WINDOW_MS).toISOString();
       try {
-        const { data, error } = await state.supabase
+        const { data, error } = await withAuthRecovery(() => state.supabase
           .from('notifications')
           .select('id,kind,title,body,icon,source_type,source_id,source_date,scheduled_at,read_at,dismissed_at,delivered_at,metadata,created_at')
           .eq('household_id', state.household.id)
@@ -283,7 +292,7 @@
           .gte('scheduled_at', cutoff)
           .is('dismissed_at', null)
           .order('scheduled_at', { ascending: false })
-          .limit(500);
+          .limit(500));
         if (error) {
           if (String(error.code) === '42P01' || /notifications/i.test(String(error.message || ''))) remoteSupported = false;
           throw error;
@@ -624,12 +633,12 @@
 
   const updateRemote = async (item, patch) => {
     if (!item.persistent || !item.remoteId || !remoteReady()) return true;
-    const { error } = await state.supabase
+    const { error } = await withAuthRecovery(() => state.supabase
       .from('notifications')
       .update({ ...patch, updated_at: new Date().toISOString() })
       .eq('id', item.remoteId)
       .eq('user_id', state.session.user.id)
-      .eq('household_id', state.household.id);
+      .eq('household_id', state.household.id));
     if (error) {
       console.warn('알림 상태를 동기화하지 못했어요', error);
       return false;
@@ -771,12 +780,12 @@
     persist();
     render();
     if (remoteIds.length && remoteReady()) {
-      const { error } = await state.supabase
+      const { error } = await withAuthRecovery(() => state.supabase
         .from('notifications')
         .update({ read_at: now, updated_at: now })
         .in('id', remoteIds)
         .eq('user_id', state.session.user.id)
-        .eq('household_id', state.household.id);
+        .eq('household_id', state.household.id));
       if (error) console.warn('모두 읽음 상태를 동기화하지 못했어요', error);
     }
   });

@@ -16,6 +16,7 @@ self.addEventListener("fetch", (event) => {
 
   const forceNetwork =
     url.pathname.endsWith("/config.js") ||
+    url.pathname.endsWith("/family-auth.js") ||
     url.pathname.endsWith("/refresh-button.css") ||
     url.pathname.endsWith("/refresh-button.js") ||
     url.pathname.endsWith("/notification-center.css") ||

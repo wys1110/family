@@ -43,11 +43,11 @@
     recent.set(dedupeKey, now);
 
     try {
-      const { error } = await context.supabase.rpc('log_app_activity', {
+      const { error } = await window.FAMILY_AUTH_API.withRecovery(() => context.supabase.rpc('log_app_activity', {
         p_activity_type: type,
         p_feature_name: feature,
         p_household_id: context.householdId,
-      });
+      }), { supabase: context.supabase, userId: context.userId });
       if (error) throw error;
       return true;
     } catch (error) {

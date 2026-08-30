@@ -224,6 +224,13 @@
     return { supabase: state.supabase, session: state.session, household: state.household };
   }
 
+  function withAuthRecovery(operation, context) {
+    return window.FAMILY_AUTH_API.withRecovery(operation, {
+      supabase: context.supabase,
+      userId: context.session.user.id,
+    });
+  }
+
   function contextKey(context = familyContext()) {
     return context ? `${context.session.user.id}:${context.household.id}` : 'device';
   }
@@ -364,14 +371,14 @@
 
     let result;
     try {
-      result = await context.supabase
+      result = await withAuthRecovery(() => context.supabase
         .from('family_todos')
         .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
         .eq('household_id', context.household.id)
         .order('completed', { ascending: true })
         .order('due_date', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(500), context);
     } catch {
       result = { data: null, error: new Error('network request failed') };
     }
@@ -392,20 +399,20 @@
     let remoteData = data || [];
     const localTodos = readLocalTodos(context);
     if (localTodos.length) {
-      const { error: migrateError } = await context.supabase
+      const { error: migrateError } = await withAuthRecovery(() => context.supabase
         .from('family_todos')
-        .upsert(localTodos.map((todo) => toRemote(todo, context)), { onConflict: 'id' });
+        .upsert(localTodos.map((todo) => toRemote(todo, context)), { onConflict: 'id' }), context);
       if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
       if (!migrateError) {
         try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
-        const { data: refreshedData, error: refreshedError } = await context.supabase
+        const { data: refreshedData, error: refreshedError } = await withAuthRecovery(() => context.supabase
           .from('family_todos')
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
           .eq('household_id', context.household.id)
           .order('completed', { ascending: true })
           .order('due_date', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(500);
+          .limit(500), context);
         if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
         if (!refreshedError) remoteData = refreshedData || [];
       }
@@ -438,11 +445,11 @@
     if (moduleState.storage === 'remote') {
       const context = familyContext();
       if (context) {
-        const { data, error } = await context.supabase
+        const { data, error } = await withAuthRecovery(() => context.supabase
           .from('family_todos')
           .insert(toRemote(todo, context))
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
-          .single();
+          .single(), context);
         if (!error) {
           const saved = normalizeTodo(data);
           moduleState.todos.unshift(saved);
@@ -487,13 +494,13 @@
     if (moduleState.storage === 'remote') {
       const context = familyContext();
       if (context) {
-        const { data, error } = await context.supabase
+        const { data, error } = await withAuthRecovery(() => context.supabase
           .from('family_todos')
           .update(remotePatch(patch))
           .eq('id', id)
           .eq('household_id', context.household.id)
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
-          .single();
+          .single(), context);
         if (!error) {
           const currentIndex = moduleState.todos.findIndex((todo) => todo.id === id);
           if (currentIndex < 0) return null;
@@ -527,11 +534,11 @@
     if (moduleState.storage === 'remote') {
       const context = familyContext();
       if (context) {
-        const { error } = await context.supabase
+        const { error } = await withAuthRecovery(() => context.supabase
           .from('family_todos')
           .delete()
           .eq('id', id)
-          .eq('household_id', context.household.id);
+          .eq('household_id', context.household.id), context);
         if (error && !isMissingTable(error)) throw error;
         if (error && isMissingTable(error)) moduleState.storage = 'local';
       }

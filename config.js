@@ -100,6 +100,7 @@ window.FAMILY_CONFIG = {
   installRefreshFallback();
 
   const modules = [
+    { name: "family-auth", version: "20260830-auth-recovery-v1", style: false },
     { name: "growth-delete-sync", version: "20260824-event-change-push-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20260718-logic-audit-v1" },

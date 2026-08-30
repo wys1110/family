@@ -88,6 +88,24 @@ let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
 
+window.addEventListener('family:auth-session-refreshed', (event) => {
+  const session = event.detail?.session;
+  if (!session?.user?.id) return;
+  if (state.session?.user?.id && state.session.user.id !== session.user.id) return;
+  state.session = session;
+  lastAuthSessionKey = authSessionKey(session);
+});
+
+window.addEventListener('family:auth-expired', () => {
+  if (!state.session) return;
+  state.session = null;
+  lastAuthSessionKey = authSessionKey(null);
+  state.onboardingPrompted = false;
+  updateAuthGate();
+  bootstrapData();
+  if (state.authReady) toast('로그인이 만료됐어요. 다시 로그인해 주세요');
+});
+
 function focusOnDesktop(selector) {
   if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   setTimeout(() => $(selector)?.focus(), 100);
@@ -249,6 +267,13 @@ function authSessionKey(session) {
   return session?.user?.id || "signed-out";
 }
 
+function withAuthRecovery(operation, supabase = state.supabase) {
+  return window.FAMILY_AUTH_API.withRecovery(operation, {
+    supabase,
+    userId: state.session?.user?.id,
+  });
+}
+
 function lockMobileZoom() {
   // Keep native pinch zoom available for accessibility.
 }
@@ -279,7 +304,7 @@ async function bootstrapData() {
       state.activeBabyId = null;
       render();
       updateAuthGate();
-      const { data: memberships, error } = await state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1);
+      const { data: memberships, error } = await withAuthRecovery(() => state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1));
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
       if (error) throw error;
       state.householdRole = memberships?.[0]?.role || null;
@@ -408,12 +433,13 @@ function seedDemoData() {
 
 async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
+  const remoteQuery = (operation) => withAuthRecovery(operation, supabase);
   const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
-    supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date"),
-    supabase.from("events").select("*").eq("household_id", householdId).order("event_date"),
-    supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false }),
-    supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order"),
-    supabase.from("household_wallpapers").select("*").eq("household_id", householdId),
+    remoteQuery(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date")),
+    remoteQuery(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date")),
+    remoteQuery(() => supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false })),
+    remoteQuery(() => supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order")),
+    remoteQuery(() => supabase.from("household_wallpapers").select("*").eq("household_id", householdId)),
   ]);
   if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
   if (babiesResult.error) toast("아기 프로필을 불러오지 못했어요. DB 업데이트를 확인해 주세요");
@@ -444,7 +470,7 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
   if (!state.familyMembers.some((member) => member.name === state.quickMember)) state.quickMember = state.familyMembers[0]?.name || "가족";
   if (state.babies.length === 1 && state.growthEntries.some((entry) => !entry.babyId)) {
     const babyId = state.babies[0].id;
-    const { error } = await supabase.from("growth_entries").update({ baby_id: babyId }).eq("household_id", householdId).is("baby_id", null);
+    const { error } = await remoteQuery(() => supabase.from("growth_entries").update({ baby_id: babyId }).eq("household_id", householdId).is("baby_id", null));
     if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
     if (error) toast("이전 성장 기록을 아기 프로필에 연결하지 못했어요");
     else state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = babyId; });
