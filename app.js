@@ -396,7 +396,10 @@ async function bootstrapData(attempt = 0) {
     state.onboardingPrompted = true;
     setTimeout(openAccountDialog, 250);
   }
-  if (!loaded && state.supabase && state.session) scheduleBootstrapRetry(attempt, sessionKey);
+  if (!loaded && state.supabase && state.session) {
+    if (attempt < BOOTSTRAP_RETRY_DELAYS.length) scheduleBootstrapRetry(attempt, sessionKey);
+    else toast("기록을 계속 불러오지 못하고 있어요. 잠시 후 새로고침해 주세요");
+  }
   return loaded;
 }
 

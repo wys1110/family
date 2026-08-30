@@ -308,6 +308,7 @@ describe('family auth recovery', () => {
     expect(app).toContain('function scheduleBootstrapRetry(attempt, sessionKey)');
     expect(app).toContain('async function bootstrapData(attempt = 0)');
     expect(app).toContain('scheduleBootstrapRetry(attempt, sessionKey);');
+    expect(app).toContain('기록을 계속 불러오지 못하고 있어요. 잠시 후 새로고침해 주세요');
   });
 
   test('records a safe remote load error summary for the next failure', () => {
@@ -345,7 +346,7 @@ describe('family auth recovery', () => {
     const serviceWorker = read('service-worker.js');
 
     expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v3" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20260830-data-load-v3"></script>');
+    expect(index).toContain('<script src="app.js?v=20260830-data-load-v4"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v3", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
     expect(index).toContain('config.js?v=20260830-data-load-v3');

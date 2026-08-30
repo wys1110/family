@@ -71,7 +71,7 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20260816-growth-monogram-v1');
-    expect(index).toContain('<script src="app.js?v=20260830-data-load-v3"></script>');
+    expect(index).toContain('<script src="app.js?v=20260830-data-load-v4"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20260830-auth-recovery-v2" }');
     expect(config).toContain('{ name: "settings", version: "20260804-settings-notification-cards-v1" }');
