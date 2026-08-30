@@ -59,6 +59,64 @@ describe('family auth recovery', () => {
     expect(events.map((event) => event.type)).toEqual(['family:auth-session-refreshed']);
   });
 
+  test('uses a current shared session before rotating a refresh token', async () => {
+    const { api } = loadApi();
+    let operationCalls = 0;
+    const getSession = vi.fn(async () => ({
+      data: { session: { user: { id: 'user-1' }, access_token: 'fresh-token', expires_at: Math.floor(Date.now() / 1000) + 300 } },
+      error: null,
+    }));
+    const refreshSession = vi.fn(async () => ({
+      data: { session: { user: { id: 'user-1' }, access_token: 'rotated-token' } },
+      error: null,
+    }));
+    const operation = vi.fn(async () => {
+      operationCalls += 1;
+      return operationCalls === 1
+        ? { data: null, error: { status: 401, message: 'JWT expired' } }
+        : { data: ['ok'], error: null };
+    });
+
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: { getSession, refreshSession } },
+      userId: 'user-1',
+    });
+
+    expect(result.data).toEqual(['ok']);
+    expect(getSession).toHaveBeenCalledTimes(1);
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(operation).toHaveBeenCalledTimes(2);
+  });
+
+  test('rotates the token when a shared session retry is still rejected', async () => {
+    const { api } = loadApi();
+    let operationCalls = 0;
+    const getSession = vi.fn(async () => ({
+      data: { session: { user: { id: 'user-1' }, access_token: 'shared-token', expires_at: Math.floor(Date.now() / 1000) + 300 } },
+      error: null,
+    }));
+    const refreshSession = vi.fn(async () => ({
+      data: { session: { user: { id: 'user-1' }, access_token: 'rotated-token' } },
+      error: null,
+    }));
+    const operation = vi.fn(async () => {
+      operationCalls += 1;
+      return operationCalls < 3
+        ? { data: null, error: { status: 401, message: 'JWT expired' } }
+        : { data: ['ok'], error: null };
+    });
+
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: { getSession, refreshSession } },
+      userId: 'user-1',
+    });
+
+    expect(result.data).toEqual(['ok']);
+    expect(getSession).toHaveBeenCalledTimes(1);
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(operation).toHaveBeenCalledTimes(3);
+  });
+
   test('coalesces concurrent refreshes while retrying each request once', async () => {
     const { api } = loadApi();
     let resolveRefresh;
@@ -203,6 +261,32 @@ describe('family auth recovery', () => {
     expect(notifications).toContain('window.FAMILY_AUTH_API.withRecovery');
   });
 
+  test('defers data loading out of the Supabase auth listener', () => {
+    const app = read('app.js');
+    const authListener = app.match(/state\.supabase\.auth\.onAuthStateChange\(([\s\S]*?)\n      \}\);/)?.[1] || '';
+
+    expect(authListener).toContain('window.setTimeout(() => bootstrapData(), 0);');
+    expect(authListener).toContain('state.session = session;');
+    expect(authListener).not.toContain('\n        bootstrapData();');
+  });
+
+  test('retries transient initial session reads before showing the login gate', () => {
+    const app = read('app.js');
+
+    expect(app).toContain('async function getInitialSession(supabase)');
+    expect(app).toContain('for (let attempt = 0; attempt < 3; attempt += 1)');
+    expect(app).toContain('state.session = await getInitialSession(state.supabase);');
+  });
+
+  test('retries a transient remote bootstrap failure without looping forever', () => {
+    const app = read('app.js');
+
+    expect(app).toContain('const BOOTSTRAP_RETRY_DELAYS = [1000, 3000];');
+    expect(app).toContain('function scheduleBootstrapRetry(attempt, sessionKey)');
+    expect(app).toContain('async function bootstrapData(attempt = 0)');
+    expect(app).toContain('scheduleBootstrapRetry(attempt, sessionKey);');
+  });
+
   test('keeps every authenticated remote module behind the recovery API', () => {
     const modules = [
       'growth-delete-sync.js',
@@ -229,11 +313,11 @@ describe('family auth recovery', () => {
     const packageJson = read('package.json');
     const serviceWorker = read('service-worker.js');
 
-    expect(index).toContain('<script src="family-auth.js?v=20260830-auth-recovery-v3" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20260830-session-surface-v1"></script>');
-    expect(config).toContain('{ name: "family-auth", version: "20260830-auth-recovery-v3", style: false }');
+    expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v1" data-module="family-auth"></script>');
+    expect(index).toContain('<script src="app.js?v=20260830-data-load-v1"></script>');
+    expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v1", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
-    expect(index).toContain('config.js?v=20260830-account-logout-v1');
+    expect(index).toContain('config.js?v=20260830-data-load-v1');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });
 });

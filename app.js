@@ -83,10 +83,12 @@ let suppressCalendarClickUntil = 0;
 let monthSwipeAnimating = false;
 let lastAuthSessionKey = null;
 let bootstrapRequestId = 0;
+let bootstrapRetryTimer = null;
 let eventSaveInProgress = false;
 let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
+const BOOTSTRAP_RETRY_DELAYS = [1000, 3000];
 
 window.addEventListener('family:auth-session-refreshed', (event) => {
   const session = event.detail?.session;
@@ -206,6 +208,23 @@ function toast(message, action = null) {
   toast.timer = setTimeout(() => el.classList.remove("show"), action ? 4500 : 2200);
 }
 
+async function getInitialSession(supabase) {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (!error) return data?.session || null;
+      lastError = error;
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+  throw lastError || new Error("초기 로그인 상태를 확인하지 못했어요");
+}
+
 async function init() {
   lockMobileZoom();
   bindUi();
@@ -227,17 +246,15 @@ async function init() {
       lastAuthSessionKey = authSessionKey(state.session);
     } else if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
       state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-      const { data, error } = await state.supabase.auth.getSession();
-      if (error) throw error;
-      state.session = data.session;
+      state.session = await getInitialSession(state.supabase);
       lastAuthSessionKey = authSessionKey(state.session);
       state.supabase.auth.onAuthStateChange((_event, session) => {
         const nextKey = authSessionKey(session);
-        if (nextKey === lastAuthSessionKey) return;
+        const userChanged = nextKey !== lastAuthSessionKey;
         lastAuthSessionKey = nextKey;
         state.session = session;
         if (!session) state.onboardingPrompted = false;
-        bootstrapData();
+        if (userChanged) window.setTimeout(() => bootstrapData(), 0);
       });
     }
   } catch (error) {
@@ -293,7 +310,18 @@ function renderDailyVerse() {
   $("#dailyVerseReference").textContent = verse.reference;
 }
 
-async function bootstrapData() {
+function scheduleBootstrapRetry(attempt, sessionKey) {
+  if (!state.supabase || !state.session || attempt >= BOOTSTRAP_RETRY_DELAYS.length) return;
+  clearTimeout(bootstrapRetryTimer);
+  bootstrapRetryTimer = setTimeout(() => {
+    bootstrapRetryTimer = null;
+    if (sessionKey === authSessionKey(state.session)) bootstrapData(attempt + 1);
+  }, BOOTSTRAP_RETRY_DELAYS[attempt]);
+}
+
+async function bootstrapData(attempt = 0) {
+  clearTimeout(bootstrapRetryTimer);
+  bootstrapRetryTimer = null;
   const requestId = ++bootstrapRequestId;
   const sessionKey = authSessionKey(state.session);
   let loaded = true;
@@ -356,6 +384,7 @@ async function bootstrapData() {
     state.onboardingPrompted = true;
     setTimeout(openAccountDialog, 250);
   }
+  if (!loaded && state.supabase && state.session) scheduleBootstrapRetry(attempt, sessionKey);
   return loaded;
 }
 
