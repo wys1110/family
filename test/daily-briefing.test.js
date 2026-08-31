@@ -63,8 +63,13 @@ test("서버는 가족 구성원만 등록하고 오늘 범위 일정을 브리�
 
 test("가족 일정 변경 알림을 끄면 현재 기기 구독을 비활성화한다", () => {
   expect(client).toContain("await syncSubscription(subscription, { pushEnabled: false })");
-  expect(client).toContain("이 기기의 가족 일정 변경 알림을 껐어요");
+  expect(client).toContain("이 기기의 가족 기록 변경 알림을 껐어요");
   expect(edge).toContain("briefing_enabled: briefingEnabled");
+});
+
+test("기존 푸시 설정은 일정과 성장·수유·기저귀 가족 기록을 함께 안내한다", () => {
+  expect(client).toContain("가족 기록 변경 알림");
+  expect(client).toContain("성장·수유·기저귀");
 });
 
 test("5분 크론이 비밀 헤더로 푸시 디스패처를 호출한다", () => {

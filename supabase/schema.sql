@@ -130,6 +130,28 @@ create table public.family_todos (
   check ((completed = false and completed_at is null) or completed = true)
 );
 
+create table public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null default 'system' check (kind in ('event_change', 'growth_change', 'daily_briefing', 'system')),
+  title text not null check (char_length(title) between 1 and 120),
+  body text not null default '' check (char_length(body) <= 500),
+  icon text not null default '🔔' check (char_length(icon) between 1 and 16),
+  source_type text check (source_type is null or source_type in ('event', 'todo', 'briefing', 'growth', 'system')),
+  source_id text check (source_id is null or char_length(source_id) <= 120),
+  source_date date,
+  scheduled_at timestamptz not null default now(),
+  read_at timestamptz,
+  dismissed_at timestamptz,
+  delivered_at timestamptz,
+  dedupe_key text not null check (char_length(dedupe_key) between 1 and 200),
+  metadata jsonb not null default '{}'::jsonb check (jsonb_typeof(metadata) = 'object'),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, household_id, dedupe_key)
+);
+
 create index events_household_date_idx on public.events(household_id, event_date);
 create index babies_household_birth_idx on public.babies(household_id, birth_date);
 create index babies_active_household_birth_idx on public.babies(household_id, birth_date) where archived_at is null;
@@ -139,6 +161,10 @@ create index feature_requests_household_created_idx on public.feature_requests(h
 create index family_todos_household_due_idx on public.family_todos(household_id, completed, due_date, created_at desc);
 create index family_todos_household_visibility_creator_idx on public.family_todos(household_id, visibility, created_by, completed, due_date, created_at desc);
 create unique index family_todos_recurrence_parent_unique_idx on public.family_todos(recurrence_parent_id) where recurrence_parent_id is not null;
+create index notifications_user_feed_idx on public.notifications(user_id, household_id, dismissed_at, scheduled_at desc);
+create index notifications_unread_idx on public.notifications(user_id, household_id, scheduled_at desc)
+  where read_at is null and dismissed_at is null;
+create index notifications_source_idx on public.notifications(household_id, source_type, source_id);
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.events enable row level security;
@@ -148,6 +174,7 @@ alter table public.growth_entries enable row level security;
 alter table public.household_wallpapers enable row level security;
 alter table public.feature_requests enable row level security;
 alter table public.family_todos enable row level security;
+alter table public.notifications enable row level security;
 
 create or replace function public.is_household_member(target_household uuid)
 returns boolean language sql stable security definer set search_path = public
@@ -186,6 +213,25 @@ create policy "members can view scoped family todos" on public.family_todos for 
 create policy "members can create scoped family todos" on public.family_todos for insert to authenticated with check ((select public.is_household_member(household_id)) and created_by = (select auth.uid()));
 create policy "members can update scoped family todos" on public.family_todos for update to authenticated using ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid()))) with check ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid())));
 create policy "members can delete scoped family todos" on public.family_todos for delete to authenticated using ((select public.is_household_member(household_id)) and (visibility = 'family' or created_by = (select auth.uid())));
+create policy "notifications_select_own" on public.notifications for select to authenticated using (
+  user_id = auth.uid()
+  and exists (select 1 from public.household_members hm where hm.household_id = notifications.household_id and hm.user_id = auth.uid())
+);
+create policy "notifications_update_own" on public.notifications for update to authenticated using (
+  user_id = auth.uid()
+  and exists (select 1 from public.household_members hm where hm.household_id = notifications.household_id and hm.user_id = auth.uid())
+) with check (
+  user_id = auth.uid()
+  and exists (select 1 from public.household_members hm where hm.household_id = notifications.household_id and hm.user_id = auth.uid())
+);
+create policy "notifications_delete_own" on public.notifications for delete to authenticated using (
+  user_id = auth.uid()
+  and exists (select 1 from public.household_members hm where hm.household_id = notifications.household_id and hm.user_id = auth.uid())
+);
+revoke insert on public.notifications from anon, authenticated;
+grant select, update, delete on public.notifications to authenticated;
+comment on table public.notifications is 'Per-user persistent notification inbox for family schedule, growth changes, and daily briefings.';
+comment on column public.notifications.dedupe_key is 'Stable per-user key used by service-role writers to avoid duplicate inbox rows.';
 
 create or replace function public.prevent_family_todo_creator_change()
 returns trigger language plpgsql set search_path = public

@@ -203,7 +203,7 @@
       persist();
       updateControls();
     } catch (error) {
-      console.warn("가족 일정 변경 알림 상태 확인 실패", error);
+      console.warn("가족 기록 변경 알림 상태 확인 실패", error);
     }
   };
 
@@ -252,7 +252,7 @@
       status.textContent = "iPhone 설정 → 알림에서 이 앱의 알림을 허용해 주세요.";
       status.classList.add("error");
     } else if (pushSettings.enabled) {
-      status.textContent = "이 기기는 가족 일정 변경 알림을 받고 있어요.";
+      status.textContent = "이 기기는 가족 기록 변경 알림을 받고 있어요.";
       status.classList.add("active");
     } else {
       status.textContent = "이 기기에서는 아직 알림을 받지 않아요.";
@@ -291,7 +291,7 @@
     }
 
     setBusy(true);
-    updateStatus("이 기기를 가족 일정 알림에 연결하고 있어요…");
+    updateStatus("이 기기를 가족 기록 알림에 연결하고 있어요…");
     try {
       const permission = Notification.permission === "default"
         ? await Notification.requestPermission()
@@ -312,14 +312,14 @@
       pushSettings.enabled = true;
       persist();
       updateControls();
-      if (typeof toast === "function") toast("가족 일정 변경 알림을 켰어요 🔔");
+      if (typeof toast === "function") toast("가족 기록 변경 알림을 켰어요 🔔");
       return true;
     } catch (error) {
       pushSettings.enabled = false;
       persist();
       updateControls();
       updateStatus(friendlyError(error), "error");
-      console.error("가족 일정 변경 알림 설정 실패", error);
+      console.error("가족 기록 변경 알림 설정 실패", error);
       return false;
     } finally {
       setBusy(false);
@@ -329,7 +329,7 @@
   const disablePush = async () => {
     if (busy) return false;
     setBusy(true);
-    updateStatus("이 기기의 가족 일정 알림을 끄고 있어요…");
+    updateStatus("이 기기의 가족 기록 알림을 끄고 있어요…");
     try {
       const subscription = await currentSubscription();
       if (subscription && state?.session && state?.household?.id) {
@@ -338,11 +338,11 @@
       pushSettings.enabled = false;
       persist();
       updateControls();
-      if (typeof toast === "function") toast("이 기기의 가족 일정 변경 알림을 껐어요");
+      if (typeof toast === "function") toast("이 기기의 가족 기록 변경 알림을 껐어요");
       return true;
     } catch (error) {
       updateStatus(friendlyError(error), "error");
-      console.warn("가족 일정 변경 알림 해제 실패", error);
+      console.warn("가족 기록 변경 알림 해제 실패", error);
       return false;
     } finally {
       setBusy(false);
@@ -367,8 +367,8 @@
         <span class="settings-mark" aria-hidden="true">🔔</span>
         <div>
           <p class="eyebrow">가족 알림</p>
-          <h2>가족 일정 변경 알림</h2>
-          <span>다른 가족이 일정을 추가·수정·이동·삭제하면 이 기기로 알려드려요.</span>
+          <h2>가족 기록 변경 알림</h2>
+          <span>다른 가족이 일정·성장·수유·기저귀 기록을 추가·수정·삭제하면 이 기기로 알려드려요.</span>
         </div>
       </div>
       <button id="eventChangePushToggle" type="button" aria-pressed="false">알림 받기</button>

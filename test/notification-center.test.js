@@ -51,3 +51,11 @@ test('앱이 실행 중일 때 기한 도달 알림을 서비스 워커로 표�
   expect(client).toContain("Notification.permission !== 'granted'");
   expect(packageJson).toContain('node --check notification-center.js');
 });
+
+test('성장 변경 알림은 성장 기록을 바로 연다', () => {
+  expect(client).toContain("sourceType === 'growth' ? 'growth'");
+  expect(client).toContain("growth: '성장 기록 열기'");
+  expect(client).toContain("item.kind === 'growth'");
+  expect(client).toContain(".growth-entry[data-id]");
+  expect(client).toContain("window.switchView('growth')");
+});

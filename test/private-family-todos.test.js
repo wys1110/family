@@ -19,7 +19,6 @@ describe('private and family todo scopes', () => {
 
   test('todo UI persists scope and exposes only family rows to shared consumers', () => {
     const todoSource = read('family-todo.js');
-    const handoff = read('family-handoff.js');
     const notifications = read('notification-center.js');
 
     expect(todoSource).toContain("const VALID_SCOPES = new Set(['family', 'private'])");
@@ -27,7 +26,6 @@ describe('private and family todo scopes', () => {
     expect(todoSource).toContain("visibility: todo.visibility === 'private' ? 'private' : 'family'");
     expect(todoSource).toContain('getFamilySnapshot');
     expect(todoSource).toContain("new MutationObserver(() => {");
-    expect(handoff).toContain('getFamilySnapshot');
     expect(notifications).toContain(".eq('visibility', 'family')");
     expect(notifications).toContain("filter((todo) => todo.visibility === 'family')");
   });

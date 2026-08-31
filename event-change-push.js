@@ -9,6 +9,11 @@
     return state.events.map((event) => ({ ...event }));
   };
 
+  const cloneGrowthEntries = () => {
+    if (typeof state === "undefined" || !Array.isArray(state.growthEntries)) return [];
+    return state.growthEntries.map((entry) => ({ ...entry }));
+  };
+
   const remoteEvent = (value = {}, fallback = {}) => ({
     id: String(value.id || fallback.id || ""),
     title: String(value.title ?? fallback.title ?? "가족 일정").slice(0, 80),
@@ -19,6 +24,34 @@
   });
 
   const eventById = (events, id) => events.find((event) => String(event.id) === String(id)) || {};
+
+  const growthById = (entries, id) => entries.find((entry) => String(entry.id) === String(id)) || {};
+
+  const remoteGrowth = (value = {}, fallback = {}) => ({
+    id: String(value.id || fallback.id || ""),
+    title: String(value.title ?? fallback.title ?? "성장 기록").slice(0, 80),
+    date: String(value.entry_date || value.date || fallback.entry_date || fallback.date || "").slice(0, 10),
+    time: String(value.entry_time || value.time || fallback.entry_time || fallback.time || "").slice(0, 5),
+    category: String(value.category ?? fallback.category ?? "기타").slice(0, 30),
+    heightCm: value.height_cm ?? value.height ?? fallback.height_cm ?? fallback.heightCm ?? null,
+    weightKg: value.weight_kg ?? value.weight ?? fallback.weight_kg ?? fallback.weightKg ?? null,
+    headCm: value.head_cm ?? value.head ?? fallback.head_cm ?? fallback.headCm ?? null,
+    feedingMl: value.feeding_ml ?? value.feedingMl ?? fallback.feeding_ml ?? fallback.feedingMl ?? null,
+    feedingType: String(value.feeding_type ?? value.feedingType ?? fallback.feeding_type ?? fallback.feedingType ?? "").slice(0, 20),
+    feedingSide: String(value.feeding_side ?? value.feedingSide ?? fallback.feeding_side ?? fallback.feedingSide ?? "").slice(0, 20),
+    feedingMinutes: value.feeding_minutes ?? value.feedingMinutes ?? fallback.feeding_minutes ?? fallback.feedingMinutes ?? null,
+    sleepMinutes: value.sleep_minutes ?? value.sleepMinutes ?? fallback.sleep_minutes ?? fallback.sleepMinutes ?? null,
+    temperatureC: value.temperature_c ?? value.temperature ?? fallback.temperature_c ?? fallback.temperatureC ?? null,
+    diaperKind: String(value.diaper_kind ?? value.diaperKind ?? fallback.diaper_kind ?? fallback.diaperKind ?? "").slice(0, 20),
+  });
+
+  const growthChange = (kind, item, count = 1) => ({
+    kind,
+    count,
+    sourceId: item.id,
+    sourceDate: item.date,
+    ...item,
+  });
 
   const normalizedChange = (context) => {
     const values = Array.isArray(context.payload) ? context.payload : context.payload ? [context.payload] : [];
@@ -56,6 +89,32 @@
     return null;
   };
 
+  const normalizedGrowthChange = (context) => {
+    const values = Array.isArray(context.payload) ? context.payload : context.payload ? [context.payload] : [];
+    const targetId = context.filters.id || values[0]?.id || "";
+    const before = growthById(context.growthBefore, targetId);
+
+    if (context.operation === "insert") {
+      const item = remoteGrowth(values[0]);
+      return growthChange(values.length > 1 ? "bulk-created" : "created", item, values.length || 1);
+    }
+
+    if (context.operation === "upsert") {
+      const item = remoteGrowth(values[0], before);
+      return growthChange(before.id ? "updated" : "created", item);
+    }
+
+    if (context.operation === "update") {
+      return growthChange("updated", remoteGrowth({ ...context.payload, id: targetId }, before));
+    }
+
+    if (context.operation === "delete") {
+      return growthChange("deleted", remoteGrowth({ id: targetId }, before));
+    }
+
+    return null;
+  };
+
   const functionErrorCode = async (error) => {
     const context = error?.context;
     if (context && typeof context.clone === "function" && typeof context.json === "function") {
@@ -70,7 +129,8 @@
   const notifyFamily = async (context) => {
     if (context.notified) return;
     context.notified = true;
-    const change = normalizedChange(context);
+    const isGrowth = context.table === "growth_entries";
+    const change = isGrowth ? normalizedGrowthChange(context) : normalizedChange(context);
     if (!change?.date) return;
     if (!context.client || !context.userId || !context.householdId) return;
     if (typeof state === "undefined"
@@ -81,11 +141,9 @@
     try {
       const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
         () => context.client.functions.invoke(FUNCTION_NAME, {
-          body: {
-            action: "event-change",
-            householdId: context.householdId,
-            change,
-          },
+          body: isGrowth
+            ? { action: "growth-change", householdId: context.householdId, change }
+            : { action: "event-change", householdId: context.householdId, change },
         }),
         {
           supabase: context.client,
@@ -99,7 +157,7 @@
       if (error) throw new Error(await functionErrorCode(error));
       if (data?.error) throw new Error(data.error);
     } catch (error) {
-      console.warn("가족 일정 변경 알림 발송 실패", error);
+      console.warn(isGrowth ? "성장 기록 변경 알림 발송 실패" : "가족 일정 변경 알림 발송 실패", error);
     }
   };
 
@@ -133,7 +191,7 @@
 
     client.from = (table) => {
       const builder = originalFrom(table);
-      if (table !== "events") return builder;
+      if (table !== "events" && table !== "growth_entries") return builder;
 
       return new Proxy(builder, {
         get(target, property, receiver) {
@@ -147,10 +205,12 @@
               householdId: state.household?.id,
               userId: state.session?.user?.id,
               client: state.supabase,
+              table,
               operation: String(property),
               payload: args[0] || null,
               filters: {},
-              eventsBefore: cloneEvents(),
+              eventsBefore: table === "events" ? cloneEvents() : [],
+              growthBefore: table === "growth_entries" ? cloneGrowthEntries() : [],
               notified: false,
             };
             return wrapMutationBuilder(value.apply(target, args), context);
@@ -173,22 +233,50 @@
     return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? value : "";
   };
 
-  const clearNotificationDate = (params) => {
-    params.delete("eventDate");
+  const clearNotificationParams = (params, names) => {
+    names.forEach((name) => params.delete(name));
     const query = params.toString();
     history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
+  };
+
+  const openGrowthNotification = (params) => {
+    const rawDate = params.get("growthDate") || "";
+    const date = rawDate ? validNotificationDate(rawDate) : "";
+    if (rawDate && !date) {
+      clearNotificationParams(params, ["growthDate", "growthId"]);
+      return true;
+    }
+    if (typeof state === "undefined" || typeof switchView !== "function") return false;
+    switchView("growth");
+    const growthId = params.get("growthId") || "";
+    if (growthId && typeof document !== "undefined") {
+      setTimeout(() => {
+        const target = Array.from(document.querySelectorAll(".growth-entry"))
+          .find((entry) => entry.dataset.id === growthId);
+        target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+        target?.click?.();
+      }, 0);
+    }
+    clearNotificationParams(params, ["growthDate", "growthId"]);
+    return true;
   };
 
   const openNotificationDate = () => {
     if (notificationDateHandled) return true;
     const params = new URLSearchParams(location.search);
+    if (params.has("growthDate") || params.has("growthId")) {
+      const growthReady = openGrowthNotification(params);
+      if (!growthReady) return false;
+      notificationDateHandled = true;
+      return true;
+    }
     if (!params.has("eventDate")) {
       notificationDateHandled = true;
       return true;
     }
     const date = validNotificationDate(params.get("eventDate"));
     if (!date) {
-      clearNotificationDate(params);
+      clearNotificationParams(params, ["eventDate"]);
       notificationDateHandled = true;
       return true;
     }
@@ -196,7 +284,7 @@
     state.selectedDate = date;
     state.viewDate = startOfMonth(parseDate(date));
     switchView("calendar");
-    clearNotificationDate(params);
+    clearNotificationParams(params, ["eventDate"]);
     notificationDateHandled = true;
     return true;
   };

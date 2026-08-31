@@ -211,6 +211,74 @@ Deno.serve(async (request: Request) => {
     return json({ scanned: subscriptions?.length || 0, recipients: recipientIds.length, sent, expired, failed });
   }
 
+  if (body.action === "growth-change") {
+    if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
+    const change = normalizeGrowthChange(body.change);
+    if (!change) return json({ error: "INVALID_GROWTH_CHANGE" }, 400);
+
+    const payload = buildGrowthChangePayload(change);
+    const { data: members, error: memberError } = await serviceClient
+      .from("household_members")
+      .select("user_id")
+      .eq("household_id", householdId)
+      .neq("user_id", user.id)
+      .limit(500);
+    if (memberError) return json({ error: "MEMBER_LOAD_FAILED" }, 500);
+
+    const occurrence = change.occurredAt || new Date().toISOString();
+    const recipientIds = [...new Set((members || []).map((member) => member.user_id).filter(Boolean))];
+    const notificationIds = new Map<string, string>();
+    for (const recipientId of recipientIds) {
+      const notificationId = await upsertNotification(serviceClient, {
+        householdId,
+        userId: recipientId,
+        kind: "growth_change",
+        title: payload.title,
+        body: payload.body,
+        icon: "🌱",
+        sourceType: "growth",
+        sourceId: change.sourceId || null,
+        sourceDate: change.sourceDate,
+        scheduledAt: occurrence,
+        dedupeKey: `growth-change:${change.kind}:${change.sourceId || change.sourceDate}:${occurrence}:${recipientId}`,
+        metadata: {
+          kind: change.kind,
+          category: change.category,
+          date: change.sourceDate,
+          url: payload.url,
+        },
+      });
+      if (notificationId) notificationIds.set(recipientId, notificationId);
+    }
+
+    const { data: subscriptions, error } = await serviceClient.from("push_subscriptions")
+      .select("id,user_id,household_id,endpoint,p256dh,auth,timezone,briefing_time")
+      .eq("household_id", householdId)
+      .eq("enabled", true)
+      .neq("user_id", user.id)
+      .order("created_at")
+      .limit(100);
+    if (error) return json({ error: "SUBSCRIPTION_LOAD_FAILED" }, 500);
+
+    let sent = 0;
+    let expired = 0;
+    let failed = 0;
+    const deliveredUsers = new Set<string>();
+    for (const subscription of subscriptions || []) {
+      const result = await sendPush(serviceClient, subscription, payload, { markSent: false });
+      if (result === "sent") {
+        sent += 1;
+        deliveredUsers.add(subscription.user_id);
+      } else if (result === "expired") expired += 1;
+      else failed += 1;
+    }
+    for (const recipientId of deliveredUsers) {
+      const notificationId = notificationIds.get(recipientId);
+      if (notificationId) await markNotificationDelivered(serviceClient, notificationId);
+    }
+    return json({ scanned: subscriptions?.length || 0, recipients: recipientIds.length, sent, expired, failed });
+  }
+
   return json({ error: "UNKNOWN_ACTION" }, 400);
 });
 
@@ -350,6 +418,36 @@ function buildEventChangePayload(change) {
   };
 }
 
+function buildGrowthChangePayload(change) {
+  const titles = {
+    created: "성장 기록이 추가됐어요",
+    updated: "성장 기록이 수정됐어요",
+    deleted: "성장 기록이 삭제됐어요",
+  };
+  const values = [
+    change.heightCm == null ? "" : `키 ${change.heightCm}cm`,
+    change.weightKg == null ? "" : `몸무게 ${change.weightKg}kg`,
+    change.headCm == null ? "" : `머리둘레 ${change.headCm}cm`,
+    change.feedingMl == null ? "" : `수유 ${change.feedingMl}ml`,
+    change.feedingType || "",
+    change.feedingSide || "",
+    change.feedingMinutes == null ? "" : `수유 ${change.feedingMinutes}분`,
+    change.sleepMinutes == null ? "" : `수면 ${change.sleepMinutes}분`,
+    change.temperatureC == null ? "" : `체온 ${change.temperatureC}°C`,
+    change.diaperKind || "",
+  ].filter(Boolean).slice(0, 3);
+  return {
+    title: titles[change.kind] || "성장 기록이 변경됐어요",
+    body: `${change.category} · ${change.title}${values.length ? ` · ${values.join(" · ")}` : ""}`,
+    tag: `family-growth-change-${change.sourceId || change.sourceDate}-${change.kind}`,
+    url: `./?growthDate=${encodeURIComponent(change.sourceDate)}${change.sourceId ? `&growthId=${encodeURIComponent(change.sourceId)}` : ""}`,
+    date: change.sourceDate,
+    sourceId: change.sourceId,
+    sourceDate: change.sourceDate,
+    renotify: true,
+  };
+}
+
 function formatEventWhen(change) {
   const start = shortKoreanDate(change.date);
   const end = change.endDate && change.endDate !== change.date ? shortKoreanDate(change.endDate) : "";
@@ -451,6 +549,40 @@ function normalizeEventChange(value: unknown) {
     time,
     member: cleanText(change.member, 40) || "가족",
     count: Math.min(Math.max(Number(change.count) || 1, 1), 50),
+  };
+}
+
+function normalizeGrowthChange(value: unknown) {
+  const change = value && typeof value === "object" ? value as Record<string, unknown> : null;
+  if (!change) return null;
+  const kinds = new Set(["created", "updated", "deleted", "bulk-created"]);
+  const kind = typeof change.kind === "string" && kinds.has(change.kind) ? change.kind : "";
+  const sourceDate = normalizeDate(change.sourceDate || change.date);
+  const sourceId = typeof change.sourceId === "string" && validUuid(change.sourceId) ? change.sourceId : "";
+  if (!kind || !sourceDate || (kind !== "bulk-created" && !sourceId)) return null;
+  const numberValue = (input: unknown, min: number, max: number) => {
+    const number = typeof input === "number" ? input : Number(input);
+    return Number.isFinite(number) && number >= min && number <= max ? number : null;
+  };
+  return {
+    kind,
+    sourceId,
+    sourceDate,
+    occurredAt: typeof change.occurredAt === "string" && !Number.isNaN(Date.parse(change.occurredAt))
+      ? change.occurredAt.slice(0, 30)
+      : new Date().toISOString(),
+    title: cleanText(change.title, 80) || "성장 기록",
+    category: cleanText(change.category, 30) || "기타",
+    heightCm: numberValue(change.heightCm, 0.1, 250),
+    weightKg: numberValue(change.weightKg, 0.01, 200),
+    headCm: numberValue(change.headCm, 0.1, 100),
+    feedingMl: numberValue(change.feedingMl, 1, 3000),
+    feedingType: cleanText(change.feedingType, 20),
+    feedingSide: cleanText(change.feedingSide, 20),
+    feedingMinutes: numberValue(change.feedingMinutes, 1, 240),
+    sleepMinutes: numberValue(change.sleepMinutes, 1, 1440),
+    temperatureC: numberValue(change.temperatureC, 30, 45),
+    diaperKind: cleanText(change.diaperKind, 20),
   };
 }
 

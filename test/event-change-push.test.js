@@ -51,3 +51,18 @@ test("저장 도중 가족 컨텍스트가 바뀌면 이전 가족 일정을 발
   expect(client).toContain("state.household?.id !== context.householdId");
   expect(client).toContain("state.session?.user?.id !== context.userId");
 });
+
+test("성장·수유·수면·기저귀 기록 변경을 같은 푸시 브리지로 감지한다", () => {
+  expect(client).toContain('table === "growth_entries"');
+  expect(client).toContain('action: "growth-change"');
+  expect(client).toContain("normalizedGrowthChange(context)");
+  expect(client).toContain("sourceId");
+  expect(client).toContain("sourceDate");
+  expect(client).toContain("feedingMl");
+  expect(client).toContain("feedingMinutes");
+  expect(client).toContain("feedingSide");
+  expect(client).toContain("diaperKind");
+  expect(edge).toContain('if (body.action === "growth-change")');
+  expect(client).toContain('params.has("growthDate")');
+  expect(client).toContain('switchView("growth")');
+});

@@ -10,7 +10,7 @@ describe("family event push settings", () => {
   it("shows one compact device toggle", () => {
     expect(client).toContain('card.id = "eventChangePushSettings"');
     expect(client).toContain('id="eventChangePushToggle"');
-    expect(client).toContain("가족 일정 변경 알림");
+    expect(client).toContain("가족 기록 변경 알림");
     expect(client).not.toContain('id="dailyBriefingTime"');
     expect(client).not.toContain("아침 일정 브리핑");
   });

@@ -259,13 +259,13 @@
     return {
       id: `db:${row.id}`,
       remoteId: row.id,
-      kind: sourceType === 'event' ? 'event' : sourceType === 'todo' ? 'todo' : sourceType === 'briefing' ? 'briefing' : 'notification',
+      kind: sourceType === 'event' ? 'event' : sourceType === 'todo' ? 'todo' : sourceType === 'growth' ? 'growth' : sourceType === 'briefing' ? 'briefing' : 'notification',
       sourceType,
-      icon: String(row.icon || (sourceType === 'event' ? '📅' : sourceType === 'todo' ? '✅' : '🔔')),
+      icon: String(row.icon || (sourceType === 'event' ? '📅' : sourceType === 'todo' ? '✅' : sourceType === 'growth' ? '🌱' : '🔔')),
       title: String(row.title || '알림'),
       body: String(row.body || ''),
       scheduledAt: Number.isFinite(scheduledAt) ? scheduledAt : Date.now(),
-      sourceId: String(row.source_id || metadata.eventId || ''),
+      sourceId: String(row.source_id || metadata.sourceId || metadata.eventId || ''),
       sourceDate: String(row.source_date || metadata.date || ''),
       metadata,
       read: Boolean(row.read_at),
@@ -532,7 +532,7 @@
     history: ['지난 알림이 없어요', '확인한 알림이 모든 기기에서 여기에 남아요.'],
   };
 
-  const itemActionLabel = (item) => ({ event: '일정 열기', todo: '할 일 열기', feeding: '성장 기록 열기', briefing: '설정 열기' })[item.kind] || '확인';
+  const itemActionLabel = (item) => ({ event: '일정 열기', todo: '할 일 열기', growth: '성장 기록 열기', feeding: '성장 기록 열기', briefing: '설정 열기' })[item.kind] || '확인';
 
   const renderList = () => {
     const counts = { new: newItems().length, upcoming: upcomingItems().length, history: historyItems().length };
@@ -699,6 +699,16 @@
     if (attempt < 20) setTimeout(() => waitForTodoItem(todoId, attempt + 1), 100);
   };
 
+  const waitForGrowthItem = (growthId, attempt = 0) => {
+    const row = Array.from(document.querySelectorAll('.growth-entry[data-id]'))
+      .find((entry) => entry.dataset.id === String(growthId));
+    if (row) {
+      row.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+      return row.click();
+    }
+    if (attempt < 20) setTimeout(() => waitForGrowthItem(growthId, attempt + 1), 100);
+  };
+
   const openSource = async (item) => {
     await markRead(item);
     dialog.close();
@@ -718,6 +728,12 @@
       if (typeof window.switchView === 'function') window.switchView('calendar');
       document.querySelector('[data-calendar-mode="todo"]')?.click();
       if (item.sourceId) waitForTodoItem(item.sourceId);
+      return;
+    }
+    if (item.kind === 'growth' || item.sourceType === 'growth') {
+      if (typeof window.switchView === 'function') window.switchView('growth');
+      if (item.sourceId) waitForGrowthItem(item.sourceId);
+      else setTimeout(() => document.querySelector('#growthView')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
       return;
     }
     if (item.kind === 'feeding') {
