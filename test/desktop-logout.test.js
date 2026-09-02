@@ -23,7 +23,7 @@ test("계정 팝업 로그아웃은 오류를 처리하는 공통 함수를 쓴�
 
 test("가족 공간이 없어도 계정 팝업에서 로그아웃할 수 있다", () => {
   const app = readFileSync("app.js", "utf8");
-  const noHouseholdBranch = app.match(/if \(!state\.household\) \{([\s\S]*?)\n  \}\n  root\.innerHTML/)?.[1] || "";
+  const noHouseholdBranch = app.match(/if \(!state\.household\) \{([\s\S]*?)\n  const role = currentNotificationRole/)?.[1] || "";
 
   expect(noHouseholdBranch).toContain('id="logoutButton"');
   expect(noHouseholdBranch).toContain("signOutCurrentUser(event.currentTarget)");
