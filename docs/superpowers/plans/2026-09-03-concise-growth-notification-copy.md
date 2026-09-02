@@ -145,23 +145,23 @@ git commit -m "feat: show concise growth notification details"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-09-03-concise-growth-notification-copy.md`
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 Run: `npm test`
 
 Expected: all test files and tests pass.
 
-- [ ] **Step 2: Run static checks**
+- [x] **Step 2: Run static checks**
 
 Run: `npm run check && git diff --check`
 
 Expected: syntax, TypeScript, theme guard, and whitespace checks pass.
 
-- [ ] **Step 3: Deploy the Edge Function**
+- [x] **Step 3: Deploy the Edge Function**
 
 Deploy `daily-briefing-push` from the updated `supabase/functions/daily-briefing-push/index.ts`, preserving its existing JWT configuration and secrets.
 
-- [ ] **Step 4: Push the branch and merge into main**
+- [x] **Step 4: Push the branch and merge into main**
 
 ```bash
 git push -u origin feature/concise-growth-notifications
@@ -169,6 +169,6 @@ git -C /Users/yongseokwon/dev/family merge --ff-only feature/concise-growth-noti
 git -C /Users/yongseokwon/dev/family push origin main
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Confirm Edge Function status is `ACTIVE`, Pages workflow succeeds for the merged commit, and the public app still loads the notification settings screen.
