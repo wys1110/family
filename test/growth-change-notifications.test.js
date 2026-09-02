@@ -31,3 +31,10 @@ test("성장 변경을 다른 가족 구성원에게만 안전하게 전달한�
   expect(edge).not.toContain("change.note");
   expect(edge).not.toContain("change.photo_paths");
 });
+
+test("성장 알림은 구체적인 기록 내용과 기록자 호칭만 제목에 표시한다", () => {
+  expect(edge).toContain("user.user_metadata?.family_role");
+  expect(edge).toContain("모유 · 왼쪽 수유 · 20분 · 엄마");
+  expect(edge).toContain("body: ''");
+  expect(edge).not.toContain('created: "성장 기록이 추가됐어요"');
+});
