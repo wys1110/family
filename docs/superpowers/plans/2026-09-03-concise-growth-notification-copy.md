@@ -25,7 +25,7 @@
 - Consumes: `supabase/functions/daily-briefing-push/index.ts` source text.
 - Produces: regression assertions for actor role and concise title/body rules.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```js
 test("성장 알림은 구체적인 기록 내용과 기록자 호칭만 제목에 표시한다", () => {
@@ -36,13 +36,13 @@ test("성장 알림은 구체적인 기록 내용과 기록자 호칭만 제목�
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- test/growth-change-notifications.test.js`
 
 Expected: FAIL because the current Edge Function uses a generic growth title and sends details in `body` without reading `family_role`.
 
-- [ ] **Step 3: Commit the failing contract test**
+- [x] **Step 3: Commit the failing contract test**
 
 ```bash
 git add test/growth-change-notifications.test.js
@@ -59,7 +59,7 @@ git commit -m "test: define concise growth notification copy"
 - Consumes: `state.supabase.auth.updateUser`, `state.session.user.user_metadata`.
 - Produces: account dialog controls that persist `family_role` as `엄마` or `아빠`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```js
 test("계정 화면은 알림 호칭을 엄마 또는 아빠로 저장한다", () => {
@@ -70,23 +70,23 @@ test("계정 화면은 알림 호칭을 엄마 또는 아빠로 저장한다", (
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- test/account-notification-role.test.js`
 
 Expected: FAIL because `renderAccount` has no role control or `updateUser` call.
 
-- [ ] **Step 3: Implement the smallest account control**
+- [x] **Step 3: Implement the smallest account control**
 
 Add a select with `엄마` and `아빠` to the logged-in household account view. On submit call `state.supabase.auth.updateUser({ data: { family_role: role } })`, update `state.session.user` with the returned user, and show a success or failure toast.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- test/account-notification-role.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app.js test/account-notification-role.test.js
@@ -96,14 +96,16 @@ git commit -m "feat: save family notification role"
 ### Task 3: 간결한 서버 알림 제목과 본문
 
 **Files:**
-- Modify: `supabase/functions/daily-briefing-push/index.ts:421-448,555-588`
+- Modify: `supabase/functions/daily-briefing-push/index.ts:1-4,214-255,555-588`
+- Create: `supabase/functions/daily-briefing-push/growth-notification.ts`
 - Modify: `test/growth-change-notifications.test.js`
+- Create: `test/growth-notification-payload.test.js`
 
 **Interfaces:**
 - Consumes: normalized growth change and authenticated `user.user_metadata.family_role`.
 - Produces: `buildGrowthChangePayload(change, actorLabel)` with concise `title` and empty `body`.
 
-- [ ] **Step 1: Extend the failing test**
+- [x] **Step 1: Extend the failing test**
 
 ```js
 test("수유 알림은 종류·방향·시간·기록자만 포함한다", () => {
@@ -115,23 +117,23 @@ test("수유 알림은 종류·방향·시간·기록자만 포함한다", () =>
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- test/growth-change-notifications.test.js`
 
 Expected: FAIL because the current formatter uses category/title in `body` and generic action text in `title`.
 
-- [ ] **Step 3: Implement the formatter**
+- [x] **Step 3: Implement the formatter**
 
 Normalize `family_role` to `엄마` or `아빠`, build category-specific details, append the actor when present, set `title` to the joined details, and set `body` to `''`. Keep URL, tag, source IDs, and `renotify` unchanged.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run: `npm test -- test/growth-change-notifications.test.js test/event-change-push.test.js`
 
 Expected: all focused tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add supabase/functions/daily-briefing-push/index.ts test/growth-change-notifications.test.js
