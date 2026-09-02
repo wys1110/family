@@ -89,6 +89,7 @@ let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
 const BOOTSTRAP_RETRY_DELAYS = [1000, 3000, 10000, 30000];
+const NOTIFICATION_ROLES = ["엄마", "아빠"];
 
 window.addEventListener('family:auth-session-refreshed', (event) => {
   const session = event.detail?.session;
@@ -2411,6 +2412,38 @@ async function deleteGrowthEntry() {
 }
 
 function openAccountDialog() { renderAccount(); $("#accountDialog").showModal(); }
+function currentNotificationRole() {
+  const role = state.session?.user?.user_metadata?.family_role;
+  return NOTIFICATION_ROLES.includes(role) ? role : "";
+}
+async function saveNotificationRole(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const role = form.querySelector("select")?.value || "";
+  if (!NOTIFICATION_ROLES.includes(role)) return toast("엄마 또는 아빠를 선택해 주세요");
+  const button = form.querySelector("button");
+  if (button) {
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.textContent = "저장 중…";
+  }
+  try {
+    const metadata = { ...(state.session.user.user_metadata || {}), family_role: role };
+    const { data, error } = await state.supabase.auth.updateUser({ data: metadata });
+    if (error) throw error;
+    if (data?.user) state.session.user = data.user;
+    toast(`알림 호칭을 ${role}로 저장했어요`);
+  } catch (error) {
+    console.error("알림 호칭 저장 실패", error);
+    toast("알림 호칭을 저장하지 못했어요. 다시 시도해 주세요");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.setAttribute("aria-busy", "false");
+      button.textContent = "저장";
+    }
+  }
+}
 async function signOutCurrentUser(button = null) {
   if (!state.supabase || !state.session) return false;
   const originalLabel = button?.textContent || "로그아웃";
@@ -2453,7 +2486,9 @@ function renderAccount() {
     root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="6자리 코드" maxlength="6" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
     $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget)); return;
   }
-  root.innerHTML = `<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+  const role = currentNotificationRole();
+  root.innerHTML = `<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><div class="account-card"><strong>알림에 표시할 호칭</strong><p>기록 알림에 누가 기록했는지 표시해요.</p><form class="account-form" id="notificationRoleForm"><label>내 호칭<select aria-label="알림에 표시할 호칭"><option value="">선택해 주세요</option><option value="엄마"${role === "엄마" ? " selected" : ""}>엄마</option><option value="아빠"${role === "아빠" ? " selected" : ""}>아빠</option></select></label><button type="submit">저장</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+  $("#notificationRoleForm").addEventListener("submit", saveNotificationRole);
   $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
 }
 function authRedirectUrl() { return `${location.origin}${location.pathname}`; }
