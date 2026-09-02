@@ -1,6 +1,7 @@
 // @ts-nocheck -- Supabase Edge Runtime provides Deno and npm: imports.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { buildGrowthChangePayload, normalizeFamilyRole } from "./growth-notification.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -216,7 +217,8 @@ Deno.serve(async (request: Request) => {
     const change = normalizeGrowthChange(body.change);
     if (!change) return json({ error: "INVALID_GROWTH_CHANGE" }, 400);
 
-    const payload = buildGrowthChangePayload(change);
+    const actorLabel = normalizeFamilyRole(user.user_metadata?.family_role);
+    const payload = buildGrowthChangePayload(change, actorLabel);
     const { data: members, error: memberError } = await serviceClient
       .from("household_members")
       .select("user_id")
@@ -414,36 +416,6 @@ function buildEventChangePayload(change) {
     url: `./?eventDate=${encodeURIComponent(change.date)}`,
     date: change.date,
     eventId: change.id,
-    renotify: true,
-  };
-}
-
-function buildGrowthChangePayload(change) {
-  const titles = {
-    created: "성장 기록이 추가됐어요",
-    updated: "성장 기록이 수정됐어요",
-    deleted: "성장 기록이 삭제됐어요",
-  };
-  const values = [
-    change.heightCm == null ? "" : `키 ${change.heightCm}cm`,
-    change.weightKg == null ? "" : `몸무게 ${change.weightKg}kg`,
-    change.headCm == null ? "" : `머리둘레 ${change.headCm}cm`,
-    change.feedingMl == null ? "" : `수유 ${change.feedingMl}ml`,
-    change.feedingType || "",
-    change.feedingSide || "",
-    change.feedingMinutes == null ? "" : `수유 ${change.feedingMinutes}분`,
-    change.sleepMinutes == null ? "" : `수면 ${change.sleepMinutes}분`,
-    change.temperatureC == null ? "" : `체온 ${change.temperatureC}°C`,
-    change.diaperKind || "",
-  ].filter(Boolean).slice(0, 3);
-  return {
-    title: titles[change.kind] || "성장 기록이 변경됐어요",
-    body: `${change.category} · ${change.title}${values.length ? ` · ${values.join(" · ")}` : ""}`,
-    tag: `family-growth-change-${change.sourceId || change.sourceDate}-${change.kind}`,
-    url: `./?growthDate=${encodeURIComponent(change.sourceDate)}${change.sourceId ? `&growthId=${encodeURIComponent(change.sourceId)}` : ""}`,
-    date: change.sourceDate,
-    sourceId: change.sourceId,
-    sourceDate: change.sourceDate,
     renotify: true,
   };
 }
