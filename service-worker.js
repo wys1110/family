@@ -75,8 +75,9 @@ self.addEventListener("push", (event) => {
   }
 
   const title = payload.title || "우리 가족 일정 브리핑";
+  const notificationBody = typeof payload.body === "string" ? payload.body : "오늘 일정을 확인해 주세요.";
   const options = {
-    body: payload.body || "오늘 일정을 확인해 주세요.",
+    body: notificationBody,
     tag: payload.tag || "family-daily-briefing",
     renotify: Boolean(payload.renotify),
     icon: "assets/family-mascots.webp",
