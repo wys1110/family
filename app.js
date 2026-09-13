@@ -487,10 +487,10 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
   const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey, () => isCurrentBootstrap(requestId, sessionKey) && state.household?.id === householdId);
   const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
-    remoteQuery(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date")),
-    remoteQuery(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date")),
-    remoteQuery(() => supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false })),
-    remoteQuery(() => supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order")),
+    remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date"))),
+    remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date"))),
+    remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false }))),
+    remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order"))),
     remoteQuery(() => supabase.from("household_wallpapers").select("*").eq("household_id", householdId)),
   ]);
   if (!isCurrentBootstrap(requestId, sessionKey) || state.household?.id !== householdId) return false;
@@ -586,9 +586,15 @@ function validateCareTimerContext() {
 async function hydrateGrowthPhotoUrls(entries) {
   const paths = [...new Set(entries.flatMap((entry) => entry.photoPaths || []))];
   if (!state.supabase || !paths.length) return;
-  const { data, error } = await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths, 3600));
-  if (error) return;
-  const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
+  const supabase = state.supabase, householdId = state.household?.id, userId = state.session?.user?.id;
+  const isCurrent = () => state.supabase === supabase && state.household?.id === householdId && state.session?.user?.id === userId;
+  const urls = new Map();
+  for (let offset = 0; offset < paths.length; offset += 100) {
+    if (!isCurrent()) return;
+    const { data, error } = await withAuthRecovery(() => supabase.storage.from(GROWTH_PHOTO_BUCKET).createSignedUrls(paths.slice(offset, offset + 100), 3600), supabase, userId, isCurrent);
+    if (error || !isCurrent()) return;
+    (data || []).forEach((item) => urls.set(item.path, item.signedUrl));
+  }
   entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
 }
 

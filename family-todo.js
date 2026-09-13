@@ -378,14 +378,14 @@
 
     let result;
     try {
-      result = await withAuthRecovery(() => context.supabase
+      result = await withAuthRecovery(() => window.FAMILY_DATA.readAll(() => context.supabase
         .from('family_todos')
         .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
         .eq('household_id', context.household.id)
         .order('completed', { ascending: true })
         .order('due_date', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(500), context);
+        ), context);
     } catch {
       result = { data: null, error: new Error('network request failed') };
     }
@@ -412,14 +412,14 @@
       if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
       if (!migrateError) {
         try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
-        const { data: refreshedData, error: refreshedError } = await withAuthRecovery(() => context.supabase
+        const { data: refreshedData, error: refreshedError } = await withAuthRecovery(() => window.FAMILY_DATA.readAll(() => context.supabase
           .from('family_todos')
           .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
           .eq('household_id', context.household.id)
           .order('completed', { ascending: true })
           .order('due_date', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(500), context);
+          ), context);
         if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
         if (!refreshedError) remoteData = refreshedData || [];
       }
@@ -692,6 +692,12 @@
   }
 
   window.FAMILY_TODO_API = {
+    restoreFamilyBackup: (rows) => {
+      const mapping = new Map(rows.map(row=>[row.id,uid()]));
+      const restored = rows.filter(row=>row.visibility === 'family').map(row=>normalizeTodo({...row,id:mapping.get(row.id),parentId:mapping.get(row.recurrence_parent_id || row.parentId) || null,createdBy:familyContext()?.session?.user?.id || null}));
+      const next = [...moduleState.todos, ...restored];
+      writeLocalTodos(next); moduleState.todos = next; renderTodos();
+    },
     getSnapshot: () => moduleState.todos.map((todo) => ({ ...todo })),
     getFamilySnapshot: () => moduleState.todos.filter((todo) => todo.visibility === 'family').map((todo) => ({ ...todo })),
     open: (todo) => openTodoDialog(todo),

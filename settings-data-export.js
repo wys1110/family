@@ -7,7 +7,7 @@
       name: '캘린더 가족 일정',
       headers: ['제목', '시작일', '종료일', '시간', '담당'],
       query: (supabase, householdId) => supabase.from('events')
-        .select('title,event_date,event_end_date,event_time,member')
+        .select('id,title,event_date,event_end_date,event_time,member')
         .eq('household_id', householdId)
         .order('event_date'),
       rows: (rows) => rows.map((row) => [
@@ -22,7 +22,7 @@
       name: '성장 기록 히스토리',
       headers: ['아기 ID', '제목', '기록일', '기록 시간', '분류', '키(cm)', '몸무게(kg)', '머리 둘레(cm)', '수유량(ml)', '수면(분)', '체온(°C)', '기저귀', '수유 유형', '수유 방향', '수유 시간(분)'],
       query: (supabase, householdId) => supabase.from('growth_entries')
-        .select('baby_id,title,entry_date,entry_time,category,height_cm,weight_kg,head_cm,feeding_ml,sleep_minutes,temperature_c,diaper_kind,feeding_type,feeding_side,feeding_minutes')
+        .select('id,baby_id,title,entry_date,entry_time,category,height_cm,weight_kg,head_cm,feeding_ml,sleep_minutes,temperature_c,diaper_kind,feeding_type,feeding_side,feeding_minutes')
         .eq('household_id', householdId)
         .order('entry_date', { ascending: false }),
       rows: (rows) => rows.map((row) => [
@@ -276,7 +276,7 @@
 
   const readSheet = async (sheet, context) => {
     const { data, error } = await window.FAMILY_AUTH_API.withRecovery(
-      () => sheet.query(context.supabase, context.householdId),
+      () => window.FAMILY_DATA.readAll(() => sheet.query(context.supabase, context.householdId)),
       {
         supabase: context.supabase,
         userId: context.userId,

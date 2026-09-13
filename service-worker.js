@@ -15,6 +15,10 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   const forceNetwork =
+    url.pathname.endsWith("/family-data.js") ||
+    url.pathname.endsWith("/family-backup-media.js") ||
+    url.pathname.endsWith("/family-journal.js") ||
+    url.pathname.endsWith("/family-journal.css") ||
     url.pathname.endsWith("/config.js") ||
     url.pathname.endsWith("/family-auth.js") ||
     url.pathname.endsWith("/growth-delete-sync.js") ||

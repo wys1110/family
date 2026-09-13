@@ -19,7 +19,7 @@ const loadApi = () => {
 
 describe('settings family management', () => {
   test('loads a compact settings module and style', () => {
-    expect(config).toContain('{ name: "settings-family-management", version: "20260830-auth-recovery-v2" }');
+    expect(config).toContain('{ name: "settings-family-management", version: "20260913-records-v1" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-family-management.js")');
     expect(source).toContain('data-settings-family-members');
     expect(css).toContain('.settings-family-members-card');
@@ -101,7 +101,7 @@ describe('settings family management', () => {
   });
 
   test('uses one owner-authorized database function for remote restores', () => {
-    expect(source).toContain(".rpc('restore_household_backup'");
+    expect(source).toContain(".rpc('restore_household_backup_v3'");
     expect(source).not.toContain("const registry = context.supabase.from('household_backup_imports')");
     expect(integrityMigration).toContain('create or replace function public.restore_household_backup');
     expect(integrityMigration).toContain('security definer');

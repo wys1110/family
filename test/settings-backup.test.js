@@ -14,7 +14,7 @@ const loadApi = () => {
 
 describe('settings JSON backup contract', () => {
   test('loads through the versioned app module manifest and network bypass', () => {
-    expect(config).toContain('{ name: "settings-backup", version: "20260805-settings-management-v1", style: false }');
+    expect(config).toContain('{ name: "settings-backup", version: "20260913-records-v1", style: false }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-backup.js")');
   });
 
@@ -34,7 +34,7 @@ describe('settings JSON backup contract', () => {
     };
     const first = api.createBackupPayload('household-42', tables, new Date('2026-08-05T00:00:00.000Z'));
     const second = api.createBackupPayload('household-42', tables, new Date('2026-08-06T00:00:00.000Z'));
-    expect(first.schemaVersion).toBe(2);
+    expect(first.schemaVersion).toBe(3);
     expect(first.backupId).toMatch(/^bk-[a-f0-9]{16}$/);
     expect(first.backupId).toBe(second.backupId);
     expect(api.isDuplicateBackup(first.backupId, [])).toBe(false);
@@ -66,7 +66,7 @@ describe('settings JSON backup contract', () => {
       private_entries: [{ body: '숨김' }],
     });
 
-    expect(Object.keys(payload.tables).sort()).toEqual(['babies', 'calendar_members', 'events', 'growth_entries']);
+    expect(Object.keys(payload.tables).sort()).toEqual(['babies', 'calendar_members', 'events', 'family_todos', 'growth_entries']);
     expect(payload.tables.events[0]).not.toHaveProperty('household_id');
     expect(payload.tables.events[0]).not.toHaveProperty('access_token');
     expect(payload.tables.growth_entries[0]).not.toHaveProperty('photo_path');

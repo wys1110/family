@@ -11,7 +11,7 @@
     babies: 'family-babies-v1',
     imports: 'family-backup-imports-v1',
   };
-  const BACKUP_TABLES = ['events', 'growth_entries', 'calendar_members', 'babies'];
+  const BACKUP_TABLES = ['events', 'growth_entries', 'calendar_members', 'babies', 'family_todos'];
   const backupApi = window.FAMILY_SETTINGS_BACKUP || {};
 
   const normalizeMember = ({ name = '', color } = {}) => {
@@ -100,9 +100,10 @@
         temperature_c: nullable(firstDefined(row.temperature_c, row.temperature)),
         diaper_kind: nullable(firstDefined(row.diaper_kind, row.diaperKind)),
         note: nullable(row.note),
+        photo_paths: Array.isArray(row.photo_paths) ? row.photo_paths : [],
       };
     });
-    return { events, growth_entries, calendar_members: calendarMembers, babies };
+    return { events, growth_entries, calendar_members: calendarMembers, babies, family_todos: (tables.family_todos || []).filter(row => row.visibility === 'family').map(row => ({...row, due_date: firstDefined(row.due_date,row.dueDate), completed_at: firstDefined(row.completed_at,row.completedAt), recurrence_parent_id: firstDefined(row.recurrence_parent_id,row.parentId)})) };
   };
   const api = { normalizeMember, hasDuplicateName, archiveDecision, scopeRestoreRow, remapBackupTables };
   window.FAMILY_SETTINGS_MANAGEMENT_API = api;
@@ -261,10 +262,14 @@
         growth_entries: readJson(LOCAL_KEYS.growth, typeof state !== 'undefined' ? state.growthEntries : []),
         calendar_members: readJson(LOCAL_KEYS.members, typeof state !== 'undefined' ? state.familyMembers : []),
         babies: readJson(LOCAL_KEYS.babies, typeof state !== 'undefined' ? state.babies : []),
+        family_todos: window.FAMILY_TODO_API?.getFamilySnapshot?.() || [],
       };
     }
     const results = await Promise.all(BACKUP_TABLES.map(async (table) => {
-      const { data, error } = await withAuthRecovery(() => context.supabase.from(table).select('*').eq('household_id', context.householdId), context);
+      const { data, error } = await withAuthRecovery(() => window.FAMILY_DATA.readAll(() => {
+        const query = context.supabase.from(table).select('*').eq('household_id', context.householdId);
+        return table === 'family_todos' ? query.eq('visibility','family') : query;
+      }), context);
       if (error) throw error;
       return [table, Array.isArray(data) ? data : []];
     }));
@@ -325,6 +330,7 @@
     writeJson(LOCAL_KEYS.growth, state.growthEntries);
     writeJson(LOCAL_KEYS.babies, state.babies);
     writeJson(LOCAL_KEYS.members, state.familyMembers);
+    if (tables.family_todos?.length) window.FAMILY_TODO_API.restoreFamilyBackup(tables.family_todos);
     markBackupImportedLocally(context.householdId, backupId);
     return { duplicate: false };
   };
@@ -334,7 +340,7 @@
       householdId: context.householdId,
       userId: context.session.user.id,
     });
-    const { data, error } = await withAuthRecovery(() => context.supabase.rpc('restore_household_backup', {
+    const { data, error } = await withAuthRecovery(() => context.supabase.rpc('restore_household_backup_v3', {
       target_household_id: context.householdId,
       p_backup_id: backupId,
       p_tables: normalizedTables,
@@ -357,22 +363,34 @@
       return;
     }
     button.disabled = true;
-    status.textContent = '가족 기록을 모으는 중…';
+    status.textContent = '1 / 3 · 가족 기록을 모으는 중…';
+    const progress = card.querySelector('[data-backup-progress]');
+    progress.hidden = false; progress.value = 15;
+    const isCurrent = () => currentContext().householdId === context.householdId && currentContext().session?.user?.id === context.session?.user?.id;
     try {
       const tables = await readSharedTables(context);
+      progress.value = 35;
+      const photos = card.querySelector('[data-backup-photos]').checked
+        ? await window.FAMILY_BACKUP_MEDIA.collect(tables, context, op => withAuthRecovery(op, context), (count, bytes) => { status.textContent = `2 / 3 · 사진 ${count}장 · ${(bytes/1048576).toFixed(1)}MB 준비됨`; }, isCurrent) : [];
+      if (!photos.length) tables.growth_entries.forEach(row => { row.photo_refs = []; });
+      if (!isCurrent() || !canManage()) throw new Error('가족 공간이 변경됐어요.');
       const payload = backupApi.createBackupPayload(context.householdId, tables);
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      payload.photos = photos;
+      progress.value = 85;
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json;charset=utf-8' });
+      if (blob.size > 80 * 1024 * 1024) throw new Error('백업 파일이 80MB를 초과했어요. 사진을 제외하고 다시 시도해 주세요.');
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = `family-backup-${new Date().toISOString().slice(0, 10)}.json`;
       anchor.click();
       URL.revokeObjectURL(url);
-      status.textContent = 'JSON 백업을 저장했어요.';
+      progress.value = 100;
+      status.textContent = `3 / 3 · 기록 ${Object.values(payload.tables).reduce((n, rows) => n + rows.length, 0)}건 · 사진 ${photos.length}장 저장 요청 완료`;
       notify('가족 JSON 백업을 저장했어요');
     } catch (error) {
       console.error('가족 JSON 백업 실패', error);
-      status.textContent = '백업에 실패했어요. 잠시 후 다시 시도해 주세요.';
+      status.textContent = error.message || '백업에 실패했어요. 다시 시도해 주세요.';
       notify('JSON 백업을 만들지 못했어요');
     } finally {
       button.disabled = false;
@@ -389,6 +407,9 @@
         <span class="settings-mark" aria-hidden="true">⇄</span>
         <div><p class="eyebrow">데이터 관리</p><h2 id="settingsFamilyDataTitle">백업과 복원</h2><span>현재 가족 공간의 공유 기록만 안전하게 다룹니다.</span></div>
       </div>
+      <div class="backup-scope-grid"><span>일정 · 성장 기록</span><span>아기 프로필 · 가족 할 일</span></div>
+      <label class="backup-photo-option"><input type="checkbox" data-backup-photos checked /> 원본 사진 포함 <small>최대 50MB · 개인 할 일 제외</small></label>
+      <progress data-backup-progress max="100" value="0" hidden aria-label="백업 진행 상태"></progress>
       <div class="settings-family-data-actions">
         <button type="button" data-settings-backup-download>JSON 백업</button>
         <label class="settings-family-file-button">JSON 복원 파일 선택<input type="file" accept="application/json,.json" data-settings-backup-input hidden /></label>
@@ -402,12 +423,16 @@
     const restoreButton = card.querySelector('[data-settings-backup-restore]');
     const preview = card.querySelector('[data-settings-restore-preview]');
     let pendingPayload = null;
+    let pendingContext = currentContext().householdId;
     const syncPermission = () => {
+      if (pendingContext !== currentContext().householdId) { pendingPayload = null; preview.hidden = true; pendingContext = currentContext().householdId; }
       const allowed = canManage();
       backupButton.disabled = !allowed;
       input.disabled = !allowed;
       restoreButton.disabled = !allowed || !pendingPayload;
-      if (!allowed) card.querySelector('[data-settings-backup-status]').textContent = ownerOnlyMessage;
+      const status = card.querySelector('[data-settings-backup-status]');
+      if (!allowed) status.textContent = ownerOnlyMessage;
+      else if (status.textContent === ownerOnlyMessage) status.textContent = '사진과 가족 할일까지 한 파일에 보관하세요.';
     };
     backupButton.addEventListener('click', () => downloadJson(card));
     input.addEventListener('change', async () => {
@@ -420,11 +445,16 @@
       if (!file) return;
       const status = card.querySelector('[data-settings-backup-status]');
       try {
+        if (file.size > 80 * 1024 * 1024) throw new Error('backup-too-large');
+        const selectedContext = currentContext();
         const payload = JSON.parse(await file.text());
         const result = backupApi.validateBackupPayload(payload, currentContext().householdId);
         if (!result.ok) throw new Error(result.reason);
+        await window.FAMILY_BACKUP_MEDIA.validate(payload);
+        if (currentContext().householdId !== selectedContext.householdId || currentContext().session?.user?.id !== selectedContext.session?.user?.id) throw new Error('household-mismatch');
         pendingPayload = payload;
-        const counts = BACKUP_TABLES.map((table) => `${table}: ${(payload.tables[table] || []).length}개`).join(' · ');
+        const names = ['일정','성장 기록','가족','아기','가족 할 일'];
+        const counts = BACKUP_TABLES.map((table, i) => `${names[i]} ${(payload.tables[table] || []).length}개`).join(' · ') + ` · 사진 ${payload.photos?.length || 0}장`;
         preview.textContent = `복원 대기 · ${counts}`;
         preview.hidden = false;
         restoreButton.disabled = false;
@@ -446,10 +476,21 @@
       restoreButton.disabled = true;
       try {
         const context = currentContext();
+        if (!backupApi.validateBackupPayload(pendingPayload, context.householdId).ok) throw new Error('가족 공간이 변경됐어요.');
         const backupId = backupApi.getBackupId(pendingPayload, context.householdId);
+        let restoreTables = pendingPayload.tables;
+        if (pendingPayload.schemaVersion >= 3) {
+          if (context.mode === 'remote') {
+            const rows = await window.FAMILY_BACKUP_MEDIA.restore(pendingPayload, context, op => withAuthRecovery(op,context), (done,total) => { status.textContent = `사진 복원 ${done} / ${total}`; }, () => currentContext().householdId === context.householdId && currentContext().session?.user?.id === context.session?.user?.id);
+            restoreTables = {...restoreTables,growth_entries:rows};
+          } else {
+            const photos = new Map((pendingPayload.photos || []).map(p=>[p.id,`data:${p.mime};base64,${p.data}`]));
+            restoreTables = {...restoreTables,growth_entries:restoreTables.growth_entries.map(row=>({...row,photoUrls:(row.photo_refs||[]).map(ref=>photos.get(ref.id))}))};
+          }
+        }
         const result = context.mode === 'remote'
-          ? await restoreRemote(pendingPayload.tables, context, backupId)
-          : restoreLocal(pendingPayload.tables, context, backupId);
+          ? await restoreRemote(restoreTables, context, backupId)
+          : restoreLocal(restoreTables, context, backupId);
         pendingPayload = null;
         preview.hidden = true;
         if (result.duplicate) {
@@ -465,7 +506,7 @@
         console.error('가족 JSON 복원 실패', error);
         status.textContent = error.message === 'backup-registry-missing'
           ? 'Supabase 마이그레이션 적용 후 복원할 수 있어요.'
-          : '복원에 실패했어요. 새 기록 자동 정리를 시도했어요.';
+          : '복원이 완료되지 않았어요. 같은 파일로 다시 시도해 주세요. 업로드된 사진은 재사용돼요.';
       } finally {
         syncPermission();
       }
@@ -515,6 +556,7 @@
       <p class="settings-family-members-status" data-settings-family-members-status aria-live="polite">기존 일정은 구성원을 보관해도 그대로 남아요.</p>
     `;
     const syncPermission = () => {
+
       const allowed = canManage();
       card.querySelector('[data-settings-family-member-add]').querySelectorAll('input, button').forEach((control) => { control.disabled = !allowed; });
       if (!allowed) card.querySelector('[data-settings-family-members-status]').textContent = ownerOnlyMessage;

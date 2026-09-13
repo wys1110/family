@@ -1,11 +1,11 @@
 (() => {
-  const BACKUP_SCHEMA_VERSION = 2;
+  const BACKUP_SCHEMA_VERSION = 3;
   const LEGACY_SCHEMA_VERSION = 1;
-  const SUPPORTED_SCHEMA_VERSIONS = [LEGACY_SCHEMA_VERSION, BACKUP_SCHEMA_VERSION];
-  const TABLES = ['events', 'growth_entries', 'calendar_members', 'babies'];
+  const SUPPORTED_SCHEMA_VERSIONS = [LEGACY_SCHEMA_VERSION, 2, BACKUP_SCHEMA_VERSION];
+  const TABLES = ['events', 'growth_entries', 'calendar_members', 'babies', 'family_todos'];
   const OMIT_KEYS = new Set([
     'household_id', 'created_by', 'owner_id', 'user_id', 'access_token',
-    'invite_code', 'photo_path', 'photo_paths', 'signed_url', 'private_entries',
+    'invite_code', 'photo_path', 'photo_paths', 'photoPaths', 'photoUrls', 'signed_url', 'private_entries', 'createdBy',
   ]);
 
   const hash = (value) => {
@@ -23,12 +23,12 @@
 
   const householdFingerprint = (householdId) => `hh-${hash(householdId)}`;
 
-  const sanitizeValue = (value) => {
-    if (Array.isArray(value)) return value.map(sanitizeValue);
+  const sanitizeValue = (value, version = BACKUP_SCHEMA_VERSION) => {
+    if (Array.isArray(value)) return value.map(child => sanitizeValue(child, version));
     if (!value || typeof value !== 'object') return value;
     return Object.fromEntries(Object.entries(value)
-      .filter(([key]) => !OMIT_KEYS.has(key))
-      .map(([key, child]) => [key, sanitizeValue(child)]));
+      .filter(([key]) => !OMIT_KEYS.has(key) || (version < 3 && ['photoPaths','photoUrls','createdBy'].includes(key)))
+      .map(([key, child]) => [key, sanitizeValue(child, version)]));
   };
 
   const stableStringify = (value) => {
@@ -39,10 +39,11 @@
     return JSON.stringify(value);
   };
 
-  const canonicalTables = (tables = {}) => Object.fromEntries(TABLES.map((table) => [
+  const canonicalTables = (tables = {}, version = BACKUP_SCHEMA_VERSION) => Object.fromEntries(TABLES.filter((table) => version >= 3 || table !== 'family_todos').map((table) => [
     table,
     (Array.isArray(tables[table]) ? tables[table] : [])
-      .map(sanitizeValue)
+      .filter((row) => table !== 'family_todos' || row.visibility === 'family')
+      .map(row => sanitizeValue(row, version))
       .sort((left, right) => {
         const first = stableStringify(left);
         const second = stableStringify(right);
@@ -51,7 +52,7 @@
   ]));
 
   const createBackupId = (householdId, tables = {}, schemaVersion = BACKUP_SCHEMA_VERSION) =>
-    `bk-${hash(`${householdFingerprint(householdId)}|${schemaVersion}|${stableStringify(canonicalTables(tables))}`)}`;
+    `bk-${hash(`${householdFingerprint(householdId)}|${schemaVersion}|${stableStringify(canonicalTables(tables, schemaVersion))}`)}`;
 
   const isDuplicateBackup = (id, importedIds = []) => Boolean(id) && importedIds.includes(id);
 
@@ -61,6 +62,7 @@
     householdFingerprint: householdFingerprint(householdId),
     backupId: createBackupId(householdId, tables),
     tables: canonicalTables(tables),
+    photos: [],
   });
 
   const validateBackupPayload = (payload, householdId) => {
@@ -69,7 +71,8 @@
     if (payload.householdFingerprint !== householdFingerprint(householdId)) return { ok: false, reason: 'household-mismatch' };
     if (!payload.tables || typeof payload.tables !== 'object' || Array.isArray(payload.tables)) return { ok: false, reason: 'invalid-tables' };
     if (Object.keys(payload.tables).some((table) => !TABLES.includes(table))) return { ok: false, reason: 'unknown-table' };
-    if (TABLES.some((table) => !Array.isArray(payload.tables[table]))) return { ok: false, reason: 'invalid-table-rows' };
+    if (TABLES.filter((table) => payload.schemaVersion >= 3 || table !== 'family_todos').some((table) => !Array.isArray(payload.tables[table]))) return { ok: false, reason: 'invalid-table-rows' };
+    if (payload.schemaVersion >= 3 && (payload.tables.family_todos.some((row) => row.visibility !== 'family') || !Array.isArray(payload.photos))) return { ok: false, reason: 'invalid-extras' };
     if (payload.backupId && payload.backupId !== createBackupId(householdId, payload.tables, payload.schemaVersion)) return { ok: false, reason: 'invalid-backup-id' };
     return { ok: true };
   };
