@@ -9,8 +9,9 @@
     "check:theme-colors": "node scripts/check-theme-colors.mjs"
   },
   "devDependencies": {
-    "@types/node": "^20.19.0",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "@electric-sql/pglite": "0.5.8",
+    "@types/node": "20.19.43",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
   }
 }

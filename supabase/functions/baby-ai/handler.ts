@@ -13,9 +13,11 @@ import {
 } from "./domain.ts";
 import type { GeminiResult } from "./gemini.ts";
 import type { GroundedSource } from "./sources.ts";
+import { readJsonObject } from "../_shared/request.ts";
 
 export type HandlerDependencies = {
   authenticate(request: Request): Promise<{ userId: string } | null>;
+  consumeBudget(householdId: string): Promise<boolean>;
   isCronAuthorized(request: Request): boolean;
   loadContext(userId: string, babyId: string): Promise<BabyAiContext | null>;
   generateGroundedText(prompt: string): Promise<GeminiResult>;
@@ -73,9 +75,10 @@ export function createBabyAiHandler(deps: HandlerDependencies) {
 
     let body: RequestBody;
     try {
-      body = await request.json();
-    } catch {
-      return json({ error: "INVALID_JSON" }, 400);
+      body = await readJsonObject(request);
+    } catch (error) {
+      return json({ error: error instanceof Error && error.message === "BODY_TOO_LARGE" ? "BODY_TOO_LARGE" : "INVALID_JSON" },
+        error instanceof Error && error.message === "BODY_TOO_LARGE" ? 413 : 400);
     }
 
     if (body.action === "process-refresh-queue") {
@@ -95,6 +98,10 @@ export function createBabyAiHandler(deps: HandlerDependencies) {
     if (!context) return json({ error: "BABY_NOT_FOUND" }, 404);
 
     try {
+      if (!["chat", "generate-strategy", "retry-refresh"].includes(String(body.action))) return json({ error: "UNKNOWN_ACTION" }, 400);
+      // Urgent guidance is local and must not wait for a paid-model quota.
+      if (body.action === "chat" && containsUrgentSignal(String(body.question || ""))) return json({ answer: URGENT_GUIDANCE, urgent: true });
+      if (!context.householdId || !(await deps.consumeBudget(context.householdId))) return json({ error: "RATE_LIMITED" }, 429);
       if (body.action === "chat") {
         return await handleChat(deps, context, body);
       }

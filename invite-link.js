@@ -2,7 +2,7 @@
   const PARAM_NAME = "invite";
   const STORAGE_KEY = "family-pending-invite-v1";
   const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-  const CURRENT_INVITE_PATTERN = /^[A-F0-9]{6}$/i;
+  const CURRENT_INVITE_PATTERN = /^(?:[A-F0-9]{6}|[A-F0-9]{32})$/i;
   const LEGACY_INVITE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{5,127}$/;
   const SHARE_BUTTON_HTML = '<span aria-hidden="true">↗</span> 초대 링크 공유';
 
@@ -137,6 +137,15 @@
   const shareInvite = async (button) => {
     if (!button || button.disabled) return;
 
+    if (state.householdRole === 'owner' && state.supabase && state.session) {
+      const householdId = state.household?.id;
+      const { data, error } = await state.supabase.rpc('get_household_invite');
+      if (error || !data?.[0]?.invite_code || state.household?.id !== householdId) {
+        showToast("초대 링크를 갱신하지 못했어요. 다시 시도해 주세요");
+        return;
+      }
+      state.household.invite_code = data[0].invite_code;
+    }
     const code = normalizeCode(state.household?.invite_code);
     if (!code) {
       console.error("가족 초대 코드가 없거나 지원하지 않는 형식입니다");
@@ -206,12 +215,12 @@
     const userId = state.session.user.id;
 
     try {
-      const { error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.rpc("join_household", { code }), {
+      const { data, error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.rpc("join_household", { code }), {
         supabase,
         userId,
         isCurrent: () => state.supabase === supabase && state.session?.user?.id === userId && !state.household,
       });
-      if (error) {
+      if (error || !data) {
         console.error("초대 링크 참여 실패", error);
         showToast("초대 링크를 확인해 주세요");
         return;

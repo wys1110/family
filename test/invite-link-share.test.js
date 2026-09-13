@@ -12,8 +12,8 @@ describe("family invite sharing", () => {
     expect(invite).not.toContain('querySelector("#shareFamilyInvite")?.addEventListener');
   });
 
-  test("accepts both current six-character codes and legacy URL-safe codes", () => {
-    expect(invite).toContain("const CURRENT_INVITE_PATTERN = /^[A-F0-9]{6}$/i");
+  test("accepts both current 32-character codes and legacy URL-safe codes", () => {
+    expect(invite).toContain("const CURRENT_INVITE_PATTERN = /^(?:[A-F0-9]{6}|[A-F0-9]{32})$/i");
     expect(invite).toContain("const LEGACY_INVITE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{5,127}$/");
     expect(invite).toContain("if (CURRENT_INVITE_PATTERN.test(rawCode)) return rawCode.toUpperCase()");
     expect(invite).toContain("if (LEGACY_INVITE_PATTERN.test(rawCode)) return rawCode");

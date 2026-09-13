@@ -13,6 +13,7 @@ const context = {
 test("로그인한 가족이 실패한 자동 갱신을 즉시 다시 예약한다", async () => {
   let received;
   const handler = createBabyAiHandler({
+    consumeBudget: async () => true,
     authenticate: async () => ({ userId: "user-1" }),
     isCronAuthorized: () => false,
     loadContext: async () => context,

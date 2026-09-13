@@ -20,6 +20,11 @@ Deno.serve(async (request: Request) => {
   });
 
   const handler = createBabyAiHandler({
+    consumeBudget: async (householdId) => {
+      const { data, error } = await userClient.rpc("consume_family_action_budget", { p_household_id: householdId, p_action: "ai" });
+      if (error) throw new Error("RATE_LIMIT_UNAVAILABLE");
+      return data === true;
+    },
     authenticate: async () => {
       const { data, error } = await userClient.auth.getUser();
       return error || !data.user ? null : { userId: data.user.id };
@@ -197,6 +202,8 @@ async function generateScheduledDrafts(client, context, babyId: string) {
   const transport = gemini();
   const drafts = [];
   for (const kind of ["feeding", "sleep"] as const) {
+    const { data: allowed, error: budgetError } = await client.rpc("consume_family_background_ai_budget", { p_household_id: context.householdId });
+    if (budgetError || !allowed) throw new Error("RATE_LIMITED");
     const content = await generateGroundedStrategy({
       generateGroundedText: (prompt) => transport.generateGroundedText(prompt),
       generateText: (prompt, options) => transport.generateText(prompt, options),

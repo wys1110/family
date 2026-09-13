@@ -1,6 +1,8 @@
 // @ts-nocheck -- Supabase Edge Runtime provides Deno and npm: imports.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { normalizePushSubscription, maySendPush, claimChange } from "./security.ts";
+import { readJsonObject } from "../_shared/request.ts";
 import { buildGrowthChangePayload, normalizeFamilyRole } from "./growth-notification.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -24,8 +26,8 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return json({ error: "METHOD_NOT_ALLOWED" }, 405);
 
   let body: Record<string, unknown>;
-  try { body = await request.json(); }
-  catch { return json({ error: "INVALID_JSON" }, 400); }
+  try { body = await readJsonObject(request); }
+  catch (error) { return json({ error: error?.message === "BODY_TOO_LARGE" ? "BODY_TOO_LARGE" : "INVALID_JSON" }, error?.message === "BODY_TOO_LARGE" ? 413 : 400); }
 
   const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
@@ -62,6 +64,14 @@ Deno.serve(async (request: Request) => {
     return json({ error: "HOUSEHOLD_NOT_FOUND" }, 403);
   }
 
+  if (["subscribe", "test", "event-change", "growth-change"].includes(String(body.action))) {
+    const { data: allowed, error } = await userClient.rpc("consume_family_action_budget", {
+      p_household_id: householdId, p_action: body.action === "test" ? "push-test" : "push",
+    });
+    if (error) return json({ error: "RATE_LIMIT_UNAVAILABLE" }, 503);
+    if (!allowed) return json({ error: "RATE_LIMITED" }, 429);
+  }
+
   if (body.action === "subscription-status") {
     const endpoint = typeof body.endpoint === "string" ? body.endpoint.trim().slice(0, 2048) : "";
     if (!endpoint) return json({ error: "INVALID_SUBSCRIPTION" }, 400);
@@ -90,19 +100,12 @@ Deno.serve(async (request: Request) => {
       ? body.briefingEnabled
       : body.enabled !== false;
 
-    const { error } = await serviceClient.from("push_subscriptions").upsert({
-      user_id: user.id,
-      household_id: householdId,
-      endpoint: subscription.endpoint,
-      p256dh: subscription.keys.p256dh,
-      auth: subscription.keys.auth,
-      timezone,
-      briefing_time: `${briefingTime}:00`,
-      enabled: pushEnabled,
-      briefing_enabled: briefingEnabled,
-      updated_at: new Date().toISOString(),
-      last_error: null,
-    }, { onConflict: "endpoint" });
+    const { error } = await userClient.rpc("register_family_push_subscription", {
+      p_household_id: householdId,
+      p_subscription: { endpoint: subscription.endpoint, p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth, timezone, briefing_time: `${briefingTime}:00`,
+        enabled: pushEnabled, briefing_enabled: briefingEnabled },
+    });
     if (error) {
       console.error("DAILY_BRIEFING_SUBSCRIBE_FAILED", error.code);
       return json({ error: "SUBSCRIBE_FAILED" }, 500);
@@ -151,8 +154,14 @@ Deno.serve(async (request: Request) => {
 
   if (body.action === "event-change") {
     if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
-    const change = normalizeEventChange(body.change);
-    if (!change) return json({ error: "INVALID_EVENT_CHANGE" }, 400);
+    const requested = normalizeEventChange(body.change);
+    if (!requested || (requested.id && !validUuid(requested.id))) return json({ error: "INVALID_EVENT_CHANGE" }, 400);
+    let verified;
+    try { verified = await claimChange(userClient, householdId, "event", requested.id || null); }
+    catch { return json({ error: "CHANGE_VERIFICATION_FAILED" }, 503); }
+    if (!verified) return json({ error: "CHANGE_NOT_FOUND_OR_ALREADY_SENT" }, 409);
+    const change = normalizeEventChange(verified);
+    if (!change) return json({ error: "INVALID_VERIFIED_CHANGE" }, 500);
 
     const payload = buildEventChangePayload(change);
     const { data: members, error: memberError } = await serviceClient
@@ -214,8 +223,14 @@ Deno.serve(async (request: Request) => {
 
   if (body.action === "growth-change") {
     if (!pushConfigured()) return json({ error: "PUSH_NOT_CONFIGURED" }, 503);
-    const change = normalizeGrowthChange(body.change);
-    if (!change) return json({ error: "INVALID_GROWTH_CHANGE" }, 400);
+    const requested = normalizeGrowthChange(body.change);
+    if (!requested) return json({ error: "INVALID_GROWTH_CHANGE" }, 400);
+    let verified;
+    try { verified = await claimChange(userClient, householdId, "growth", requested.sourceId || null); }
+    catch { return json({ error: "CHANGE_VERIFICATION_FAILED" }, 503); }
+    if (!verified) return json({ error: "CHANGE_NOT_FOUND_OR_ALREADY_SENT" }, 409);
+    const change = normalizeGrowthChange(verified);
+    if (!change) return json({ error: "INVALID_VERIFIED_CHANGE" }, 500);
 
     const actorLabel = normalizeFamilyRole(user.user_metadata?.family_role);
     const payload = buildGrowthChangePayload(change, actorLabel);
@@ -315,6 +330,7 @@ async function dispatchDueBriefings(serviceClient) {
   let failed = 0;
 
   for (const subscription of subscriptions || []) {
+    if (!(await maySendPush(serviceClient, subscription))) continue;
     const local = localClock(now, subscription.timezone);
     if (!isDue(subscription, local)) continue;
     due += 1;
@@ -465,11 +481,13 @@ async function markNotificationDelivered(serviceClient, notificationId: string) 
 
 async function sendPush(serviceClient, subscription, payload, options) {
   try {
+    if (!(await maySendPush(serviceClient, subscription))) return "blocked";
     await webpush.sendNotification({
       endpoint: subscription.endpoint,
       keys: { p256dh: subscription.p256dh, auth: subscription.auth },
     }, JSON.stringify(payload), {
       TTL: 60 * 60,
+      timeout: 10_000,
       vapidDetails: {
         subject: VAPID_SUBJECT,
         publicKey: VAPID_PUBLIC_KEY,
@@ -559,13 +577,7 @@ function normalizeGrowthChange(value: unknown) {
 }
 
 function normalizeSubscription(value: unknown) {
-  const subscription = value && typeof value === "object" ? value as Record<string, unknown> : null;
-  const keys = subscription?.keys && typeof subscription.keys === "object" ? subscription.keys as Record<string, unknown> : null;
-  const endpoint = typeof subscription?.endpoint === "string" ? subscription.endpoint.trim() : "";
-  const p256dh = typeof keys?.p256dh === "string" ? keys.p256dh.trim() : "";
-  const auth = typeof keys?.auth === "string" ? keys.auth.trim() : "";
-  if (!endpoint.startsWith("https://") || !p256dh || !auth) return null;
-  return { endpoint, keys: { p256dh, auth } };
+  return normalizePushSubscription(value);
 }
 
 function normalizeTime(value: unknown) {

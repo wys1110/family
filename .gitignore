@@ -6,4 +6,5 @@
 .env.*
 !.env.example
 node_modules/
+supabase/.temp/
 supabase/.env.ai

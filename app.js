@@ -2483,7 +2483,7 @@ function renderAccount() {
     $("#accountGoogleSignIn").addEventListener("click", signInWithGoogle); $("#loginForm").addEventListener("submit", sendMagicLink); return;
   }
   if (!state.household) {
-    root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="6자리 코드" maxlength="6" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+    root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="초대 코드" maxlength="32" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
     $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget)); return;
   }
   const role = currentNotificationRole();
@@ -2498,7 +2498,7 @@ async function signInWithGoogle() {
 }
 async function sendMagicLink(event) { event.preventDefault(); const email = event.currentTarget.querySelector('input[type="email"]').value; const { error } = await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirectUrl() } }); if (error) return toast("로그인 링크를 보내지 못했어요"); toast("이메일을 확인해 주세요"); event.currentTarget.reset(); }
 async function createHousehold(event) { event.preventDefault(); const { error } = await withAuthRecovery(() => state.supabase.rpc("create_household", { household_name: $("#householdName").value.trim() })); if (error) return toast("가족 공간을 만들지 못했어요"); await bootstrapData(); renderAccount(); toast("가족 공간을 만들었어요"); }
-async function joinHousehold(event) { event.preventDefault(); const { error } = await withAuthRecovery(() => state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() })); if (error) return toast("초대 코드를 확인해 주세요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
+async function joinHousehold(event) { event.preventDefault(); const { data, error } = await withAuthRecovery(() => state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() })); if (error || !data) return toast("초대 코드가 만료됐거나 시도 횟수를 초과했어요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
 
 init().catch((error) => {
   console.error("가족 앱 시작 실패", error);

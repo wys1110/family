@@ -3,6 +3,7 @@ import { createBabyAiHandler } from "../supabase/functions/baby-ai/handler.ts";
 
 const BABY_ID = "11111111-1111-4111-8111-111111111111";
 const context = {
+  householdId: "household-1",
   baby: { ageDays: 90, sex: "남아" },
   profile: { temperament: "소리에 예민함" },
   logs: [],
@@ -22,6 +23,7 @@ function request(body, { auth = true, cron = false } = {}) {
 
 function fakeDeps(overrides = {}) {
   return {
+    consumeBudget: async () => true,
     authenticate: async (req) => req.headers.get("authorization") ? { userId: "user-1" } : null,
     isCronAuthorized: (req) => req.headers.get("x-baby-ai-cron") === "cron-token",
     loadContext: async () => context,
@@ -205,4 +207,18 @@ describe("baby-ai Edge Function handler", () => {
     expect(denied.status).toBe(401);
     expect(await allowed.json()).toEqual({ processed: 2, failed: 0 });
   });
+});
+
+ test("AI quota denial prevents all model calls", async () => {
+  let calls = 0;
+  const handler = createBabyAiHandler(fakeDeps({ consumeBudget: async () => false,
+    generateText: async () => { calls++; return "answer"; }, generateGroundedText: async () => { calls++; return {}; } }));
+  const response = await handler(request({ action: "chat", babyId: BABY_ID, question: "수유 질문" }));
+  expect(response.status).toBe(429);
+  expect(calls).toBe(0);
+});
+ test("missing rate limiter cannot silently allow paid requests", async () => {
+  const handler = createBabyAiHandler(fakeDeps({ consumeBudget: async () => { throw new Error("RATE_LIMIT_UNAVAILABLE"); } }));
+  const response = await handler(request({ action: "chat", babyId: BABY_ID, question: "수유 질문" }));
+  expect(response.status).toBe(502);
 });

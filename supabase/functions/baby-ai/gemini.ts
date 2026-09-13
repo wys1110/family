@@ -47,6 +47,7 @@ export function createGeminiTransport(options: GeminiTransportOptions): GeminiTr
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: "POST",
+          signal: AbortSignal.timeout(30_000),
           headers: {
             "content-type": "application/json",
             "x-goog-api-key": apiKey,
