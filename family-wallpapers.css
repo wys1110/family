@@ -1,4 +1,4 @@
-/* One sharp cover image, a contrast scrim, and the card content form the wallpaper stack. */
+/* Keep photos unmodified; contrast belongs to text and controls, not the image. */
 .wallpaper-surface { position: relative; isolation: isolate; overflow: hidden; }
 .wallpaper-image,
 .wallpaper-scrim {
@@ -15,13 +15,6 @@
 .wallpaper-scrim {
   z-index: 1;
   display: none;
-  /* Keep the photo visible; text shadows provide most of the contrast. */
-  opacity: .35;
-  background: linear-gradient(105deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 52%, var(--theme-wallpaper-scrim-end) 100%);
-}
-.wallpaper-surface.has-wallpaper .wallpaper-scrim { display: block; }
-.baby-profile-card[data-wallpaper-surface="growth"] .wallpaper-scrim {
-  background: linear-gradient(90deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 45%, var(--theme-wallpaper-scrim-end) 72%, transparent 100%);
 }
 .wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 2; }
 html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--theme-wallpaper-text); }

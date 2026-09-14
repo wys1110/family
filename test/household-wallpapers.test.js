@@ -389,8 +389,10 @@ describe('family wallpaper', () => {
   test('keeps growth wallpaper neutral and profile text legible in white mode', () => {
     const growthSelector = '.baby-profile-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="growth"]';
     expect(css).toContain(growthSelector);
-    expect(css).toMatch(/\.baby-profile-card\[data-wallpaper-surface="growth"\] \.wallpaper-scrim \{[^}]+linear-gradient\(90deg,/s);
     expect(css).not.toContain('background-position: center 38%');
+    expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*display:\s*none;/s);
+    expect(css).not.toContain('linear-gradient');
+    expect(css).not.toContain('.wallpaper-surface.has-wallpaper .wallpaper-scrim { display: block; }');
     expect(css).toContain(`${growthSelector}::before,`);
     expect(css).toContain(`${growthSelector}::after { content: none; }`);
     expect(css).toContain(`${growthSelector} :is(`);
@@ -435,7 +437,7 @@ describe('family wallpaper', () => {
     expect(css).toMatch(/\.wallpaper-scrim\s*\{[^}]*z-index:\s*1;/s);
     expect(css).toContain('.wallpaper-surface.has-wallpaper .family-mascot { display: none; }');
     expect(css).not.toContain('var(--wallpaper-image)');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260914-photo-contrast-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260914-original-photo-v2", script: false }');
   });
 
   test('keeps wallpaper actions above the content layer', () => {
@@ -460,7 +462,7 @@ describe('family wallpaper', () => {
     expect(html).toContain('theme-critical.css?v=20260815-wallpaper-brightness-v1');
     expect(html).toContain('config.js?v=20260830-data-load-v3');
     expect(html).toContain('app.js?v=20260913-records-v1');
-    expect(config).toContain('{ name: "family-wallpapers", version: "20260914-photo-contrast-v1", script: false }');
+    expect(config).toContain('{ name: "family-wallpapers", version: "20260914-original-photo-v2", script: false }');
     expect(config).toContain('{ name: "wallpaper-editor", version: "20260815-v1" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');
   });
