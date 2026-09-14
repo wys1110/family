@@ -13,10 +13,10 @@
   "theme_color": "#f5f3ef",
   "icons": [
     {
-      "src": "assets/family-mascots.webp",
-      "sizes": "any",
-      "type": "image/webp",
-      "purpose": "any maskable"
+      "src": "assets/family-logo-20260914.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

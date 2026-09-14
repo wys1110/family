@@ -462,8 +462,8 @@
       body: item.body,
       tag: item.id,
       renotify: false,
-      icon: 'assets/family-mascots.webp',
-      badge: 'assets/family-mascots.webp',
+      icon: 'assets/family-logo-20260914.png',
+      badge: 'assets/family-logo-20260914.png',
       data: { url: './' },
     };
     try {

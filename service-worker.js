@@ -84,8 +84,8 @@ self.addEventListener("push", (event) => {
     body: notificationBody,
     tag: payload.tag || "family-daily-briefing",
     renotify: Boolean(payload.renotify),
-    icon: "assets/family-mascots.webp",
-    badge: "assets/family-mascots.webp",
+    icon: "assets/family-logo-20260914.png",
+    badge: "assets/family-logo-20260914.png",
     data: {
       url: payload.url || DEFAULT_URL,
       date: payload.date || "",
