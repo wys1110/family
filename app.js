@@ -85,6 +85,7 @@ let lastAuthSessionKey = null;
 let bootstrapRequestId = 0;
 let bootstrapRetryTimer = null;
 let eventSaveInProgress = false;
+let eventDialogReturnPosition = null;
 let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
@@ -1443,6 +1444,7 @@ async function storeEvent(item) {
 }
 
 function openEventDialog(event = null) {
+  eventDialogReturnPosition = { x: window.scrollX, y: window.scrollY, view: state.activeView };
   $("#eventDialogTitle").textContent = event ? "일정 수정" : "새 일정";
   $("#eventSubmitButton").textContent = event ? "변경사항 저장" : "일정 추가";
   $("#eventId").value = event?.id || "";
@@ -1525,7 +1527,22 @@ async function saveEvent(event) {
 async function deleteEvent() {
   const id = $("#eventId").value; if (!id || !confirm("이 일정을 삭제할까요?")) return;
   if (state.supabase && state.session) { const { error } = await withAuthRecovery(() => state.supabase.from("events").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("삭제하지 못했어요"); }
-  state.events = state.events.filter((event) => event.id !== id); persistLocal(); $("#eventDialog").close(); render(); toast("일정을 삭제했어요");
+  const returnPosition = eventDialogReturnPosition;
+  state.events = state.events.filter((event) => event.id !== id);
+  persistLocal();
+  $("#eventDialog").close();
+  // Keep the selected month/day and mounted views; only event content changed.
+  renderHeader(); renderCalendar(); renderAgenda(); renderUpcomingEvents();
+  if (returnPosition && state.activeView === returnPosition.view) {
+    window.scrollTo({ left: returnPosition.x, top: returnPosition.y, behavior: "instant" });
+    requestAnimationFrame(() => {
+      if (state.activeView !== returnPosition.view || $("#eventDialog").open) return;
+      const selectedDay = $("#calendarGrid .calendar-day.selected");
+      selectedDay?.focus({ preventScroll: true });
+      window.scrollTo({ left: returnPosition.x, top: returnPosition.y, behavior: "instant" });
+    });
+  }
+  toast("일정을 삭제했어요");
 }
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
 

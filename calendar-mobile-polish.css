@@ -191,3 +191,10 @@
   #calendarView .calendar-card { padding-inline: 7px; }
   #calendarView .month-picker-trigger { width: 112px; max-width: 112px; font-size: 16px; }
 }
+
+/* The copy column already limits width; do not shrink its heading a second time. */
+#calendarView .hero-card h2 {
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

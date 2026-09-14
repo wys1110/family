@@ -143,7 +143,7 @@ describe("upcoming family events", () => {
   });
 
   test("loads the core app with the growth and upcoming delivery version", () => {
-    expect(index).toContain('<script src="app.js?v=20260913-records-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20260914-calendar-position-v1"></script>');
     expect(index).not.toContain('app.js?v=20260718-logic-audit-v1');
   });
 });
