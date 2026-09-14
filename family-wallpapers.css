@@ -15,6 +15,8 @@
 .wallpaper-scrim {
   z-index: 1;
   display: none;
+  /* Keep the photo visible; text shadows provide most of the contrast. */
+  opacity: .35;
   background: linear-gradient(105deg, var(--theme-wallpaper-scrim-start) 0%, var(--theme-wallpaper-scrim-middle) 52%, var(--theme-wallpaper-scrim-end) 100%);
 }
 .wallpaper-surface.has-wallpaper .wallpaper-scrim { display: block; }
@@ -24,7 +26,7 @@
 .wallpaper-surface > :not(.wallpaper-image):not(.wallpaper-scrim):not(.wallpaper-actions) { z-index: 2; }
 html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--theme-wallpaper-text); }
 .wallpaper-surface.has-wallpaper .family-mascot { display: none; }
-.wallpaper-surface.has-wallpaper :is(h2, h3, p, span, strong, small) { color: inherit; text-shadow: 0 1px 12px var(--theme-wallpaper-text-shadow); }
+.wallpaper-surface.has-wallpaper :is(h2, h3, p, span, strong, small) { color: inherit; text-shadow: 0 1px 3px var(--theme-wallpaper-text-shadow), 0 2px 12px var(--theme-wallpaper-text-shadow); }
 .wallpaper-surface.has-wallpaper .family-chip,
 .wallpaper-surface.has-wallpaper .baby-edit-button,
 .wallpaper-surface.has-wallpaper .today-care-grid article { background: var(--theme-wallpaper-surface) !important; border-color: var(--theme-wallpaper-border) !important; backdrop-filter: blur(8px); }
@@ -60,4 +62,10 @@ html[data-family-theme-choice] .wallpaper-surface.has-wallpaper { color: var(--t
   .wallpaper-actions { right: 10px; bottom: 9px; }
   .wallpaper-surface[data-wallpaper-surface="calendar"] .wallpaper-actions { top: 9px; right: 75px; bottom: auto; }
   .wallpaper-actions button { min-height: 44px; padding: 0 10px; font-size: 9px; }
+}
+
+/* Photo text must win over the plain-card palette in every theme. */
+#calendarView .hero-card.wallpaper-surface.has-wallpaper[data-wallpaper-surface="calendar"] :is(h2, p, .album-stamp, .family-chip) {
+  color: var(--theme-wallpaper-text) !important;
+  text-shadow: 0 1px 3px var(--theme-wallpaper-text-shadow), 0 2px 12px var(--theme-wallpaper-text-shadow);
 }
