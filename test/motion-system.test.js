@@ -22,6 +22,7 @@ function loadMotion({ reduce = false, startViewTransition } = {}) {
     matchMedia: () => ({ matches: reduce }),
     setTimeout: (callback) => callback(),
     clearTimeout: () => {},
+    addEventListener: () => {},
   };
   vm.runInNewContext(source, { window, document, console, CustomEvent: class {} });
   return window.FAMILY_MOTION_API;
@@ -44,6 +45,7 @@ function loadMotionContext({ reduce = false, startViewTransition, switchView = v
     matchMedia: () => ({ matches: reduce }),
     setTimeout: (callback) => callback(),
     clearTimeout: () => {},
+    addEventListener: () => {},
     addEventListener: (name, callback) => listeners.set(name, callback),
   };
   vm.runInNewContext(source, { window, document, console, CustomEvent: class {} });
@@ -182,7 +184,7 @@ describe('smooth mobile motion policy', () => {
   });
 
   test('ships the smooth motion under a fresh asset version', () => {
-    expect(config).toContain('{ name: "motion-system", version: "20260915-instant-tabs-v1" }');
+    expect(config).toContain('{ name: "motion-system", version: "20260915-tab-position-v1" }');
   });
 
   test('marks growth completion for save feedback', () => {

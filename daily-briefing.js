@@ -34,6 +34,8 @@
   let publicKeyCache = "";
   let busy = false;
   let reconcileGeneration = 0;
+  let diagnosis = null;
+  let diagnosticBusy = false;
 
   const notificationPermission = () => {
     try { return "Notification" in window ? Notification.permission : "unsupported"; }
@@ -46,7 +48,7 @@
 
   const getStatus = () => ({
     enabled: pushSettings.enabled,
-    pushReady: pushSettings.enabled,
+    pushReady: pushSettings.enabled && notificationPermission() === "granted" && diagnosis?.server === true,
     permission: notificationPermission(),
     serviceWorker: typeof navigator !== "undefined" && "serviceWorker" in navigator,
     supported: pushSupported(),
@@ -199,6 +201,7 @@
         || state.supabase !== client
         || state.session?.user?.id !== userId
         || state.household?.id !== householdId) return;
+      diagnosis = {device: Boolean(subscription), server: enabled};
       pushSettings.enabled = enabled;
       persist();
       updateControls();
@@ -214,6 +217,8 @@
     if (code.includes("PUSH_NOT_CONFIGURED") || code.includes("FunctionsHttpError") || code.includes("FUNCTION_FAILED")) {
       return "알림 서버의 VAPID 설정을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.";
     }
+    if (code.includes("RATE_LIMITED")) return "요청이 많아요. 잠시 후 다시 시도해 주세요.";
+    if (code.includes("SUBSCRIPTION_NOT_FOUND")) return "기기 등록이 없어요. 알림 받기를 눌러 연결해 주세요.";
     if (code.includes("SUBSCRIBE_FAILED")) return "이 기기의 알림 설정을 저장하지 못했어요.";
     if (code.includes("INVALID_SUBSCRIPTION")) return "이 기기의 알림 정보가 올바르지 않아요. 앱을 완전히 닫았다가 다시 열어 주세요.";
     if (code.includes("NotAllowedError") || code.includes("PERMISSION_DENIED")) return "iPhone 설정에서 이 앱의 알림을 허용해 주세요.";
@@ -224,6 +229,7 @@
 
   const setBusy = (next) => {
     busy = next;
+    updateDiagnosticControls();
     const toggle = card?.querySelector("#eventChangePushToggle");
     if (toggle) {
       toggle.disabled = demoMode || next;
@@ -252,7 +258,7 @@
       status.textContent = "iPhone 설정 → 알림에서 이 앱의 알림을 허용해 주세요.";
       status.classList.add("error");
     } else if (pushSettings.enabled) {
-      status.textContent = "이 기기는 가족 기록 변경 알림을 받고 있어요.";
+      status.textContent = "이 기기의 가족 기록 변경 알림이 켜져 있어요.";
       status.classList.add("active");
     } else {
       status.textContent = "이 기기에서는 아직 알림을 받지 않아요.";
@@ -266,10 +272,74 @@
       toggle.textContent = demoMode ? "실제 앱에서 설정" : pushSettings.enabled ? "알림 끄기" : "알림 받기";
       toggle.classList.toggle("active", pushSettings.enabled);
       toggle.setAttribute("aria-pressed", String(pushSettings.enabled));
-      toggle.disabled = demoMode || busy;
+      toggle.disabled = demoMode || busy || diagnosticBusy;
     }
     updateStatus();
+    updateDiagnosticControls();
+    renderDiagnosis();
   }
+
+  const diagnosticScope = () => typeof state === "undefined" ? "" : `${state.session?.user?.id}|${state.household?.id}`;
+  const renderDiagnosis = () => {
+    const output = card?.querySelector("#pushDiagnosis");
+    if (!output) return;
+    const permission = ({granted: "허용", denied: "차단", default: "미설정", unsupported: "지원 안 됨"})[notificationPermission()];
+    output.textContent = `알림 권한: ${permission}\n실행 환경: ${isStandalone() ? "홈 화면 앱" : "브라우저"}\n기기 등록: ${diagnosis?.device == null ? "확인 필요" : diagnosis.device ? "등록됨" : "없음"}\n서버 연결: ${diagnosis?.server == null ? "확인 필요" : diagnosis.server ? "알림 켜짐" : "알림 꺼짐 또는 미등록"}`;
+  };
+  const diagnosePush = async () => {
+    if (diagnosticBusy || busy) return false;
+    const scope = diagnosticScope();
+    const client = typeof state === "undefined" ? null : state.supabase;
+    const current = () => scope === diagnosticScope() && typeof state !== "undefined" && client === state.supabase;
+    diagnosticBusy = true;
+    reconcileGeneration += 1;
+    diagnosis = null;
+    updateControls(); renderDiagnosis();
+    try {
+      if (demoMode) throw new Error("DEMO_MODE");
+      if (!pushSupported()) throw new Error("PUSH_UNSUPPORTED");
+      if (!client || !state.session || !state.household?.id) throw new Error("LOGIN_REQUIRED");
+      const householdId = state.household.id;
+      const subscription = await currentSubscription();
+      if (!current()) return false;
+      diagnosis = {device: Boolean(subscription), server: null};
+      renderDiagnosis();
+      const result = subscription ? await loadSubscriptionStatus(client, householdId, subscription) : {enabled:false};
+      if (!current()) return false;
+      diagnosis.server = Boolean(result.enabled);
+      pushSettings.enabled = diagnosis.server;
+      persist(); updateControls(); renderDiagnosis();
+      updateStatus(notificationPermission() !== "granted" ? "기기 설정에서 알림을 허용해 주세요." : diagnosis.server ? "등록 상태는 정상이에요. 테스트 알림으로 실제 수신을 확인해 주세요." : "알림 받기를 눌러 이 기기를 연결해 주세요.", "guide");
+      return Boolean(subscription && diagnosis.server && notificationPermission() === "granted");
+    } catch (error) {
+      if (current()) { renderDiagnosis(); updateStatus(demoMode ? "테스트 모드에서는 실제 기기를 진단하지 않아요." : friendlyError(error), "error"); }
+      return false;
+    } finally { diagnosticBusy = false; updateDiagnosticControls(); }
+  };
+  const updateDiagnosticControls = () => {
+    for (const id of ["pushDiagnoseButton", "pushTestButton", "eventChangePushToggle"]) {
+      const button = card?.querySelector(`#${id}`);
+      if (button) button.disabled = demoMode || busy || diagnosticBusy;
+    }
+  };
+  const sendTestPush = async () => {
+    if (busy || diagnosticBusy || demoMode) return;
+    const startingScope = diagnosticScope();
+    const ready = await diagnosePush();
+    if (!ready || startingScope !== diagnosticScope()) return;
+    const scope = diagnosticScope(), client = state.supabase, householdId = state.household.id;
+    const current = () => scope === diagnosticScope() && typeof state !== "undefined" && client === state.supabase;
+    setBusy(true);
+    try {
+      const subscription = await currentSubscription();
+      if (!current()) return;
+      if (!subscription?.endpoint) throw new Error("SUBSCRIPTION_NOT_FOUND");
+      const result = await invoke({action:"test", householdId, endpoint:subscription.endpoint});
+      if (!current()) return;
+      updateStatus(result.sent > 0 ? "푸시 서버가 테스트 알림을 접수했어요. 알림 센터를 확인해 주세요. 안 보이면 집중 모드·알림 요약·잠금 화면 표시 설정을 확인해 주세요." : "발송된 알림이 없어요. 알림 받기로 기기 연결을 다시 확인해 주세요.", result.sent > 0 ? "guide" : "error");
+    } catch (error) { if (current()) updateStatus(friendlyError(error), "error"); }
+    finally { setBusy(false); }
+  };
 
   const enablePush = async () => {
     if (busy) return false;
@@ -309,6 +379,7 @@
       }
 
       await syncSubscription(subscription, { pushEnabled: true });
+      diagnosis = {device: true, server: true};
       pushSettings.enabled = true;
       persist();
       updateControls();
@@ -373,6 +444,9 @@
       </div>
       <button id="eventChangePushToggle" type="button" aria-pressed="false">알림 받기</button>
       <p id="eventChangePushStatus" class="event-change-push-status" role="status" aria-live="polite"></p>
+      <div class="push-diagnostic-actions"><button id="pushDiagnoseButton" type="button">알림 상태 확인</button><button id="pushTestButton" type="button">테스트 알림 보내기</button></div>
+      <p id="pushDiagnosis" class="push-diagnosis" role="status" aria-live="polite"></p>
+      <p class="event-change-push-ios-note"><span>본인이 작성한 기록은 본인에게 푸시를 보내지 않아요. 테스트 알림은 현재 기기로만 보내요.</span></p>
       <p class="event-change-push-ios-note"><strong>iPhone 안내</strong><span>Safari 공유 버튼 → 홈 화면에 추가 → 앱 아이콘으로 열어야 잠금 화면 알림을 받을 수 있어요.</span></p>`;
     settingsView.appendChild(card);
 
@@ -380,6 +454,8 @@
       if (pushSettings.enabled) disablePush();
       else enablePush();
     });
+    card.querySelector("#pushDiagnoseButton").addEventListener("click", diagnosePush);
+    card.querySelector("#pushTestButton").addEventListener("click", sendTestPush);
     updateControls();
     return true;
   };
@@ -395,6 +471,7 @@
   };
 
   const reloadForContext = () => {
+    diagnosis = null;
     pushSettings = readSettings();
     publicKeyCache = "";
     updateControls();
@@ -402,6 +479,6 @@
   };
 
   window.addEventListener("familycontextchange", reloadForContext);
-  window.FAMILY_EVENT_CHANGE_PUSH_API = { getStatus };
+  window.FAMILY_EVENT_CHANGE_PUSH_API = { getStatus, diagnose: diagnosePush };
   install();
 })();

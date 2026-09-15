@@ -110,3 +110,8 @@
     gap: 2px;
   }
 }
+
+.push-diagnostic-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.push-diagnostic-actions button { flex: 1 1 130px; min-height: 44px; border: 1px solid var(--separator); border-radius: 12px; background: var(--surface-2); color: var(--label); font: inherit; font-size: 12px; }
+.push-diagnostic-actions button:disabled { opacity: .58; }
+.push-diagnosis { white-space: pre-line; margin: 0; font-size: 12px; line-height: 1.8; color: var(--secondary); }

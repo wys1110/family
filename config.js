@@ -128,7 +128,7 @@ window.FAMILY_CONFIG = {
     { name: "settings-layout-polish", version: "20260824-event-change-push-v1", script: false },
     { name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
-    { name: "daily-briefing", version: "20260830-auth-recovery-v2" },
+    { name: "daily-briefing", version: "20260915-push-diagnostics-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20260824-settings-request-v1" },
@@ -187,7 +187,7 @@ window.FAMILY_CONFIG = {
     { name: "calendar-mobile-polish", version: "20260914-calendar-position-v1", script: false },
     { name: "family-wallpapers", version: "20260914-original-photo-v2", script: false },
     { name: "wallpaper-editor", version: "20260815-v1" },
-    { name: "motion-system", version: "20260915-instant-tabs-v1" },
+    { name: "motion-system", version: "20260915-tab-position-v1" },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");

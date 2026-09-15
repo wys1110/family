@@ -7,6 +7,13 @@
   let activeTransition = null;
   let transitionId = 0;
   let transitionUpdateDepth = 0;
+  let navigationGeneration = 0;
+  let positionScope = "";
+  let pendingPositionView = null;
+  let positionRequest = 0;
+  const tabPositions = new Map();
+  const currentScope = () => typeof state === 'undefined' ? '' : `${state.session?.user?.id}|${state.household?.id}`;
+
 
   const currentView = () => document.querySelector('.view-tab.active[data-view]')?.dataset.view || '';
 
@@ -86,6 +93,7 @@
 
     const original = latest;
     const wrapped = function familyMotionSwitchView(requestedView) {
+      if (!transitionUpdateDepth) navigationGeneration += 1;
       return transitionView(requestedView, () => original(requestedView), { currentView: currentView(), immediate: true });
     };
     copyFunctionProperties(original, wrapped);
@@ -114,7 +122,32 @@
     activate,
   });
 
+  for (const name of ['wheel', 'touchmove']) document.addEventListener(name, () => { navigationGeneration += 1; pendingPositionView = null; }, {passive: true});
+  window.addEventListener('familycontextchange', () => { tabPositions.clear(); pendingPositionView = null; positionRequest += 1; navigationGeneration += 1; });
+
   document.addEventListener('click', (event) => {
-    if (event.target?.closest?.('.view-tab[data-view]')) ensureWrapped();
+    const tab = event.target?.closest?.('.view-tab[data-view]');
+    if (!tab) return;
+    ensureWrapped();
+    const scope = currentScope();
+    if (scope !== positionScope) { tabPositions.clear(); positionScope = scope; }
+    const from = currentView(), to = tab.dataset.view;
+    if (!from || from === to) return;
+    if (pendingPositionView !== from) tabPositions.set(from, {x: window.scrollX, y: window.scrollY});
+    pendingPositionView = to;
+    const request = ++positionRequest;
+    const generation = navigationGeneration + 1;
+    const position = tabPositions.get(to) || {x: 0, y: 0};
+    // Restore only direct tab navigation, after all tab handlers finish.
+    queueMicrotask(() => {
+      if (request !== positionRequest) return;
+      const restore = () => {
+        if (generation !== navigationGeneration || currentScope() !== scope || currentView() !== to) return;
+        window.scrollTo({left: position.x, top: position.y, behavior: 'instant'});
+        pendingPositionView = null;
+      };
+      restore();
+      requestAnimationFrame(() => { restore(); requestAnimationFrame(restore); });
+    });
   }, true);
 })();

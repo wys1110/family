@@ -10,7 +10,7 @@ const cron = readFileSync("supabase/daily-briefing-cron.sql", "utf8");
 
 test("가족 일정 변경 푸시 모듈을 설정 화면에 연결한다", () => {
   const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "daily-briefing", version: "20260830-auth-recovery-v2" }');
+  expect(config).toContain('{ name: "daily-briefing", version: "20260915-push-diagnostics-v1" }');
   expect(client).toContain('const SUBSCRIPTION_TIME = "09:00"');
   expect(client).toContain('card.id = "eventChangePushSettings"');
   expect(client).toContain('Notification.requestPermission()');
@@ -33,7 +33,7 @@ test("구독 저장 실패 시 켜짐 상태를 남기지 않고 브리핑은 �
   expect(client).toContain("await syncSubscription(subscription, { pushEnabled: true })");
   expect(client).toContain("briefingEnabled: false");
   expect(client).toContain("pushSettings.enabled = false;");
-  expect(client).not.toContain("sendTest");
+  expect(client).toContain('addEventListener("click", sendTestPush)');
 });
 
 test("서비스 워커가 백그라운드 푸시를 표시하고 일정 화면을 연다", () => {
