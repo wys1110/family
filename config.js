@@ -187,7 +187,7 @@ window.FAMILY_CONFIG = {
     { name: "calendar-mobile-polish", version: "20260914-calendar-position-v1", script: false },
     { name: "family-wallpapers", version: "20260914-original-photo-v2", script: false },
     { name: "wallpaper-editor", version: "20260815-v1" },
-    { name: "motion-system", version: "20260812-smooth-mobile-v1" },
+    { name: "motion-system", version: "20260915-instant-tabs-v1" },
   ];
 
   window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");

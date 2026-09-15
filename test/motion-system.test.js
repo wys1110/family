@@ -66,7 +66,7 @@ describe('smooth mobile motion policy', () => {
     expect(update).toHaveBeenCalledOnce();
   });
 
-  test('does not animate bootstrap render before activation', () => {
+  test('switches tabs synchronously even after motion activation', () => {
     const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
     const switchView = vi.fn();
     const context = loadMotionContext({ startViewTransition, switchView });
@@ -76,8 +76,21 @@ describe('smooth mobile motion policy', () => {
 
     context.api.activate();
     context.window.switchView('growth');
-    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(startViewTransition).not.toHaveBeenCalled();
     expect(switchView).toHaveBeenCalledTimes(2);
+  });
+
+
+  test('rapid tab presses finish on the latest tab without waiting for a browser callback', () => {
+    let visible = 'calendar';
+    const startViewTransition = vi.fn(() => ({ finished: new Promise(() => {}) }));
+    const context = loadMotionContext({ startViewTransition, switchView: view => { visible = view; } });
+    context.api.activate();
+    for (const view of ['growth', 'settings', 'english', 'calendar']) {
+      context.window.switchView(view);
+      expect(visible).toBe(view);
+    }
+    expect(startViewTransition).not.toHaveBeenCalled();
   });
 
   test('folds nested view wrappers into one transition', () => {
@@ -136,11 +149,11 @@ describe('smooth mobile motion policy', () => {
     expect(pendingUpdate).not.toHaveBeenCalled();
   });
 
-  test('uses the short fade transition when reduced motion is requested', () => {
+  test('updates immediately when reduced motion is requested', () => {
     const update = vi.fn();
     const startViewTransition = vi.fn((callback) => { callback(); return { finished: Promise.resolve() }; });
     loadMotion({ reduce: true, startViewTransition }).transitionView('growth', update, { currentView: 'calendar' });
-    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(startViewTransition).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledOnce();
   });
 
@@ -169,7 +182,7 @@ describe('smooth mobile motion policy', () => {
   });
 
   test('ships the smooth motion under a fresh asset version', () => {
-    expect(config).toContain('{ name: "motion-system", version: "20260812-smooth-mobile-v1" }');
+    expect(config).toContain('{ name: "motion-system", version: "20260915-instant-tabs-v1" }');
   });
 
   test('marks growth completion for save feedback', () => {

@@ -37,7 +37,7 @@
     if (transitionUpdateDepth > 0) return update();
     const from = options.currentView ?? currentView();
     const direction = directionBetween(from, requestedView);
-    if (direction === 'none') {
+    if (options.immediate || reduceMotion?.matches || direction === 'none') {
       activeTransition?.skipTransition?.();
       transitionId += 1;
       activeTransition = null;
@@ -86,7 +86,7 @@
 
     const original = latest;
     const wrapped = function familyMotionSwitchView(requestedView) {
-      return transitionView(requestedView, () => original(requestedView), { currentView: currentView() });
+      return transitionView(requestedView, () => original(requestedView), { currentView: currentView(), immediate: true });
     };
     copyFunctionProperties(original, wrapped);
     wrapped.__familyMotionWrapped = true;
