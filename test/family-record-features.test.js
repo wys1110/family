@@ -1,8 +1,8 @@
 import {test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-const load = name => {const window={};new Function('window',readFileSync(name,'utf8'))(window);return window;};
+const load = (name,window={}) => {new Function('window',readFileSync(name,'utf8'))(window);return window;};
 const {FAMILY_DATA:data}=load('family-data.js');
-const {FAMILY_JOURNAL:journal}=load('family-journal.js');
+const {FAMILY_JOURNAL:journal}=load('family-journal.js',{FAMILY_DATA:data});
 const {FAMILY_BACKUP_MEDIA:media}=load('family-backup-media.js');
 const {FAMILY_SETTINGS_BACKUP:backup}=load('settings-backup.js');
 test('pagination reads beyond 1000 rows even with a smaller server cap',async()=>{
@@ -19,7 +19,7 @@ test('pagination fails if server keeps repeating a page',async()=>{
  expect((await data.readAll(()=>({order(){return this;},range(){return {data:[{id:1}],error:null};}}))).error).toBeTruthy();
 });
 test('report handles missing days, zero values, and cross-midnight sleep',()=>{
- const result=journal.summarize([{date:'2026-09-01',time:'23:30',sleepMinutes:120},{date:'2026-09-02',feedingMl:90},{date:'2026-09-02',feedingMl:0},{date:'2026-09-02',temperature:36.5},{date:'2026-09-02',temperature:37}], '2026-09-02','2026-09-03');
+ const result=journal.summarize([{date:'2026-09-01',time:'23:30',category:'수면',sleepMinutes:120},{date:'2026-09-02',feedingMl:90},{date:'2026-09-02',feedingMl:0},{date:'2026-09-02',temperature:36.5},{date:'2026-09-02',temperature:37}], '2026-09-02','2026-09-03');
  expect(result.days[0]).toMatchObject({feedingMl:90,feedingCount:2,sleepMinutes:90,temperature:37});
  expect(result.days[1]).toMatchObject({feedingMl:null,sleepMinutes:null,recordCount:0});
  expect(()=>journal.daysBetween('2026-09-03','2026-09-01')).toThrow();

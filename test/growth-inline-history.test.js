@@ -149,7 +149,7 @@ describe("inline growth measurement history", () => {
     expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20260722-header-meta-v4" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20260915-growth-performance-v1" }');
     expect(config).toContain('{ name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false }');
   });

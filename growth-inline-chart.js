@@ -14,6 +14,8 @@
   let rendering = false;
   let lastSignature = "";
   let historyExpanded = false;
+  let selectedMetric = "weight";
+  let metricFocusPending = false;
   let historyToggleFocusPending = false;
 
   const escapeText = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -115,9 +117,11 @@
   };
 
   const chartSvg = (entries) => {
+    entries = entries.filter(entry => numberValue(entry[selectedMetric]) !== null).slice(-90);
+    if (!entries.length) return `<p class="growth-metric-empty">${escapeText(metrics[selectedMetric].label)} 기록이 아직 없어요.</p>`;
     const width = 420;
     const height = 252;
-    const padding = { left: 43, right: 71, top: 25, bottom: 38 };
+    const padding = { left: 43, right: 25, top: 25, bottom: 38 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
     const defaultRanges = {
@@ -145,20 +149,16 @@
     const grid = [0, 1, 2, 3, 4].map((index) => {
       const ratio = index / 4;
       const y = padding.top + ratio * plotHeight;
-      const heightValue = scales.height.max - ratio * scales.height.range;
-      const weightValue = scales.weight.max - ratio * scales.weight.range;
-      const headValue = scales.head.max - ratio * scales.head.range;
+      const heightValue = scales[selectedMetric].max - ratio * scales[selectedMetric].range;
       return `
         <g class="growth-inline-grid">
           <line x1="${padding.left}" y1="${y.toFixed(2)}" x2="${width - padding.right}" y2="${y.toFixed(2)}"></line>
-          <text x="${padding.left - 8}" y="${(y + 3).toFixed(2)}" style="fill:${metrics.height.color}">${escapeText(heightValue.toLocaleString("ko-KR", { maximumFractionDigits: 1 }))}</text>
-          <text class="weight-axis" x="${width - padding.right + 9}" y="${(y + 3).toFixed(2)}" style="fill:${metrics.weight.color}">${escapeText(weightValue.toLocaleString("ko-KR", { maximumFractionDigits: 2 }))}</text>
-          <text class="head-axis" x="${width - 5}" y="${(y + 3).toFixed(2)}" style="fill:${metrics.head.color}">${escapeText(headValue.toLocaleString("ko-KR", { maximumFractionDigits: 1 }))}</text>
+          <text x="${padding.left - 8}" y="${(y + 3).toFixed(2)}" style="fill:${metrics[selectedMetric].color}">${escapeText(heightValue.toLocaleString("ko-KR", { maximumFractionDigits: 1 }))}</text>
         </g>
       `;
     }).join("");
 
-    const series = Object.entries(metrics).map(([metricKey, metric]) => {
+    const series = Object.entries(metrics).filter(([key]) => key === selectedMetric).map(([metricKey, metric]) => {
       const points = entries.map((entry, entryIndex) => {
         const value = numberValue(entry[metricKey]);
         if (value === null) return null;
@@ -203,7 +203,7 @@
     }).join("");
 
     return `
-      <svg class="growth-inline-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="키, 몸무게, 머리둘레 성장 변화 그래프">
+      <svg class="growth-inline-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeText(metrics[selectedMetric].label)} 성장 변화 그래프">
         ${grid}
         <line class="growth-inline-baseline" x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}"></line>
         ${series}
@@ -222,7 +222,7 @@
     if (rendering) return;
 
     const entries = measurementEntries();
-    const signature = signatureFor(entries);
+    const signature = `${selectedMetric}|${signatureFor(entries)}`;
     if (insightRow.querySelector(".growth-inline-card") && signature === lastSignature) return;
 
     const restoreHistoryToggleFocus = historyToggleFocusPending;
@@ -259,16 +259,20 @@
           </div>
         </header>
         <section class="growth-inline-chart" aria-label="성장 변화">
-          <div class="growth-inline-legend" aria-hidden="true">
-            ${Object.entries(metrics).map(([key, metric]) => `<span style="--metric-color:${metric.color}"><i></i>${escapeText(metric.label)} <small>(${escapeText(metric.unit)})</small></span>`).join("")}
+          <div class="growth-metric-tabs" role="group" aria-label="성장 그래프 항목">
+            ${Object.entries(metrics).map(([key, metric]) => `<button type="button" data-growth-metric="${key}" aria-pressed="${key === selectedMetric}">${escapeText(metric.label)} <small>${metric.unit}</small></button>`).join("")}
           </div>
           ${chartSvg(entries)}
-          <p>그래프의 점을 누르면 해당 날짜의 기록을 바로 수정할 수 있어요.</p>
+          <p>최근 90회 측정을 표시해요. 점을 눌러 수정하고, 전체 기록은 아래에서 확인하세요.</p>
         </section>
         ${historyRows(entries)}
       </article>
     `;
 
+    if (metricFocusPending) {
+      metricFocusPending = false;
+      insightRow.querySelector(`[data-growth-metric="${selectedMetric}"]`)?.focus({ preventScroll: true });
+    }
     if (restoreHistoryToggleFocus) {
       insightRow.querySelector("[data-growth-inline-history-toggle]")?.focus({ preventScroll: true });
     }
@@ -288,6 +292,11 @@
   };
 
   insightRow.addEventListener("click", (event) => {
+    const metricButton = event.target.closest("[data-growth-metric]");
+    if (metricButton && metrics[metricButton.dataset.growthMetric]) {
+      selectedMetric = metricButton.dataset.growthMetric;
+      metricFocusPending = true; queueRender(); return;
+    }
     const historyToggle = event.target.closest("[data-growth-inline-history-toggle]");
     if (historyToggle) {
       historyExpanded = !historyExpanded;

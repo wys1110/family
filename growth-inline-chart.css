@@ -248,3 +248,11 @@ html[data-family-theme="night"] .growth-inline-chart { background: color-mix(in 
 .growth-inline-history-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
 .growth-inline-history-footer button { min-height:44px; padding:0 13px; border:1px solid color-mix(in srgb,var(--label) 10%,transparent); border-radius:13px; color:var(--blue); background:var(--surface); font-size:10px; font-weight:750; }
 @media (max-width:380px) { .growth-inline-history-row { grid-template-columns:72px minmax(0,1fr); gap:8px; padding-inline:9px; } .growth-inline-history-row > i { display:none; } #growthInsightRow .growth-inline-history-values { gap:4px; } #growthInsightRow .growth-inline-history-values b { padding-inline:3px; } }
+
+.growth-metric-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.growth-metric-tabs button { flex: 1; min-width: 0; min-height: 44px; padding: 6px; border: 1px solid var(--separator); border-radius: 12px; background: var(--surface); color: var(--label); }
+.growth-metric-tabs button[aria-pressed="true"] { border-color: var(--blue); background: var(--surface-2); font-weight: 800; }
+.growth-metric-tabs small { font-size: 10px; color: var(--secondary); }
+.growth-metric-empty { padding: 32px 8px; text-align: center; }
+
+.growth-load-more { width: 100%; min-height: 44px; margin: 12px 0; border: 1px solid var(--separator); border-radius: 12px; background: var(--surface); color: var(--label); }

@@ -263,7 +263,7 @@
   const renderAdaptiveDailyTimeline = function adaptiveDailyTimeline(items) {
     installCareControls();
     const date = parseDate(carePatternDate), today = dateKey(new Date());
-    const dayItems = items.filter((entry) => entry.date === carePatternDate && typeOf(entry));
+    const dayItems = window.FAMILY_DATA.splitSleepEntries(items).filter((entry) => entry.date === carePatternDate && typeOf(entry));
     const groups = dayItems.filter((entry) => entry.time && carePatternCategories.has(typeOf(entry))).reduce((map, entry) => {
       if (!map.has(entry.time)) map.set(entry.time, []); map.get(entry.time).push(entry); return map;
     }, new Map());
@@ -283,15 +283,16 @@
     let useClock = clockButton?.classList.contains("active") || document.activeElement === clockButton;
     try { useClock ||= localStorage.getItem("family-care-day-mode-v1") === "clock"; } catch { /* 현재 선택 상태 사용 */ }
     return useClock
-      ? baseDailyCarePattern.apply(this, arguments)
+      ? baseDailyCarePattern.call(this, window.FAMILY_DATA.splitSleepEntries(items))
       : renderAdaptiveDailyTimeline.apply(this, arguments);
   };
 
   renderWeeklyCarePattern = function adaptiveWeeklyPattern(items) {
     installCareControls();
     const end = dateKey(new Date()), kinds = careKinds, days = Array.from({ length: 7 }, (_, index) => addDays(end, index - 6));
+    const dailyItems = window.FAMILY_DATA.splitSleepEntries(items);
     const data = days.map((day) => {
-      const current = items.filter((entry) => entry.date === day);
+      const current = dailyItems.filter((entry) => entry.date === day);
       const total = (kind, field) => current.filter((entry) => typeOf(entry) === kind).reduce((sum, entry) => sum + (Number(entry[field]) || (field ? 0 : 1)), 0);
       return { day, formula: total("formula", "feedingMl"), pumped: total("pumped", "feedingMl"), breast: total("breast", "feedingMinutes"), solid: total("solid", "feedingMl"), sleep: total("sleep", "sleepMinutes"), diaper: current.filter((entry) => typeOf(entry) === "diaper").length, health: current.filter((entry) => typeOf(entry) === "health").length };
     });

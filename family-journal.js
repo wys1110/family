@@ -20,17 +20,9 @@
       if(number(entry.temperature)!==null) day.temperature=Math.max(day.temperature??-Infinity,Number(entry.temperature));
       if(entry.category==='기저귀') day.diaperCount++;
     }
-    // The record time is the start of a sleep interval. Missing times stay on the recorded day.
-    for(const entry of entries) {
-      const minutes=number(entry.sleepMinutes); if(minutes===null || minutes<0 || !validDay(entry.date)) continue;
-      if(!/^\d{2}:\d{2}$/.test(entry.time||'')) {const day=byDate.get(entry.date);if(day) day.sleepMinutes=(day.sleepMinutes??0)+minutes;continue;}
-      let start=new Date(`${entry.date}T${entry.time}:00`); const end=new Date(start.getTime()+minutes*60000);
-      if(!Number.isFinite(end.getTime())||minutes>7*24*60) continue;
-      while(start<end) {
-        const next=new Date(start);next.setHours(24,0,0,0); const stop=new Date(Math.min(next.getTime(),end.getTime()));
-        const day=byDate.get(dayKey(start));if(day)day.sleepMinutes=(day.sleepMinutes??0)+(stop-start)/60000;
-        start=stop;
-      }
+    for (const entry of window.FAMILY_DATA.splitSleepEntries(entries)) {
+      const minutes = number(entry.sleepMinutes), day = byDate.get(entry.date);
+      if (entry.category === '수면' && day && minutes !== null && minutes >= 0) day.sleepMinutes = (day.sleepMinutes ?? 0) + minutes;
     }
     const latest = key => [...selected].reverse().find(e=>number(e[key])!==null);
     return {days,selected,measurements:['weight','height','head'].map(key=>({key,entry:latest(key)})),health:selected.filter(e=>e.category==='건강·병원'||number(e.temperature)!==null)};

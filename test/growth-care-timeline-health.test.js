@@ -17,7 +17,7 @@ describe("health records in the compact care timeline", () => {
 
   test("uses a dedicated health accent and cache version", () => {
     expect(palette).toContain(".care-split-entry.health");
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20260806-health-timeline-v1" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20260915-growth-performance-v1" }');
   });
 
   test("makes diaper and health cards editable in the shared right lane", () => {
@@ -25,6 +25,6 @@ describe("health records in the compact care timeline", () => {
     expect(editor).toContain('type === "health"');
     expect(editor).toContain(".care-split-cell.diaper-health .care-split-entry");
     expect(editor).toContain('["diaper", "health"].includes(entryType(entry))');
-    expect(config).toContain('{ name: "care-entry-edit-fix", version: "20260806-right-lane-edit-v1" }');
+    expect(config).toContain('{ name: "care-entry-edit-fix", version: "20260915-growth-performance-v1" }');
   });
 });

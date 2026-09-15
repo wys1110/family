@@ -68,6 +68,9 @@ let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], 
 let activeQuickCategory = null;
 let activeQuickPresets = [];
 let growthSaveInProgress = false;
+let growthDialogReturnPosition = null;
+let growthListLimit = 100;
+let growthListContext = "";
 let careTimer = storedCareTimer();
 let careTimerSaveInProgress = false;
 let carePatternView = "day";
@@ -1564,15 +1567,23 @@ function renderGrowth() {
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
+  const listContext = `${state.activeBabyId}|${state.growthFilter}`;
+  if (growthListContext !== listContext) { growthListContext = listContext; growthListLimit = 100; }
   const entries = filterGrowthEntries(allEntries).sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
   $("#growthCount").textContent = `${entries.length}개 기록`;
   const list = $("#growthList");
   if (!entries.length) { list.innerHTML = `<div class="empty-state premium-empty"><strong>아직 표시할 기록이 없어요</strong><span>빠른 기록으로 ${escapeHtml(baby.name)}의 오늘을 남겨보세요.</span></div>`; return; }
-  list.innerHTML = entries.map((entry) => {
+  list.innerHTML = entries.slice(0, growthListLimit).map((entry) => {
     const preview = entry.photoUrls?.find(Boolean);
     const meta = growthEntryMeta(entry);
     return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count"><b>${entry.photoPaths.length}</b> photos</span>` : `<span class="growth-arrow">›</span>`}</button>`;
   }).join("");
+  if (entries.length > growthListLimit) {
+    const more = document.createElement("button"); more.type = "button"; more.className = "growth-load-more";
+    more.textContent = `기록 더 보기 (${growthListLimit} / ${entries.length})`;
+    more.addEventListener("click", () => { const top = window.scrollY; growthListLimit += 100; renderGrowth(); window.scrollTo({top, behavior: "instant"}); });
+    list.appendChild(more);
+  }
   list.querySelectorAll(".growth-entry").forEach((item) => item.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === item.dataset.id))));
 }
 
@@ -1604,7 +1615,7 @@ function daysFromBirth(birthDate) {
 }
 
 function renderTodayCareSummary(entries) {
-  const today = dateKey(new Date()); const items = entries.filter((entry) => entry.date === today);
+  const today = dateKey(new Date()); const items = window.FAMILY_DATA.splitSleepEntries(entries).filter((entry) => entry.date === today);
   const feeding = items.filter((entry) => entry.category === "수유·이유식");
   const sleep = items.filter((entry) => entry.category === "수면");
   const diapers = items.filter((entry) => entry.category === "기저귀");
@@ -1904,7 +1915,7 @@ function renderGrowthSummary(entries) {
   const periodDays = { day: 1, week: 7, month: 30 }[state.growthSummaryPeriod] || 1;
   const end = dateKey(new Date());
   const start = addDays(end, 1 - periodDays);
-  const items = entries.filter((entry) => entry.date >= start && entry.date <= end);
+  const items = window.FAMILY_DATA.splitSleepEntries(entries).filter((entry) => entry.date >= start && entry.date <= end);
   const feeding = items.filter((entry) => entry.category === "수유·이유식");
   const sleep = items.filter((entry) => entry.category === "수면");
   const diapers = items.filter((entry) => entry.category === "기저귀");
@@ -2154,7 +2165,16 @@ function defaultGrowthTitle(category) {
   return ({ "수유·이유식": "수유 기록", "수면": "수면 기록", "기저귀": "기저귀 기록", "건강·병원": "건강 기록", "성장": "성장 측정", "첫 순간": "새로운 첫 순간", "놀이": "오늘의 놀이", "기타": `${name} 기록` })[category] || `${name} 기록`;
 }
 
+function restoreGrowthPosition(position) {
+  const current = () => position && state.activeView === position.view && state.activeBabyId === position.babyId
+    && state.household?.id === position.householdId && state.session?.user?.id === position.userId;
+  if (!current()) return;
+  const restore = () => { if (current() && !$("#growthDialog").open) window.scrollTo({left: position.x, top: position.y, behavior: "instant"}); };
+  restore(); requestAnimationFrame(() => { restore(); requestAnimationFrame(restore); });
+}
 function openGrowthDialog(entry = null, category = "첫 순간") {
+  growthDialogReturnPosition = { x: window.scrollX, y: window.scrollY, view: state.activeView,
+    babyId: state.activeBabyId, householdId: state.household?.id, userId: state.session?.user?.id };
   if (!entry && !activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
   $("#growthDialogTitle").textContent = entry ? "성장 기록 수정" : "새 성장 기록";
   $("#growthDialogEyebrow").textContent = `${activeBaby()?.name || "아기"} 성장일기`;
@@ -2370,6 +2390,7 @@ async function saveGrowthEntry(event) {
   event.preventDefault();
   if (growthSaveInProgress) return;
   const isNewEntry = !$("#growthId").value;
+  const returnPosition = growthDialogReturnPosition;
   setGrowthSaving(true);
   try {
     if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
@@ -2415,7 +2436,8 @@ async function saveGrowthEntry(event) {
     resetGrowthPhotoDraft();
     $("#growthDialog").close();
     renderGrowth();
-    showGrowthComplete(`${activeBaby()?.name || "아기"}의 성장 기록을 안전하게 저장했어요.`);
+    if (isNewEntry) showGrowthComplete(`${activeBaby()?.name || "아기"}의 성장 기록을 안전하게 저장했어요.`);
+    else { restoreGrowthPosition(returnPosition); toast("성장 기록을 수정했어요"); }
   } catch (error) {
     console.error(error);
     toast("성장 기록을 저장하지 못했어요. 다시 시도해 주세요");

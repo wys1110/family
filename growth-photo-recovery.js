@@ -7,38 +7,29 @@
 
   const validSignedUrl = (item) => item && !item.error && typeof item.signedUrl === "string" && item.signedUrl.length > 0;
 
+  const urlCache = new Map();
+  let cacheScope = "";
   hydrateGrowthPhotoUrls = async function hydrateGrowthPhotoUrlsWithRefresh(entries) {
-    const paths = [...new Set(entries.flatMap((entry) => entry.photoPaths || []))];
-    if (!state.supabase || !paths.length) {
-      entries.forEach((entry) => { entry.photoUrls = []; });
-      return;
+    const paths = [...new Set(entries.flatMap(entry => entry.photoPaths || []))];
+    const supabase = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
+    const scope = `${userId}|${householdId}`;
+    if (scope !== cacheScope) { urlCache.clear(); cacheScope = scope; }
+    const current = () => state.supabase === supabase && state.session?.user?.id === userId && state.household?.id === householdId;
+    if (!supabase || !paths.length) { photoUrlsIssuedAt = Date.now(); return; }
+    const missing = paths.filter(path => !urlCache.has(path) || Date.now() - urlCache.get(path).at >= PHOTO_REFRESH_AFTER_MS);
+    const received = new Map();
+    for (let offset = 0; offset < missing.length; offset += 100) {
+      if (!current()) return;
+      const { data, error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.storage
+        .from(GROWTH_PHOTO_BUCKET).createSignedUrls(missing.slice(offset, offset + 100), PHOTO_URL_TTL_SECONDS),
+        { supabase, userId, isCurrent: current });
+      if (!current()) return;
+      if (error) throw error;
+      for (const item of (data || []).filter(validSignedUrl)) received.set(item.path, {url:item.signedUrl, at:Date.now()});
     }
-
-    const supabase = state.supabase;
-    const userId = state.session?.user?.id;
-    const householdId = state.household?.id;
-    const { data, error } = await window.FAMILY_AUTH_API.withRecovery(() => supabase.storage
-      .from(GROWTH_PHOTO_BUCKET)
-      .createSignedUrls(paths, PHOTO_URL_TTL_SECONDS), {
-        supabase,
-        userId,
-        isCurrent: () => state.supabase === supabase
-          && state.session?.user?.id === userId
-          && state.household?.id === householdId
-          && state.growthEntries === entries,
-      });
-
-    if (error) throw error;
-
-    const urls = new Map(
-      (data || [])
-        .filter(validSignedUrl)
-        .map((item) => [item.path, item.signedUrl]),
-    );
-
-    entries.forEach((entry) => {
-      entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || "");
-    });
+    if (!current()) return;
+    received.forEach((value,key) => urlCache.set(key,value));
+    entries.forEach(entry => { entry.photoUrls = (entry.photoPaths || []).map(path => urlCache.get(path)?.url || ""); });
     photoUrlsIssuedAt = Date.now();
   };
 
@@ -47,6 +38,7 @@
     if (!force && Date.now() - photoUrlsIssuedAt < PHOTO_REFRESH_AFTER_MS) return;
     if (refreshPromise) return refreshPromise;
 
+    if (force) urlCache.clear();
     const entries = state.growthEntries;
     const householdId = state.household?.id;
     refreshPromise = hydrateGrowthPhotoUrls(entries)
@@ -88,5 +80,5 @@
   window.setInterval(() => {
     if (document.visibilityState === "visible") refreshGrowthPhotoUrls();
   }, PHOTO_REFRESH_AFTER_MS);
-  window.setTimeout(() => refreshGrowthPhotoUrls(true), 2500);
+  window.setTimeout(() => refreshGrowthPhotoUrls(), 2500);
 })();
