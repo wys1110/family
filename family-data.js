@@ -41,5 +41,7 @@
     }
     return result;
   });
-  window.FAMILY_DATA = { readAll, splitSleepEntries };
+  const thumbnailPath = path => typeof path === 'string' && /--preview\.(?:jpg|jpeg|png|webp)$/.test(path) ? `${path}.thumb.jpg` : null;
+  const photoStoragePaths = paths => [...new Set(paths.flatMap(path => [path, thumbnailPath(path)].filter(Boolean)))];
+  window.FAMILY_DATA = { readAll, splitSleepEntries, thumbnailPath, photoStoragePaths };
 })();

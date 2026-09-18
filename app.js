@@ -71,6 +71,8 @@ let growthSaveInProgress = false;
 let growthDialogReturnPosition = null;
 let growthListLimit = 100;
 let growthListContext = "";
+let photoAlbumLimit = 60;
+let photoAlbumBabyId = null;
 let careTimer = storedCareTimer();
 let careTimerSaveInProgress = false;
 let carePatternView = "day";
@@ -589,7 +591,7 @@ function validateCareTimerContext() {
 }
 
 async function hydrateGrowthPhotoUrls(entries) {
-  const paths = [...new Set(entries.flatMap((entry) => entry.photoPaths || []))];
+  const paths = window.FAMILY_DATA.photoStoragePaths(entries.flatMap(entry => entry.photoPaths || []));
   if (!state.supabase || !paths.length) return;
   const supabase = state.supabase, householdId = state.household?.id, userId = state.session?.user?.id;
   const isCurrent = () => state.supabase === supabase && state.household?.id === householdId && state.session?.user?.id === userId;
@@ -600,7 +602,7 @@ async function hydrateGrowthPhotoUrls(entries) {
     if (error || !isCurrent()) return;
     (data || []).forEach((item) => urls.set(item.path, item.signedUrl));
   }
-  entries.forEach((entry) => { entry.photoUrls = (entry.photoPaths || []).map((path) => urls.get(path) || ""); });
+  entries.forEach(entry => { entry.photoUrls = (entry.photoPaths || []).map(path => urls.get(path) || ""); entry.photoThumbnailUrls = (entry.photoPaths || []).map(path => urls.get(window.FAMILY_DATA.thumbnailPath(path)) || ""); });
 }
 
 function readLocalWallpapers() {
@@ -1575,9 +1577,11 @@ function renderGrowth() {
   const list = $("#growthList");
   if (!entries.length) { list.innerHTML = `<div class="empty-state premium-empty"><strong>아직 표시할 기록이 없어요</strong><span>빠른 기록으로 ${escapeHtml(baby.name)}의 오늘을 남겨보세요.</span></div>`; return; }
   list.innerHTML = entries.slice(0, growthListLimit).map((entry) => {
-    const preview = entry.photoUrls?.find(Boolean);
+    const previewIndex = entry.photoUrls?.findIndex(Boolean) ?? -1;
+    const original = entry.photoUrls?.[previewIndex];
+    const preview = entry.photoThumbnailUrls?.[previewIndex] || original;
     const meta = growthEntryMeta(entry);
-    return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count"><b>${entry.photoPaths.length}</b> photos</span>` : `<span class="growth-arrow">›</span>`}</button>`;
+    return `<button class="growth-entry ${preview ? "has-photo" : ""}" data-id="${entry.id}">${preview ? `<img class="growth-thumbnail" src="${escapeHtml(preview)}" data-original-src="${escapeHtml(original)}" alt="" loading="lazy" />` : `<span class="growth-date"><strong>${parseDate(entry.date).getDate()}</strong>${parseDate(entry.date).getMonth() + 1}월</span>`}<span class="growth-body"><i>${escapeHtml(entry.category)}${entry.time ? ` · ${escapeHtml(entry.time)}` : ""}</i><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.note || meta || "기록 보기")}</small></span>${entry.photoPaths?.length ? `<span class="photo-count"><b>${entry.photoPaths.length}</b> photos</span>` : `<span class="growth-arrow">›</span>`}</button>`;
   }).join("");
   if (entries.length > growthListLimit) {
     const more = document.createElement("button"); more.type = "button"; more.className = "growth-load-more";
@@ -1983,14 +1987,20 @@ function renderGrowthInsights(entries) {
 }
 
 function renderRecentPhotos(entries) {
-  allPhotoItems = [...entries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`)).flatMap((entry) => (entry.photoUrls || []).map((url) => ({ url, entry, filePromise: null }))).filter((item) => item.url);
+  allPhotoItems = [...entries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`)).flatMap((entry) => (entry.photoUrls || []).map((url, index) => ({ url, thumbnailUrl: entry.photoThumbnailUrls?.[index] || url, entry, filePromise: null }))).filter((item) => item.url);
   recentPhotoItems = allPhotoItems.slice(0, 4);
   $("#recentPhotoSection").hidden = !recentPhotoItems.length;
-  if (!recentPhotoItems.length) return;
+  if (!recentPhotoItems.length) {
+    $("#recentPhotoGrid").replaceChildren();
+    $("#photoAlbumContent").replaceChildren();
+    if ($("#growthView").classList.contains("album-open")) renderPhotoAlbum();
+    return;
+  }
   $("#recentPhotoCount").textContent = `최신 ${recentPhotoItems.length}장`;
-  $("#recentPhotoGrid").innerHTML = recentPhotoItems.map(({ url, entry }, index) => `<button type="button" data-photo-index="${index}" aria-label="${escapeHtml(entry.title)} 사진 크게 보기"><img src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
+  $("#recentPhotoGrid").innerHTML = recentPhotoItems.map(({ url, thumbnailUrl, entry }, index) => `<button type="button" data-photo-index="${index}" aria-label="${escapeHtml(entry.title)} 사진 크게 보기"><img src="${escapeHtml(thumbnailUrl)}" data-original-src="${escapeHtml(url)}" alt="${escapeHtml(entry.title)}" loading="lazy" decoding="async" /><span>${entry.date.slice(5).replace("-", ".")}</span></button>`).join("");
   $("#recentPhotoGrid").querySelectorAll("[data-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.photoIndex), recentPhotoItems)));
-  renderPhotoAlbum();
+  if ($("#growthView").classList.contains("album-open")) renderPhotoAlbum();
+  else $("#photoAlbumContent").replaceChildren();
 }
 
 function renderPhotoAlbum() {
@@ -1999,15 +2009,22 @@ function renderPhotoAlbum() {
   $("#photoAlbumCount").textContent = `${allPhotoItems.length}장`;
   if (!allPhotoItems.length) { $("#photoAlbumContent").innerHTML = '<div class="photo-album-empty">아직 사진이 없어요.</div>'; return; }
   const groups = new Map();
-  allPhotoItems.forEach((photo, index) => {
+  if (photoAlbumBabyId !== state.activeBabyId) { photoAlbumBabyId = state.activeBabyId; photoAlbumLimit = 60; }
+  allPhotoItems.slice(0, photoAlbumLimit).forEach((photo, index) => {
     const month = photo.entry.date.slice(0, 7);
     if (!groups.has(month)) groups.set(month, []);
     groups.get(month).push({ photo, index });
   });
   $("#photoAlbumContent").innerHTML = [...groups.entries()].map(([month, items]) => {
     const [year, monthNumber] = month.split("-").map(Number);
-    return `<section class="photo-album-group"><div class="photo-album-month"><h3>${year}년 ${monthNumber}월</h3><span>${items.length}장</span></div><div class="photo-album-grid">${items.map(({ photo, index }) => `<button type="button" data-album-photo-index="${index}" aria-label="${escapeHtml(photo.entry.title)} 사진 크게 보기"><img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.entry.title)}" loading="lazy" /><span><strong>${photo.entry.date.slice(8)}일</strong>${escapeHtml(photo.entry.title)}</span></button>`).join("")}</div></section>`;
+    return `<section class="photo-album-group"><div class="photo-album-month"><h3>${year}년 ${monthNumber}월</h3><span>${items.length}장</span></div><div class="photo-album-grid">${items.map(({ photo, index }) => `<button type="button" data-album-photo-index="${index}" aria-label="${escapeHtml(photo.entry.title)} 사진 크게 보기"><img src="${escapeHtml(photo.thumbnailUrl || photo.url)}" data-original-src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.entry.title)}" loading="lazy" decoding="async" /><span><strong>${photo.entry.date.slice(8)}일</strong>${escapeHtml(photo.entry.title)}</span></button>`).join("")}</div></section>`;
   }).join("");
+  if (allPhotoItems.length > photoAlbumLimit) {
+    const more = document.createElement('button'); more.type = 'button'; more.className = 'growth-load-more';
+    more.textContent = `사진 더 보기 (${photoAlbumLimit} / ${allPhotoItems.length})`;
+    more.addEventListener('click', () => { const top = window.scrollY; photoAlbumLimit += 60; renderPhotoAlbum(); window.scrollTo({top, behavior:'instant'}); });
+    $("#photoAlbumContent").appendChild(more);
+  }
   $("#photoAlbumContent").querySelectorAll("[data-album-photo-index]").forEach((button) => button.addEventListener("click", () => openRecentPhoto(Number(button.dataset.albumPhotoIndex), allPhotoItems)));
 }
 
@@ -2023,6 +2040,7 @@ function openPhotoAlbum() {
 function closePhotoAlbum(restoreScroll = true) {
   $("#growthView").classList.remove("album-open");
   $("#photoAlbumView").hidden = true;
+  $("#photoAlbumContent").replaceChildren();
   $("#babyJournalContent").hidden = !activeBaby();
   $("#addEventButton").hidden = false;
   if (restoreScroll) $("#recentPhotoSection").scrollIntoView({ block: "start", behavior: "smooth" });
@@ -2372,19 +2390,59 @@ function removeGrowthPhoto(event) {
   renderGrowthPhotoPreview();
 }
 
+async function createGrowthThumbnail(file) {
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 480 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .72));
+  } catch { return null; }
+  finally { bitmap?.close(); }
+}
+
 async function uploadGrowthPhotos(entryId) {
-  const uploaded = [];
-  for (const photo of growthPhotoDraft.newPhotos) {
-    const type = photo.file.type || "image/jpeg"; const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg";
-    const path = `${state.household.id}/${entryId}/${uid()}.${extension}`;
-    const { error } = await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).upload(path, photo.file, { contentType: type, cacheControl: "3600", upsert: false }));
-    if (error) {
-      if (uploaded.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploaded));
-      throw error;
+  const uploaded = [], attempted = [];
+  const client = state.supabase, householdId = state.household.id, userId = state.session?.user?.id;
+  const photos = [...growthPhotoDraft.newPhotos];
+  const storage = client.storage.from(GROWTH_PHOTO_BUCKET);
+  const current = () => state.supabase === client && state.household?.id === householdId && state.session?.user?.id === userId;
+  try {
+    for (const photo of photos) {
+      const type = photo.file.type || "image/jpeg";
+      const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg";
+      const base = `${householdId}/${entryId}/${uid()}`;
+      const thumbnail = await createGrowthThumbnail(photo.file);
+      if (!current()) throw new Error('Family context changed');
+      let path = `${base}.${extension}`;
+      if (thumbnail && /^(jpg|png|webp)$/.test(extension)) {
+        const candidate = `${base}--preview.${extension}`;
+        const previewPath = window.FAMILY_DATA.thumbnailPath(candidate);
+        attempted.push(previewPath);
+        try {
+          const { error } = await withAuthRecovery(() => {
+            if (!current()) throw new Error('Family context changed');
+            return storage.upload(previewPath, thumbnail, {contentType:'image/jpeg', cacheControl:'3600', upsert:false});
+          });
+          if (!error) path = candidate;
+        } catch { /* A preview failure must not prevent saving the photo. */ }
+      }
+      attempted.push(path);
+      const { error } = await withAuthRecovery(() => {
+        if (!current()) throw new Error('Family context changed');
+        return storage.upload(path, photo.file, {contentType:type, cacheControl:'3600', upsert:false});
+      });
+      if (error) throw error;
+      if (!current()) throw new Error('Family context changed');
+      uploaded.push(path);
     }
-    uploaded.push(path);
+    return uploaded;
+  } catch (error) {
+    try { if (attempted.length) await storage.remove(attempted); } catch { /* Preserve the upload error. */ }
+    throw error;
   }
-  return uploaded;
 }
 
 async function saveGrowthEntry(event) {
@@ -2418,10 +2476,10 @@ async function saveGrowthEntry(event) {
       entry.photoPaths.push(...uploadedPaths);
       const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
       if (error) {
-        if (uploadedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(uploadedPaths));
+        if (uploadedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(uploadedPaths)));
         return toast("성장 기록을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
       }
-      if (growthPhotoDraft.removedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(growthPhotoDraft.removedPaths));
+      if (growthPhotoDraft.removedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(growthPhotoDraft.removedPaths)));
       try {
         await hydrateGrowthPhotoUrls([entry]);
       } catch (error) {
@@ -2452,7 +2510,7 @@ async function deleteGrowthEntry() {
   const target = state.growthEntries.find((entry) => entry.id === id);
   if (state.supabase && state.session) {
     const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("기록을 삭제하지 못했어요");
-    if (target?.photoPaths?.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(target.photoPaths));
+    if (target?.photoPaths?.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(target.photoPaths)));
   }
   state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); window.dispatchEvent(new CustomEvent('family:growth-entry-deleted', { detail: { babyId: target?.babyId || null, deletedAt: new Date().toISOString() } })); toast("성장 기록을 삭제했어요");
 }

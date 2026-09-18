@@ -10,7 +10,7 @@
   const urlCache = new Map();
   let cacheScope = "";
   hydrateGrowthPhotoUrls = async function hydrateGrowthPhotoUrlsWithRefresh(entries) {
-    const paths = [...new Set(entries.flatMap(entry => entry.photoPaths || []))];
+    const paths = window.FAMILY_DATA.photoStoragePaths(entries.flatMap(entry => entry.photoPaths || []));
     const supabase = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
     const scope = `${userId}|${householdId}`;
     if (scope !== cacheScope) { urlCache.clear(); cacheScope = scope; }
@@ -29,7 +29,10 @@
     }
     if (!current()) return;
     received.forEach((value,key) => urlCache.set(key,value));
-    entries.forEach(entry => { entry.photoUrls = (entry.photoPaths || []).map(path => urlCache.get(path)?.url || ""); });
+    entries.forEach(entry => {
+      entry.photoUrls = (entry.photoPaths || []).map(path => urlCache.get(path)?.url || "");
+      entry.photoThumbnailUrls = (entry.photoPaths || []).map(path => urlCache.get(window.FAMILY_DATA.thumbnailPath(path))?.url || "");
+    });
     photoUrlsIssuedAt = Date.now();
   };
 
@@ -49,6 +52,17 @@
       .finally(() => { refreshPromise = null; });
     return refreshPromise;
   }
+
+  // A missing preview must fall back to the stored full-size photo, without a
+  // refresh loop or hiding a valid original.
+  document.addEventListener('error', event => {
+    const image = event.target;
+    if (image?.dataset?.originalSrc && image.src !== image.dataset.originalSrc) {
+      image.src = image.dataset.originalSrc;
+      delete image.dataset.originalSrc;
+      event.stopImmediatePropagation();
+    }
+  }, true);
 
   function bindPhotoErrorRecovery() {
     document.querySelectorAll("#recentPhotoGrid img, #growthList .growth-thumbnail, #photoAlbumContent img, #photoViewerImage").forEach((image) => {

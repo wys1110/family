@@ -2,6 +2,7 @@ import {test,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const source=name=>readFileSync(name,'utf8');
+const dataWindow={};vm.runInNewContext(source('family-data.js'),{window:dataWindow});
 test('sleep is split at midnight without changing the original or its edit ID',()=>{
  const window={};vm.runInNewContext(source('family-data.js'),{window});
  const original={id:'sleep-1',category:'수면',date:'2026-09-13',time:'23:00',sleepMinutes:120};
@@ -16,7 +17,7 @@ function deleteHarness(result={data:[{id:'0'}]},storageError=false){
  const supabase={from:vi.fn(()=>query),storage:{from:()=>({remove:async()=>{if(storageError)throw new Error('storage offline');return {};}})}};
  const state={supabase,session:{user:{id:'u'}},household:{id:'h'},growthEntries:Array.from({length:1006},(_,i)=>({id:String(i),babyId:'b',photoPaths:i===0?['h/photo']:[]}))};
  const toast=vi.fn(),renderGrowth=vi.fn(),dispatchEvent=vi.fn();
- vm.runInNewContext(source('growth-delete-sync.js'),{state,document:{querySelector:s=>s==='#deleteGrowthButton'?button:s==='#growthId'?{value:'0'}:dialog},window:{confirm:()=>true,FAMILY_AUTH_API:{withRecovery:op=>op()},dispatchEvent},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail;}},toast,renderGrowth,resetGrowthPhotoDraft:vi.fn(),GROWTH_PHOTO_BUCKET:'photos',console:{error(){},warn(){}}});
+ vm.runInNewContext(source('growth-delete-sync.js'),{state,document:{querySelector:s=>s==='#deleteGrowthButton'?button:s==='#growthId'?{value:'0'}:dialog},window:{FAMILY_DATA:dataWindow.FAMILY_DATA,confirm:()=>true,FAMILY_AUTH_API:{withRecovery:op=>op()},dispatchEvent},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail;}},toast,renderGrowth,resetGrowthPhotoDraft:vi.fn(),GROWTH_PHOTO_BUCKET:'photos',console:{error(){},warn(){}}});
  return {state,dialog,query,supabase,toast,renderGrowth,dispatchEvent,click:()=>click({preventDefault(){},stopImmediatePropagation(){}})};
 }
 test('deletion keeps all remaining rows without a capped reload; photo cleanup cannot reverse success',async()=>{
@@ -30,7 +31,7 @@ test('failed deletion preserves the record and open editor',async()=>{
 });
 function photoHarness(sign){
  const context={state:{session:{user:{id:'u'}},household:{id:'h'},supabase:{storage:{from:()=>({createSignedUrls:sign})}}},GROWTH_PHOTO_BUCKET:'photos',hydrateGrowthPhotoUrls:()=>{},renderGrowth(){},queueMicrotask(){},document:{addEventListener(){},querySelectorAll:()=>[]},window:{FAMILY_AUTH_API:{withRecovery:op=>op()},addEventListener(){},setTimeout(){},setInterval(){}}};
- vm.createContext(context);vm.runInContext(source('growth-photo-recovery.js'),context);return context;
+ vm.createContext(context);vm.runInContext(source('family-data.js'),context);vm.runInContext(source('growth-photo-recovery.js'),context);return context;
 }
 test('photo URLs are batched and reused; changing families clears the cache',async()=>{
  const sign=vi.fn(async paths=>({data:paths.map(path=>({path,signedUrl:'signed:'+path}))}));const h=photoHarness(sign);const entries=[{photoPaths:Array.from({length:205},(_,i)=>'photo/'+i)}];

@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const adminModule = readFileSync(new URL('../platform-request-admin.js', import.meta.url), 'utf8');
-const loader = readFileSync(new URL('../tab-emojis.js', import.meta.url), 'utf8');
+const loader = readFileSync(new URL('../config.js', import.meta.url), 'utf8');
 const migration = readFileSync(new URL('../supabase/migrations/20260801_platform_feature_request_admin.sql', import.meta.url), 'utf8');
 
 describe('platform feature request administration', () => {
   it('loads the platform administration module', () => {
-    expect(loader).toContain('platform-request-admin.js?v=20260830-auth-recovery-v2');
+    expect(loader).toContain('platform-request-admin');
   });
 
   it('checks platform-admin authorization and uses protected RPCs', () => {

@@ -344,6 +344,7 @@
           s = document.querySelector("#addEventButton");
         if (i !== e)
           return (C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
+        n("calendar");
         const r = a();
         r && (r.activeView = e);
         try {
@@ -587,13 +588,13 @@
     (function () {
       const t = document.querySelector(".view-tabs"),
         n = document.querySelector("main");
-      if (!t || !n || document.querySelector('[data-view="english"]')) return;
-      const o = document.createElement("button");
+      if (!t || !n || document.querySelector("#englishView")) return;
+      const o = document.querySelector('[data-view="english"]') || document.createElement("button");
       ((o.className = "view-tab english-view-tab"),
         (o.dataset.view = e),
         (o.type = "button"),
         (o.innerHTML = '<span aria-hidden="true">📖</span> 영어동화'),
-        t.appendChild(o));
+        t.insertBefore(o, t.querySelector('[data-view="settings"]')));
       const a = document.createElement("div");
       ((a.id = "englishView"),
         (a.hidden = !0),
@@ -672,6 +673,7 @@
               return null;
             }
           })() === e &&
+          !window.FAMILY_DEFERRED_MODULES &&
           "function" == typeof switchView &&
           switchView(e)
         );

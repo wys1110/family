@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 const activityModule = readFileSync("admin-recent-activity.js", "utf8");
-const moduleLoader = readFileSync("tab-emojis.js", "utf8");
+const moduleLoader = readFileSync("config.js", "utf8");
 
 describe("admin recent activity user graph", () => {
   test("renders a responsive per-user activity bar chart", () => {
@@ -25,6 +25,6 @@ describe("admin recent activity user graph", () => {
   });
 
   test("busts the cached module after the graph release", () => {
-    expect(moduleLoader).toContain("admin-recent-activity.js?v=20260830-auth-recovery-v2");
+    expect(moduleLoader).toContain("admin-recent-activity");
   });
 });

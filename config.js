@@ -101,9 +101,9 @@ window.FAMILY_CONFIG = {
 
   const modules = [
     { name: "family-auth", version: "20260830-data-load-v3", style: false },
-    { name: "growth-delete-sync", version: "20260915-growth-performance-v1" },
+    { name: "growth-delete-sync", version: "20260918-lazy-tabs-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "english-stories", version: "20260718-logic-audit-v1" },
+    { name: "english-stories", version: "20260918-lazy-tabs-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20260806-health-pattern-v1" },
     { name: "care-time-emphasis", version: "20260717-latest-first-v2" },
@@ -131,7 +131,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-briefing", version: "20260915-push-diagnostics-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
-    { name: "tab-emojis", version: "20260824-settings-request-v1" },
+    { name: "tab-emojis", version: "20260918-lazy-tabs-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20260913-records-v1" },
     { name: "notification-center", version: "20260830-auth-recovery-v2" },
@@ -146,7 +146,7 @@ window.FAMILY_CONFIG = {
     { name: "responsive-modules", version: "20260716-desktop-v1", script: false },
     { name: "growth-layout", version: "20260816-growth-monogram-v1", script: false },
     { name: "growth-dialog-simple", version: "20260718-submit-label-v2", style: false },
-    { name: "growth-photo-recovery", version: "20260915-growth-performance-v1", style: false },
+    { name: "growth-photo-recovery", version: "20260918-lazy-tabs-v1", style: false },
     { name: "sheet-form-system", version: "20260718-form-redesign-v1", script: false },
     { name: "daily-intake-summary", version: "20260718-clock-total-v2" },
     { name: "weekly-care-summary", version: "20260806-health-pattern-v1" },
@@ -188,9 +188,24 @@ window.FAMILY_CONFIG = {
     { name: "family-wallpapers", version: "20260914-original-photo-v2", script: false },
     { name: "wallpaper-editor", version: "20260815-v1" },
     { name: "motion-system", version: "20260915-tab-position-v1" },
+    { name: "family-admin", version: "20260830-auth-recovery-v2", style: false },
+    { name: "deferred-tabs", version: "20260918-v1", style: false },
   ];
 
-  window.FAMILY_MODULE_SIGNATURE = modules.map(({ name, version }) => `${name}@${version}`).join("|");
+  const deferredGroups = {
+    english: ['english-stories', 'english-story-name'],
+    settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
+    admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity'],
+  };
+  const deferredNames = new Set(Object.values(deferredGroups).flat());
+  const extraModules = [
+    {name:'english-story-name', version:'20260801-v1'},
+    {name:'admin-resource-usage', version:'20260830-auth-recovery-v2'},
+    {name:'platform-request-admin', version:'20260830-auth-recovery-v2'},
+    {name:'admin-recent-activity', version:'20260830-auth-recovery-v2'},
+  ];
+
+  window.FAMILY_MODULE_SIGNATURE = [...modules, ...extraModules].map(({ name, version }) => `${name}@${version}`).join("|");
 
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
     if (document.querySelector(`link[data-module="${name}"]`)) return;
@@ -257,13 +272,35 @@ window.FAMILY_CONFIG = {
     document.body.appendChild(script);
   });
 
+  let initialView = null;
+  try { initialView = localStorage.getItem(demoMode ? "family-demo-active-view-v1" : "family-active-view-v1"); } catch { /* Default view. */ }
+  const deferredLoads = new Map();
+  window.FAMILY_DEFERRED_MODULES = {
+    groups: deferredGroups,
+    initialView,
+    load: name => {
+      if (deferredLoads.has(name)) return deferredLoads.get(name);
+      const module = [...modules, ...extraModules].find(item => item.name === name);
+      if (!module) return Promise.reject(new Error('Unknown module'));
+      const promise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `${name}.js?v=${module.version}`; script.dataset.module = name; script.async = false;
+        script.onload = resolve;
+        script.onerror = () => { script.remove(); deferredLoads.delete(name); reject(new Error(`Failed to load ${name}`)); };
+        document.body.appendChild(script);
+      });
+      deferredLoads.set(name, promise); return promise;
+    },
+  };
+
   let startModules;
   window.FAMILY_MODULES_READY = new Promise((resolve) => {
     startModules = async () => {
       if (document.documentElement.dataset.familyModulesLoading) return;
       document.documentElement.dataset.familyModulesLoading = "true";
-      const scripts = modules.filter((module) => module.script !== false);
+      const scripts = modules.filter((module) => module.script !== false && !deferredNames.has(module.name));
       await Promise.all(scripts.map(loadScript));
+      await window.FAMILY_DEFERRED_TABS?.restoreInitial();
       document.documentElement.dataset.familyModulesReady = "true";
       resolve();
     };
