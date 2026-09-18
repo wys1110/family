@@ -370,7 +370,7 @@ describe("wallpaper editor surface", () => {
 
   test("initializes one app controller only after the module is ready", () => {
     expect(app.match(/FAMILY_WALLPAPER_EDITOR\.createController\(/g)).toHaveLength(1);
-    expect(app).toContain("await waitForWallpaperEditor();");
+    expect(app).toContain("const startupModulesReady = waitForWallpaperEditor();");
   });
 
   test("keeps the app usable when the editor module fails to load", () => {

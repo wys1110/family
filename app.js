@@ -268,8 +268,8 @@ async function init() {
   state.authReady = true;
   window.__familyCoreReady = true;
   window.dispatchEvent(new CustomEvent("family:core-ready"));
-  await waitForWallpaperEditor();
-  await bootstrapData();
+  const startupModulesReady = waitForWallpaperEditor();
+  await bootstrapData(0, startupModulesReady);
   window.FAMILY_MOTION_API?.activate();
 }
 
@@ -336,7 +336,7 @@ function scheduleBootstrapRetry(attempt, sessionKey) {
   }, BOOTSTRAP_RETRY_DELAYS[attempt]);
 }
 
-async function bootstrapData(attempt = 0) {
+async function bootstrapData(attempt = 0, displayReady = null) {
   clearTimeout(bootstrapRetryTimer);
   bootstrapRetryTimer = null;
   const requestId = ++bootstrapRequestId;
@@ -354,7 +354,7 @@ async function bootstrapData(attempt = 0) {
       state.growthEntries = [];
       state.familyMembers = [...DEFAULT_FAMILY_MEMBERS];
       state.activeBabyId = null;
-      render();
+      if (!displayReady) render();
       updateAuthGate();
       const { data: memberships, error } = await withAuthRecovery(() => state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1), state.supabase, sessionKey);
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
@@ -383,6 +383,7 @@ async function bootstrapData(attempt = 0) {
     console.error(`가족 기록 불러오기 실패: ${describeRemoteError(error)}`, error);
     if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
+  if (displayReady) await displayReady;
   if (!isCurrentBootstrap(requestId, sessionKey)) return false;
   selectInitialBaby();
   validateCareTimerContext();

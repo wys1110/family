@@ -6,9 +6,9 @@ self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Installed iOS apps can retain old versioned assets after a normal reload.
-// Always request the module manifest and viewport-fixed utility assets from
-// the network so layout and interaction fixes reach the installed app immediately.
+// The manifest always comes from the network. Versioned public assets can
+// reuse the browser HTTP cache: changing ?v= creates a separate cache key.
+// Never cache authenticated API responses, photos, or navigation here.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
@@ -67,7 +67,10 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith("/motion-system.js");
   if (!forceNetwork) return;
 
-  event.respondWith(fetch(event.request, { cache: "no-store" }));
+  const versionedAsset = Boolean(url.searchParams.get("v"))
+    && /\.(?:js|css)$/.test(url.pathname)
+    && !url.pathname.endsWith("/config.js");
+  event.respondWith(fetch(event.request, { cache: versionedAsset ? "force-cache" : "no-store" }));
 });
 
 self.addEventListener("push", (event) => {
