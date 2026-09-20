@@ -87,3 +87,82 @@ html[data-family-theme-choice="black"] body {
     radial-gradient(circle at 12% 4%, rgba(255, 255, 255, .045), transparent 26rem),
     linear-gradient(180deg, #050505 0%, #090909 48%, #030303 100%);
 }
+
+/* Nova: the canonical palette for the complete family UI. */
+html[data-family-design="nova"][data-family-theme-choice="white"] {
+  --nova-bg: #f6f5f9;
+  --nova-card: #ffffff;
+  --nova-soft: #efedf5;
+  --nova-text: #262337;
+  --nova-muted: #726d84;
+  --nova-accent: #7053ca;
+  --nova-accent-deep: #5337ab;
+  --nova-on-accent: #ffffff;
+  --nova-lilac: #e8defa;
+  --nova-peach: #f8e5d7;
+  --nova-mint: #dceee7;
+  --nova-line: #e7e3ef;
+  --nova-shadow: 0 8px 30px rgba(44, 29, 78, .045);
+  --nova-danger: #aa3f56;
+}
+html[data-family-design="nova"][data-family-theme-choice="black"] {
+  --nova-bg: #10111c;
+  --nova-card: #1b1c2c;
+  --nova-soft: #25263a;
+  --nova-text: #f0edf9;
+  --nova-muted: #aaa7bd;
+  --nova-accent: #b9a3ff;
+  --nova-accent-deep: #9674f1;
+  --nova-on-accent: #1b1038;
+  --nova-lilac: #39314f;
+  --nova-peach: #493630;
+  --nova-mint: #263f3b;
+  --nova-line: #343449;
+  --nova-shadow: 0 10px 35px rgba(0, 0, 0, .14);
+  --nova-danger: #ff9caf;
+}
+html[data-family-design="nova"][data-family-theme-choice] {
+  --bg: var(--nova-bg) !important;
+  --surface: var(--nova-card) !important;
+  --surface-2: var(--nova-soft) !important;
+  --label: var(--nova-text) !important;
+  --secondary: var(--nova-muted) !important;
+  --tertiary: var(--nova-muted) !important;
+  --separator: var(--nova-line) !important;
+  --blue: var(--nova-accent) !important;
+  --shadow: var(--nova-shadow) !important;
+  --theme-canvas: var(--nova-bg) !important;
+  --theme-surface: var(--nova-card) !important;
+  --theme-surface-raised: var(--nova-soft) !important;
+  --theme-surface-soft: var(--nova-soft) !important;
+  --theme-control: var(--nova-soft) !important;
+  --theme-control-active: var(--nova-accent) !important;
+  --theme-border: var(--nova-line) !important;
+  --theme-border-strong: var(--nova-line) !important;
+  --theme-text: var(--nova-text) !important;
+  --theme-text-muted: var(--nova-muted) !important;
+  --theme-text-subtle: var(--nova-muted) !important;
+  --theme-accent: var(--nova-accent) !important;
+  --theme-accent-contrast: var(--nova-on-accent) !important;
+  --theme-shadow: var(--nova-shadow) !important;
+}
+html[data-family-design="nova"][data-family-theme-choice],
+html[data-family-design="nova"][data-family-theme-choice] body {
+  color: var(--nova-text);
+  background: var(--nova-bg);
+}
+/* Theme thumbnails represent both choices regardless of the active theme. */
+html[data-family-design="nova"] [data-theme-option="white"] .theme-preview {
+  --preview-bg: #f6f5f9 !important;
+  --preview-surface: #ffffff !important;
+  --preview-accent: #7053ca !important;
+  --preview-highlight: #e8defa !important;
+  --preview-text: #262337 !important;
+}
+html[data-family-design="nova"] [data-theme-option="black"] .theme-preview {
+  --preview-bg: #10111c !important;
+  --preview-surface: #1b1c2c !important;
+  --preview-accent: #b9a3ff !important;
+  --preview-highlight: #39314f !important;
+  --preview-text: #f0edf9 !important;
+}

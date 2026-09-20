@@ -114,6 +114,7 @@
   }
 
   function reorderGrowthSections() {
+    if (document.documentElement?.dataset?.compactFamily) return;
     const pattern = document.querySelector(".care-pattern-section");
     const summary = document.querySelector(".integrated-care-summary");
     if (pattern && summary) {

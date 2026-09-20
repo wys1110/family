@@ -110,7 +110,7 @@ window.FAMILY_CONFIG = {
     { name: "care-ring-timeline", version: "20260720-care-emojis-v1" },
     { name: "care-date-nav-position", version: "20260718-above-timeline-v1", style: false },
     { name: "care-pattern-view-mode", version: "20260717-day-mode-v2", script: false },
-    { name: "growth-dedup", version: "20260722-heading-icon-v1" },
+    { name: "growth-dedup", version: "20260919-compact-v1" },
     { name: "growth-filter-default", version: "20260720-today-v1", style: false },
     { name: "quick-record-icons", version: "20260719-v1", style: false },
     { name: "feature-request", version: "20260830-auth-recovery-v2" },
@@ -190,6 +190,8 @@ window.FAMILY_CONFIG = {
     { name: "motion-system", version: "20260915-tab-position-v1" },
     { name: "family-admin", version: "20260830-auth-recovery-v2", style: false },
     { name: "deferred-tabs", version: "20260918-v1", style: false },
+    { name: "compact-family", version: "20260919-v1" },
+    { name: "nova-family", version: "20260920-v1" },
   ];
 
   const deferredGroups = {

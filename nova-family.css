@@ -1,0 +1,209 @@
+/* Presentation only. Data, event handlers, permissions and photo pixels are untouched. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body { background: radial-gradient(ellipse at 10% 0%, color-mix(in srgb,var(--nova-lilac) 42%,transparent),transparent 38rem),var(--nova-bg) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body::after { content: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell { width: min(100%,1060px); padding-inline: 22px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .topbar { padding: 8px 0 12px; margin-bottom: 18px; gap: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar > div:first-child { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark { display: grid; place-items: center; width: 42px; height: 48px; border-radius: 16px; background: linear-gradient(155deg,var(--nova-accent),var(--nova-accent-deep)); box-shadow: 0 5px 15px color-mix(in srgb,var(--nova-accent) 20%,transparent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark::after { content: ''; width: 24px; height: 24px; mask: url('assets/icons/heart.svg') center/contain no-repeat; background: var(--nova-on-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 { color: var(--nova-text) !important; background: none !important; -webkit-text-fill-color: var(--nova-text) !important; letter-spacing: -.06em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 span { font-size: 11px; color: var(--nova-muted); font-weight: 500; letter-spacing: -.025em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 strong { font-size: 25px; font-weight: 780; line-height: 1.4; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { gap: 4px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > button { width: 34px; min-width: 34px; min-height: 40px; border: 0 !important; background: transparent !important; color: var(--nova-muted) !important; border-radius: 12px; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions #accountButton { background: var(--nova-lilac) !important; color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions button svg { width: 19px; height: 19px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .daily-verse-card { padding: 9px 13px; border-radius: 15px; border: 1px solid var(--nova-line) !important; background: color-mix(in srgb,var(--nova-card) 70%,transparent) !important; box-shadow: none !important; gap: 3px 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .daily-verse-card::after { content: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .verse-toggle { color: var(--nova-accent) !important; font-size: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .daily-verse-card blockquote { font-size: 12px; color: var(--nova-muted) !important; font-weight: 500; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs { background: color-mix(in srgb,var(--nova-card) 92%,transparent) !important; border: 1px solid var(--nova-line) !important; border-radius: 20px; padding: 5px; gap: 4px; box-shadow: 0 4px 18px color-mix(in srgb,var(--nova-text) 4%,transparent) !important; margin: 16px 0 22px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab { min-height: 48px; border: 0 !important; border-radius: 14px; font-size: 13px; font-weight: 620; gap: 6px; background: transparent !important; color: var(--nova-muted) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab.active { color: var(--nova-on-accent) !important; background: var(--nova-accent) !important; box-shadow: 0 4px 10px color-mix(in srgb,var(--nova-accent) 20%,transparent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .view-tab .view-tab-icon { font-size: 0 !important; width: 18px; height: 18px; display: inline-block; background: currentColor; mask: var(--nova-icon) center/contain no-repeat; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] [data-view="calendar"] { --nova-icon: url('assets/icons/calendar.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] [data-view="growth"] { --nova-icon: url('assets/icons/growth.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] [data-view="english"] { --nova-icon: url('assets/icons/book.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] [data-view="settings"] { --nova-icon: url('assets/icons/settings.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] [data-view="admin"] { --nova-icon: url('assets/icons/crown.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#calendarView,#growthView,#englishView,#settingsView,#adminView,#featureRequestView) :is(.section-heading h2,.settings-heading h2,.care-timer-heading h2,.english-page-header h2) { color: var(--nova-text) !important; letter-spacing: -.045em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#calendarView,#growthView,#englishView,#settingsView,#adminView) .eyebrow { color: var(--nova-muted) !important; font-size: 10px; letter-spacing: .035em; font-weight: 500; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#calendarView,#growthView,#englishView,#settingsView,#adminView,#featureRequestView) :is(.calendar-card,.agenda-card,.growth-entry,.settings-card,.english-player-card,.english-story-card,.compact-today,.compact-analysis,.care-pattern-section,.growth-insight-row,.care-timer-card,.family-todo-card) { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; box-shadow: var(--nova-shadow) !important; border-radius: 24px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#growthView,#calendarView) :is(.growth-entry,.agenda-card) { border-radius: 18px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions #addEventButton.fab, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .sheet-dialog .primary-button { color: var(--nova-on-accent) !important; background: linear-gradient(115deg,var(--nova-accent),var(--nova-accent-deep)) !important; border: 0 !important; min-height: 48px; border-radius: 15px; font-size: 14px; font-weight: 650; box-shadow: 0 5px 16px color-mix(in srgb,var(--nova-accent) 16%,transparent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions #addEventButton.fab::before { content: '+'; font-size: 20px; font-weight: 400; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions #addEventButton.fab > span { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions { margin: 12px 0 18px; }
+/* Calendar: quiet canvas, clear selected day, original member colors preserved. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) { background: linear-gradient(120deg,var(--nova-lilac),color-mix(in srgb,var(--nova-lilac) 18%,var(--nova-card))) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line); box-shadow: none !important; border-radius: 25px; padding: 22px; min-height: 170px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper)::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper)::after { content: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) h2 { color: var(--nova-text) !important; font-size: 25px; line-height: 1.25; max-width: 100%; letter-spacing: -.06em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) #todayLabel { color: var(--nova-muted) !important; font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card .family-mascot { opacity: .92; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-card { padding: 24px 14px 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar { margin-bottom: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar h2 { font-size: 21px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.calendar-day,.calendar-empty) { background: transparent !important; box-shadow: none !important; border-radius: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-day.selected { background: color-mix(in srgb,var(--nova-lilac) 55%,var(--nova-card)) !important; outline: 1px solid color-mix(in srgb,var(--nova-accent) 22%,transparent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-day.today .day-number { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border-radius: 50%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.calendar-font-trigger,.today-button,.month-nav) { box-shadow: none !important; border: 1px solid var(--nova-line) !important; background: var(--nova-soft) !important; color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.agenda-card,.upcoming-event-card) { padding: 16px; border: 1px solid var(--nova-line); background: var(--nova-card); box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .count-badge { color: var(--nova-muted) !important; background: var(--nova-soft) !important; border: 0 !important; font-size: 11px; font-weight: 550; }
+/* Growth: profile, three equally accessible quick actions, readable daily data. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-page-header { margin-bottom: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-page-header h2 { font-size: 22px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .storybook-heading-icon { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-header-actions button { border: 1px solid var(--nova-line); background: var(--nova-card) !important; font-size: 11px; min-height: 38px; box-shadow: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent { gap: 18px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) { background: linear-gradient(110deg,var(--nova-lilac),color-mix(in srgb,var(--nova-card) 85%,var(--nova-lilac))) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line); padding: 22px; box-shadow: none !important; border-radius: 24px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper)::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper)::after { content: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) :is(.baby-profile-copy h2,.baby-dday strong) { color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) .baby-profile-copy :is(p,span) { color: var(--nova-muted) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card .baby-profile-copy h2 { font-size: 30px; margin: 5px 0; letter-spacing: -.06em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) .baby-dday { background: var(--nova-card) !important; border: 1px solid var(--nova-line); border-radius: 17px; padding: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-dday strong { font-size: 23px; font-weight: 650; letter-spacing: -.05em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) .baby-edit-button { background: color-mix(in srgb,var(--nova-card) 65%,transparent) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line) !important; border-radius: 11px; box-shadow: none; font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-profile-card:not(.has-wallpaper) .wallpaper-actions button { background: var(--nova-card) !important; color: var(--nova-muted) !important; border: 1px solid var(--nova-line); border-radius: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard { padding: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard::after { content: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-timer-heading { margin-bottom: 15px; padding-bottom: 0; border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-timer-heading h2 { font-size: 18px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-quick-block .growth-quick-grid { gap: 9px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .growth-quick-grid button { min-height: 98px; border-radius: 17px; box-shadow: none !important; border: 0 !important; font-size: 14px; color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .growth-quick-grid button:nth-child(1) { background: var(--nova-peach) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .growth-quick-grid button:nth-child(2) { background: var(--nova-mint) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .growth-quick-grid button:nth-child(3) { background: var(--nova-lilac) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol { font-size: 0 !important; background: transparent !important; box-shadow: none !important; width: 32px !important; height: 32px !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol::after { content: ''; display: block; width: 27px; height: 27px; background: var(--nova-text); mask: var(--nova-quick-icon) center/contain no-repeat; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #careTimerCard button:nth-child(1) { --nova-quick-icon: url('assets/icons/bottle.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #careTimerCard button:nth-child(2) { --nova-quick-icon: url('assets/icons/diaper.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #careTimerCard button:nth-child(3) { --nova-quick-icon: url('assets/icons/moon.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #careTimerCard .compact-primary-actions { margin-bottom: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today { padding: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today header { margin-bottom: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid { gap: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid > div { padding-inline: 12px; border-left: 1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid > div:first-child { padding-left: 0; border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid > div:last-child { padding-right: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid strong { font-size: 21px; font-weight: 650; letter-spacing: -.05em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid span { font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-filter-bar { padding: 4px; gap: 3px; background: var(--nova-soft); border-radius: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-filter-bar button { border: 0 !important; background: transparent !important; color: var(--nova-muted) !important; box-shadow: none !important; min-height: 36px; border-radius: 10px; flex: 1; font-size: 12px; padding: 0 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-filter-bar button.active { background: var(--nova-card) !important; color: var(--nova-accent) !important; box-shadow: 0 2px 5px color-mix(in srgb,var(--nova-text) 5%,transparent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-entry { padding: 16px; gap: 13px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-entry :is(.growth-date,.growth-date-badge) { background: var(--nova-soft) !important; color: var(--nova-accent) !important; border-radius: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-analysis { padding: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-analysis > summary { color: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools { gap: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button { background: var(--nova-card); border: 1px solid var(--nova-line); border-radius: 18px; padding: 18px; box-shadow: none; }
+/* Story time: a book-like player and soft illustration covers. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header { padding: 0 2px 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header h2 { font-size: 30px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-book-mark { background: var(--nova-lilac) !important; box-shadow: none !important; border-radius: 20px; color: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(.english-name-card,.english-today-card) { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; border-radius: 19px; box-shadow: none !important; padding: 18px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-today-card { background: linear-gradient(115deg,var(--nova-lilac),var(--nova-card)) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(.english-story-cover,.english-player) { border-radius: 25px; background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; box-shadow: var(--nova-shadow) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(.english-sentence,.english-sentence-list li) { background: var(--nova-soft) !important; border: 0 !important; box-shadow: none !important; border-radius: 15px; padding: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-sentence.active { background: var(--nova-lilac) !important; outline: 1px solid var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-play-main { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border: 0 !important; min-height: 48px; border-radius: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-library-card { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; border-radius: 19px; box-shadow: none !important; }
+/* Settings, administration and forms share the same material and type scale. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#settingsView,#adminView,#featureRequestView) .settings-card { padding: 22px; margin-bottom: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#settingsView,#adminView) .settings-mark { background: var(--nova-lilac) !important; color: var(--nova-accent) !important; box-shadow: none !important; border: 0 !important; border-radius: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#settingsView,#adminView) .settings-heading h2 { font-size: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#settingsView,#adminView) :is(input:not([type="checkbox"]):not([type="color"]):not([type="range"]),select,textarea) { background: var(--nova-soft) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line) !important; border-radius: 12px; box-shadow: none !important; min-height: 44px; font-size: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView .theme-option { background: var(--nova-soft) !important; border: 1px solid var(--nova-line) !important; box-shadow: none !important; border-radius: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView .theme-option[aria-checked="true"] { background: var(--nova-lilac) !important; border-color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#settingsView,#adminView) button { border-radius: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(.sheet-dialog,.journal-dialog) { background: var(--nova-card) !important; border: 1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(.sheet-panel,.journal-dialog-panel) { border: 1px solid var(--nova-line) !important; border-radius: 28px 28px 0 0; background: var(--nova-card) !important; color: var(--nova-text) !important; box-shadow: 0 -12px 55px color-mix(in srgb,var(--nova-text) 12%,transparent) !important; padding: 24px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .sheet-dialog :is(input:not([type="checkbox"]):not([type="color"]):not([type="range"]),select,textarea) { border: 1px solid var(--nova-line) !important; border-radius: 13px; background: var(--nova-soft) !important; color: var(--nova-text) !important; box-shadow: none !important; min-height: 46px; font-size: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .sheet-dialog .dialog-header h2 { font-size: 24px; letter-spacing: -.04em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .sheet-dialog .danger-button { color: var(--nova-danger) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .auth-panel { background: var(--nova-card) !important; color: var(--nova-text); border: 1px solid var(--nova-line); box-shadow: var(--nova-shadow); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .oauth-button { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] button:focus-visible, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] summary:focus-visible, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] input:focus-visible { outline: 3px solid var(--nova-accent) !important; outline-offset: 3px; }
+@media (hover:hover) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .view-tab:not(.active):hover, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .journal-tools button:hover { background: var(--nova-lilac) !important; }
+}
+@media (max-width: 360px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell { padding-inline: 14px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar > div:first-child { grid-template-columns: 32px 1fr; gap: 8px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark { width: 32px; height: 38px; border-radius: 12px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { gap: 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > button { width: 30px; min-width: 30px; padding: 5px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab { gap: 4px; font-size: 11px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab-label { font-size: 11px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid strong { font-size: 17px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today { padding: 16px; }
+}
+@media (min-width: 900px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell { padding-inline: 32px; padding-top: 32px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .topbar h1 strong { font-size: 29px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { gap: 10px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab { min-height: 54px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0,1.15fr); align-items: start; gap: 22px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent[hidden] { display: none; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > .growth-section { grid-column: 2; grid-row: 2 / span 3; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > .baby-profile-card { grid-column: 1 / -1; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > #careTimerCard { grid-column: 1; grid-row: 2; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > .compact-today { grid-column: 1; grid-row: 3; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > .compact-analysis { grid-column: 1; grid-row: 4; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #babyJournalContent > :is(.journal-tools,#recentPhotoSection,#babySelector) { grid-column: 1 / -1; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 20px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView[hidden] { display: none; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView .settings-card { margin: 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(.sheet-panel,.journal-dialog-panel) { border-radius: 28px; }
+}
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol > * { display: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol::before { content: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol { display: grid; place-items: center; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-quick-block { border: 0 !important; padding-top: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card > div:first-of-type { max-width: 58%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions button { background: var(--nova-card) !important; color: var(--nova-muted) !important; border-color: var(--nova-line) !important; min-height: 32px; font-size: 11px; padding: 5px 10px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions { top: 12px; right: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .album-stamp { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar { background: transparent !important; border: 0 !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-subtabs { background: var(--nova-soft) !important; border: 1px solid var(--nova-line); border-radius: 15px; padding: 4px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-subtabs button { background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--nova-muted) !important; border-radius: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-subtabs button.active { background: var(--nova-card) !important; color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-today-label { color: var(--nova-accent) !important; font-size: 11px; letter-spacing: .06em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(#englishTodayCopy,#englishStoryTheme,#englishStoryKoreanTitle) { color: var(--nova-muted) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(#englishTodayTitle,#englishStoryTitle) { color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-story-player { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; border-radius: 25px; box-shadow: var(--nova-shadow) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-story-cover { box-shadow: none !important; border: 0 !important; background: var(--nova-soft) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(.english-cover-emoji,.english-book-mark) { position: relative; font-size: 0; background: var(--nova-lilac) !important; box-shadow: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(.english-cover-emoji,.english-book-mark)::after { content: ''; position: absolute; inset: 25%; mask: url('assets/icons/book.svg') center/contain no-repeat; background: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView :is(#englishSpeedButton,#englishTranslationButton) { background: var(--nova-soft) !important; border: 1px solid var(--nova-line) !important; color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #settingsView .family-profile-save { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border: 0; box-shadow: none; min-height: 44px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#familyTodoView,.family-todo-view) :is(.todo-overview-card,.todo-card,.todo-quick-form) { background: var(--nova-card) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line) !important; box-shadow: var(--nova-shadow) !important; border-radius: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button { display: grid; grid-template-columns: 1fr auto; gap: 5px; text-align: left; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button > span { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button > strong { grid-column: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button > small { grid-column: 1; font-size: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button > b { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] dialog.sheet-dialog { background: var(--nova-card) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] dialog.sheet-dialog::backdrop { background: color-mix(in srgb,var(--nova-bg) 35%,var(--nova-text) 35%); backdrop-filter: blur(5px); }
+
+/* Resolve legacy ID-scoped dark surfaces without changing feature behavior. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-entry { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; box-shadow: var(--nova-shadow) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-quick-block { background: transparent !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#calendarView,#growthView) #addEventButton.fab, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] dialog[id] form .primary-button { background: linear-gradient(115deg,var(--nova-accent),var(--nova-accent-deep)) !important; color: var(--nova-on-accent) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body .topbar .topbar-account-actions > button[id] { background: transparent !important; color: var(--nova-muted) !important; box-shadow: none !important; border: 0 !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body .topbar .topbar-account-actions > #accountButton { background: var(--nova-lilac) !important; color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] dialog[id], html[data-family-design="nova"][data-family-theme-choice][data-family-theme] dialog[id] form { background: var(--nova-card) !important; color: var(--nova-text) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .baby-header-actions button { background: var(--nova-card) !important; color: var(--nova-text) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .growth-quick-grid button::after { content: none !important; }
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #growthList .growth-entry { background: var(--nova-card) !important; color: var(--nova-text) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #growthFilterBar button { background: transparent !important; color: var(--nova-muted) !important; border: 0 !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #growthFilterBar button.active { background: var(--nova-card) !important; color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #babyJournalContent .journal-tools button { background: var(--nova-card) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body .topbar :is(#accountButton,.notification-center-button,.refresh-button,.avatar-button) { background: transparent !important; color: var(--nova-muted) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#growthDialog,#eventDialog,#babyDialog,#memberDialog,#bulkEventDialog,#quickLogDialog) :is(#growthForm,#eventForm,#babyForm,#memberForm,#bulkEventForm,.sheet-panel) .primary-button { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#growthDialog,#eventDialog,#babyDialog,#quickLogDialog) .dialog-actions { background: var(--nova-card) !important; border-color: var(--nova-line) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar .month-nav { background: transparent !important; border: 0 !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .count-badge { width: auto; min-width: max-content; aspect-ratio: auto; white-space: nowrap; padding: 5px 10px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card { background: var(--nova-card) !important; border-color: var(--nova-line) !important; color: var(--nova-text) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card.active { border-color: var(--nova-accent) !important; background: var(--nova-lilac) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishPlayButton { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; box-shadow: none !important; }
