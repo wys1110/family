@@ -6,6 +6,7 @@
     calendar: ['🗓️', '일정'],
     growth: ['🌱', '성장'],
     english: ['📖', '동화'],
+    travel: ['✈️', '여행'],
     settings: ['⚙️', '설정'],
     admin: ['👑', '관리'],
   };

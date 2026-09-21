@@ -57,6 +57,10 @@ anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema
 
 `main` 브랜치에 반영되면 `.github/workflows/pages.yml`이 정적 사이트를 자동 배포합니다. 저장소의 **Settings → Pages → Source**가 **GitHub Actions**로 설정되어 있어야 합니다.
 
+## Android 앱
+
+기존 PWA를 Capacitor Android 앱으로도 패키징할 수 있습니다. Android Studio와 SDK가 설치된 환경에서 `npm run android:open`을 실행하고, 디버그 APK는 `npm run android:debug`로 생성합니다. 패키지 ID와 Play 스토어 출시 절차는 [`docs/android/ANDROID_DEPLOYMENT.md`](docs/android/ANDROID_DEPLOYMENT.md)에 정리되어 있습니다. `main` 변경 시 GitHub Actions가 디버그 APK 아티팩트도 빌드합니다.
+
 ## Google 로그인 설정
 
 1. Google Cloud에서 OAuth 2.0 Client ID를 **Web application**으로 생성합니다.

@@ -6,5 +6,6 @@
 .env.*
 !.env.example
 node_modules/
+dist/
 supabase/.temp/
 supabase/.env.ai

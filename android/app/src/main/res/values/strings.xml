@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">우리 가족</string>
+    <string name="title_activity_main">우리 가족</string>
+    <string name="package_name">com.wys1110.family</string>
+    <string name="custom_url_scheme">com.wys1110.family</string>
+</resources>

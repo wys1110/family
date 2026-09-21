@@ -204,6 +204,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#growthDialog,#eventDialog,#babyDialog,#quickLogDialog) .dialog-actions { background: var(--nova-card) !important; border-color: var(--nova-line) !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar .month-nav { background: transparent !important; border: 0 !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .count-badge { width: auto; min-width: max-content; aspect-ratio: auto; white-space: nowrap; padding: 5px 10px; }
+html[data-family-design="nova"][data-family-theme-choice] [data-view="travel"] { --nova-icon: url('assets/icons/travel.svg'); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card { background: var(--nova-card) !important; border-color: var(--nova-line) !important; color: var(--nova-text) !important; box-shadow: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card.active { border-color: var(--nova-accent) !important; background: var(--nova-lilac) !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishPlayButton { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; box-shadow: none !important; }

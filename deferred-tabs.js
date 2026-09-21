@@ -12,10 +12,11 @@
     if (nav.querySelector(`[data-view="${view}"]`)) return;
     const tab = document.createElement('button');
     tab.className = 'view-tab'; tab.type = 'button'; tab.dataset.view = view; tab.textContent = text;
-    if (view === 'english') nav.insertBefore(tab, nav.querySelector('[data-view="settings"]'));
+    if (view === 'english' || view === 'travel') nav.insertBefore(tab, nav.querySelector('[data-view="english"]') || nav.querySelector('[data-view="settings"]'));
     else nav.appendChild(tab);
   };
   createTab('english', '📖 동화');
+  createTab('travel', '✈️ 여행');
   const notice = document.createElement('section');
   notice.className = 'settings-card'; notice.hidden = true; notice.setAttribute('role', 'status');
   main.appendChild(notice);

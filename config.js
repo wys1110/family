@@ -192,12 +192,17 @@ window.FAMILY_CONFIG = {
     { name: "deferred-tabs", version: "20260918-v1", style: false },
     { name: "compact-family", version: "20260919-v1" },
     { name: "nova-family", version: "20260920-v1" },
+    { name: "travel-data", version: "20260921-v1", style: false },
+    { name: "travel-providers", version: "20260921-v1", style: false },
+    { name: "travel-map", version: "20260921-v1", style: false },
+    { name: "travel", version: "20260921-v1" },
   ];
 
   const deferredGroups = {
     english: ['english-stories', 'english-story-name'],
     settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
     admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity'],
+    travel: ['travel-data', 'travel-providers', 'travel-map', 'travel'],
   };
   const deferredNames = new Set(Object.values(deferredGroups).flat());
   const extraModules = [

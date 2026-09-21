@@ -349,7 +349,7 @@ describe('family auth recovery', () => {
     expect(index).toContain('<script src="app.js?v=20260918-lazy-tabs-v1"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v3", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
-    expect(index).toContain('config.js?v=20260920-nova-v1');
+    expect(index).toContain('config.js?v=20260921-travel-v1');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });
 });
