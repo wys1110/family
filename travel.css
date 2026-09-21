@@ -216,3 +216,37 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView textarea:f
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-offer-side div { margin-left: auto; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-summary-hero { align-items: flex-start; }
 }
+
+/* Keep long names, prices and native date inputs inside narrow screens. */
+#travelView, #travelView * { box-sizing: border-box; }
+#travelView { min-width: 0; }
+#travelView :is(.travel-card-heading, .travel-workspace-head, .travel-summary-actions) { flex-wrap: wrap; }
+#travelView :is(.travel-card-heading > div, .travel-trip-card > span, .travel-booked-card > div, .travel-form-grid > label) { min-width: 0; }
+#travelView :is(h2, h3, strong, p, small) { overflow-wrap: anywhere; }
+#travelView :is(input, select, textarea) { max-width: 100%; min-width: 0; }
+#travelView .travel-provider-links { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 14px; }
+#travelView .travel-provider-button { min-height: 44px; border: 1px solid var(--nova-line); border-radius: 12px; padding: 10px 14px; background: var(--nova-soft); color: var(--nova-text); cursor: pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions { flex-wrap: wrap; justify-content: end; max-width: 92px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions :is(button,a) { min-width: 40px; min-height: 40px; }
+@media (max-width: 560px) {
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-offer-side { flex-wrap: wrap; gap: 10px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-offer-side div { width: 100%; display: flex; flex-wrap: wrap; gap: 10px; margin-left: 0; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView :is(input,select,textarea) { font-size: 16px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel { padding: 16px; }
+}
+#travelView .travel-discovery { padding: clamp(16px,4vw,28px); margin-bottom: 24px; border: 1px solid var(--nova-line); border-radius: 24px; background: linear-gradient(135deg,var(--nova-lilac),var(--nova-card)); }
+#travelView .travel-discovery > h2 { margin: 10px 0; font-size: clamp(24px,5vw,34px); letter-spacing: -.04em; }
+#travelView .travel-discovery p { color: var(--nova-muted); line-height: 1.65; }
+#travelView .travel-discovery form { margin-block: 22px; }
+#travelView .travel-discovery label { display: grid; gap: 8px; font-size: 13px; }
+#travelView .travel-discovery input, #travelView .travel-discovery select { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; color: var(--nova-text); background: var(--nova-card); font: inherit; }
+#travelView .travel-destination-input { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-block: 8px 16px; }
+#travelView .travel-discovery summary { cursor: pointer; color: var(--nova-muted); font-size: 13px; padding: 10px 0; }
+#travelView .travel-recommend-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 14px; }
+#travelView .travel-recommend-card { display: flex; flex-direction: column; align-items: start; min-width: 0; padding: 20px; border: 1px solid var(--nova-line); border-radius: 18px; background: var(--nova-card); }
+#travelView .travel-recommend-card h3 { margin: 14px 0 4px; font-size: 18px; }
+#travelView .travel-recommend-card p { font-size: 13px; flex: 1; }
+#travelView .travel-recommend-card small { color: var(--nova-muted); font-size: 11px; }
+#travelView .travel-recommend-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+#travelView .travel-recommend-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding-top: 24px; }
+#travelView .travel-recommend-footer small { width: 100%; color: var(--nova-muted); }

@@ -66,3 +66,60 @@ test('travel is registered as a deferred tab and keeps the five-section workspac
   expect(travelSource).toContain("['memories','기록']");
   expect(travelSource).not.toMatch(/service_role|sk-[A-Za-z0-9]{20,}/i);
 });
+
+test('failed storage writes do not pretend the trip was saved', () => {
+  const { api, window } = loadData({ demo: false });
+  window.localStorage.setItem = () => { throw new Error('quota'); };
+  expect(() => api.createTrip({ title: '제주', destination: '제주', startDate: '2026-10-01', endDate: '2026-10-03' })).toThrow('저장');
+  expect(api.getTrips()).toEqual([]);
+});
+
+test('invalid dates and shortening a trip across existing items preserve the trip', () => {
+  const { api } = loadData({ demo: false });
+  expect(() => api.createTrip({ title: '제주', destination: '제주', startDate: '2026-02-30', endDate: '2026-03-05' })).toThrow();
+  const trip = api.createTrip({ title: '제주', destination: '제주', startDate: '2026-10-01', endDate: '2026-10-03' });
+  api.addItem(trip.id, { title: '마지막 날', localDate: '2026-10-03' });
+  expect(() => api.updateTrip(trip.id, { endDate: '2026-10-02' })).toThrow('기간 밖');
+  expect(api.getTrip(trip.id).endDate).toBe('2026-10-03');
+});
+
+test('registering the same candidate twice creates one booking', () => {
+  const { api } = loadData();
+  const trip = api.getTrips()[0];
+  api.addBooking(trip.id, { candidateId: 'demo-flight', title: '항공' });
+  api.addBooking(trip.id, { candidateId: 'demo-flight', title: '항공' });
+  expect(api.getTrip(trip.id).bookings).toHaveLength(1);
+});
+
+test('route preview rejects missing and invalid coordinates while keeping itinerary numbering', () => {
+  const window = {};
+  vm.runInNewContext(readFileSync('travel-map.js', 'utf8'), { window });
+  const items = [
+    { id: 'missing', latitude: null, longitude: null },
+    { id: 'blank', latitude: '', longitude: '' },
+    { id: 'invalid', latitude: 100, longitude: 190 },
+    { id: 'valid', title: '장소', latitude: 26, longitude: 127 },
+  ];
+  expect(window.FAMILY_TRAVEL_MAP.placePoints(items).map(item => item.id)).toEqual(['valid']);
+  expect(window.FAMILY_TRAVEL_MAP.render({ items })).toContain('<b>4</b>');
+});
+
+test('destination-only recommendations contain no invented prices and carry their destination into search', () => {
+  const window = {};
+  vm.runInNewContext(providerSource, { window, URL, encodeURIComponent });
+  const api = window.FAMILY_TRAVEL_PROVIDERS;
+  const offers = api.recommend({ destination: '오키나와' });
+  expect(offers.some(item => item.kind === 'flight')).toBe(true);
+  expect(offers.filter(item => item.kind === 'stay')).toHaveLength(2);
+  expect(offers.every(item => item.amountMinor === null)).toBe(true);
+  expect(offers.some(item => item.title.includes('하얏트'))).toBe(true);
+  expect(api.recommend({ destination: '' })).toEqual([]);
+  expect(decodeURIComponent(api.searchUrl({kind:'flight',provider:'skyscanner',origin:'부산',destination:'도쿄'}))).toContain('부산 도쿄');
+  expect(api.recommend({ destination:'오키나와', origin:'부산' }).some(item => item.id === 'flight-korean-okinawa')).toBe(false);
+});
+
+test('chosen recommendations transfer into a new trip in one save', () => {
+  const { api } = loadData({ demo: false });
+  const trip = api.createTrip({ title:'첫 여행', destination:'오키나와', startDate:'2026-12-01', endDate:'2026-12-04', candidates:[{id:'picked',kind:'stay',title:'숙소',source:'recommendation',searchRevision:1}] });
+  expect(api.getTrip(trip.id).candidates[0].id).toBe('picked');
+});

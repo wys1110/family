@@ -65,9 +65,14 @@
   };
   let trips = read();
   const emit = () => window.dispatchEvent(new CustomEvent('family:travel-change', { detail: { count: trips.length } }));
-  const commit = next => { trips = next.map(normalizeTrip); const saved = write(trips); emit(); return { data: clone(trips), saved }; };
+  const commit = next => { const normalized = next.map(normalizeTrip); if (!write(normalized)) throw new Error('저장 공간이 부족하거나 저장이 차단되어 있어요. 입력 내용을 복사한 뒤 다시 시도해 주세요.'); trips = normalized; emit(); return { data: clone(trips), saved: true }; };
   const getTrips = () => clone(trips);
   const getTrip = id => clone(trips.find(trip => trip.id === id) || null);
+  const validateDates = (start, end) => {
+    const valid = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+    if (!valid(start) || !valid(end) || end < start) throw new Error('여행 날짜를 확인해 주세요');
+    if ((Date.parse(end) - Date.parse(start)) / 86400000 >= 366) throw new Error('여행은 최대 366일까지 계획할 수 있어요');
+  };
   const createTrip = input => {
     const title = String(input.title || '').trim();
     const destination = String(input.destination || '').trim();
@@ -76,13 +81,17 @@
     if (!title || title.length > 60) throw new Error('여행 이름을 확인해 주세요');
     if (!destination || destination.length > 80) throw new Error('여행지를 확인해 주세요');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) throw new Error('여행 날짜를 확인해 주세요');
+    validateDates(startDate, endDate);
     const travelers = Array.isArray(input.travelers) ? input.travelers : [];
-    const trip = normalizeTrip({ id: makeId('trip'), title, origin: String(input.origin || '').trim(), destination, startDate, endDate, timezone: String(input.timezone || 'Asia/Seoul'), currency: String(input.currency || 'KRW'), budgetMinor: Number(input.budgetMinor) > 0 ? Math.round(Number(input.budgetMinor)) : null, status: 'planning', searchRevision: 1, rooms: Math.max(1, Number(input.rooms) || 1), children: Math.max(0, Number(input.children) || travelers.filter(person => person.type === 'child').length), infants: Math.max(0, Number(input.infants) || travelers.filter(person => person.type === 'infant').length), travelers, candidates: [], bookings: [], items: [], tasks: starterTasks(), expenses: [], memories: [], selectedDate: startDate, activeSection: 'summary', updatedAt: new Date().toISOString(), version: VERSION });
+    const trip = normalizeTrip({ id: makeId('trip'), title, origin: String(input.origin || '').trim(), destination, startDate, endDate, timezone: String(input.timezone || 'Asia/Seoul'), currency: String(input.currency || 'KRW'), budgetMinor: Number(input.budgetMinor) > 0 ? Math.round(Number(input.budgetMinor)) : null, status: 'planning', searchRevision: 1, rooms: Math.max(1, Number(input.rooms) || 1), children: Math.max(0, Number(input.children) || travelers.filter(person => person.type === 'child').length), infants: Math.max(0, Number(input.infants) || travelers.filter(person => person.type === 'infant').length), travelers, candidates: Array.isArray(input.candidates) ? input.candidates : [], bookings: [], items: [], tasks: starterTasks(), expenses: [], memories: [], selectedDate: startDate, activeSection: 'summary', updatedAt: new Date().toISOString(), version: VERSION });
     commit([...trips, trip]); return clone(trip);
   };
   const updateTrip = (id, patch) => {
     const index = trips.findIndex(trip => trip.id === id); if (index < 0) throw new Error('여행을 찾을 수 없어요');
     const next = normalizeTrip({ ...trips[index], ...patch, id, updatedAt: new Date().toISOString(), version: Number(trips[index].version || 1) + 1 });
+    validateDates(next.startDate, next.endDate);
+    if (next.items.some(item => item.localDate < next.startDate || item.localDate > next.endDate)) throw new Error('변경할 기간 밖에 일정이 있어요. 해당 일정의 날짜를 먼저 수정해 주세요.');
+    if (next.selectedDate < next.startDate || next.selectedDate > next.endDate) next.selectedDate = next.startDate;
     commit(trips.map((trip, i) => i === index ? next : trip)); return clone(next);
   };
   const mutateTrip = (id, fn) => {
@@ -95,7 +104,7 @@
     return { ...trip, candidates: [...trip.candidates, { ...input, id: makeId('candidate'), status: input.status || 'saved', source: input.source || 'manual', searchRevision: trip.searchRevision, quotedAt: input.quotedAt || todayKey() }] };
   });
   const updateCandidate = (id, candidateId, patch) => mutateTrip(id, trip => ({ ...trip, candidates: trip.candidates.map(item => item.id === candidateId ? { ...item, ...patch } : item) }));
-  const addBooking = (id, input) => mutateTrip(id, trip => ({ ...trip, bookings: [...trip.bookings, { ...input, id: makeId('booking'), status: 'booked', confirmationSource: 'manual' }] }));
+  const addBooking = (id, input) => mutateTrip(id, trip => { if (input.candidateId && trip.bookings.some(item => item.candidateId === input.candidateId)) return trip; return ({ ...trip, bookings: [...trip.bookings, { ...input, id: makeId('booking'), status: 'booked', confirmationSource: 'manual' }] }); });
   const addItem = (id, input) => mutateTrip(id, trip => ({ ...trip, items: [...trip.items, { ...input, id: makeId('item'), position: trip.items.filter(item => item.localDate === input.localDate).length, fixedTime: Boolean(input.fixedTime) }] }));
   const updateItem = (id, itemId, patch) => mutateTrip(id, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? { ...item, ...patch } : item) }));
   const toggleTask = (id, taskId) => mutateTrip(id, trip => ({ ...trip, tasks: trip.tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed, completedAt: !task.completed ? new Date().toISOString() : null } : task) }));

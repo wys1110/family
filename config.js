@@ -192,10 +192,10 @@ window.FAMILY_CONFIG = {
     { name: "deferred-tabs", version: "20260918-v1", style: false },
     { name: "compact-family", version: "20260919-v1" },
     { name: "nova-family", version: "20260920-v1" },
-    { name: "travel-data", version: "20260921-v1", style: false },
-    { name: "travel-providers", version: "20260921-v1", style: false },
-    { name: "travel-map", version: "20260921-v1", style: false },
-    { name: "travel", version: "20260921-v1" },
+    { name: "travel-data", version: "20260921-v2", style: false },
+    { name: "travel-providers", version: "20260921-v2", style: false },
+    { name: "travel-map", version: "20260921-v2", style: false },
+    { name: "travel", version: "20260921-v2" },
   ];
 
   const deferredGroups = {
