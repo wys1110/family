@@ -1,5 +1,7 @@
 (() => {
-  const CARE_DAY_MODE_KEY = "family-care-day-mode-v1";
+  // The former linear layout was the default. Keep a separate preference key so
+  // every existing family sees the clock once, then let each device choose again.
+  const CARE_DAY_MODE_KEY = "family-care-day-mode-v2";
   const CARE_DAY_MODES = new Set(["timeline", "clock"]);
   const circularCareClock = renderDailyCareClock;
   const baseRenderCarePattern = renderCarePattern;
@@ -7,9 +9,9 @@
   const storedCareDayMode = () => {
     try {
       const saved = localStorage.getItem(CARE_DAY_MODE_KEY);
-      return CARE_DAY_MODES.has(saved) ? saved : "timeline";
+      return CARE_DAY_MODES.has(saved) ? saved : "clock";
     } catch {
-      return "timeline";
+      return "clock";
     }
   };
 
@@ -109,8 +111,8 @@
     control.innerHTML = `
       <span>하루 보기</span>
       <div role="group" aria-label="하루 돌봄 패턴 표시 방식">
-        <button type="button" data-care-day-mode="timeline" aria-pressed="false">타임라인</button>
-        <button type="button" data-care-day-mode="clock" aria-pressed="false">원형 시계</button>
+        <button type="button" data-care-day-mode="clock" aria-pressed="false">시계 타임라인</button>
+        <button type="button" data-care-day-mode="timeline" aria-pressed="false">목록</button>
       </div>
     `;
     control.addEventListener("click", (event) => {
