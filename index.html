@@ -210,11 +210,8 @@
                   <h2 id="growthSummaryTitle">기간별 돌봄 요약</h2>
                 <span id="growthSummaryRange"></span>
               </div>
-              <button class="growth-summary-toggle" id="growthSummaryToggle" type="button" aria-expanded="false" aria-controls="growthSummaryBody">
-                <span id="growthSummaryToggleText">펼쳐보기</span><i aria-hidden="true">⌄</i>
-              </button>
               </div>
-              <div class="growth-summary-body" id="growthSummaryBody" hidden>
+              <div class="growth-summary-body" id="growthSummaryBody">
                 <div class="summary-period-tabs" id="growthSummaryPeriod" role="group" aria-label="요약 기간 선택">
                   <button type="button" class="active" data-summary-period="day">하루</button>
                   <button type="button" data-summary-period="week">한 주</button>
@@ -225,6 +222,28 @@
               </div>
             </div>
             <div class="wallpaper-actions"><button type="button" data-wallpaper-change="growth">사진 변경</button><button type="button" data-wallpaper-remove="growth" hidden>삭제</button></div>
+          </section>
+
+          <section class="care-pattern-section" aria-labelledby="carePatternTitle">
+            <div class="care-pattern-heading">
+              <div><p class="eyebrow">CARE PATTERN</p><h2 id="carePatternTitle"><span class="storybook-heading-icon" aria-hidden="true">📊</span>돌봄 패턴</h2><small>시간대와 반복 간격을 한눈에 확인해요</small></div>
+              <div class="care-rhythm-legend" aria-label="그래프 범례"><span class="feed">수유</span><span class="sleep">수면</span><span class="diaper">기저귀</span></div>
+            </div>
+            <div class="care-pattern-tabs" id="carePatternTabs" role="tablist" aria-label="돌봄 패턴 보기">
+              <button type="button" class="active" data-care-pattern="day" role="tab">하루 패턴</button>
+              <button type="button" data-care-pattern="week" role="tab">주간 패턴</button>
+              <button type="button" data-care-pattern="interval" role="tab">기록 간격</button>
+            </div>
+            <div class="care-pattern-categories" id="carePatternCategories" aria-label="표시할 기록 선택">
+              <button type="button" class="feed active" data-pattern-category="feed"><i>F</i>수유</button>
+              <button type="button" class="sleep active" data-pattern-category="sleep"><i>Zz</i>수면</button>
+              <button type="button" class="diaper active" data-pattern-category="diaper"><i>D</i>기저귀</button>
+              <button type="button" class="health active" data-pattern-category="health"><i>!</i>건강</button>
+            </div>
+            <div class="care-pattern-date" id="carePatternDateNav">
+              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
+            </div>
+            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>
           </section>
 
           <section class="recent-photo-section recent-photo-featured" id="recentPhotoSection" hidden>
@@ -265,28 +284,6 @@
               <button type="button" data-growth-quick="성장"><span class="quick-symbol measure">cm</span>성장</button>
               <button type="button" data-growth-quick="첫 순간"><span class="quick-symbol moment">★</span>첫 순간</button>
             </div>
-          </section>
-
-          <section class="care-pattern-section" aria-labelledby="carePatternTitle">
-            <div class="care-pattern-heading">
-              <div><p class="eyebrow">CARE PATTERN</p><h2 id="carePatternTitle"><span class="storybook-heading-icon" aria-hidden="true">📊</span>돌봄 패턴</h2><small>시간대와 반복 간격을 한눈에 확인해요</small></div>
-              <div class="care-rhythm-legend" aria-label="그래프 범례"><span class="feed">수유</span><span class="sleep">수면</span><span class="diaper">기저귀</span></div>
-            </div>
-            <div class="care-pattern-tabs" id="carePatternTabs" role="tablist" aria-label="돌봄 패턴 보기">
-              <button type="button" class="active" data-care-pattern="day" role="tab">하루 패턴</button>
-              <button type="button" data-care-pattern="week" role="tab">주간 패턴</button>
-              <button type="button" data-care-pattern="interval" role="tab">기록 간격</button>
-            </div>
-            <div class="care-pattern-categories" id="carePatternCategories" aria-label="표시할 기록 선택">
-              <button type="button" class="feed active" data-pattern-category="feed"><i>F</i>수유</button>
-              <button type="button" class="sleep active" data-pattern-category="sleep"><i>Zz</i>수면</button>
-              <button type="button" class="diaper active" data-pattern-category="diaper"><i>D</i>기저귀</button>
-              <button type="button" class="health active" data-pattern-category="health"><i>!</i>건강</button>
-            </div>
-            <div class="care-pattern-date" id="carePatternDateNav">
-              <button type="button" data-pattern-day="-1" aria-label="이전 날">‹</button><strong id="carePatternDateLabel"></strong><button type="button" data-pattern-day="1" aria-label="다음 날">›</button>
-            </div>
-            <div class="care-pattern-content" id="carePatternContent" aria-live="polite"></div>
           </section>
 
           <section class="growth-insight-row" id="growthInsightRow"></section>
@@ -597,6 +594,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="family-auth.js?v=20260830-data-load-v3" data-module="family-auth"></script>
     <script src="family-data.js?v=20260918-lazy-tabs-v1"></script>
-    <script src="app.js?v=20260918-lazy-tabs-v1"></script>
+    <script src="app.js?v=20260922-care-summary-open-v1"></script>
   </body>
 </html>
