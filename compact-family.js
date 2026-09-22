@@ -37,20 +37,20 @@
   const summary = document.createElement('section');
   summary.className = 'compact-today'; summary.setAttribute('aria-labelledby', 'compactTodayTitle');
   summary.innerHTML = '<header><h2 id="compactTodayTitle">오늘 요약</h2><time></time></header><div class="compact-today-grid" aria-live="polite"></div>';
-  const analysis = document.createElement('details');
-  analysis.className = 'compact-analysis';
-  analysis.innerHTML = '<summary>성장 분석 보기<span>돌봄 패턴 · 기간별 요약 · 성장 그래프</span></summary>';
-  for (const selector of ['.care-pattern-section', '.integrated-care-summary', '#growthInsightRow']) {
-    const node = $(selector); if (node) analysis.appendChild(node);
-  }
   const history = $('#growthView .growth-section');
   const profile = $('#growthView .baby-profile-card');
   const tools = $('#growthView .journal-tools');
   journal.insertBefore(timer, profile.nextSibling);
   timer.after(summary);
-  summary.after(history);
-  history.after(analysis);
-  analysis.after($('#recentPhotoSection'));
+  let beforeHistory = summary;
+  for (const selector of ['.care-pattern-section', '.integrated-care-summary', '#growthInsightRow']) {
+    const node = $(selector);
+    if (!node) continue;
+    beforeHistory.after(node);
+    beforeHistory = node;
+  }
+  beforeHistory.after(history);
+  history.after($('#recentPhotoSection'));
   if (tools) journal.appendChild(tools);
 
   // Primary actions stay in document flow: no calendar dates or records are covered.
@@ -88,6 +88,5 @@
   const render = function(...args) { const result = previousRender.apply(this, args); renderSummary(); return result; };
   Object.assign(render, previousRender); renderGrowth = render;
   renderSummary();
-  // Do not carry one baby's disclosure state into another baby's profile.
-  for (const event of ['familycontextchange', 'familybabychange']) window.addEventListener(event, () => { analysis.open = false; renderSummary(); });
+  for (const event of ['familycontextchange', 'familybabychange']) window.addEventListener(event, renderSummary);
 })();

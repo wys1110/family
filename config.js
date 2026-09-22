@@ -190,7 +190,7 @@ window.FAMILY_CONFIG = {
     { name: "motion-system", version: "20260915-tab-position-v1" },
     { name: "family-admin", version: "20260830-auth-recovery-v2", style: false },
     { name: "deferred-tabs", version: "20260918-v1", style: false },
-    { name: "compact-family", version: "20260919-v1" },
+    { name: "compact-family", version: "20260922-pattern-priority-v2" },
     { name: "nova-family", version: "20260920-v1" },
     { name: "travel-data", version: "20260921-v3", style: false },
     { name: "travel-providers", version: "20260921-v3", style: false },
