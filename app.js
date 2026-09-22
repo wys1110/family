@@ -58,7 +58,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), growthSummaryExpanded: false, activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 // Feature modules loaded after the core need a read-only way to identify the
 // current family context without reaching into app internals.
 window.FAMILY_APP_STATE = state;
@@ -924,7 +924,6 @@ function bindUi() {
   $("#babySelector").addEventListener("click", selectBabyFromEvent);
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
-  $("#growthSummaryToggle").addEventListener("click", toggleGrowthSummary);
   $("#careTimerStarts").addEventListener("click", startCareTimerFromEvent);
   $("#careTimerStop").addEventListener("click", stopCareTimer);
   $("#careTimerSwitchSide").addEventListener("click", switchCareTimerSide);
@@ -1966,15 +1965,8 @@ function changeGrowthSummaryPeriod(event) {
   renderGrowthSummary(activeBabyEntries());
 }
 
-function toggleGrowthSummary() {
-  state.growthSummaryExpanded = !state.growthSummaryExpanded;
-  syncGrowthSummaryDisclosure();
-}
-
 function syncGrowthSummaryDisclosure() {
-  $("#growthSummaryBody").hidden = !state.growthSummaryExpanded;
-  $("#growthSummaryToggle").setAttribute("aria-expanded", String(state.growthSummaryExpanded));
-  $("#growthSummaryToggleText").textContent = state.growthSummaryExpanded ? "접기" : "펼쳐보기";
+  $("#growthSummaryBody").hidden = false;
 }
 
 function renderGrowthInsights(entries) {
