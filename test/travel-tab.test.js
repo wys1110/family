@@ -6,6 +6,7 @@ const dataSource = readFileSync('travel-data.js', 'utf8');
 const travelSource = readFileSync('travel.js', 'utf8');
 const configSource = readFileSync('config.js', 'utf8');
 const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
+const appSource = readFileSync('app.js', 'utf8');
 
 function loadData() {
   const store = new Map();
@@ -42,6 +43,43 @@ test('travel tab loads only archive modules and has no booking-search workspace'
   expect(travelSource).not.toContain('항공·숙소 찾기');
   expect(travelSource).not.toContain('예약처 열기');
   expect(travelSource).not.toMatch(/service_role|sk-[A-Za-z0-9]{20,}/i);
+});
+
+test('the dynamically-created travel tab remains navigable after its deferred load', () => {
+  expect(deferredSource).toContain('if (!tab || !groups[tab.dataset.view] || loaded.has(tab.dataset.view)) return;');
+
+  const handlerMatch = appSource.match(/\$\("\.view-tabs"\)\.addEventListener\("click", (\(event\) => \{[\s\S]*?\n  \})\);/);
+  expect(handlerMatch).not.toBeNull();
+  let delegatedClick;
+  const navigations = [];
+  const window = { FAMILY_TRAVEL_READY: false };
+  const context = {
+    window,
+    switchView: view => navigations.push(view),
+    $: selector => ({ addEventListener: (eventName, handler) => {
+      expect(selector).toBe('.view-tabs');
+      expect(eventName).toBe('click');
+      delegatedClick = handler;
+    } }),
+  };
+  vm.createContext(context);
+  vm.runInContext(`$(".view-tabs").addEventListener("click", ${handlerMatch[1]});`, context);
+
+  const travelTab = { dataset: { view: 'travel' } };
+  const targetTab = tab => ({ closest: selector => selector === '.view-tab[data-view="travel"]' && tab.dataset.view === 'travel' ? tab : null });
+  delegatedClick({ target: targetTab(travelTab) }); // Deferred load still pending.
+  expect(navigations).toEqual([]);
+  window.FAMILY_TRAVEL_READY = true;
+  delegatedClick({ target: targetTab(travelTab) }); // First visit after load.
+  delegatedClick({ target: targetTab(travelTab) }); // Exit, then re-enter.
+  expect(navigations).toEqual(['travel', 'travel']);
+
+  const otherTab = { dataset: { view: 'english' } };
+  delegatedClick({ target: targetTab(otherTab) });
+  expect(navigations).toEqual(['travel', 'travel']);
+  const nestedTarget = { closest: selector => selector === '.view-tab[data-view="travel"]' ? travelTab : null };
+  delegatedClick({ target: nestedTarget });
+  expect(navigations).toEqual(['travel', 'travel', 'travel']);
 });
 
 test('map preview ignores invalid points and retains the original itinerary number', () => {

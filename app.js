@@ -872,6 +872,13 @@ function bindUi() {
     button.addEventListener("click", () => switchView(button.dataset.view));
     button.addEventListener("pointerup", releaseTouchTabFocus);
   });
+  // Travel's tab is injected by deferred-tabs.js after bindUi() has run, so
+  // the initial per-button binding above cannot see it. Delegate only that
+  // dynamically-created tab; unloaded clicks are consumed by deferred-tabs.
+  $(".view-tabs").addEventListener("click", (event) => {
+    const button = event.target.closest('.view-tab[data-view="travel"]');
+    if (button && window.FAMILY_TRAVEL_READY) switchView(button.dataset.view);
+  });
   $("#accountButton").addEventListener("click", openAccountDialog);
   $("#desktopLogoutButton").addEventListener("click", (event) => DEMO_MODE ? exitDemoMode() : signOutCurrentUser(event.currentTarget));
   $("#googleSignIn").addEventListener("click", signInWithGoogle);
