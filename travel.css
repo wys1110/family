@@ -217,6 +217,67 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView textarea:f
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-summary-hero { align-items: flex-start; }
 }
 
+/* Planner v2: date-first itinerary and family travel history. */
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-actions,
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-list-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-save-state { padding:6px 9px; border-radius:999px; background:var(--nova-lilac); color:var(--nova-accent); font-size:10px; font-weight:700; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-planner-note { display:flex; align-items:center; gap:8px; margin:0 18px 2px; padding:9px 12px; border-radius:12px; background:color-mix(in srgb,var(--nova-lilac) 48%,var(--nova-card)); color:var(--nova-muted); font-size:11px; line-height:1.45; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-planner-note span { color:var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-planner-note p { margin:0; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs { display:flex; gap:7px; overflow-x:auto; padding:15px 18px 4px; scrollbar-width:thin; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs button { position:relative; flex:0 0 auto; display:grid; gap:2px; min-width:82px; padding:10px 12px; border:1px solid var(--nova-line); border-radius:14px; background:var(--nova-card); color:var(--nova-muted); text-align:left; cursor:pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs button.active { border-color:var(--nova-accent); background:var(--nova-lilac); color:var(--nova-text); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs small { font-size:9px; letter-spacing:.04em; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs strong { font-size:11px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs span { position:absolute; top:8px; right:9px; font-size:10px; color:var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group { margin-top:16px; padding:16px; border:1px solid var(--nova-line); border-radius:18px; background:var(--nova-card); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group > header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group h3 { margin:3px 0 0; font-size:16px; letter-spacing:-.04em; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group .travel-itinerary-item:first-of-type { border-top:0; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-itinerary-item { grid-template-columns:30px minmax(0,1fr) auto; gap:9px; cursor:default; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-leading { display:flex; justify-content:center; padding-top:2px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-note-mark { color:var(--nova-accent); font-size:18px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-main { display:grid; gap:3px; min-width:0; padding:0; border:0; background:transparent; color:var(--nova-text); text-align:left; cursor:pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-main strong { font-size:14px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-main small { overflow:hidden; color:var(--nova-muted); font-size:11px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-meta { color:var(--nova-accent); font-size:10px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-visited { width:max-content; padding:2px 6px; border-radius:999px; background:var(--nova-mint); color:var(--nova-text); font-size:9px; font-style:normal; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions { align-items:center; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions button { min-width:32px; min-height:32px; border:0; background:var(--nova-soft); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group .travel-inline-empty { padding:20px 8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-inbox-group { background:color-mix(in srgb,var(--nova-lilac) 20%,var(--nova-card)); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-footer { display:flex; justify-content:flex-end; padding:0 18px 18px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-footer .travel-secondary-button { color:var(--nova-muted); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-search-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-results { display:grid; gap:6px; margin:10px 0 16px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-result { display:grid; gap:3px; width:100%; padding:11px; border:1px solid var(--nova-line); border-radius:12px; background:var(--nova-soft); color:var(--nova-text); text-align:left; cursor:pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-result:hover,
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-result.selected { border-color:var(--nova-accent); background:var(--nova-lilac); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-result strong { font-size:13px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-result small,
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-search-message,
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-form-hint { color:var(--nova-muted); font-size:11px; line-height:1.5; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-manual-place { display:grid; gap:10px; padding-top:12px; border-top:1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-manual-place p { margin:0; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel form { display:grid; gap:11px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel form > label,
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-manual-place label { display:grid; gap:5px; color:var(--nova-muted); font-size:11px; font-weight:650; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel .travel-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel .travel-form-grid label { display:grid; gap:5px; color:var(--nova-muted); font-size:11px; }
+@media (min-width:900px) {
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-itinerary-layout { grid-template-columns:minmax(0,.42fr) minmax(0,.58fr); align-items:start; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-map-card { position:sticky; top:16px; }
+}
+@media (max-width:560px) {
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head { padding:18px 14px 10px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head h2 { font-size:24px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-planner-note { margin-inline:12px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-itinerary-layout { padding:12px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-group { padding:13px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions button { min-width:36px; min-height:36px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-save-state { font-size:9px; }
+}
+
 /* Keep long names, prices and native date inputs inside narrow screens. */
 #travelView, #travelView * { box-sizing: border-box; }
 #travelView { min-width: 0; }

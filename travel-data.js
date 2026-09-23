@@ -1,116 +1,167 @@
 (() => {
-  const VERSION = 1;
+  // Travel records use a small, versioned document so the itinerary can become
+  // the family memory after the trip. The storage key stays v1 for a safe,
+  // one-time migration of the earlier local archive.
+  const VERSION = 2;
   const LOCAL_KEY = 'family-travel-v1';
-  const DEMO_TRIP_ID = 'demo-trip-okinawa';
-
+  const MAX_DAYS = 366;
+  const MAX_ITEMS = 500;
+  const MAX_TITLE = 120;
+  const MAX_NOTE = 2000;
   const makeId = prefix => `${prefix}-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`}`;
-  const todayKey = () => new Date().toISOString().slice(0, 10);
-  const demoMode = () => window.FAMILY_DEMO_MODE === true;
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const todayKey = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
+  const dateValue = value => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return null;
+    const date = new Date(`${value}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+  const dateList = (start, end) => {
+    const result = [];
+    const cursor = dateValue(start);
+    const last = dateValue(end);
+    while (cursor && last && cursor <= last && result.length < MAX_DAYS) {
+      result.push(new Intl.DateTimeFormat('sv-SE').format(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return result;
+  };
+  const dayIndexFor = (date, start) => {
+    if (!date || !start) return null;
+    const from = dateValue(start); const target = dateValue(date);
+    if (!from || !target) return null;
+    const index = Math.round((target - from) / 86400000);
+    return index >= 0 ? index : null;
+  };
+  const localDateFor = (trip, dayIndex) => dayIndex == null ? null : dateList(trip.startDate, trip.endDate)[dayIndex] || null;
+  const validCoordinate = (lat, lng) => Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && Math.abs(Number(lat)) <= 90 && Math.abs(Number(lng)) <= 180;
+  const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
   const contextKey = () => {
     const householdId = window.FAMILY_APP_STATE?.household?.id;
-    if (householdId) return `${LOCAL_KEY}:${householdId}`;
-    return window.FAMILY_DEMO?.storageKey?.(LOCAL_KEY) || LOCAL_KEY;
+    if (householdId) return `family-travel-v1:${householdId}`;
+    return window.FAMILY_DEMO?.storageKey?.('family-travel-v1') || 'family-travel-v1';
   };
-  const starterTasks = () => [
-    { id: makeId('task'), title: '아기 여권 준비 여부 확인', category: '서류', assignee: '가족', dueDate: null, completed: false },
-    { id: makeId('task'), title: '항공사 유아 탑승 등록 확인', category: '항공', assignee: '가족', dueDate: null, completed: false },
-    { id: makeId('task'), title: '숙소 아기 침대·전자레인지 확인', category: '숙소', assignee: '가족', dueDate: null, completed: false },
-    { id: makeId('task'), title: '유모차·카시트·수유용품 챙기기', category: '짐', assignee: '가족', dueDate: null, completed: false },
-    { id: makeId('task'), title: '공항 이동 방법 정하기', category: '이동', assignee: '가족', dueDate: null, completed: false },
-  ];
-  const demoTrip = () => ({
-    id: DEMO_TRIP_ID, title: '도윤이와 첫 오키나와', origin: '인천공항', destination: '오키나와', startDate: '2026-12-11', endDate: '2026-12-15', timezone: 'Asia/Tokyo', currency: 'KRW', budgetMinor: 1800000, status: 'planning', searchRevision: 1, rooms: 1,
-    travelers: [{ name: '용석', type: 'adult' }, { name: '수빈', type: 'adult' }, { name: '도윤', type: 'infant' }],
-    candidates: [
-      { id: 'demo-flight', kind: 'flight', provider: '외부 예약처', source: 'manual', title: '인천 ↔ 나하 왕복 항공권', detail: '가족 3명 · 유아 좌석 없음 · 수하물 확인 필요', amountMinor: 720000, currency: 'KRW', quotedAt: todayKey(), status: 'shortlisted', searchRevision: 1, bookingUrl: 'https://www.skyscanner.co.kr/' },
-      { id: 'demo-stay', kind: 'stay', provider: '외부 예약처', source: 'manual', title: '나하 가족 숙소 4박', detail: '체크인 12/11 · 체크아웃 12/15 · 아기 침대 문의', amountMinor: 680000, currency: 'KRW', quotedAt: todayKey(), status: 'saved', searchRevision: 1, bookingUrl: 'https://www.booking.com/' },
-    ],
-    bookings: [],
-    items: [
-      { id: 'demo-item-1', localDate: '2026-12-12', position: 0, kind: 'visit', title: '국제거리 산책', place: '국제거리', address: '오키나와 나하시 국제거리', latitude: 26.2144, longitude: 127.6792, startTime: '10:30', durationMinutes: 90, transportMode: 'walk', fixedTime: false, note: '도윤이 컨디션에 따라 짧게' },
-      { id: 'demo-item-2', localDate: '2026-12-12', position: 1, kind: 'meal', title: '아기와 점심', place: '나하 시내', address: '오키나와 나하시', latitude: 26.2124, longitude: 127.6809, startTime: '12:30', durationMinutes: 60, transportMode: 'walk', fixedTime: false, note: '수유 공간 확인' },
-      { id: 'demo-item-3', localDate: '2026-12-13', position: 0, kind: 'visit', title: '추라우미 수족관', place: '해양박공원', address: '424 Ishikawa, Motobu, Okinawa', latitude: 26.6942, longitude: 127.8777, startTime: '10:00', durationMinutes: 150, transportMode: 'car', fixedTime: false, note: '주차·기저귀 교환대 확인' },
-    ],
-    tasks: starterTasks(), expenses: [], memories: [], selectedDate: '2026-12-12', activeSection: 'summary', updatedAt: new Date().toISOString(), version: VERSION,
-  });
-  const clone = value => JSON.parse(JSON.stringify(value));
-  const normalizeTrip = trip => {
-    const value = { ...trip };
-    value.travelers = Array.isArray(value.travelers) ? value.travelers : [];
-    value.candidates = Array.isArray(value.candidates) ? value.candidates : [];
-    value.bookings = Array.isArray(value.bookings) ? value.bookings : [];
-    value.items = Array.isArray(value.items) ? value.items : [];
-    value.tasks = Array.isArray(value.tasks) ? value.tasks : [];
-    value.expenses = Array.isArray(value.expenses) ? value.expenses : [];
-    value.memories = Array.isArray(value.memories) ? value.memories : [];
-    value.rooms = Math.max(1, Number(value.rooms) || 1);
-    value.children = Math.max(0, Number(value.children) || value.travelers.filter(person => person.type === 'child').length);
-    value.infants = Math.max(0, Number(value.infants) || value.travelers.filter(person => person.type === 'infant').length);
-    value.selectedDate ||= value.startDate;
-    value.activeSection ||= 'summary';
-    value.searchRevision = Number(value.searchRevision) || 1;
-    value.version = Number(value.version) || VERSION;
-    return value;
+  const sharing = () => window.FAMILY_TRAVEL_SHARING;
+  const shared = () => sharing()?.enabled() === true;
+  const demoMode = () => window.FAMILY_DEMO_MODE === true;
+
+  const normalizeItem = (raw, trip, fallbackIndex = 0) => {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const legacyDate = source.localDate || source.date || null;
+    const dayIndex = source.dayIndex == null ? dayIndexFor(legacyDate, trip.startDate) : Number(source.dayIndex);
+    const placeSource = source.place && typeof source.place === 'object' ? source.place : null;
+    const isNote = source.type === 'note' || source.kind === 'note' || (!source.place && !validCoordinate(source.latitude, source.longitude) && source.note && !source.address);
+    const place = isNote ? null : (placeSource || (source.address || source.place || validCoordinate(source.latitude, source.longitude) ? {
+      provider: source.provider || 'legacy', providerId: source.providerId || source.placeId || null,
+      name: String(source.placeName || source.place || source.title || '').trim(), address: String(source.address || '').trim(),
+      lat: validCoordinate(source.latitude, source.longitude) ? Number(source.latitude) : null,
+      lng: validCoordinate(source.latitude, source.longitude) ? Number(source.longitude) : null,
+      attribution: source.attribution || null,
+    } : null));
+    const item = {
+      id: String(source.id || makeId('item')),
+      type: isNote ? 'note' : 'place',
+      dayIndex: Number.isInteger(dayIndex) && dayIndex >= 0 ? dayIndex : null,
+      order: Number.isFinite(Number(source.order ?? source.position)) ? Number(source.order ?? source.position) : fallbackIndex,
+      title: String(source.title || source.name || place?.name || '기록').trim().slice(0, MAX_TITLE),
+      time: source.time || source.startTime || null,
+      note: String(source.note || '').slice(0, MAX_NOTE),
+      visited: Boolean(source.visited),
+      place,
+    };
+    // Compatibility aliases keep old local records and exports readable.
+    item.localDate = localDateFor(trip, item.dayIndex); item.position = item.order; item.kind = item.type === 'place' ? 'visit' : 'note';
+    if (item.place) {
+      item.placeName = item.place.name; item.address = item.place.address; item.latitude = item.place.lat; item.longitude = item.place.lng;
+      item.provider = item.place.provider; item.providerId = item.place.providerId;
+    }
+    return item;
   };
-  const read = () => {
-    try {
-      const value = JSON.parse(localStorage.getItem(contextKey()) || 'null');
-      if (Array.isArray(value)) return value.map(normalizeTrip);
-    } catch { /* storage may be unavailable */ }
-    return demoMode() ? [demoTrip()] : [];
+  const normalizeOrder = trip => {
+    const buckets = new Map();
+    trip.items.forEach(item => { const key = item.dayIndex == null ? 'inbox' : String(item.dayIndex); if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(item); });
+    for (const bucket of buckets.values()) bucket.sort((a, b) => (a.order - b.order) || String(a.id).localeCompare(String(b.id))).forEach((item, index) => { item.order = index; item.position = index; item.localDate = localDateFor(trip, item.dayIndex); });
+    return trip;
   };
-  const write = trips => {
-    try { localStorage.setItem(contextKey(), JSON.stringify(trips)); return true; }
-    catch { return false; }
+  const normalizeTrip = raw => {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const startDate = String(source.startDate || todayKey()); const endDate = String(source.endDate || startDate);
+    const preservedLegacy = clone(source.legacy || source.document?.legacy || {});
+    for (const key of ['memories','expenses','bookings','candidates','tasks']) if (source[key] != null && preservedLegacy[key] == null) preservedLegacy[key] = clone(source[key]);
+    const trip = {
+      id: String(source.id || makeId('trip')), title: String(source.title || `${source.destinationLabel || source.destination || '우리 가족'} 여행`).slice(0, 60),
+      destinationLabel: String(source.destinationLabel || source.destination || '').slice(0, 120), destination: String(source.destinationLabel || source.destination || '').slice(0, 120),
+      centerLat: validCoordinate(source.centerLat, source.centerLng) ? Number(source.centerLat) : null, centerLng: validCoordinate(source.centerLat, source.centerLng) ? Number(source.centerLng) : null,
+      timezone: String(source.timezone || 'Asia/Seoul'), startDate, endDate, intro: String(source.intro || '').slice(0, 240), archivedAt: source.archivedAt || source.archived_at || null,
+      revision: Number.isFinite(Number(source.revision)) ? Number(source.revision) : 0, updatedAt: source.updatedAt || source.updated_at || new Date().toISOString(), createdAt: source.createdAt || source.created_at || new Date().toISOString(),
+      updatedBy: source.updatedBy || null, householdId: source.householdId || source.household_id || null, legacy: preservedLegacy, memories: Array.isArray(source.memories) ? clone(source.memories) : [],
+      travelers: Array.isArray(source.travelers) ? clone(source.travelers) : [], tasks: Array.isArray(source.tasks) ? clone(source.tasks) : [], expenses: Array.isArray(source.expenses) ? clone(source.expenses) : [], candidates: Array.isArray(source.candidates) ? clone(source.candidates) : [], bookings: Array.isArray(source.bookings) ? clone(source.bookings) : [],
+    };
+    const rawItems = Array.isArray(source.items) ? source.items : Array.isArray(source.document?.items) ? source.document.items : [];
+    trip.items = rawItems.slice(0, MAX_ITEMS).map((item, index) => normalizeItem(item, trip, index));
+    trip.document = { schemaVersion: VERSION, items: trip.items.map(item => ({ id: item.id, type: item.type, dayIndex: item.dayIndex, order: item.order, title: item.title, time: item.time, note: item.note, visited: item.visited, place: item.place ? { ...item.place } : null })), legacy: clone(trip.legacy) };
+    return normalizeOrder(trip);
   };
-  let trips = read();
-  const emit = () => window.dispatchEvent(new CustomEvent('family:travel-change', { detail: { count: trips.length } }));
-  const commit = next => { const normalized = next.map(normalizeTrip); if (!write(normalized)) throw new Error('저장 공간이 부족하거나 저장이 차단되어 있어요. 입력 내용을 복사한 뒤 다시 시도해 주세요.'); trips = normalized; emit(); return { data: clone(trips), saved: true }; };
-  const getTrips = () => clone(trips);
-  const getTrip = id => clone(trips.find(trip => trip.id === id) || null);
   const validateDates = (start, end) => {
-    const valid = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
-    if (!valid(start) || !valid(end) || end < start) throw new Error('여행 날짜를 확인해 주세요');
-    if ((Date.parse(end) - Date.parse(start)) / 86400000 >= 366) throw new Error('여행은 최대 366일까지 계획할 수 있어요');
+    const from = dateValue(start); const to = dateValue(end);
+    if (!from || !to || end < start) throw new Error('여행 날짜를 확인해 주세요.');
+    if ((to - from) / 86400000 >= MAX_DAYS) throw new Error('여행은 최대 366일까지 계획할 수 있어요.');
   };
-  const createTrip = input => {
-    const title = String(input.title || '').trim();
-    const destination = String(input.destination || '').trim();
-    const startDate = String(input.startDate || '');
-    const endDate = String(input.endDate || '');
-    if (!title || title.length > 60) throw new Error('여행 이름을 확인해 주세요');
-    if (!destination || destination.length > 80) throw new Error('여행지를 확인해 주세요');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) throw new Error('여행 날짜를 확인해 주세요');
-    validateDates(startDate, endDate);
-    const travelers = Array.isArray(input.travelers) ? input.travelers : [];
-    const trip = normalizeTrip({ id: makeId('trip'), title, origin: String(input.origin || '').trim(), destination, startDate, endDate, timezone: String(input.timezone || 'Asia/Seoul'), currency: String(input.currency || 'KRW'), budgetMinor: Number(input.budgetMinor) > 0 ? Math.round(Number(input.budgetMinor)) : null, status: 'planning', searchRevision: 1, rooms: Math.max(1, Number(input.rooms) || 1), children: Math.max(0, Number(input.children) || travelers.filter(person => person.type === 'child').length), infants: Math.max(0, Number(input.infants) || travelers.filter(person => person.type === 'infant').length), travelers, candidates: Array.isArray(input.candidates) ? input.candidates : [], bookings: [], items: [], tasks: starterTasks(), expenses: [], memories: [], selectedDate: startDate, activeSection: 'summary', updatedAt: new Date().toISOString(), version: VERSION });
-    commit([...trips, trip]); return clone(trip);
+  const validateTrip = trip => {
+    validateDates(trip.startDate, trip.endDate);
+    if (!trip.title || trip.title.length > 60) throw new Error('여행 이름을 확인해 주세요.');
+    if (!trip.destinationLabel || trip.destinationLabel.length > 120) throw new Error('여행지를 확인해 주세요.');
+    if (trip.items.length > MAX_ITEMS) throw new Error('한 여행에는 최대 500개까지 기록할 수 있어요.');
+    const maxDayIndex = dateList(trip.startDate, trip.endDate).length - 1;
+    trip.items.forEach(item => {
+      if (item.dayIndex != null && item.dayIndex > maxDayIndex) { const error = new Error('기간 밖에 있는 기록이 있어요.'); error.code = 'OUT_OF_RANGE'; throw error; }
+      if (!item.title || item.title.length > MAX_TITLE || item.note.length > MAX_NOTE) throw new Error('장소 이름 또는 메모가 너무 길어요.');
+      if (item.type === 'place' && item.place?.lat != null && !validCoordinate(item.place.lat, item.place.lng)) throw new Error('장소 위치를 확인해 주세요.');
+    });
+    return trip;
   };
-  const updateTrip = (id, patch) => {
-    const index = trips.findIndex(trip => trip.id === id); if (index < 0) throw new Error('여행을 찾을 수 없어요');
-    const next = normalizeTrip({ ...trips[index], ...patch, id, updatedAt: new Date().toISOString(), version: Number(trips[index].version || 1) + 1 });
-    validateDates(next.startDate, next.endDate);
-    if (next.items.some(item => item.localDate < next.startDate || item.localDate > next.endDate)) throw new Error('변경할 기간 밖에 일정이 있어요. 해당 일정의 날짜를 먼저 수정해 주세요.');
-    if (next.selectedDate < next.startDate || next.selectedDate > next.endDate) next.selectedDate = next.startDate;
-    commit(trips.map((trip, i) => i === index ? next : trip)); return clone(next);
+  const demoTrip = () => normalizeTrip({ id: 'demo-trip-family-map', title: '도윤이와 첫 오키나와', destinationLabel: '오키나와', startDate: '2026-12-11', endDate: '2026-12-15', timezone: 'Asia/Tokyo', items: [
+    { id: 'demo-place-1', type: 'place', dayIndex: 1, order: 0, title: '국제거리 산책', note: '도윤이 컨디션에 따라 짧게', place: { provider: 'demo', providerId: 'kokusai', name: '국제거리', address: '오키나와 나하시 국제거리', lat: 26.2144, lng: 127.6792 } },
+    { id: 'demo-note-1', type: 'note', dayIndex: 1, order: 1, title: '점심·수유 시간', time: '12:30', note: '수유 공간을 먼저 확인해요.' },
+    { id: 'demo-place-2', type: 'place', dayIndex: 2, order: 0, title: '추라우미 수족관', note: '주차·기저귀 교환대 확인', place: { provider: 'demo', providerId: 'churaumi', name: '해양박공원', address: '424 Ishikawa, Motobu, Okinawa', lat: 26.6942, lng: 127.8777 } },
+  ], memories: [], legacy: {} });
+  const readRaw = () => { try { return JSON.parse(localStorage.getItem(contextKey()) || 'null'); } catch { return null; } };
+  const read = () => { const value = readRaw(); if (Array.isArray(value)) return value.map(normalizeTrip).filter(trip => !trip.archivedAt); if (value && Array.isArray(value.trips)) return value.trips.map(normalizeTrip).filter(trip => !trip.archivedAt); return demoMode() ? [demoTrip()] : []; };
+  const write = values => { try { localStorage.setItem(contextKey(), JSON.stringify(values.map(normalizeTrip))); return true; } catch { return false; } };
+  let trips = shared() ? [] : read(); let generation = 0; let refreshing = null;
+  const emit = detail => window.dispatchEvent(new CustomEvent('family:travel-change', { detail: detail || { count: trips.length } }));
+  const commit = async (next, options = {}) => { const epoch = generation; let normalized = next.map(value => validateTrip(normalizeTrip(value))); if (shared()) { normalized = normalized.map(value => { if (isUuid(value.id)) return value; const originalId = value.id; return normalizeTrip({ ...value, id: crypto.randomUUID?.() || makeId('trip'), legacy: { ...value.legacy, originalLocalId: originalId } }); }); await sharing().save(normalized, { expectedRevision: options.expectedRevision, mutationId: options.mutationId || makeId('mutation') }); } else if (!write(normalized)) throw new Error('저장 공간이 부족하거나 저장이 차단되어 있어요. 입력 내용을 보관한 뒤 다시 시도해 주세요.'); if (epoch !== generation) throw new Error('가족 계정이 변경되었어요. 여행 탭을 다시 열어 주세요.'); trips = normalized; emit(); return { data: clone(trips), saved: true }; };
+  const getTrips = (options = {}) => clone(options.includeArchived ? trips : trips.filter(trip => !trip.archivedAt));
+  const getTrip = id => clone(trips.find(trip => trip.id === id && !trip.archivedAt) || null);
+  const getArchivedTrips = () => clone(trips.filter(trip => trip.archivedAt));
+  const updateLocal = async (id, updater, options = {}) => { const index = trips.findIndex(trip => trip.id === id); if (index < 0) throw new Error('여행을 찾을 수 없어요.'); const before = normalizeTrip(trips[index]); const next = normalizeOrder(normalizeTrip(updater(clone(before)))); next.id = before.id; next.revision = before.revision + 1; next.updatedAt = new Date().toISOString(); validateTrip(next); await commit(trips.map((trip, tripIndex) => tripIndex === index ? next : trip), { ...options, expectedRevision: before.revision }); return clone(next); };
+  const createTrip = async input => { const destinationLabel = String(input.destinationLabel || input.destination || '').trim(); const startDate = String(input.startDate || ''); const endDate = String(input.endDate || startDate); const trip = normalizeTrip({ id: makeId('trip'), title: String(input.title || `${destinationLabel} 가족여행`).trim(), destinationLabel, destination: destinationLabel, startDate, endDate, timezone: input.timezone || 'Asia/Seoul', centerLat: input.centerLat, centerLng: input.centerLng, intro: input.intro, legacy: {}, items: [], memories: [] }); validateTrip(trip); const originalId = trip.id; await commit([...trips, trip]); return clone(trips.find(item => item.id === originalId || item.legacy?.originalLocalId === originalId) || trip); };
+  const updateTrip = async (id, patch = {}) => updateLocal(id, trip => { const next = { ...trip, ...patch }; if (patch.destination != null && patch.destinationLabel == null) next.destinationLabel = patch.destination; if (patch.destinationLabel != null) next.destination = patch.destinationLabel; if (patch.startDate && patch.startDate !== trip.startDate) { const oldDates = dateList(trip.startDate, trip.endDate); const newDates = dateList(patch.startDate, patch.endDate || trip.endDate); next.items = trip.items.map(item => ({ ...item, localDate: null })); next.items.forEach(item => { item.localDate = localDateFor(next, item.dayIndex); }); next.legacy = { ...trip.legacy, dateShiftedAt: new Date().toISOString(), previousDates: oldDates, nextDates: newDates }; } return next; });
+  const moveOutOfRangeToInbox = async (id, patch = {}) => updateLocal(id, trip => { const next = { ...trip, ...patch }; const max = dateList(next.startDate, next.endDate).length - 1; next.items = trip.items.map(item => item.dayIndex != null && item.dayIndex > max ? { ...item, dayIndex: null } : item); return next; });
+  const addItem = async (id, input = {}) => updateLocal(id, trip => { if (trip.items.length >= MAX_ITEMS) throw new Error('한 여행에는 최대 500개까지 기록할 수 있어요.'); const type = input.type || (input.kind === 'note' ? 'note' : 'place'); const localDate = input.localDate || null; const dayIndex = input.dayIndex == null ? dayIndexFor(localDate, trip.startDate) : Number(input.dayIndex); const place = input.place && typeof input.place === 'object' ? input.place : (type === 'place' && (input.place || input.address || validCoordinate(input.latitude, input.longitude)) ? { provider: input.provider || 'manual', providerId: input.providerId || null, name: String(input.place || input.title || '').trim(), address: String(input.address || '').trim(), lat: validCoordinate(input.latitude, input.longitude) ? Number(input.latitude) : null, lng: validCoordinate(input.latitude, input.longitude) ? Number(input.longitude) : null, attribution: input.attribution || null } : null); if (type === 'place' && !place) throw new Error('검색 결과를 선택하거나 위치가 있는 장소를 추가해 주세요. 위치가 없으면 메모로 남길 수 있어요.'); return { ...trip, items: [...trip.items, normalizeItem({ ...input, id: makeId('item'), type, dayIndex: Number.isInteger(dayIndex) && dayIndex >= 0 ? dayIndex : null, order: trip.items.filter(item => item.dayIndex === dayIndex).length, place }, trip, trip.items.length)] }; });
+  const addPlace = (id, input) => addItem(id, { ...input, type: 'place' }); const addNote = (id, input) => addItem(id, { ...input, type: 'note', place: null });
+  const updateItem = async (tripId, itemId, patch) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? normalizeItem({ ...item, ...patch }, trip, item.order) : item) }));
+  const deleteItem = async (tripId, itemId) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.filter(item => item.id !== itemId) }));
+  const moveItem = async (tripId, itemId, dayIndex) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? { ...item, dayIndex: dayIndex == null ? null : Number(dayIndex), order: trip.items.filter(other => other.dayIndex === (dayIndex == null ? null : Number(dayIndex))).length } : item) }));
+  const reorderItem = async (tripId, itemId, direction) => updateLocal(tripId, trip => { const item = trip.items.find(entry => entry.id === itemId); if (!item) return trip; const siblings = trip.items.filter(entry => entry.dayIndex === item.dayIndex).sort((a, b) => a.order - b.order); const index = siblings.findIndex(entry => entry.id === itemId); const target = index + (direction === 'up' ? -1 : 1); if (target < 0 || target >= siblings.length) return trip; [siblings[index].order, siblings[target].order] = [siblings[target].order, siblings[index].order]; return { ...trip, items: trip.items.map(entry => entry.id === siblings[index].id ? siblings[index] : entry.id === siblings[target].id ? siblings[target] : entry) }; });
+  const toggleVisited = (tripId, itemId) => { const item = getTrip(tripId)?.items.find(entry => entry.id === itemId); return updateItem(tripId, itemId, { visited: !item?.visited }); };
+  const archiveTrip = async id => updateLocal(id, trip => ({ ...trip, archivedAt: new Date().toISOString() })); const restoreTrip = async id => updateLocal(id, trip => ({ ...trip, archivedAt: null }));
+  const addMemory = async (id, input) => updateLocal(id, trip => ({ ...trip, memories: [...trip.memories, { ...input, id: makeId('memory'), createdAt: new Date().toISOString() }] }));
+  const toggleTask = async (id, taskId) => updateLocal(id, trip => ({ ...trip, tasks: trip.tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task) }));
+  const addExpense = async (id, input) => updateLocal(id, trip => ({ ...trip, expenses: [...trip.expenses, { ...input, id: makeId('expense'), spentAt: input.spentAt || todayKey() }] }));
+  const unsupported = async () => { throw new Error('항공·숙소 후보 기능은 여행 기록 범위에 포함되지 않아요.'); }; const addCandidate = unsupported; const updateCandidate = unsupported; const addBooking = unsupported; const removeTrip = archiveTrip;
+  const searchPlaces = async (query, options = {}) => {
+    const text = String(query || '').trim(); if (!text) return { items: [], status: 'empty' };
+    if (typeof window.FAMILY_TRAVEL_GEOCODER === 'function') return window.FAMILY_TRAVEL_GEOCODER(text, options);
+    const client = window.FAMILY_APP_STATE?.supabase;
+    if (!client || !window.FAMILY_APP_STATE?.session?.user?.id || !window.FAMILY_APP_STATE?.household?.id) return { items: [], status: 'unavailable', message: '가족 계정에서 장소 검색을 사용할 수 있어요. 지금은 이름과 주소를 직접 기록해 주세요.' };
+    const { data: payload, error } = await client.functions.invoke('travel-place-search', { body: { query: text, limit: Math.min(10, options.limit || 10) }, headers: { 'x-family-household': window.FAMILY_APP_STATE.household.id } });
+    if (error) return { items: [], status: 'error', message: '장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요.' };
+    return payload || { items: [], status: 'ok' };
   };
-  const mutateTrip = (id, fn) => {
-    const trip = getTrip(id); if (!trip) throw new Error('여행을 찾을 수 없어요');
-    const next = normalizeTrip(fn(trip)); return updateTrip(id, next);
-  };
-  const addCandidate = (id, input) => mutateTrip(id, trip => {
-    const current = trip.candidates.filter(item => item.kind === input.kind && item.searchRevision === trip.searchRevision && item.status !== 'dismissed');
-    if (current.length >= 3) throw new Error(`${input.kind === 'flight' ? '항공' : '숙소'} 후보는 현재 조건에서 최대 3개까지 저장할 수 있어요.`);
-    return { ...trip, candidates: [...trip.candidates, { ...input, id: makeId('candidate'), status: input.status || 'saved', source: input.source || 'manual', searchRevision: trip.searchRevision, quotedAt: input.quotedAt || todayKey() }] };
-  });
-  const updateCandidate = (id, candidateId, patch) => mutateTrip(id, trip => ({ ...trip, candidates: trip.candidates.map(item => item.id === candidateId ? { ...item, ...patch } : item) }));
-  const addBooking = (id, input) => mutateTrip(id, trip => { if (input.candidateId && trip.bookings.some(item => item.candidateId === input.candidateId)) return trip; return ({ ...trip, bookings: [...trip.bookings, { ...input, id: makeId('booking'), status: 'booked', confirmationSource: 'manual' }] }); });
-  const addItem = (id, input) => mutateTrip(id, trip => ({ ...trip, items: [...trip.items, { ...input, id: makeId('item'), position: trip.items.filter(item => item.localDate === input.localDate).length, fixedTime: Boolean(input.fixedTime) }] }));
-  const updateItem = (id, itemId, patch) => mutateTrip(id, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? { ...item, ...patch } : item) }));
-  const toggleTask = (id, taskId) => mutateTrip(id, trip => ({ ...trip, tasks: trip.tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed, completedAt: !task.completed ? new Date().toISOString() : null } : task) }));
-  const addMemory = (id, input) => mutateTrip(id, trip => ({ ...trip, memories: [...trip.memories, { ...input, id: makeId('memory'), createdAt: new Date().toISOString() }] }));
-  const addExpense = (id, input) => mutateTrip(id, trip => ({ ...trip, expenses: [...trip.expenses, { ...input, id: makeId('expense'), amountMinor: Math.round(Number(input.amountMinor) || 0), spentAt: input.spentAt || todayKey() }] }));
-  const removeTrip = id => { const before = trips.length; commit(trips.filter(trip => trip.id !== id)); return before !== trips.length; };
-  window.addEventListener('familycontextchange', () => { trips = read(); emit(); });
-  window.FAMILY_TRAVEL_DATA = Object.freeze({ getTrips, getTrip, createTrip, updateTrip, addCandidate, updateCandidate, addBooking, addItem, updateItem, toggleTask, addMemory, addExpense, removeTrip, contextKey, isLocal: () => true, refresh: () => { trips = read(); return getTrips(); } });
+  const refresh = async () => { if (!shared()) { trips = read(); emit(); return getTrips(); } if (refreshing) return refreshing; const epoch = generation; refreshing = sharing().load().then(next => { if (epoch !== generation) return []; trips = (next || []).map(normalizeTrip); emit(); return getTrips(); }).finally(() => { refreshing = null; }); return refreshing; };
+  const importLocalTrip = async id => { const local = readRaw(); const candidate = (Array.isArray(local) ? local : []).find(item => item.id === id); if (!candidate) throw new Error('기존 여행을 찾을 수 없어요.'); const created = normalizeTrip(candidate); const originalId = created.id; await commit([...trips, created]); return clone(trips.find(item => item.id === originalId || item.legacy?.originalLocalId === originalId) || created); };
+  const getLocalTrips = () => shared() ? read().filter(local => !trips.some(remote => remote.id === local.id)) : [];
+  window.addEventListener('familycontextchange', () => { generation++; refreshing = null; trips = shared() ? [] : read(); emit(); });
+  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
 })();
