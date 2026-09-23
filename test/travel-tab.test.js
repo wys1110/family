@@ -7,6 +7,7 @@ const travelSource = readFileSync('travel.js', 'utf8');
 const configSource = readFileSync('config.js', 'utf8');
 const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
 const appSource = readFileSync('app.js', 'utf8');
+const travelCssSource = readFileSync('travel.css', 'utf8');
 
 function loadData() {
   const store = new Map();
@@ -80,6 +81,70 @@ test('the dynamically-created travel tab remains navigable after its deferred lo
   const nestedTarget = { closest: selector => selector === '.view-tab[data-view="travel"]' ? travelTab : null };
   delegatedClick({ target: nestedTarget });
   expect(navigations).toEqual(['travel', 'travel', 'travel']);
+});
+
+test('travel modal uses the top layer, closes cleanly, and fits a mobile keyboard viewport', () => {
+  const showLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const showModal ='));
+  const closeLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const closeModal ='));
+  expect(showLine).toBeTruthy();
+  expect(closeLine).toBeTruthy();
+  expect(travelSource).toContain('dialog class="travel-modal"');
+
+  let showCount = 0;
+  let closeCount = 0;
+  let panelFocusCount = 0;
+  const viewportListeners = new Map();
+  const viewport = {
+    height: 390, offsetTop: 0,
+    addEventListener: (type, listener) => viewportListeners.set(type, listener),
+    removeEventListener: type => viewportListeners.delete(type),
+  };
+  const styleValues = new Map();
+  const panel = { focus: () => panelFocusCount++ };
+  const title = { textContent: '' };
+  const content = { innerHTML: '' };
+  const modal = {
+    hidden: true, open: false, dataset: {}, style: {
+      setProperty: (name, value) => styleValues.set(name, value),
+      removeProperty: name => styleValues.delete(name),
+    },
+    querySelector: selector => ({
+      '#travelModalTitle': title,
+      '#travelModalContent': content,
+      '.travel-modal-panel': panel,
+    })[selector],
+    addEventListener: () => {},
+    showModal() { this.open = true; showCount++; },
+    close() { this.open = false; closeCount++; },
+  };
+  const current = { modalMode: 'trip', selectedPlace: { name: 'Naha' } };
+  const context = { current, view: {}, window: { visualViewport: viewport }, $: selector => selector === '#travelModal' ? modal : null };
+  vm.createContext(context);
+  vm.runInContext(`let travelViewportListener = null;\nconst clearTravelViewport = node => { if(travelViewportListener){window.visualViewport.removeEventListener('resize',travelViewportListener);window.visualViewport.removeEventListener('scroll',travelViewportListener);} travelViewportListener=null; node.style.removeProperty('--travel-viewport-height'); node.style.removeProperty('--travel-viewport-top'); };\n${showLine}\n${closeLine}`, context);
+  vm.runInContext('showModal("새 여행", "<form></form>")', context);
+  expect(showCount).toBe(1);
+  expect(panelFocusCount).toBe(1);
+  expect(modal.hidden).toBe(false);
+  expect(styleValues.get('--travel-viewport-height')).toBe('390px');
+  expect(viewportListeners.has('resize')).toBe(true);
+  viewport.height = 300;
+  viewport.offsetTop = 20;
+  viewportListeners.get('resize')();
+  expect(styleValues.get('--travel-viewport-height')).toBe('300px');
+  expect(styleValues.get('--travel-viewport-top')).toBe('20px');
+  vm.runInContext('closeModal()', context);
+  expect(closeCount).toBe(1);
+  expect(modal.hidden).toBe(true);
+  expect(viewportListeners.size).toBe(0);
+  expect(styleValues.size).toBe(0);
+  expect(current).toEqual({ modalMode: null, selectedPlace: null });
+  vm.runInContext('showModal("새 여행", "<form></form>")', context);
+  expect(showCount).toBe(2);
+  expect(panelFocusCount).toBe(2);
+
+  expect(travelCssSource).toContain('dialog.travel-modal:not([open])');
+  expect(travelCssSource).toContain('calc(var(--travel-viewport-height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))');
+  expect(travelSource).toContain("event.target.matches('.travel-modal-backdrop')");
 });
 
 test('map preview ignores invalid points and retains the original itinerary number', () => {

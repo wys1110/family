@@ -195,7 +195,7 @@ window.FAMILY_CONFIG = {
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
     { name: "travel-data", version: "20260923-planner-v2", style: false },
     { name: "travel-map", version: "20260923-planner-v2", style: false },
-    { name: "travel", version: "20260923-planner-v2" },
+    { name: "travel", version: "20260923-modal-top-layer-v1" },
   ];
 
   const deferredGroups = {
