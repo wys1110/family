@@ -147,6 +147,46 @@ test('travel modal uses the top layer, closes cleanly, and fits a mobile keyboar
   expect(travelSource).toContain("event.target.matches('.travel-modal-backdrop')");
 });
 
+test('trip destination can be a preset or a custom value without stale-field overrides', () => {
+  const resolveLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const resolveDestination ='));
+  const reconcileLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const reconcileDestinationInputs ='));
+  const formLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const tripForm ='));
+  expect(resolveLine).toBeTruthy();
+  expect(reconcileLine).toBeTruthy();
+  expect(formLine).toBeTruthy();
+  const context = { esc: value => String(value ?? ''), destinationGroups: [], destinationOptions: value => `<option>${value || ''}</option>` };
+  vm.createContext(context);
+  vm.runInContext(`${resolveLine}\n${reconcileLine}\n${formLine}`, context);
+
+  expect(vm.runInContext('resolveDestination({destination:"제주", destinationCustom:""})', context)).toBe('제주');
+  expect(vm.runInContext('resolveDestination({destination:"", destinationCustom:"영종도"})', context)).toBe('영종도');
+  expect(vm.runInContext('resolveDestination({destination:"제주", destinationCustom:"  "})', context)).toBe('제주');
+  expect(vm.runInContext('resolveDestination({destination:"  ", destinationCustom:"  "})', context)).toBe('');
+
+  const fields = { destination: { value: '제주' }, destinationCustom: { value: '영종도' } };
+  const form = { elements: fields };
+  context.form = form;
+  context.target = { closest: selector => selector === '#travelTripForm' ? form : null };
+  context.target = fields.destinationCustom;
+  // Emulate custom input after editing a preset: the old preset is cleared.
+  context.target.closest = selector => selector === '#travelTripForm' ? form : null;
+  vm.runInContext('reconcileDestinationInputs(target)', context);
+  expect(fields.destination.value).toBe('');
+  fields.destination.value = '제주';
+  fields.destinationCustom.value = '영종도';
+  context.target = fields.destination;
+  context.target.closest = selector => selector === '#travelTripForm' ? form : null;
+  vm.runInContext('reconcileDestinationInputs(target)', context);
+  expect(fields.destinationCustom.value).toBe('');
+
+  const editPreset = vm.runInContext('tripForm({destinationLabel:"제주", title:"제주 여행"})', context);
+  const editCustom = vm.runInContext('tripForm({destinationLabel:"영종도", title:"영종도 여행"})', context);
+  expect(editPreset).toContain('name="destination"');
+  expect(editPreset).not.toContain('name="destination" required');
+  expect(editCustom).toContain('name="destinationCustom"');
+  expect(editCustom).toContain('value="영종도"');
+});
+
 test('map preview ignores invalid points and retains the original itinerary number', () => {
   const window = {};
   vm.runInNewContext(readFileSync('travel-map.js', 'utf8'), { window });
