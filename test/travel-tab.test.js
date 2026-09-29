@@ -9,11 +9,14 @@ const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
 const appSource = readFileSync('app.js', 'utf8');
 const travelCssSource = readFileSync('travel.css', 'utf8');
 
-function loadData() {
+function loadData({ demoMode = false, savedTrips, shared = false } = {}) {
   const store = new Map();
+  const key = 'family-travel-v1:household-a';
+  if (savedTrips !== undefined) store.set(key, JSON.stringify(savedTrips));
   const window = {
-    FAMILY_DEMO_MODE: false,
+    FAMILY_DEMO_MODE: demoMode,
     FAMILY_APP_STATE: { household: { id: 'household-a' } },
+    FAMILY_TRAVEL_SHARING: shared ? { enabled: () => true, load: async () => [] } : undefined,
     localStorage: { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) },
     addEventListener: () => {}, dispatchEvent: () => {},
   };
@@ -22,6 +25,37 @@ function loadData() {
   vm.createContext(context); vm.runInContext(dataSource, context);
   return { api: window.FAMILY_TRAVEL_DATA, store };
 }
+
+test('demo travel mode seeds only a generic local sample and never shared records', () => {
+  const { api, store } = loadData({ demoMode: true });
+  const trips = api.getTrips();
+  expect(trips).toHaveLength(1);
+  expect(trips.map(({ title, startDate, endDate }) => [title, startDate, endDate])).toEqual([
+    ['도윤이와 첫 오키나와', '2026-12-11', '2026-12-15'],
+  ]);
+  expect(trips[0].items.some(item => item.type === 'place' && Number.isFinite(item.place?.lat) && Number.isFinite(item.place?.lng))).toBe(true);
+  expect(trips[0].intro).toContain('예정 여행 예시');
+  expect(store.size).toBe(0);
+});
+
+test('demo history replaces only an untouched default sample and preserves custom local and remote data', () => {
+  const original = loadData({ demoMode: true }).api.getTrips().at(-1);
+  expect(loadData({ demoMode: true, savedTrips: [original] }).api.getTrips()).toHaveLength(1);
+
+  const editedDefault = { ...original, title: '우리의 편집한 오키나와 계획' };
+  const editedResult = loadData({ demoMode: true, savedTrips: [editedDefault] }).api.getTrips();
+  expect(editedResult).toHaveLength(1);
+  expect(editedResult[0].title).toBe('우리의 편집한 오키나와 계획');
+
+  const custom = { id: 'my-demo-trip', title: '내가 만든 제주 여행', destination: '제주', startDate: '2026-10-01', endDate: '2026-10-02', items: [] };
+  const customResult = loadData({ demoMode: true, savedTrips: [custom] }).api.getTrips();
+  expect(customResult.map(trip => trip.id)).toEqual(['my-demo-trip']);
+  expect(loadData({ demoMode: true, savedTrips: [] }).api.getTrips()).toEqual([]);
+
+  const remote = loadData({ demoMode: true, shared: true });
+  expect(remote.api.getTrips()).toEqual([]);
+  expect(remote.store.size).toBe(0);
+});
 
 test('travel records remain scoped to the current family and retain places and memories', async () => {
   const { api, store } = loadData();
@@ -187,10 +221,106 @@ test('trip destination can be a preset or a custom value without stale-field ove
   expect(editCustom).toContain('value="영종도"');
 });
 
-test('map preview ignores invalid points and retains the original itinerary number', () => {
+test('map numbers follow the sorted itinerary including unlocated entries and distinguish days', () => {
   const window = {};
   vm.runInNewContext(readFileSync('travel-map.js', 'utf8'), { window });
-  const items = [{ id: 'missing', latitude: null, longitude: null }, { id: 'valid', title: '장소', latitude: 26, longitude: 127 }];
-  expect(window.FAMILY_TRAVEL_MAP.placePoints(items).map(item => item.id)).toEqual(['valid']);
-  expect(window.FAMILY_TRAVEL_MAP.render({ items })).toContain('<b>2</b>');
+  const items = [
+    { id: 'first', type: 'place', title: '첫 장소', dayIndex: 0, order: 1, latitude: 26, longitude: 127 },
+    { id: 'unlocated', type: 'place', title: '위치 없는 장소', dayIndex: 0, order: 2 },
+    { id: 'third', type: 'place', title: '세 번째', dayIndex: 0, order: 3, latitude: 27, longitude: 128 },
+    { id: 'next-day', type: 'place', title: '다음 날', dayIndex: 1, order: 1, latitude: 28, longitude: 129 },
+  ];
+  expect(window.FAMILY_TRAVEL_MAP.placePoints(items).map(item => item.id)).toEqual(['first', 'third', 'next-day']);
+  const markup = window.FAMILY_TRAVEL_MAP.render({ items, grouped: true });
+  expect(markup).toContain('aria-label="DAY 1 1번 첫 장소"');
+  expect(markup).toContain('aria-label="DAY 1 3번 세 번째"');
+  expect(markup).toContain('aria-label="DAY 2 1번 다음 날"');
+  expect(markup).toContain('travel-map-plot');
+  expect(markup).toContain('DAY 1 · 1번 · 첫 장소');
+});
+
+test('day-scoped add defaults and external map route use the selected date or inbox', () => {
+  const lines = travelSource.split('\n');
+  const activeItems = travelSource.match(/  const activeItems = item => \{[\s\S]*?\n  \};/)?.[0];
+  const functions = ['const itineraryOrder =', 'const defaultDayIndex =', 'const daySelect =', 'const routeUrl ='];
+  const extracted = [activeItems, ...functions.map(prefix => lines.find(line => line.trimStart().startsWith(prefix)))];
+  expect(extracted.every(Boolean)).toBe(true);
+  const context = {
+    current: { tab: 'day-1' },
+    days: () => ['2026-10-01', '2026-10-02'],
+    dayLabel: (_trip, index) => `DAY ${index + 1}`,
+    fmtDate: value => value,
+    esc: value => String(value ?? ''),
+  };
+  vm.createContext(context);
+  vm.runInContext(extracted.join('\n'), context);
+  expect(vm.runInContext('defaultDayIndex()', context)).toBe(1);
+  context.twoDayTrip = { startDate: '2026-10-01', endDate: '2026-10-02' };
+  expect(vm.runInContext('daySelect(twoDayTrip, 1)', context)).toContain('<option value="1" selected>DAY 2');
+  const inboxForm = vm.runInContext('daySelect(twoDayTrip, null)', context);
+  expect(inboxForm).toContain('<option value="" selected>보관함');
+  expect(inboxForm).not.toContain('required');
+  const trip = { startDate: '2026-10-01', endDate: '2026-10-02', items: [
+    { id: 'a', type: 'place', title: 'A', dayIndex: 0, order: 1, place: { address: '주소 A' } },
+    { id: 'b', type: 'place', title: 'B', dayIndex: 1, order: 1, place: { address: '주소 B' } },
+    { id: 'inbox', type: 'place', title: '미정', dayIndex: null, order: 1, place: { address: '주소 미정' } },
+  ] };
+  context.trip = trip;
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://www.google.com/maps/search/?api=1&query=%EC%A3%BC%EC%86%8C%20B');
+  context.current.tab = 'inbox';
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://www.google.com/maps/search/?api=1&query=%EC%A3%BC%EC%86%8C%20%EB%AF%B8%EC%A0%95');
+  context.current.tab = 'all';
+  const allUrl = vm.runInContext('decodeURIComponent(routeUrl(trip))', context);
+  expect(allUrl).toContain('주소 A');
+  expect(allUrl).toContain('주소 미정');
+});
+
+test('planner capture controls preserve day context, details clicks, and null inbox moves', async () => {
+  const handler = travelSource.match(/  const handlePlannerControls = async event => \{[\s\S]*?\n  \};/)?.[0];
+  expect(handler).toBeTruthy();
+  const current = { tab: 'all', modalMode: null };
+  const trip = { id: 'trip-1' };
+  const calls = { render: 0, move: [], show: [] };
+  const context = {
+    current,
+    trip: () => trip,
+    defaultDayIndex: () => null,
+    placeForm: (_trip, day) => `place-day:${day}`,
+    noteForm: (_trip, day) => `note-day:${day}`,
+    showModal: (...args) => calls.show.push(args),
+    render: () => calls.render++,
+    data: { moveItem: async (...args) => calls.move.push(args) },
+    Number,
+  };
+  vm.createContext(context);
+  vm.runInContext(handler, context);
+  const makeEvent = (target, { inMore = false, innerButton = false } = {}) => ({
+    target: {
+      closest: selector => selector === 'button,summary' ? target
+        : selector === '.travel-item-more' ? (inMore ? target.details : null)
+        : selector === '.travel-item-more button,.travel-item-more summary' ? (innerButton ? target : null)
+        : selector === '[data-travel-add-place],[data-travel-add-note]' ? (target.add ? target : null)
+        : null,
+    },
+    preventDefault() {}, stopImmediatePropagation() { this.stopped = true; }, stopped: false,
+  });
+  const add = { add: true, dataset: { travelDayIndex: '2' }, hasAttribute: name => name === 'data-travel-day-index', matches: selector => selector === '[data-travel-add-place]', closest: selector => selector === '[data-travel-add-place],[data-travel-add-note]' ? add : null };
+  await vm.runInContext('handlePlannerControls(event)', Object.assign(context, { event: makeEvent(add) }));
+  expect(calls.show).toEqual([['장소 추가', 'place-day:2']]);
+
+  let selectRenderCount = calls.render;
+  const details = { querySelector: () => ({ value: '' }) };
+  const summary = { matches: selector => selector === '.travel-item-more summary', details };
+  const summaryEvent = makeEvent(summary, { inMore: true });
+  await vm.runInContext('handlePlannerControls(event)', Object.assign(context, { event: summaryEvent }));
+  expect(summaryEvent.stopped).toBe(true);
+  const selectTarget = { matches: () => false, closest: undefined };
+  const selectEvent = { ...makeEvent(selectTarget, { inMore: true }), target: { closest: selector => selector === '.travel-item-more' ? details : selector === '.travel-item-more button,.travel-item-more summary' ? null : null } };
+  await vm.runInContext('handlePlannerControls(event)', Object.assign(context, { event: selectEvent }));
+  expect(selectEvent.stopped).toBe(true);
+  expect(calls.render).toBe(selectRenderCount);
+
+  const move = { dataset: { travelMove: 'entry-1' }, matches: selector => selector === '[data-travel-move]', closest: selector => selector === '.travel-item-more' ? details : null };
+  await vm.runInContext('handlePlannerControls(event)', Object.assign(context, { event: makeEvent(move, { inMore: true, innerButton: true }) }));
+  expect(calls.move).toEqual([['trip-1', 'entry-1', null]]);
 });

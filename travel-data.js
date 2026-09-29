@@ -120,13 +120,31 @@
     });
     return trip;
   };
-  const demoTrip = () => normalizeTrip({ id: 'demo-trip-family-map', title: '도윤이와 첫 오키나와', destinationLabel: '오키나와', startDate: '2026-12-11', endDate: '2026-12-15', timezone: 'Asia/Tokyo', items: [
+  const demoTrip = () => normalizeTrip({ id: 'demo-trip-family-map', title: '도윤이와 첫 오키나와', destinationLabel: '오키나와', startDate: '2026-12-11', endDate: '2026-12-15', timezone: 'Asia/Tokyo', intro: '예정 여행 예시 · 실제 예약 완료 내역이 아닌 계획 샘플', items: [
     { id: 'demo-place-1', type: 'place', dayIndex: 1, order: 0, title: '국제거리 산책', note: '도윤이 컨디션에 따라 짧게', place: { provider: 'demo', providerId: 'kokusai', name: '국제거리', address: '오키나와 나하시 국제거리', lat: 26.2144, lng: 127.6792 } },
     { id: 'demo-note-1', type: 'note', dayIndex: 1, order: 1, title: '점심·수유 시간', time: '12:30', note: '수유 공간을 먼저 확인해요.' },
     { id: 'demo-place-2', type: 'place', dayIndex: 2, order: 0, title: '추라우미 수족관', note: '주차·기저귀 교환대 확인', place: { provider: 'demo', providerId: 'churaumi', name: '해양박공원', address: '424 Ishikawa, Motobu, Okinawa', lat: 26.6942, lng: 127.8777 } },
   ], memories: [], legacy: {} });
+  // Keep public demo mode generic. Signed-in families load their private trips
+  // from the household archive after authentication, so personal history never
+  // ships inside the public JavaScript bundle.
+  const demoTrips = () => [demoTrip()];
+  const isUntouchedDemoTrip = trip => {
+    if (trip?.id !== 'demo-trip-family-map') return false;
+    const original = demoTrip();
+    return trip.title === original.title && trip.destinationLabel === original.destinationLabel && trip.startDate === original.startDate && trip.endDate === original.endDate && trip.intro === original.intro && JSON.stringify(trip.document.items) === JSON.stringify(original.document.items);
+  };
   const readRaw = () => { try { return JSON.parse(localStorage.getItem(contextKey()) || 'null'); } catch { return null; } };
-  const read = () => { const value = readRaw(); if (Array.isArray(value)) return value.map(normalizeTrip).filter(trip => !trip.archivedAt); if (value && Array.isArray(value.trips)) return value.trips.map(normalizeTrip).filter(trip => !trip.archivedAt); return demoMode() ? [demoTrip()] : []; };
+  const read = () => {
+    const value = readRaw();
+    const localDemoSample = demoMode() && !shared();
+    if (value == null) return localDemoSample ? demoTrips() : [];
+    const saved = Array.isArray(value) ? value : Array.isArray(value.trips) ? value.trips : null;
+    if (!saved) return [];
+    const normalized = saved.map(normalizeTrip);
+    if (localDemoSample && normalized.length === 1 && isUntouchedDemoTrip(normalized[0])) return demoTrips();
+    return normalized.filter(trip => !trip.archivedAt);
+  };
   const write = values => { try { localStorage.setItem(contextKey(), JSON.stringify(values.map(normalizeTrip))); return true; } catch { return false; } };
   let trips = shared() ? [] : read(); let generation = 0; let refreshing = null;
   const emit = detail => window.dispatchEvent(new CustomEvent('family:travel-change', { detail: detail || { count: trips.length } }));
