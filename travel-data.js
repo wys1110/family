@@ -143,13 +143,57 @@
     if (!saved) return [];
     const normalized = saved.map(normalizeTrip);
     if (localDemoSample && normalized.length === 1 && isUntouchedDemoTrip(normalized[0])) return demoTrips();
-    return normalized.filter(trip => !trip.archivedAt);
+    return normalized;
   };
   const write = values => { try { localStorage.setItem(contextKey(), JSON.stringify(values.map(normalizeTrip))); return true; } catch { return false; } };
   let trips = shared() ? [] : read(); let generation = 0; let refreshing = null;
   const emit = detail => window.dispatchEvent(new CustomEvent('family:travel-change', { detail: detail || { count: trips.length } }));
   const commit = async (next, options = {}) => { const epoch = generation; let normalized = next.map(value => validateTrip(normalizeTrip(value))); if (shared()) { normalized = normalized.map(value => { if (isUuid(value.id)) return value; const originalId = value.id; return normalizeTrip({ ...value, id: crypto.randomUUID?.() || makeId('trip'), legacy: { ...value.legacy, originalLocalId: originalId } }); }); await sharing().save(normalized, { expectedRevision: options.expectedRevision, mutationId: options.mutationId || makeId('mutation') }); } else if (!write(normalized)) throw new Error('저장 공간이 부족하거나 저장이 차단되어 있어요. 입력 내용을 보관한 뒤 다시 시도해 주세요.'); if (epoch !== generation) throw new Error('가족 계정이 변경되었어요. 여행 탭을 다시 열어 주세요.'); trips = normalized; emit(); return { data: clone(trips), saved: true }; };
   const getTrips = (options = {}) => clone(options.includeArchived ? trips : trips.filter(trip => !trip.archivedAt));
+  const summaryDate = value => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ''));
+    if (!match) return null;
+    const year = Number(match[1]); const month = Number(match[2]); const day = Number(match[3]);
+    const utc = Date.UTC(year, month - 1, day);
+    const date = new Date(utc);
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? utc : null;
+  };
+  const todayInTimezone = (now, timezone) => {
+    const date = now instanceof Date ? new Date(now.getTime()) : new Date(now);
+    if (Number.isNaN(date.getTime())) return null;
+    const formatter = zone => new Intl.DateTimeFormat('en-US', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' });
+    const toKey = values => `${values.year}-${values.month}-${values.day}`;
+    const parts = format => Object.fromEntries(format.formatToParts(date).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+    try { return toKey(parts(formatter(timezone || 'Asia/Seoul'))); }
+    catch { return toKey(parts(formatter('Asia/Seoul'))); }
+  };
+  const summarizeTrips = (input, now = new Date()) => {
+    const summary = { pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [] };
+    const ids = new Set(); const destinations = new Map();
+    for (const trip of Array.isArray(input) ? input : []) {
+      const id = String(trip?.id ?? '').trim();
+      if (id && ids.has(id)) continue;
+      if (id) ids.add(id);
+      const start = summaryDate(trip?.startDate); const end = summaryDate(trip?.endDate);
+      if (start == null || end == null || end < start) { summary.invalidTrips++; continue; }
+      const today = todayInTimezone(now, trip?.timezone);
+      if (!today) { summary.invalidTrips++; continue; }
+      if (trip.endDate < today) {
+        const nights = (end - start) / 86400000;
+        summary.pastTrips++; summary.totalNights += nights;
+        const label = String(trip.destinationLabel ?? '').trim() || String(trip.destination ?? '').trim();
+        const key = label || null;
+        const aggregate = destinations.get(key) || { name: label || '여행지 미지정', trips: 0, nights: 0 };
+        aggregate.trips++; aggregate.nights += nights; destinations.set(key, aggregate);
+      } else if (trip.startDate > today) summary.upcomingTrips++;
+      else summary.ongoingTrips++;
+    }
+    summary.destinations = [...destinations.keys()].filter(label => label !== null).length;
+    summary.topDestinations = [...destinations.values()]
+      .sort((a, b) => b.trips - a.trips || b.nights - a.nights || a.name.localeCompare(b.name))
+      .slice(0, 5);
+    return summary;
+  };
   const getTrip = id => clone(trips.find(trip => trip.id === id && !trip.archivedAt) || null);
   const getArchivedTrips = () => clone(trips.filter(trip => trip.archivedAt));
   const updateLocal = async (id, updater, options = {}) => { const index = trips.findIndex(trip => trip.id === id); if (index < 0) throw new Error('여행을 찾을 수 없어요.'); const before = normalizeTrip(trips[index]); const next = normalizeOrder(normalizeTrip(updater(clone(before)))); next.id = before.id; next.revision = before.revision + 1; next.updatedAt = new Date().toISOString(); validateTrip(next); await commit(trips.map((trip, tripIndex) => tripIndex === index ? next : trip), { ...options, expectedRevision: before.revision }); return clone(next); };
@@ -181,5 +225,5 @@
   const importLocalTrip = async id => { const local = readRaw(); const candidate = (Array.isArray(local) ? local : []).find(item => item.id === id); if (!candidate) throw new Error('기존 여행을 찾을 수 없어요.'); const created = normalizeTrip(candidate); const originalId = created.id; await commit([...trips, created]); return clone(trips.find(item => item.id === originalId || item.legacy?.originalLocalId === originalId) || created); };
   const getLocalTrips = () => shared() ? read().filter(local => !trips.some(remote => remote.id === local.id)) : [];
   window.addEventListener('familycontextchange', () => { generation++; refreshing = null; trips = shared() ? [] : read(); emit(); });
-  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
+  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, summarizeTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
 })();

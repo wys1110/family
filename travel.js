@@ -50,7 +50,16 @@
   const itemCount = item => item.items.length;
   const tripCard = item => `<button type="button" class="travel-trip-card${item.id===current.tripId?' active':''}" data-travel-trip="${esc(item.id)}"><span class="travel-trip-card-mark" aria-hidden="true">⌖</span><span><strong>${esc(item.title)}</strong><small>${esc(item.destinationLabel)} · ${fmtDate(item.startDate)}–${fmtDate(item.endDate)}</small><small>${itemCount(item)}개 기록${item.archivedAt?' · 보관됨':''}</small></span><b aria-hidden="true">›</b></button>`;
   const pageHeader = () => `<header class="travel-page-header"><div><p class="eyebrow">FAMILY TRAVEL ARCHIVE</p><h2>우리 가족의 여행 지도</h2><p>계획한 장소와 그날의 기록을 한 여행 안에 남겨요.</p></div><button class="travel-primary-button" type="button" data-travel-new>＋ 새 여행</button></header>`;
-  const emptyState = () => `${pageHeader()}<section class="travel-empty-card"><span class="travel-empty-icon">⌖</span><h2>첫 여행을 지도에 남겨 볼까요?</h2><p>여행지와 날짜만 정한 뒤 장소를 담고, 여행 후에는 가족의 히스토리로 간직해요.</p><button class="travel-primary-button" type="button" data-travel-new>여행 시작하기</button></section>${modalShell()}`;
+  const historySummary = () => {
+    const summary = data.summarizeTrips(data.getTrips({ includeArchived: true }));
+    const maximum = Math.max(1, ...summary.topDestinations.map(item => item.trips));
+    const destinations = summary.topDestinations.length
+      ? `<ol class="travel-history-destinations">${summary.topDestinations.map(item => `<li><span class="travel-history-destination-name">${esc(item.name)}</span><span class="travel-history-bar-track" aria-hidden="true"><span style="width:${Math.round(item.trips / maximum * 100)}%"></span></span><span class="travel-history-destination-count">${item.trips}회 · ${item.nights}박</span></li>`).join('')}</ol>`
+      : '<p class="travel-history-empty">지난 여행 기록이 쌓이면 여행지가 여기에 표시돼요.</p>';
+    const invalidNotice = summary.invalidTrips ? `<p class="travel-history-notice" role="note">날짜가 누락되었거나 잘못된 여행 ${summary.invalidTrips}개는 집계에서 제외했어요.</p>` : '';
+    return `<section class="travel-history-summary" aria-labelledby="travelHistoryTitle"><div class="travel-history-heading"><div><p class="eyebrow">TRAVEL HISTORY</p><h3 id="travelHistoryTitle">우리 가족 여행 요약</h3></div><p class="travel-history-basis">종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이</p></div><div class="travel-history-stats"><article><strong>${summary.pastTrips}회</strong><span>지난 여행</span></article><article><strong>${summary.totalNights}박</strong><span>누적 박수</span></article><article><strong>${summary.destinations}곳</strong><span>여행지 수</span></article></div><p class="travel-history-plans"><span>진행 중 <strong>${summary.ongoingTrips}</strong></span><span>예정 <strong>${summary.upcomingTrips}</strong></span></p><div class="travel-history-destination-section"><h4>자주 간 여행지 <span>지난 여행 횟수 · 누적 박수</span></h4>${destinations}</div>${invalidNotice}</section>`;
+  };
+  const emptyState = () => `${pageHeader()}${historySummary()}<section class="travel-empty-card"><span class="travel-empty-icon">⌖</span><h2>새 여행을 지도에 남겨 볼까요?</h2><p>여행지와 날짜만 정한 뒤 장소를 담고, 여행 후에는 가족의 히스토리로 간직해요.</p><button class="travel-primary-button" type="button" data-travel-new>여행 시작하기</button></section>${modalShell()}`;
   const dateTabs = item => `<nav class="travel-day-tabs" aria-label="여행 날짜"><button type="button" class="${current.tab==='inbox'?'active':''}" aria-pressed="${current.tab==='inbox'}" data-travel-tab="inbox"><small>미정</small><strong>보관함</strong><span>${item.items.filter(entry=>entry.dayIndex==null).length}</span></button><button type="button" class="${current.tab==='all'?'active':''}" aria-pressed="${current.tab==='all'}" data-travel-tab="all"><small>전체</small><strong>모든 기록</strong><span>${item.items.length}</span></button>${days(item).map((date,index)=>`<button type="button" class="${current.tab===`day-${index}`?'active':''}" aria-pressed="${current.tab===`day-${index}`}" data-travel-tab="day-${index}"><small>${dayLabel(item,index)}</small><strong>${esc(fmtDate(date))}</strong><span>${item.items.filter(entry=>entry.dayIndex===index).length}</span></button>`).join('')}</nav>`;
   const itemCard = (item, entry, index, count) => {
     const number = entry.type === 'place' ? dayPlaces(item, entry.dayIndex).findIndex(place => place.id === entry.id) + 1 : null;
@@ -78,7 +87,7 @@
     if(current.tab==='all'&&active.items.length===0)current.tab='day-0';
     if(current.tab.startsWith('day-')&&(!Number.isInteger(Number(current.tab.slice(4)))||Number(current.tab.slice(4))>=days(active).length))current.tab=days(active).length?'day-0':'all';
     if($('#travelModal',view)?.open)closeModal();
-    view.innerHTML=`${pageHeader()}<div class="travel-trip-switcher"><div class="travel-trip-list">${trips.map(tripCard).join('')}</div></div>${editor(active)}${modalShell()}`;
+    view.innerHTML=`${pageHeader()}${historySummary()}<div class="travel-trip-switcher"><div class="travel-trip-list">${trips.map(tripCard).join('')}</div></div>${editor(active)}${modalShell()}`;
     view.dataset.renderedTab=current.tab;
     const dateStrip=$('.travel-day-tabs',view), tripStrip=$('.travel-trip-list',view);
     if(dateStrip&&previousDateScroll!=null&&previousTab===current.tab)dateStrip.scrollLeft=previousDateScroll;

@@ -68,6 +68,72 @@ test('travel records remain scoped to the current family and retain places and m
   expect([...store.keys()]).toEqual(['family-travel-v1:household-a']);
 });
 
+test('travel history summary validates dates, classifies per-trip timezones, deduplicates ids and ignores archived state', () => {
+  const { api } = loadData();
+  const now = new Date('2026-10-01T00:30:00.000Z');
+  const trips = [
+    { id: 'past', startDate: '2026-09-28', endDate: '2026-09-30', destinationLabel: ' 제주 ', archivedAt: '2026-10-01', timezone: 'Asia/Seoul', items: [{ visited: false }] },
+    { id: 'past', startDate: '2026-09-28', endDate: '2026-09-30', destinationLabel: '제주', timezone: 'Asia/Seoul' },
+    { id: 'same-day', startDate: '2026-09-30', endDate: '2026-09-30', destination: '도쿄', timezone: 'Asia/Tokyo' },
+    { id: 'ongoing', startDate: '2026-09-30', endDate: '2026-09-30', destination: '현재 일정', timezone: 'America/Los_Angeles' },
+    { id: 'upcoming', startDate: '2026-10-02', endDate: '2026-10-03', destination: '예정', timezone: 'invalid/timezone' },
+    { id: 'bad-calendar', startDate: '2026-02-29', endDate: '2026-03-01', destination: '제주' },
+    { id: 'bad-format', startDate: '2026-9-01', endDate: '2026-09-02', destination: '제주' },
+    { id: 'reversed', startDate: '2026-09-03', endDate: '2026-09-02', destination: '부산' },
+    { id: 'missing', startDate: '', endDate: '2026-09-02', destination: '부산' },
+    { id: 'missing-destination', startDate: '2026-09-28', endDate: '2026-09-29', destinationLabel: '  ', destination: '' },
+  ];
+  const before = JSON.stringify(trips);
+  expect(api.summarizeTrips(trips, now)).toEqual({
+    pastTrips: 3, totalNights: 3, destinations: 2, ongoingTrips: 1, upcomingTrips: 1, invalidTrips: 4,
+    topDestinations: [
+      { name: '제주', trips: 1, nights: 2 },
+      { name: '여행지 미지정', trips: 1, nights: 1 },
+      { name: '도쿄', trips: 1, nights: 0 },
+    ],
+  });
+  expect(JSON.stringify(trips)).toBe(before);
+});
+
+test('travel history ranks destinations by trip count, then nights, then name and retains archived local records', async () => {
+  const archived = { id: 'archived-trip', title: '기록', destination: '제주', startDate: '2026-09-01', endDate: '2026-09-03', archivedAt: '2026-09-05', items: [] };
+  const { api } = loadData({ savedTrips: [archived] });
+  expect(api.getTrips()).toEqual([]);
+  expect(api.getTrips({ includeArchived: true })).toHaveLength(1);
+  await api.refresh();
+  expect(api.getTrips()).toEqual([]);
+  expect(api.getTrips({ includeArchived: true })).toHaveLength(1);
+
+  const trips = [
+    { id: 'a1', destination: '가', startDate: '2026-09-01', endDate: '2026-09-02' },
+    { id: 'a2', destination: '가', startDate: '2026-09-01', endDate: '2026-09-02' },
+    { id: 'b1', destination: '나', startDate: '2026-09-01', endDate: '2026-09-04' },
+    { id: 'b2', destination: '나', startDate: '2026-09-01', endDate: '2026-09-04' },
+    { id: 'c1', destination: '다', startDate: '2026-09-01', endDate: '2026-09-04' },
+    { id: 'c2', destination: '다', startDate: '2026-09-01', endDate: '2026-09-04' },
+    { id: 'd1', destination: '라', startDate: '2026-09-01', endDate: '2026-09-02' },
+    { id: 'e1', destination: '마', startDate: '2026-09-01', endDate: '2026-09-02' },
+    { id: 'f1', destination: '바', startDate: '2026-09-01', endDate: '2026-09-02' },
+  ];
+  const ranked = api.summarizeTrips(trips, new Date('2026-10-01T12:00:00Z')).topDestinations;
+  expect(ranked).toHaveLength(5);
+  expect(ranked).toEqual([
+    { name: '나', trips: 2, nights: 6 }, { name: '다', trips: 2, nights: 6 }, { name: '가', trips: 2, nights: 2 },
+    { name: '라', trips: 1, nights: 1 }, { name: '마', trips: 1, nights: 1 },
+  ]);
+  expect(api.summarizeTrips([], new Date('2026-10-01T12:00:00Z'))).toEqual({ pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [] });
+});
+
+test('travel summary is rendered above both the trip selector and empty state', () => {
+  expect(travelSource).toContain('data.getTrips({ includeArchived: true })');
+  expect(travelSource).toContain('종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이');
+  expect(dataSource).toContain('여행지 미지정');
+  expect(travelSource).toContain('지난 여행 기록이 쌓이면 여행지가 여기에 표시돼요.');
+  expect(travelSource).toMatch(/\$\{pageHeader\(\)\}\$\{historySummary\(\)\}<div class="travel-trip-switcher"/);
+  expect(travelSource).toMatch(/\$\{pageHeader\(\)\}\$\{historySummary\(\)\}<section class="travel-empty-card"/);
+  expect(travelCssSource).toContain('@media (max-width:420px)');
+});
+
 test('travel tab loads only archive modules and has no booking-search workspace', () => {
   expect(configSource).toContain("travel: ['travel-data', 'travel-map', 'travel']");
   expect(configSource).not.toContain("travel: ['travel-data', 'travel-providers', 'travel-map', 'travel']");

@@ -193,9 +193,9 @@ window.FAMILY_CONFIG = {
     { name: "compact-family", version: "20260922-pattern-priority-v2" },
     { name: "nova-family", version: "20260920-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
-    { name: "travel-data", version: "20260929-demo-trip-history-v1", style: false },
+    { name: "travel-data", version: "20261001-history-summary-v1", style: false },
     { name: "travel-map", version: "20260926-ios-planner-v1", style: false },
-    { name: "travel", version: "20260926-ios-planner-v1" },
+    { name: "travel", version: "20261001-history-summary-v1" },
   ];
 
   const deferredGroups = {
