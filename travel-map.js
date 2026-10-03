@@ -69,7 +69,7 @@
       }
       for (const item of points) {
         const label = kind === 'history' ? `${item.title} · ${item.visits}회 방문` : `${day(item)} ${number(items, item)}번 ${item.title}`;
-        const icon = kind === 'history' ? L.divIcon({ className:'travel-history-marker', iconSize:[84,44], iconAnchor:[42,Number(item.place.lat) >= middleLatitude ? 50 : -6], html:`<span class="travel-history-pin ${Number(item.place.lat) >= middleLatitude ? 'above' : 'below'}${item.id === activeId ? ' active' : ''}"><b>${esc(item.title)}</b><small>${item.visits}회</small></span>` }) : L.divIcon({ className:'travel-map-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-map-pin${item.id === activeId ? ' active' : ''}"><b>${number(items, item)}</b>${grouped ? `<span>${item.dayIndex == null ? '미정' : `D${item.dayIndex + 1}`}</span>` : ''}</span>` });
+        const icon = kind === 'history' ? L.divIcon({ className:'travel-history-marker', iconSize:[112,44], iconAnchor:[56,Number(item.place.lat) >= middleLatitude ? 50 : -6], html:`<span class="travel-history-pin ${Number(item.place.lat) >= middleLatitude ? 'above' : 'below'}${item.id === activeId ? ' active' : ''}"><b>${esc(item.title)}</b><small>${item.visits}회</small></span>` }) : L.divIcon({ className:'travel-map-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-map-pin${item.id === activeId ? ' active' : ''}"><b>${number(items, item)}</b>${grouped ? `<span>${item.dayIndex == null ? '미정' : `D${item.dayIndex + 1}`}</span>` : ''}</span>` });
         const marker = L.marker(coordinates(item), { icon, title:label, keyboard:true }).addTo(layers);
         const labelMarker = () => marker.getElement?.()?.setAttribute('aria-label', label);
         marker.on('add', labelMarker);
