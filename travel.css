@@ -3,6 +3,28 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView {
   padding-bottom: 42px;
 }
 html[data-family-design="nova"][data-family-theme-choice] #travelView[hidden] { display: none; }
+#travelView .travel-page-nav { display:flex; gap:4px; padding:5px; margin-bottom:20px; border:1px solid var(--nova-line); border-radius:16px; background:var(--nova-soft); }
+#travelView .travel-page-nav button { flex:1; min-height:44px; border:0; border-radius:12px; background:transparent; color:var(--nova-muted); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+#travelView .travel-page-nav button[aria-pressed="true"] { background:var(--nova-card); color:var(--nova-accent); box-shadow:var(--nova-shadow); }
+#travelView .travel-catalog-search { display:grid; gap:8px; font-weight:650; color:var(--nova-text); }
+#travelView .travel-catalog-filters { display:flex; gap:7px; overflow-x:auto; padding:14px 0 4px; }
+#travelView .travel-catalog-filters button { flex:0 0 auto; min-height:44px; padding:8px 14px; border:1px solid var(--nova-line); border-radius:999px; background:var(--nova-card); color:var(--nova-muted); font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
+#travelView .travel-catalog-filters button[aria-pressed="true"] { border-color:var(--nova-accent); background:var(--nova-lilac); color:var(--nova-accent); }
+#travelView .travel-catalog-count { margin:14px 0; color:var(--nova-muted); font-size:13px; }
+#travelView .travel-catalog-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+#travelView .travel-catalog-card { display:flex; flex-direction:column; align-items:flex-start; min-width:0; padding:20px; border:1px solid var(--nova-line); border-radius:20px; background:var(--nova-card); box-shadow:var(--nova-shadow); }
+#travelView .travel-catalog-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; color:var(--nova-muted); font-size:12px; }
+#travelView .travel-catalog-status { padding:5px 9px; border-radius:8px; background:var(--nova-soft); color:var(--nova-muted); font-weight:650; }
+#travelView .travel-catalog-status[data-status="ongoing"], #travelView .travel-catalog-status[data-status="upcoming"] { background:var(--nova-lilac); color:var(--nova-accent); }
+#travelView .travel-catalog-card h3 { margin:16px 0 5px; font-size:19px; letter-spacing:-.04em; }
+#travelView .travel-catalog-card p { margin:0 0 6px; color:var(--nova-muted); font-size:14px; }
+#travelView .travel-catalog-card .travel-catalog-dates { margin-bottom:18px; font-size:13px; }
+#travelView .travel-catalog-card .travel-secondary-button { width:100%; margin-top:auto; gap:12px; }
+#travelView .travel-catalog-empty { grid-column:1 / -1; padding:32px 18px; border:1px dashed var(--nova-line); border-radius:20px; background:var(--nova-card); color:var(--nova-muted); text-align:center; font-size:14px; }
+#travelView .travel-back { margin-bottom:14px; }
+#travelView .travel-page-header > button { flex-shrink:0; white-space:nowrap; }
+#travelView :is(.travel-page-nav,.travel-catalog-filters) button:focus-visible { outline:3px solid var(--nova-accent); outline-offset:2px; }
+@media (max-width:767px) { #travelView .travel-catalog-grid { grid-template-columns:minmax(0,1fr); } #travelView .travel-catalog-card { padding:18px; } }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header,
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head,
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-card-heading,
@@ -19,16 +41,6 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-pr
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-primary-button.small { min-height: 36px; padding: 8px 11px; font-size: 12px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-secondary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 9px 13px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-soft); color: var(--nova-text); font-size: 12px; font-weight: 650; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-card-link { display: inline-flex; align-items: center; gap: 7px; padding: 0; background: transparent; color: var(--nova-accent); font-size: 12px; font-weight: 700; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-switcher { margin-bottom: 16px; overflow: hidden; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-list { display: flex; gap: 9px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card { display: grid; grid-template-columns: 34px minmax(170px,1fr) auto; align-items: center; gap: 10px; min-width: 248px; padding: 11px 13px; border: 1px solid var(--nova-line); border-radius: 17px; background: var(--nova-card); color: var(--nova-text); text-align: left; box-shadow: var(--nova-shadow); cursor: pointer; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card.active { border-color: var(--nova-accent); background: color-mix(in srgb,var(--nova-lilac) 45%,var(--nova-card)); }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: var(--nova-lilac); color: var(--nova-accent); }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card strong,
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card strong { font-size: 13px; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card small { margin-top: 3px; color: var(--nova-muted); font-size: 10px; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card > b { color: var(--nova-muted); font-size: 20px; font-weight: 400; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace { border: 1px solid var(--nova-line); border-radius: 26px; background: color-mix(in srgb,var(--nova-card) 82%,transparent); box-shadow: var(--nova-shadow); overflow: hidden; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head { align-items: flex-start; padding: 22px 22px 11px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head h2 { margin: 3px 0 0; font-size: 28px; letter-spacing: -.07em; }
@@ -310,7 +322,7 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView dialog.tra
 #travelView, #travelView * { box-sizing: border-box; }
 #travelView { min-width: 0; }
 #travelView :is(.travel-card-heading, .travel-workspace-head, .travel-summary-actions) { flex-wrap: wrap; }
-#travelView :is(.travel-card-heading > div, .travel-trip-card > span, .travel-booked-card > div, .travel-form-grid > label) { min-width: 0; }
+#travelView :is(.travel-card-heading > div, .travel-booked-card > div, .travel-form-grid > label) { min-width: 0; }
 #travelView :is(h2, h3, strong, p, small) { overflow-wrap: anywhere; }
 #travelView :is(input, select, textarea) { max-width: 100%; min-width: 0; }
 #travelView .travel-provider-links { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 14px; }
@@ -346,7 +358,7 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView :is(button
 html[data-family-design="nova"][data-family-theme-choice] #travelView :is(input,select,textarea) { min-height:44px; font-size:16px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView label { font-size:14px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView :is(.travel-form-hint,.travel-map-note,.travel-itinerary-item small,.travel-item-meta,.travel-map-selected span) { font-size:13px; line-height:1.45; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView :is(.travel-day-tabs,.travel-trip-list) { overscroll-behavior-inline:contain; scroll-behavior:auto; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-day-tabs { overscroll-behavior-inline:contain; scroll-behavior:auto; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-map-pin { display:grid; place-items:center; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; overflow:visible; border-radius:50%; transform:translate(-50%,-50%); }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-map-pin b { width:30px; height:30px; font-size:14px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-map-pin span { position:absolute; top:-7px; right:-11px; display:grid; place-items:center; width:auto; max-width:none; height:20px; padding:0 5px; border:1px solid var(--nova-card); border-radius:999px; background:var(--nova-text); color:var(--nova-card); font-size:10px; font-weight:750; }
@@ -419,7 +431,7 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-la
 }
 
 /* Final, component-scoped overrides for compact touch layouts. */
-html[data-family-design="nova"][data-family-theme-choice] #travelView :is(.travel-primary-button,.travel-primary-button.small,.travel-secondary-button,.travel-secondary-button.small,.travel-card-link,.travel-trip-card,.travel-day-tabs button,.travel-item-main,.travel-item-actions button,.travel-item-actions summary,.travel-layout-toggle button,.travel-modal-close) { min-height:44px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView :is(.travel-primary-button,.travel-primary-button.small,.travel-secondary-button,.travel-secondary-button.small,.travel-card-link,.travel-day-tabs button,.travel-item-main,.travel-item-actions button,.travel-item-actions summary,.travel-layout-toggle button,.travel-modal-close) { min-height:44px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions { grid-column:2 / -1; width:100%; max-width:none; min-width:0; justify-content:flex-start; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-actions :is(button,summary) { width:auto; height:auto; min-width:44px; min-height:44px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-menu { width:min(100%,280px); min-width:0; }
@@ -432,7 +444,6 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-it
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header { gap:10px; margin:8px 0 12px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header h2 { font-size:23px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header p:not(.eyebrow) { font-size:13px; }
-  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-trip-card { min-width:230px; min-height:60px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace { border-radius:20px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head { align-items:flex-start; gap:8px; padding:14px 12px 8px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head h2 { font-size:21px; }
