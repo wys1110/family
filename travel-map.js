@@ -1,24 +1,83 @@
 (() => {
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
-  const coordinates = item => item?.place?.lat != null && item?.place?.lng != null ? [item.place.lat, item.place.lng] : [item?.latitude, item?.longitude];
+  const coordinates = item => [item?.place?.lat, item?.place?.lng];
   const placePoints = items => (items || []).filter(item => { const [lat, lng] = coordinates(item); return lat != null && lat !== '' && lng != null && lng !== '' && Number.isFinite(Number(lat)) && Math.abs(Number(lat)) <= 90 && Number.isFinite(Number(lng)) && Math.abs(Number(lng)) <= 180; });
-  const project = (items, width = 720, height = 240) => {
-    const points = placePoints(items); if (!points.length) return [];
-    const values = points.map(item => coordinates(item));
-    const lats = values.map(value => Number(value[0])), lngs = values.map(value => Number(value[1]));
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats), minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-    const latSpan = Math.max(maxLat - minLat, .01), lngSpan = Math.max(maxLng - minLng, .01);
-    return points.map(item => { const [lat, lng] = coordinates(item); return { item, index: items.indexOf(item), x: lngSpan <= .01 ? width / 2 : ((Number(lng) - minLng) / lngSpan) * width, y: latSpan <= .01 ? height / 2 : ((maxLat - Number(lat)) / latSpan) * height }; });
+  // ponytail: at most 500 places; precompute day numbers if that limit grows.
+  const number = (items, item) => items.slice(0, items.indexOf(item) + 1).filter(entry => entry.dayIndex === item.dayIndex).length;
+  const day = item => item.dayIndex == null ? '보관함' : `DAY ${item.dayIndex + 1}`;
+  const selectedMarkup = (items, activeId) => {
+    const selected = placePoints(items).find(item => item.id === activeId);
+    return selected ? `<strong>${esc(day(selected))} · ${number(items, selected)}번 · ${esc(selected.title)}</strong><span>${esc(selected.place.address || '주소 미지정')}</span>` : '지도 핀이나 장소 번호를 누르면 기록과 함께 확인할 수 있어요.';
   };
-  const render = ({ items = [], activeId = '', grouped = false } = {}) => {
-    const points = project(items);
-    if (!points.length) return `<div class="travel-map-empty"><span aria-hidden="true">⌖</span><strong>위치가 있는 장소를 추가하면 지도에 보여요</strong><small>검색 결과를 선택하면 위치가 저장돼요. 위치가 없는 기록은 메모로 남길 수 있어요.</small></div>`;
-    const groups = grouped ? [...new Map(points.map(point => [point.item.dayIndex ?? 'inbox', true])).keys()].map(day => points.filter(point => (point.item.dayIndex ?? 'inbox') === day)) : [points];
-    const paths = groups.filter(group => group.length > 1).map(group => { const line = group.map(point => `${point.x},${point.y}`).join(' '); return `<path class="travel-map-route" d="M ${line.replaceAll(' ', ' L ')}" />`; }).join('');
-    const selected = points.find(point => point.item.id === activeId) || points[0];
-    const selectedNumber = selected ? (grouped ? items.slice(0, selected.index + 1).filter(item => item.dayIndex === selected.item.dayIndex).length : selected.index + 1) : 0;
-    const selectedDay = selected?.item.dayIndex == null ? '보관함' : `DAY ${selected.item.dayIndex + 1}`;
-    return `<div class="travel-map-wrap"><div class="travel-map-canvas" aria-label="장소 방문 순서 지도"><div class="travel-map-plot"><svg viewBox="0 0 720 240" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="travelRouteGradient" x1="0" x2="1"><stop offset="0" stop-color="var(--nova-accent)"/><stop offset="1" stop-color="var(--nova-accent-deep)"/></linearGradient></defs>${paths}</svg><div class="travel-map-labels">${points.map(point => { const number = grouped ? items.slice(0, point.index + 1).filter(item => item.dayIndex === point.item.dayIndex).length : point.index + 1; const day = point.item.dayIndex == null ? '보관함' : `DAY ${point.item.dayIndex + 1}`; return `<button type="button" class="travel-map-pin${point.item.id === activeId ? ' active' : ''}" style="left:${(point.x / 720) * 100}%;top:${(point.y / 240) * 100}%" data-map-item="${esc(point.item.id)}" aria-label="${day} ${number}번 ${esc(point.item.title)}"><b>${number}</b>${grouped?`<span>${point.item.dayIndex == null ? '미정' : `D${point.item.dayIndex + 1}`}</span>`:''}</button>`; }).join('')}</div></div><small class="travel-map-caption">방문 순서 · 실제 이동 경로 아님</small></div>${selected?`<p class="travel-map-selected" aria-live="polite"><strong>${esc(selectedDay)} · ${selectedNumber}번 · ${esc(selected.item.title)}</strong><span>${esc(selected.item.place?.address || selected.item.address || '주소 미지정')}</span></p>`:'<p class="travel-map-selected">장소를 선택하면 이름과 주소가 여기에 표시돼요.</p>'}</div>`;
+  const render = ({ items = [], activeId = '' } = {}) => `<div class="travel-map-wrap"><div class="travel-map-canvas"><div class="travel-leaflet-map" role="region" aria-label="여행 장소 지도"></div></div><p class="travel-map-status" role="status" hidden></p><p class="travel-map-note">방문 순서 · 실제 이동 경로 아님${placePoints(items).length ? '' : ' · 위치가 있는 장소를 추가하면 핀이 표시돼요.'}</p><p class="travel-map-selected" aria-live="polite">${selectedMarkup(items, activeId)}</p></div>`;
+  let library, instance, container, layers, tiles, signature = '', request = 0, tileFailed = false;
+  const load = () => {
+    if (library) return library;
+    if (window.L) return Promise.resolve(window.L);
+    library = new Promise((resolve, reject) => {
+      const style = document.createElement('link');
+      style.rel = 'stylesheet'; style.href = 'assets/vendor/leaflet-1.9.4/leaflet.css';
+      const script = document.createElement('script');
+      script.src = 'assets/vendor/leaflet-1.9.4/leaflet.js';
+      const timeout = setTimeout(() => fail(), 15000);
+      const fail = () => { clearTimeout(timeout); script.onload = script.onerror = style.onload = style.onerror = null; script.remove(); style.remove(); window.L = undefined; library = null; reject(new Error('지도 라이브러리를 불러오지 못했어요.')); };
+      let scriptReady = false, styleReady = false;
+      const ready = () => { if (scriptReady && styleReady) { clearTimeout(timeout); resolve(window.L); } };
+      script.onload = () => { scriptReady = true; ready(); }; script.onerror = fail;
+      style.onload = () => { styleReady = true; ready(); }; style.onerror = fail;
+      document.head.append(style, script);
+    });
+    return library;
   };
-  window.FAMILY_TRAVEL_MAP = Object.freeze({ render, placePoints, project });
+  const destroy = () => { request++; instance?.remove(); instance = null; container = null; layers = null; tiles = null; signature = ''; tileFailed = false; };
+  const mount = async (root, { items = [], activeId = '', grouped = false, scope = '', center = null, onSelect, retry = false, focus = false } = {}) => {
+    const node = root?.querySelector('.travel-leaflet-map');
+    if (!node || !node.isConnected) return;
+    const status = root.querySelector('.travel-map-status');
+    const failure = message => { const status = root.querySelector('.travel-map-status'); status.hidden = false; status.innerHTML = `${esc(message)} <button type="button" class="travel-secondary-button small" data-travel-map-retry>다시 불러오기</button>`; };
+    const epoch = ++request;
+    let L;
+    try { L = await load(); } catch { if (epoch === request && node.isConnected) failure('지도를 불러오지 못했어요. 일정은 계속 사용할 수 있어요.'); return; }
+    if (epoch !== request || !node.isConnected) return;
+    if (node !== container) {
+      instance?.remove(); container = node; signature = ''; tileFailed = false;
+      instance = L.map(node, { scrollWheelZoom:false });
+      // Standard OSM tiles: on-demand only, browser cache/referrer defaults; never prefetch.
+      tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(instance);
+      tiles.on('tileerror', () => { tileFailed = true; failure('지도 배경을 불러오지 못했어요.'); });
+      layers = L.layerGroup().addTo(instance);
+    }
+    if (retry) { tileFailed = false; status.hidden = true; tiles.redraw(); }
+    if (tileFailed) failure('지도 배경을 불러오지 못했어요.');
+    else status.hidden = true;
+    layers.clearLayers();
+    const points = placePoints(items);
+    const accent = window.getComputedStyle(node).getPropertyValue('--nova-accent').trim();
+    const groups = [...new Set(points.map(item => item.dayIndex))];
+    for (const group of groups) {
+      if (group == null) continue;
+      const entries = points.filter(item => item.dayIndex === group);
+      if (entries.length > 1) L.polyline(entries.map(coordinates), { color:accent, weight:3, opacity:.75 }).addTo(layers);
+    }
+    for (const item of points) {
+      const label = `${day(item)} ${number(items, item)}번 ${item.title}`;
+      const icon = L.divIcon({ className:'travel-map-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-map-pin${item.id === activeId ? ' active' : ''}"><b>${number(items, item)}</b>${grouped ? `<span>${item.dayIndex == null ? '미정' : `D${item.dayIndex + 1}`}</span>` : ''}</span>` });
+      const marker = L.marker(coordinates(item), { icon, title:label, keyboard:true }).addTo(layers);
+      const labelMarker = () => marker.getElement?.()?.setAttribute('aria-label', label);
+      marker.on('add', labelMarker);
+      labelMarker();
+      marker.on('click', () => onSelect?.(item.id));
+    }
+    root.querySelector('.travel-map-selected').innerHTML = selectedMarkup(items, activeId);
+    const nextSignature = JSON.stringify([scope, points.map(item => [item.id, item.dayIndex, ...coordinates(item)]), center]);
+    instance.invalidateSize({ pan:false });
+    if (nextSignature !== signature) {
+      signature = nextSignature;
+      if (points.length) instance.fitBounds(points.map(coordinates), { padding:[30,30], maxZoom:15, animate:false });
+      else instance.setView(center && center.every(value => value != null && Number.isFinite(value)) ? center : [37.5665,126.978], 10);
+    }
+    const selected = points.find(item => item.id === activeId);
+    if (focus && selected) instance.panTo(coordinates(selected), { animate:false });
+  };
+  window.FAMILY_TRAVEL_MAP = Object.freeze({ render, mount, destroy, placePoints });
 })();

@@ -287,24 +287,6 @@ test('trip destination can be a preset or a custom value without stale-field ove
   expect(editCustom).toContain('value="영종도"');
 });
 
-test('map numbers follow the sorted itinerary including unlocated entries and distinguish days', () => {
-  const window = {};
-  vm.runInNewContext(readFileSync('travel-map.js', 'utf8'), { window });
-  const items = [
-    { id: 'first', type: 'place', title: '첫 장소', dayIndex: 0, order: 1, latitude: 26, longitude: 127 },
-    { id: 'unlocated', type: 'place', title: '위치 없는 장소', dayIndex: 0, order: 2 },
-    { id: 'third', type: 'place', title: '세 번째', dayIndex: 0, order: 3, latitude: 27, longitude: 128 },
-    { id: 'next-day', type: 'place', title: '다음 날', dayIndex: 1, order: 1, latitude: 28, longitude: 129 },
-  ];
-  expect(window.FAMILY_TRAVEL_MAP.placePoints(items).map(item => item.id)).toEqual(['first', 'third', 'next-day']);
-  const markup = window.FAMILY_TRAVEL_MAP.render({ items, grouped: true });
-  expect(markup).toContain('aria-label="DAY 1 1번 첫 장소"');
-  expect(markup).toContain('aria-label="DAY 1 3번 세 번째"');
-  expect(markup).toContain('aria-label="DAY 2 1번 다음 날"');
-  expect(markup).toContain('travel-map-plot');
-  expect(markup).toContain('DAY 1 · 1번 · 첫 장소');
-});
-
 test('day-scoped add defaults and external map route use the selected date or inbox', () => {
   const lines = travelSource.split('\n');
   const activeItems = travelSource.match(/  const activeItems = item => \{[\s\S]*?\n  \};/)?.[0];
