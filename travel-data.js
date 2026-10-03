@@ -34,7 +34,7 @@
     return index >= 0 ? index : null;
   };
   const localDateFor = (trip, dayIndex) => dayIndex == null ? null : dateList(trip.startDate, trip.endDate)[dayIndex] || null;
-  const validCoordinate = (lat, lng) => Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && Math.abs(Number(lat)) <= 90 && Math.abs(Number(lng)) <= 180;
+  const validCoordinate = (lat, lng) => lat != null && lat !== '' && lng != null && lng !== '' && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && Math.abs(Number(lat)) <= 90 && Math.abs(Number(lng)) <= 180;
   const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
   const contextKey = () => {
     const householdId = window.FAMILY_APP_STATE?.household?.id;
@@ -168,7 +168,7 @@
     catch { return toKey(parts(formatter('Asia/Seoul'))); }
   };
   const summarizeTrips = (input, now = new Date()) => {
-    const summary = { pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [] };
+    const summary = { pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [], historyDestinations: [] };
     const ids = new Set(); const destinations = new Map();
     for (const trip of Array.isArray(input) ? input : []) {
       const id = String(trip?.id ?? '').trim();
@@ -183,15 +183,23 @@
         summary.pastTrips++; summary.totalNights += nights;
         const label = String(trip.destinationLabel ?? '').trim() || String(trip.destination ?? '').trim();
         const key = label || null;
-        const aggregate = destinations.get(key) || { name: label || '여행지 미지정', trips: 0, nights: 0 };
-        aggregate.trips++; aggregate.nights += nights; destinations.set(key, aggregate);
+        const aggregate = destinations.get(key) || { name: label || '여행지 미지정', trips: 0, nights: 0, place: null, records: [] };
+        aggregate.trips++; aggregate.nights += nights;
+        aggregate.records.push({ id, title: String(trip.title || label || '여행'), startDate: trip.startDate, endDate: trip.endDate });
+        if (!aggregate.place) {
+          const recorded = (trip.items || []).find(item => item.type === 'place' && item.dayIndex != null && validCoordinate(item.place?.lat, item.place?.lng));
+          if (validCoordinate(trip.centerLat, trip.centerLng)) aggregate.place = { lat: Number(trip.centerLat), lng: Number(trip.centerLng) };
+          else if (recorded) aggregate.place = { lat: Number(recorded.place.lat), lng: Number(recorded.place.lng) };
+        }
+        destinations.set(key, aggregate);
       } else if (trip.startDate > today) summary.upcomingTrips++;
       else summary.ongoingTrips++;
     }
     summary.destinations = [...destinations.keys()].filter(label => label !== null).length;
-    summary.topDestinations = [...destinations.values()]
-      .sort((a, b) => b.trips - a.trips || b.nights - a.nights || a.name.localeCompare(b.name))
-      .slice(0, 5);
+    const ranked = [...destinations.values()]
+      .sort((a, b) => b.trips - a.trips || b.nights - a.nights || a.name.localeCompare(b.name));
+    summary.topDestinations = ranked.slice(0, 5).map(({ name, trips, nights }) => ({ name, trips, nights }));
+    summary.historyDestinations = ranked.map(item => ({ id: item.name, title: item.name, visits: item.trips, nights: item.nights, place: item.place, records: item.records }));
     return summary;
   };
   const getTrip = id => clone(trips.find(trip => trip.id === id && !trip.archivedAt) || null);

@@ -479,6 +479,18 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-ma
 #travelView .leaflet-control-attribution a { color:var(--nova-accent); }
 #travelView .leaflet-control-zoom a { width:44px; height:44px; line-height:44px; background:var(--nova-card); color:var(--nova-text); }
 #travelView button.travel-item-number { border:0; cursor:pointer; min-width:44px; min-height:44px; }
+#travelView .travel-history-map h4 { margin:0 0 10px; font-size:14px; }
+#travelView .travel-history-map .travel-leaflet-map { height:320px; }
+#travelView .travel-history-pin { position:relative; display:flex; align-items:center; justify-content:center; gap:6px; height:44px; padding:0 8px; border:2px solid var(--nova-accent); border-radius:14px; background:var(--nova-card); color:var(--nova-text); box-shadow:var(--nova-shadow); }
+#travelView .travel-history-pin::after { position:absolute; left:calc(50% - 4px); width:8px; height:8px; border-radius:50%; background:var(--nova-accent); content:''; }
+#travelView .travel-history-pin.above::after { bottom:-12px; }
+#travelView .travel-history-pin.below::after { top:-12px; }
+#travelView .travel-history-pin b { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+#travelView .travel-history-pin small { flex-shrink:0; color:var(--nova-accent); font-size:11px; }
+#travelView .travel-history-pin.active { background:var(--nova-lilac); }
+#travelView .travel-history-marker:focus-visible { outline:3px solid var(--nova-accent); border-radius:14px; }
+#travelView .travel-history-map .travel-map-selected span { display:grid; gap:2px; padding-top:6px; }
+#travelView .travel-history-map .travel-map-selected small { color:var(--nova-muted); font-size:11px; }
 @media(max-width:767px) {
   #travelView .travel-leaflet-map { height:260px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-itinerary-item { grid-template-columns:44px minmax(0,1fr); }
