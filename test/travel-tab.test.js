@@ -151,22 +151,23 @@ test('history map groups all past destinations, retains archived dates and uses 
   expect(saved.items[0].place.lat).toBeNull();
 });
 
-test('travel summary is rendered above both the trip selector and empty state', () => {
+test('travel summary is separate from the management list and itinerary', () => {
   expect(travelSource).toContain('data.getTrips({ includeArchived: true })');
   expect(travelSource).toContain('종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이');
   expect(dataSource).toContain('여행지 미지정');
   expect(travelSource).toContain('지난 여행 기록이 쌓이면 여행지가 여기에 표시돼요.');
-  expect(travelSource).toMatch(/\$\{pageHeader\(\)\}\$\{historySummary\(\)\}<div class="travel-trip-switcher"/);
-  expect(travelSource).toMatch(/\$\{pageHeader\(\)\}\$\{historySummary\(\)\}<section class="travel-empty-card"/);
+  expect(travelSource).toContain("current.page==='summary'?historySummary():active?");
+  expect(travelSource).toContain('data-travel-back');
+  expect(travelSource).not.toContain('data.getTrips()[0]');
   expect(travelCssSource).toContain('@media (max-width:420px)');
 });
 
 test('travel tab loads only archive modules and has no booking-search workspace', () => {
-  expect(configSource).toContain("travel: ['travel-data', 'travel-map', 'travel']");
+  expect(configSource).toContain("travel: ['travel-data', 'travel-map', 'travel-management', 'travel']");
   expect(configSource).not.toContain("travel: ['travel-data', 'travel-providers', 'travel-map', 'travel']");
   expect(deferredSource).toContain("createTab('travel', '✈️ 여행')");
   expect(travelSource).toContain('FAMILY TRAVEL ARCHIVE');
-  expect(travelSource).toContain("[['overview','여행 요약'],['route','장소·지도'],['stories','여행 이야기']]");
+  expect(travelSource).toContain('data-travel-page="summary"');
   expect(travelSource).toContain('방문한 장소 남기기');
   expect(travelSource).not.toContain('항공·숙소 찾기');
   expect(travelSource).not.toContain('예약처 열기');

@@ -193,16 +193,17 @@ window.FAMILY_CONFIG = {
     { name: "compact-family", version: "20260922-pattern-priority-v2" },
     { name: "nova-family", version: "20260920-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
-    { name: "travel-data", version: "20261003-history-dots-v1", style: false },
-    { name: "travel-map", version: "20261003-history-dots-v1", style: false },
-    { name: "travel", version: "20261003-history-dots-v1" },
+    { name: "travel-data", version: "20261004-travel-management-v1", style: false },
+    { name: "travel-map", version: "20261004-travel-management-v1", style: false },
+    { name: "travel-management", version: "20261004-travel-management-v1", style: false },
+    { name: "travel", version: "20261004-travel-management-v1" },
   ];
 
   const deferredGroups = {
     english: ['english-stories', 'english-story-name'],
     settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
     admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity'],
-    travel: ['travel-data', 'travel-map', 'travel'],
+    travel: ['travel-data', 'travel-map', 'travel-management', 'travel'],
   };
   const deferredNames = new Set(Object.values(deferredGroups).flat());
   const extraModules = [
