@@ -65,6 +65,7 @@ function lineNumberAt(source, index) {
 
 function scanFile(absolute) {
   const file = relative(root, absolute).replaceAll("\\", "/");
+  if (file.startsWith("assets/vendor/")) return [];
   if (paletteFiles.has(file)) return [];
 
   const extension = absolute.slice(absolute.lastIndexOf("."));
