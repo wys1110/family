@@ -67,7 +67,7 @@ test('real map keeps itinerary numbering, day routes, selection, view state, and
   expect(calls.removed).toBe(1);
 });
 
-test('history and itinerary maps have independent lifecycles and history pins show visits without routes', async () => {
+test('history and itinerary maps have independent lifecycles and history dots reveal details only on selection', async () => {
   const {api,calls,root,selected}=loadMap();
   const itinerary=api.create(), history=api.create();
   await itinerary.mount(root,{items});
@@ -77,9 +77,9 @@ test('history and itinerary maps have independent lifecycles and history pins sh
   expect(calls.maps).toBe(2);
   expect(calls.removed).toBe(0);
   expect(calls.routes).toHaveLength(0);
-  expect(calls.markers[0].options.title).toBe('제주 · 2회 방문');
-  expect(calls.markers[0].options.icon.html).toContain('제주');
-  expect(calls.markers[0].options.icon.html).toContain('2회');
+  expect(calls.markers[0].options.title).toBe('');
+  expect(calls.markers[0].options.icon.html).not.toContain('제주');
+  expect(calls.markers[0].options.icon.html).not.toContain('2회');
   const fitBeforeResize=calls.fit;
   calls.events.filter(event=>event.name==='resize').forEach(event=>event.handler());
   expect(calls.fit).toBe(fitBeforeResize+1);
