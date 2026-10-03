@@ -2,7 +2,7 @@
 
 **Goal:** Show past family destinations together at the top of the travel summary.
 
-**Approved design:** One labeled pin per destination with visit count. Fit all recorded locations; selecting a pin shows the trips and dates. Exclude ongoing/future trips. Include archived history; list destinations with missing coordinates separately. Use saved destination coordinates or an actual scheduled place as the representative location; never invent coordinates.
+**Approved design:** One dot per destination without visible marker text. The user requested dots instead of labeled badges on 2026-10-03. Fit all recorded locations; selecting a dot shows the destination, visit count, trips and dates below the map. Exclude ongoing/future trips. Include archived history; list destinations with missing coordinates separately. Use saved destination coordinates or an actual scheduled place as the representative location; never invent coordinates.
 
 **Architecture:** Enrich the existing past-trip aggregation in `travel-data.js`. Share the Leaflet loader but give history and itinerary separate map controllers in `travel-map.js`; `travel.js` manages their independent lifecycle and selection. Reuse existing theme tokens and bundled Leaflet.
 

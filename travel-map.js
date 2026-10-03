@@ -32,7 +32,7 @@
   };
   const create = () => {
     let instance, container, currentRoot, layers, tiles, signature = '', request = 0, tileFailed = false, historyBounds = [];
-    const fitHistory = () => { if(historyBounds.length)instance.fitBounds(historyBounds,{padding:[62,62],maxZoom:10,animate:false}); };
+    const fitHistory = () => { if(historyBounds.length)instance.fitBounds(historyBounds,{padding:[30,30],maxZoom:10,animate:false}); };
     const destroy = () => { request++; instance?.remove(); instance = null; container = null; currentRoot = null; layers = null; tiles = null; signature = ''; tileFailed = false; historyBounds = []; };
     const mount = async (root, { items = [], activeId = '', grouped = false, scope = '', center = null, onSelect, retry = false, focus = false, kind = 'itinerary' } = {}) => {
       const node = root?.querySelector('.travel-leaflet-map');
@@ -59,7 +59,6 @@
       layers.clearLayers();
       const points = placePoints(items);
       historyBounds = kind === 'history' ? points.map(coordinates) : [];
-      const middleLatitude = points.length ? (Math.min(...points.map(item=>Number(item.place.lat))) + Math.max(...points.map(item=>Number(item.place.lat)))) / 2 : 0;
       const accent = window.getComputedStyle(node).getPropertyValue('--nova-accent').trim();
       const groups = [...new Set(points.map(item => item.dayIndex))];
       for (const group of kind === 'history' ? [] : groups) {
@@ -69,8 +68,8 @@
       }
       for (const item of points) {
         const label = kind === 'history' ? `${item.title} · ${item.visits}회 방문` : `${day(item)} ${number(items, item)}번 ${item.title}`;
-        const icon = kind === 'history' ? L.divIcon({ className:'travel-history-marker', iconSize:[112,44], iconAnchor:[56,Number(item.place.lat) >= middleLatitude ? 50 : -6], html:`<span class="travel-history-pin ${Number(item.place.lat) >= middleLatitude ? 'above' : 'below'}${item.id === activeId ? ' active' : ''}"><b>${esc(item.title)}</b><small>${item.visits}회</small></span>` }) : L.divIcon({ className:'travel-map-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-map-pin${item.id === activeId ? ' active' : ''}"><b>${number(items, item)}</b>${grouped ? `<span>${item.dayIndex == null ? '미정' : `D${item.dayIndex + 1}`}</span>` : ''}</span>` });
-        const marker = L.marker(coordinates(item), { icon, title:label, keyboard:true }).addTo(layers);
+        const icon = kind === 'history' ? L.divIcon({ className:'travel-history-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-history-dot${item.id === activeId ? ' active' : ''}" aria-hidden="true"></span>` }) : L.divIcon({ className:'travel-map-marker', iconSize:[44,44], iconAnchor:[22,22], html:`<span class="travel-map-pin${item.id === activeId ? ' active' : ''}"><b>${number(items, item)}</b>${grouped ? `<span>${item.dayIndex == null ? '미정' : `D${item.dayIndex + 1}`}</span>` : ''}</span>` });
+        const marker = L.marker(coordinates(item), { icon, title:kind === 'history' ? '' : label, keyboard:true }).addTo(layers);
         const labelMarker = () => marker.getElement?.()?.setAttribute('aria-label', label);
         marker.on('add', labelMarker);
         labelMarker();
