@@ -84,7 +84,7 @@ test('travel history summary validates dates, classifies per-trip timezones, ded
     { id: 'missing-destination', startDate: '2026-09-28', endDate: '2026-09-29', destinationLabel: '  ', destination: '' },
   ];
   const before = JSON.stringify(trips);
-  expect(api.summarizeTrips(trips, now)).toEqual({
+  expect(api.summarizeTrips(trips, now)).toMatchObject({
     pastTrips: 3, totalNights: 3, destinations: 2, ongoingTrips: 1, upcomingTrips: 1, invalidTrips: 4,
     topDestinations: [
       { name: '제주', trips: 1, nights: 2 },
@@ -121,7 +121,34 @@ test('travel history ranks destinations by trip count, then nights, then name an
     { name: '나', trips: 2, nights: 6 }, { name: '다', trips: 2, nights: 6 }, { name: '가', trips: 2, nights: 2 },
     { name: '라', trips: 1, nights: 1 }, { name: '마', trips: 1, nights: 1 },
   ]);
-  expect(api.summarizeTrips([], new Date('2026-10-01T12:00:00Z'))).toEqual({ pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [] });
+  expect(api.summarizeTrips([], new Date('2026-10-01T12:00:00Z'))).toEqual({ pastTrips: 0, totalNights: 0, destinations: 0, ongoingTrips: 0, upcomingTrips: 0, invalidTrips: 0, topDestinations: [], historyDestinations: [] });
+});
+
+test('history map groups all past destinations, retains archived dates and uses only recorded locations', () => {
+  const { api } = loadData();
+  const base = { startDate:'2026-09-01', endDate:'2026-09-03', timezone:'Asia/Seoul' };
+  const trips = [
+    {...base,id:'j1',title:'첫 제주',destination:'제주',centerLat:null,centerLng:null,items:[{type:'place',dayIndex:0,place:{lat:33.4,lng:126.2}}]},
+    {...base,id:'j2',title:'다시 제주',destination:' 제주 ',archivedAt:'2026-09-04',centerLat:33.5,centerLng:126.5},
+    {...base,id:'j2',destination:'제주',centerLat:33.5,centerLng:126.5},
+    {...base,id:'no',destination:'위치 없음',centerLat:'',centerLng:'',items:[{type:'place',dayIndex:null,place:{lat:37,lng:127}},{type:'note',dayIndex:0,place:{lat:37,lng:127}}]},
+    {...base,id:'bad',destination:'잘못된 위치',centerLat:100,centerLng:127,items:[{type:'place',dayIndex:0,place:{lat:null,lng:null}}]},
+    {...base,id:'future',destination:'예정',startDate:'2027-01-01',endDate:'2027-01-02',centerLat:35,centerLng:135},
+    {...base,id:'invalid',destination:'날짜 오류',endDate:'2026-02-30',centerLat:35,centerLng:135},
+    ...['도쿄','부산','서울','강릉'].map((destination,i)=>({...base,id:`extra-${i}`,destination,centerLat:35+i,centerLng:130})),
+  ];
+  const summary = api.summarizeTrips(trips,new Date('2026-10-03T00:00:00Z'));
+  expect(summary.historyDestinations).toHaveLength(7);
+  const jeju = summary.historyDestinations.find(item=>item.title==='제주');
+  expect(jeju.visits).toBe(2);
+  expect(jeju.place).toEqual({lat:33.4,lng:126.2});
+  expect(jeju.records.map(record=>[record.id,record.title,record.startDate,record.endDate])).toEqual([
+    ['j1','첫 제주','2026-09-01','2026-09-03'],['j2','다시 제주','2026-09-01','2026-09-03'],
+  ]);
+  expect(summary.historyDestinations.filter(item=>!item.place).map(item=>item.title).sort()).toEqual(['위치 없음','잘못된 위치']);
+  const saved = loadData({savedTrips:[{...base,id:'null',destination:'위치 없음',centerLat:null,centerLng:null,items:[{id:'p',type:'place',dayIndex:0,place:{lat:null,lng:null}}]}]}).api.getTrips()[0];
+  expect(saved.centerLat).toBeNull();
+  expect(saved.items[0].place.lat).toBeNull();
 });
 
 test('travel summary is rendered above both the trip selector and empty state', () => {
