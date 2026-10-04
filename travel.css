@@ -22,6 +22,24 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView[hidden] { 
 #travelView .travel-catalog-card .travel-secondary-button { width:100%; margin-top:auto; gap:12px; }
 #travelView .travel-catalog-empty { grid-column:1 / -1; padding:32px 18px; border:1px dashed var(--nova-line); border-radius:20px; background:var(--nova-card); color:var(--nova-muted); text-align:center; font-size:14px; }
 #travelView .travel-back { margin-bottom:14px; }
+#travelView .travel-bulk-editor { margin-bottom:16px; }
+#travelView .travel-bulk-editor.selecting { padding:14px; border:1px solid var(--nova-line); border-radius:16px; background:var(--nova-soft); }
+#travelView .travel-bulk-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+#travelView .travel-bulk-heading strong { color:var(--nova-accent); font-size:16px; }
+#travelView .travel-bulk-hint, #travelView .travel-bulk-message { margin:8px 0 12px; color:var(--nova-muted); font-size:13px; line-height:1.5; }
+#travelView .travel-bulk-message:empty { display:none; }
+#travelView .travel-bulk-message.error { color:var(--red); }
+#travelView #travelBulkForm fieldset { display:grid; gap:12px; min-width:0; margin:0; padding:0; border:0; }
+#travelView .travel-bulk-selection, #travelView .travel-bulk-visits { display:flex; flex-wrap:wrap; gap:8px; }
+#travelView .travel-bulk-date { display:flex; align-items:flex-end; flex-wrap:wrap; gap:8px; }
+#travelView .travel-bulk-date label { display:grid; flex:1 1 190px; gap:6px; min-width:0; color:var(--nova-muted); }
+#travelView .travel-bulk-date button { flex:1 1 140px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-bulk-visits button { flex:1 1 105px; padding-inline:8px; }
+#travelView .travel-itinerary-item.selected { background:var(--nova-lilac); border-radius:12px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-leading:has(.travel-place-selection) { display:flex; flex-direction:column; align-items:center; gap:8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-selection { display:grid; place-items:center; width:44px; height:44px; cursor:pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView input[data-travel-select-place] { width:22px; height:22px; min-height:22px; margin:0; padding:0; accent-color:var(--nova-accent); cursor:pointer; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView :is(.travel-bulk-editor,.travel-item-leading) :disabled { opacity:.5; cursor:default; }
 #travelView .travel-page-header > button { flex-shrink:0; white-space:nowrap; }
 #travelView :is(.travel-page-nav,.travel-catalog-filters) button:focus-visible { outline:3px solid var(--nova-accent); outline-offset:2px; }
 @media (max-width:767px) { #travelView .travel-catalog-grid { grid-template-columns:minmax(0,1fr); } #travelView .travel-catalog-card { padding:18px; } }
