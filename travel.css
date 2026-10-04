@@ -34,7 +34,7 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView[hidden] { 
 #travelView .travel-bulk-date { display:flex; align-items:flex-end; flex-wrap:wrap; gap:8px; }
 #travelView .travel-bulk-date label { display:grid; flex:1 1 190px; gap:6px; min-width:0; color:var(--nova-muted); }
 #travelView .travel-bulk-date button { flex:1 1 140px; }
-html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-bulk-visits button { flex:1 1 105px; padding-inline:8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-bulk-visits button { flex:1 1 140px; padding-inline:8px; }
 #travelView .travel-itinerary-item.selected { background:var(--nova-lilac); border-radius:12px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-leading:has(.travel-place-selection) { display:flex; flex-direction:column; align-items:center; gap:8px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-place-selection { display:grid; place-items:center; width:44px; height:44px; cursor:pointer; }

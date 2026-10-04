@@ -39,7 +39,7 @@ Files: `travel.js`, `travel.css`, `config.js`, `index.html`, cache-version contr
 - [x] Update asset revisions. Run focused travel tests, `npm test`, `npm run check`, and `git diff --check`.
 - [x] In generic demo browser data, select places across days, set visited, move to one date/inbox, reload and verify notes unchanged. Check 390/375px and desktop layouts, keyboard selection, map/card synchronization, catalog filters and summary navigation.
 - [x] Request a fresh code review. No actionable findings; focused travel tests passed.
-- [ ] Commit/push, attach PR, merge after checks, and verify deployment assets and live demo interaction.
+- [x] Commit/push, attach PR, merge after checks, and verify deployment assets and live demo interaction.
 
 ## Verification evidence
 
@@ -47,3 +47,4 @@ Files: `travel.js`, `travel.css`, `config.js`, `index.html`, cache-version contr
 - Generic demo UI: cross-day selection, explicit visited/unvisited, day and inbox moves, reload persistence, unchanged note, keyboard Space selection and 375/390/1440px layouts verified.
 - Summary map still renders text-free dots. Selection resets when returning to the catalog.
 - Fixed explicit null day normalization after a failing regression exposed inbox records reverting to their old date.
+- Delivered in PR #138. Pages run 37179331345 passed; five public assets matched main f84ea515. Live generic demo confirmed selecting two places, marking visited and moving to DAY 1.
