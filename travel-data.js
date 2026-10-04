@@ -48,7 +48,7 @@
   const normalizeItem = (raw, trip, fallbackIndex = 0) => {
     const source = raw && typeof raw === 'object' ? raw : {};
     const legacyDate = source.localDate || source.date || null;
-    const dayIndex = source.dayIndex == null ? dayIndexFor(legacyDate, trip.startDate) : Number(source.dayIndex);
+    const dayIndex = source.dayIndex === undefined ? dayIndexFor(legacyDate, trip.startDate) : source.dayIndex === null ? null : Number(source.dayIndex);
     const placeSource = source.place && typeof source.place === 'object' ? source.place : null;
     const isNote = source.type === 'note' || source.kind === 'note' || (!source.place && !validCoordinate(source.latitude, source.longitude) && source.note && !source.address);
     const place = isNote ? null : (placeSource || (source.address || source.place || validCoordinate(source.latitude, source.longitude) ? {
@@ -213,6 +213,24 @@
   const updateItem = async (tripId, itemId, patch) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? normalizeItem({ ...item, ...patch }, trip, item.order) : item) }));
   const deleteItem = async (tripId, itemId) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.filter(item => item.id !== itemId) }));
   const moveItem = async (tripId, itemId, dayIndex) => updateLocal(tripId, trip => ({ ...trip, items: trip.items.map(item => item.id === itemId ? { ...item, dayIndex: dayIndex == null ? null : Number(dayIndex), order: trip.items.filter(other => other.dayIndex === (dayIndex == null ? null : Number(dayIndex))).length } : item) }));
+  const selectedPlaces = (trip, itemIds) => {
+    const selected = new Set(Array.isArray(itemIds) ? itemIds : []);
+    if (trip.archivedAt || !selected.size || [...selected].some(id => !trip.items.some(item => item.id === id && item.type === 'place'))) throw new Error('선택한 장소를 확인해 주세요. 최신 목록에서 다시 선택할 수 있어요.');
+    return selected;
+  };
+  const movePlaces = async (tripId, itemIds, dayIndex) => updateLocal(tripId, trip => {
+    const selected = selectedPlaces(trip, itemIds);
+    if (dayIndex !== null && (!Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex >= dateList(trip.startDate, trip.endDate).length)) throw new Error('이동할 날짜를 확인해 주세요.');
+    const moving = trip.items.filter(item => selected.has(item.id) && item.dayIndex !== dayIndex).sort((a,b) => (a.dayIndex ?? 9999)-(b.dayIndex ?? 9999) || a.order-b.order);
+    const firstOrder = trip.items.filter(item => item.dayIndex === dayIndex).length;
+    const positions = new Map(moving.map((item,index) => [item.id,firstOrder+index]));
+    return {...trip,items:trip.items.map(item => positions.has(item.id) ? {...item,dayIndex,order:positions.get(item.id)} : item)};
+  });
+  const setPlacesVisited = async (tripId, itemIds, visited) => updateLocal(tripId, trip => {
+    const selected = selectedPlaces(trip, itemIds);
+    if (typeof visited !== 'boolean') throw new Error('방문 상태를 확인해 주세요.');
+    return {...trip,items:trip.items.map(item => selected.has(item.id) ? {...item,visited} : item)};
+  });
   const reorderItem = async (tripId, itemId, direction) => updateLocal(tripId, trip => { const item = trip.items.find(entry => entry.id === itemId); if (!item) return trip; const siblings = trip.items.filter(entry => entry.dayIndex === item.dayIndex).sort((a, b) => a.order - b.order); const index = siblings.findIndex(entry => entry.id === itemId); const target = index + (direction === 'up' ? -1 : 1); if (target < 0 || target >= siblings.length) return trip; [siblings[index].order, siblings[target].order] = [siblings[target].order, siblings[index].order]; return { ...trip, items: trip.items.map(entry => entry.id === siblings[index].id ? siblings[index] : entry.id === siblings[target].id ? siblings[target] : entry) }; });
   const toggleVisited = (tripId, itemId) => { const item = getTrip(tripId)?.items.find(entry => entry.id === itemId); return updateItem(tripId, itemId, { visited: !item?.visited }); };
   const archiveTrip = async id => updateLocal(id, trip => ({ ...trip, archivedAt: new Date().toISOString() })); const restoreTrip = async id => updateLocal(id, trip => ({ ...trip, archivedAt: null }));
@@ -233,5 +251,5 @@
   const importLocalTrip = async id => { const local = readRaw(); const candidate = (Array.isArray(local) ? local : []).find(item => item.id === id); if (!candidate) throw new Error('기존 여행을 찾을 수 없어요.'); const created = normalizeTrip(candidate); const originalId = created.id; await commit([...trips, created]); return clone(trips.find(item => item.id === originalId || item.legacy?.originalLocalId === originalId) || created); };
   const getLocalTrips = () => shared() ? read().filter(local => !trips.some(remote => remote.id === local.id)) : [];
   window.addEventListener('familycontextchange', () => { generation++; refreshing = null; trips = shared() ? [] : read(); emit(); });
-  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, summarizeTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
+  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, summarizeTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, movePlaces, setPlacesVisited, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
 })();
