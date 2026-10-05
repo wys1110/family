@@ -416,7 +416,7 @@
       </div>
       <div class="settings-family-restore-preview" data-settings-restore-preview hidden></div>
       <button type="button" class="settings-family-restore-button" data-settings-backup-restore disabled>검증 후 복원</button>
-      <p class="settings-family-data-status" data-settings-backup-status aria-live="polite">Excel 보고서는 아래 내보내기 카드에서 계속 사용할 수 있어요.</p>
+      <p class="settings-family-data-status" data-settings-backup-status aria-live="polite">JSON 백업에는 가족 기록과 선택한 사진이 포함돼요.</p>
     `;
     const backupButton = card.querySelector('[data-settings-backup-download]');
     const input = card.querySelector('[data-settings-backup-input]');

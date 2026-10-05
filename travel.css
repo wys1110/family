@@ -21,6 +21,11 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView[hidden] { 
 #travelView .travel-catalog-card .travel-catalog-dates { margin-bottom:18px; font-size:13px; }
 #travelView .travel-catalog-card .travel-secondary-button { width:100%; margin-top:auto; gap:12px; }
 #travelView .travel-catalog-empty { grid-column:1 / -1; padding:32px 18px; border:1px dashed var(--nova-line); border-radius:20px; background:var(--nova-card); color:var(--nova-muted); text-align:center; font-size:14px; }
+#travelView .travel-itinerary-filters { display:flex; flex-wrap:wrap; gap:12px; margin-block:16px 8px; }
+#travelView .travel-itinerary-filters label { display:grid; flex:1 1 220px; gap:6px; min-width:0; color:var(--nova-muted); font-size:14px; }
+#travelView .travel-itinerary-filters label:last-child { flex:1 1 140px; }
+#travelView .travel-itinerary-count { margin:0 0 16px; color:var(--nova-muted); font-size:13px; }
+#travelView .travel-itinerary-empty { padding:24px 12px; color:var(--nova-muted); text-align:center; }
 #travelView .travel-back { margin-bottom:14px; }
 #travelView .travel-bulk-editor { margin-bottom:16px; }
 #travelView .travel-bulk-editor.selecting { padding:14px; border:1px solid var(--nova-line); border-radius:16px; background:var(--nova-soft); }

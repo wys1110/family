@@ -165,6 +165,56 @@ body,
   display: none !important;
 }
 
+.settings-search-tools {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--separator);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.settings-search-tools input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  color: var(--label);
+  background: var(--surface-2);
+  font: inherit;
+}
+
+.settings-search-tools p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 12px;
+}
+
+.settings-search-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-search-jumps button,
+.settings-search-tools > button {
+  min-height: 44px;
+  padding: 7px 11px;
+  border: 1px solid var(--separator);
+  border-radius: 999px;
+  color: var(--label);
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#settingsView .settings-search-hidden {
+  display: none !important;
+}
+
 #settingsView > [data-settings-refresh-module],
 #settingsView > [data-activity-disclosure],
 #settingsView > #feedingReminderSettings {
@@ -437,10 +487,6 @@ html[data-family-theme="night"] .photo-viewer-panel {
 }
 
 @media (min-width: 640px) {
-  .theme-option-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .settings-card {
     padding: 24px;
   }

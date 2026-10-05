@@ -16,12 +16,12 @@ describe("white and black themes", () => {
   test("loads the semantic theme facade after every page palette", () => {
     const nightIndex = config.indexOf('{ name: "night-page-palette"');
     const monochromeIndex = config.indexOf('{ name: "monochrome-theme", version: "20260830-black-empty-card-v1", script: false }');
-    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20260809-feeding-neutral-v1", script: false }');
+    const finalBlackIndex = config.indexOf('{ name: "black-theme-final", version: "20261005-core-quality-v5", script: false }');
 
     expect(nightIndex).toBeGreaterThan(-1);
     expect(monochromeIndex).toBeGreaterThan(nightIndex);
     expect(finalBlackIndex).toBeGreaterThan(monochromeIndex);
-    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20260809-feeding-neutral-v1");');
+    expect(finalBlackTheme).toContain('@import url("./theme-system.css?v=20261005-core-quality-v5");');
     expect(finalBlackTheme).toContain('@import url("./theme-calendar-exception.css?v=20260803-night-only-v1");');
     expect(themeSystem).toMatch(/^@import url\("\.\/growth-delete-sync\.css\?v=20260802-theme-system-v1"\);/);
     expect(serviceWorker).toContain('url.pathname.endsWith("/theme-system.css")');
@@ -89,8 +89,8 @@ describe("white and black themes", () => {
     expect(themeSystem).not.toContain('html[data-family-theme="night"][data-family-theme-choice="black"]');
   });
 
-  test("neutralizes controls even when feature modules inject styles later", () => {
-    expect(themeSystem).toContain(':is(button, [role="button"])');
+  test("keeps component control styles while sharing progress tokens", () => {
+    expect(themeSystem).not.toContain(':is(button, [role="button"])');
     expect(themeSystem).toContain('background-image: linear-gradient(145deg, #2d2d2d, #171717) !important');
     expect(themeSystem).toContain('.admin-user-chart-bar');
     expect(themeSystem).toContain('.english-progress i');
@@ -98,7 +98,6 @@ describe("white and black themes", () => {
   });
 
   test("keeps black calendar event bars on their member colors", () => {
-    expect(themeSystem).toContain(':not(.calendar-event-bar)');
     expect(themeSystem).toContain('html[data-family-theme-choice="black"] #calendarView .calendar-event-bar');
     expect(themeSystem).toContain('background: var(--member-color) !important;');
     expect(themeSystem).toContain('background-image: none !important;');

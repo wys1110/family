@@ -58,7 +58,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], growthFilter: "all", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], calendarLayout: "month", calendarMember: "", growthFilter: "all", growthFilterBabyId: null, growthCategory: "", growthFrom: "", growthTo: "", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 // Feature modules loaded after the core need a read-only way to identify the
 // current family context without reaching into app internals.
 window.FAMILY_APP_STATE = state;
@@ -866,6 +866,13 @@ function releaseTouchTabFocus(event) {
 function bindUi() {
   $("#prevMonth").addEventListener("click", () => slideMonth(-1));
   $("#nextMonth").addEventListener("click", () => slideMonth(1));
+  $("#calendarViewControls").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-calendar-layout]"); if (!button) return;
+    state.calendarLayout = button.dataset.calendarLayout; renderCalendar();
+  });
+  $("#calendarMemberFilter").addEventListener("change", (event) => {
+    state.calendarMember = event.target.value; renderCalendar(); renderAgenda(); renderUpcomingEvents();
+  });
   $("#todayButton").addEventListener("click", () => { state.viewDate = startOfMonth(new Date()); state.selectedDate = dateKey(new Date()); render(); });
   $("#addEventButton").addEventListener("click", () => state.activeView === "calendar" ? openEventDialog() : openGrowthDialog());
   document.querySelectorAll(".view-tab").forEach((button) => {
@@ -930,6 +937,19 @@ function bindUi() {
   $("#archiveBabyButton").addEventListener("click", archiveBabyProfile);
   $("#babySelector").addEventListener("click", selectBabyFromEvent);
   $("#growthFilterBar").addEventListener("click", changeGrowthFilter);
+  $("#growthRecordFilters").addEventListener("change", (event) => {
+    state.growthCategory = $("#growthCategoryFilter").value;
+    state.growthFrom = $("#growthFrom").value; state.growthTo = $("#growthTo").value;
+    if (event.target.type === "date" && state.growthFilter === "today") state.growthFilter = "all";
+    renderGrowth();
+  });
+  $("#growthResetFilters").addEventListener("click", () => {
+    state.growthFilter = "all"; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = ""; renderGrowth();
+  });
+  window.addEventListener("familycontextchange", () => {
+    state.calendarMember = ""; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = "";
+    renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth();
+  });
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
   $("#careTimerStarts").addEventListener("click", startCareTimerFromEvent);
   $("#careTimerStop").addEventListener("click", stopCareTimer);
@@ -1081,7 +1101,7 @@ function calendarWeekSegments(gridStart) {
     const weekStart = new Date(gridStart); weekStart.setDate(gridStart.getDate() + weekIndex * 7);
     const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
     const weekStartKey = dateKey(weekStart); const weekEndKey = dateKey(weekEnd);
-    const segments = [...state.events, ...publicHolidayEvents()]
+    const segments = [...state.events.filter((event) => !state.calendarMember || event.member === state.calendarMember), ...publicHolidayEvents()]
       .filter((event) => event.date <= weekEndKey && (event.endDate || event.date) >= weekStartKey)
       .map((event) => {
         const startKey = event.date < weekStartKey ? weekStartKey : event.date;
@@ -1102,9 +1122,36 @@ function calendarWeekSegments(gridStart) {
   });
 }
 
+function calendarMonthEvents() {
+  const first = dateKey(new Date(state.viewDate.getFullYear(), state.viewDate.getMonth(), 1));
+  const last = dateKey(new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + 1, 0));
+  return state.events.filter((event) => (!state.calendarMember || event.member === state.calendarMember)
+    && event.date <= last && (event.endDate || event.date) >= first)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time || "99:99").localeCompare(b.time || "99:99"));
+}
+
+function renderCalendarMonthList() {
+  const events = calendarMonthEvents();
+  $("#calendarMonthCount").textContent = `${events.length}개 일정`;
+  const list = $("#calendarMonthList");
+  list.innerHTML = events.length ? events.map((event) => {
+    const day = new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", weekday: "short" }).format(parseDate(event.date));
+    return `<button class="upcoming-event-item" type="button" data-id="${escapeHtml(event.id)}" style="${memberStyle(event.member)}"><i class="bar" aria-hidden="true"></i><time datetime="${escapeHtml(event.date)}">${escapeHtml(day)}<small>${escapeHtml(event.time || "종일")}</small></time><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)}${formatEventRange(event) ? ` · ${escapeHtml(formatEventRange(event))}` : ""}</small></span><b aria-hidden="true">수정</b></button>`;
+  }).join("") : '<div class="empty-state"><strong>이 달에 표시할 일정이 없어요</strong><span>구성원을 바꾸거나 새 일정을 추가해 보세요.</span></div>';
+  list.querySelectorAll("[data-id]").forEach((button) => button.addEventListener("click", () => openEventDialog(state.events.find((event) => event.id === button.dataset.id))));
+}
+
 function renderCalendar() {
   const year = state.viewDate.getFullYear(); const month = state.viewDate.getMonth();
   $("#monthLabel").textContent = `${year}년 ${month + 1}월`;
+  const members = [...new Set([...state.familyMembers.map((member) => member.name), ...state.events.map((event) => event.member)].filter(Boolean))];
+  if (!members.includes(state.calendarMember)) state.calendarMember = "";
+  $("#calendarMemberFilter").innerHTML = '<option value="">전체 구성원</option>' + members.map((member) => `<option value="${escapeHtml(member)}">${escapeHtml(member)}</option>`).join("");
+  $("#calendarMemberFilter").value = state.calendarMember;
+  const listOpen = state.calendarLayout === "list";
+  $("#calendarMonthView").hidden = listOpen; $("#calendarMonthListView").hidden = !listOpen;
+  $("#calendarViewControls").querySelectorAll("[data-calendar-layout]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.calendarLayout === state.calendarLayout)));
+  renderCalendarMonthList();
   const first = new Date(year, month, 1); const start = new Date(year, month, 1 - first.getDay());
   const grid = $("#calendarGrid"); grid.innerHTML = "";
   const weekSegments = calendarWeekSegments(start);
@@ -1117,7 +1164,7 @@ function renderCalendar() {
   }));
   for (let i = 0; i < 42; i++) {
     const day = new Date(start); day.setDate(start.getDate() + i); const key = dateKey(day);
-    const dayEvents = state.events.filter((event) => eventOccursOn(event, key));
+    const dayEvents = state.events.filter((event) => (!state.calendarMember || event.member === state.calendarMember) && eventOccursOn(event, key));
     const holiday = publicHolidayEvent(key);
     const button = document.createElement("button"); button.className = "calendar-day";
     button.style.gridColumn = String((i % 7) + 1); button.style.gridRow = String(Math.floor(i / 7) + 1);
@@ -1168,7 +1215,7 @@ function renderCalendar() {
 }
 
 function renderAgenda() {
-  const date = parseDate(state.selectedDate); const events = state.events.filter((event) => eventOccursOn(event, state.selectedDate)).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+  const date = parseDate(state.selectedDate); const events = state.events.filter((event) => (!state.calendarMember || event.member === state.calendarMember) && eventOccursOn(event, state.selectedDate)).sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
   const holiday = publicHolidayEvent(state.selectedDate);
   $("#agendaTitle").textContent = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(date);
   $("#agendaCount").textContent = `${events.length + Number(Boolean(holiday))}개 일정`;
@@ -1218,7 +1265,7 @@ function upcomingEvents(events, todayKey, limit = 20) {
 
 function renderUpcomingEvents() {
   const todayKey = dateKey(new Date());
-  const events = upcomingEvents(state.events, todayKey, 20);
+  const events = upcomingEvents(state.events.filter((event) => !state.calendarMember || event.member === state.calendarMember), todayKey, 20);
   const list = $("#upcomingEventsList");
   $("#upcomingEventsCount").textContent = `${events.length}개 일정`;
   if (!events.length) {
@@ -1562,6 +1609,10 @@ async function deleteEvent() {
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
 
 function renderGrowth() {
+  if (state.growthFilterBabyId !== state.activeBabyId) {
+    state.growthFilterBabyId = state.activeBabyId;
+    state.growthCategory = ""; state.growthFrom = ""; state.growthTo = "";
+  }
   const baby = activeBaby();
   renderBabyArchiveCount();
   const albumOpen = $("#growthView").classList.contains("album-open");
@@ -1579,7 +1630,7 @@ function renderGrowth() {
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
-  const listContext = `${state.activeBabyId}|${state.growthFilter}`;
+  const listContext = `${state.activeBabyId}|${state.growthFilter}|${state.growthCategory}|${state.growthFrom}|${state.growthTo}`;
   if (growthListContext !== listContext) { growthListContext = listContext; growthListLimit = 100; }
   const entries = filterGrowthEntries(allEntries).sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
   $("#growthCount").textContent = `${entries.length}개 기록`;
@@ -2089,14 +2140,24 @@ async function shareRecentPhoto() {
 }
 
 function filterGrowthEntries(entries) {
-  if (state.growthFilter === "today") return entries.filter((entry) => entry.date === dateKey(new Date()));
-  if (state.growthFilter === "photo") return entries.filter((entry) => entry.photoPaths?.length);
-  if (state.growthFilter !== "all") return entries.filter((entry) => entry.category === state.growthFilter);
-  return entries;
+  if (state.growthFrom && state.growthTo && state.growthFrom > state.growthTo) return [];
+  return entries.filter((entry) => (!state.growthFrom || entry.date >= state.growthFrom)
+    && (!state.growthTo || entry.date <= state.growthTo)
+    && (!state.growthCategory || entry.category === state.growthCategory)
+    && (state.growthFilter === "all" || state.growthFilter === "today" && entry.date === dateKey(new Date())
+      || state.growthFilter === "photo" && entry.photoPaths?.length));
 }
 
 function renderGrowthFilters() {
-  $("#growthFilterBar").querySelectorAll("[data-growth-filter]").forEach((button) => button.classList.toggle("active", button.dataset.growthFilter === state.growthFilter));
+  $("#growthFilterBar").querySelectorAll("[data-growth-filter]").forEach((button) => {
+    const active = button.dataset.growthFilter === state.growthFilter;
+    button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active));
+  });
+  $("#growthCategoryFilter").value = state.growthCategory;
+  $("#growthFrom").value = state.growthFrom; $("#growthTo").value = state.growthTo;
+  const invalid = Boolean(state.growthFrom && state.growthTo && state.growthFrom > state.growthTo);
+  $("#growthFrom").setAttribute("aria-invalid", String(invalid)); $("#growthTo").setAttribute("aria-invalid", String(invalid));
+  $("#growthFilterStatus").textContent = invalid ? "시작일이 마지막 날보다 늦어요. 기간을 확인해 주세요." : "";
 }
 
 function changeGrowthFilter(event) {
@@ -2106,7 +2167,7 @@ function changeGrowthFilter(event) {
 
 function selectBabyFromEvent(event) {
   const button = event.target.closest("[data-baby-id]"); if (!button) return;
-  state.activeBabyId = button.dataset.babyId; state.growthFilter = "all";
+  state.activeBabyId = button.dataset.babyId; state.growthFilter = "all"; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = "";
   try { localStorage.setItem(ACTIVE_BABY_KEY, state.activeBabyId); } catch { /* 현재 선택 유지 */ }
   renderGrowth();
   window.dispatchEvent(new CustomEvent("familybabychange", { detail: { activeBabyId: state.activeBabyId } }));
