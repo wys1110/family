@@ -276,6 +276,9 @@
       playing: !1,
       paused: !1,
       playToken: 0,
+      playAll: !0,
+      progress: {},
+      storageOwner: "device",
     },
     a = () => ("undefined" != typeof state ? state : null),
     s = (e) => {
@@ -305,9 +308,10 @@
             '"': "&quot;",
           })[e],
       ),
-    h = () =>
-      `family-english-story-history-v1:${a()?.session?.user?.id || "device"}`,
-    j = () => `${n}:${a()?.session?.user?.id || "device"}`;
+    storageKey = (key) => window.FAMILY_DEMO.storageKey(`${key}:${o.storageOwner}`),
+    h = () => storageKey("family-english-story-history-v1"),
+    j = () => storageKey(n),
+    progress = () => o.progress[d().id] || 0;
   function u() {
     try {
       localStorage.setItem(
@@ -316,6 +320,7 @@
           selectedId: o.selectedId,
           showKorean: o.showKorean,
           rate: o.rate,
+          progress: o.progress,
         }),
       );
     } catch {}
@@ -328,12 +333,15 @@
     }
   }
   function g(e, t = !1) {
+    if (!t) C();
+    o.progress[e] = i.find((story) => story.id === e).lines.length;
+    u();
     const n = y();
     n[r()] = { storyId: e, completedAt: new Date().toISOString() };
     try {
       localStorage.setItem(h(), JSON.stringify(n));
     } catch {}
-    (w(), t || s("오늘의 영어 동화를 들었어요 📖"));
+    (w(), x(), $(), t || s("오늘의 영어 동화를 들었어요 📖"));
   }
   function m() {
     if ("function" != typeof switchView || switchView.__englishStoriesInstalled)
@@ -427,11 +435,11 @@
   }
   function w() {
     const e = y(),
-      t = Boolean(e[r()]),
+      t = progress() === d().lines.length || e[r()]?.storyId === d().id,
       n = document.querySelector("#englishMarkRead");
     n &&
       (n.classList.toggle("done", t),
-      (n.textContent = t ? "✓ 오늘 동화 완료" : "✓ 오늘 들었어요"));
+      (n.textContent = t ? "✓ 이 동화 완료" : "✓ 오늘 들었어요"));
   }
   function b(e) {
     i.some((t) => t.id === e) &&
@@ -441,6 +449,7 @@
       u(),
       v(),
       S(),
+      w(),
       document
         .querySelector("#englishStoryPlayer")
         ?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -455,26 +464,15 @@
   }
   function L(e) {
     const t = e.target.closest("[data-play-line]");
-    t &&
-      (function (e) {
-        const t = d();
-        if (!t.lines[e]) return;
-        C(!1);
-        const n = ++o.playToken;
-        ((o.playing = !0), (o.activeLine = e), V(), $(), x());
-        const i = I(t.lines[e][0]);
-        ((i.onend = () => {
-          n === o.playToken &&
-            ((o.playing = !1), (o.activeLine = -1), V(), x(), $());
-        }),
-          (i.onerror = i.onend),
-          window.speechSynthesis.speak(i));
-      })(Number(t.dataset.playLine));
+    t && B(Number(t.dataset.playLine), !1);
   }
   function k() {
-    ((o.rate = 0.78 === o.rate ? 0.95 : 0.78),
-      u(),
-      o.playing ? (C(), B(Math.max(o.activeLine, 0))) : v());
+    const line = o.activeLine, playAll = o.playAll, restart = o.playing && !o.paused;
+    o.rate = 0.78 === o.rate ? 0.95 : 0.78;
+    u();
+    if (restart) B(line, playAll);
+    else if (o.paused) C();
+    v();
   }
   function q() {
     ((o.showKorean = !o.showKorean), u(), v());
@@ -504,17 +502,22 @@
       "undefined" != typeof SpeechSynthesisUtterance
     )
       return o.playing && !o.paused
-        ? (window.speechSynthesis.pause(), (o.paused = !0), void x())
+        ? (window.speechSynthesis.pause(), (o.paused = !0), x(), void $())
         : o.playing && o.paused
-          ? (window.speechSynthesis.resume(), (o.paused = !1), void x())
-          : void B(0);
+          ? (window.speechSynthesis.resume(), (o.paused = !1), x(), void $())
+          : void B(progress() < d().lines.length ? progress() : 0);
     s("이 브라우저에서는 음성 읽기를 지원하지 않아요");
   }
-  function B(e) {
+  function B(e, playAll = !0) {
+    if (!window.speechSynthesis || "undefined" === typeof SpeechSynthesisUtterance) {
+      s("이 브라우저에서는 음성 읽기를 지원하지 않아요");
+      return;
+    }
+    if (!Number.isInteger(e) || !d().lines[e]) return;
     C(!1);
     const t = d(),
       n = ++o.playToken;
-    ((o.playing = !0), (o.paused = !1));
+    ((o.playing = !0), (o.paused = !1), (o.playAll = playAll));
     const i = (e) => {
       if (n !== o.playToken) return;
       if (e >= t.lines.length)
@@ -528,11 +531,24 @@
           g(t.id, !0),
           void s("동화를 끝까지 들었어요 🌙")
         );
-      ((o.activeLine = e), V(), $());
+      ((o.activeLine = e), (o.progress[t.id] = e), u(), V(), $());
       const a = I(t.lines[e][0]);
-      ((a.onend = () => i(e + 1)),
+      ((a.onend = () => {
+          if (n !== o.playToken || o.activeLine !== e) return;
+          o.progress[t.id] = e + 1;
+          u();
+          if (playAll || e + 1 === t.lines.length) i(e + 1);
+          else {
+            o.playing = !1;
+            o.paused = !1;
+            o.activeLine = -1;
+            x(); $(); V();
+          }
+        }),
         (a.onerror = () => {
-          ((o.playing = !1), (o.activeLine = -1), x(), V());
+          if (n !== o.playToken || o.activeLine !== e) return;
+          C();
+          s("음성 재생이 멈췄어요. 이어 듣기를 눌러 다시 시도해 주세요.");
         }),
         window.speechSynthesis.speak(a));
     };
@@ -557,13 +573,24 @@
       ? ((t.textContent = "▶"), (n.textContent = "계속 듣기"))
       : o.playing
         ? ((t.textContent = "Ⅱ"), (n.textContent = "잠시 멈춤"))
-        : ((t.textContent = "▶"), (n.textContent = "전체 듣기"));
+        : ((t.textContent = "▶"), (n.textContent = progress() === d().lines.length
+          ? "다시 듣기" : Object.hasOwn(o.progress, d().id) ? "이어 듣기" : "전체 듣기"));
   }
   function $() {
     const e = d(),
-      t = o.activeLine < 0 ? 0 : ((o.activeLine + 1) / e.lines.length) * 100,
+      completed = progress(),
+      t = (completed / e.lines.length) * 100,
       n = document.querySelector("#englishProgressBar");
     n && (n.style.width = `${t}%`);
+    const status = completed === e.lines.length ? `${completed} / ${e.lines.length}문장 완료`
+      : o.playing ? `${o.activeLine + 1} / ${e.lines.length}번째 문장 · ${o.paused ? "잠시 멈춤" : "재생 중"}`
+        : `${completed} / ${e.lines.length}문장 완료 · ${completed + 1}번째 문장부터 듣기`;
+    const bar = document.querySelector("#englishProgress");
+    bar?.setAttribute("aria-valuemax", e.lines.length);
+    bar?.setAttribute("aria-valuenow", completed);
+    bar?.setAttribute("aria-valuetext", status);
+    const label = document.querySelector("#englishProgressStatus");
+    if (label) label.textContent = status;
   }
   function V() {
     document.querySelectorAll(".english-sentence").forEach((e) => {
@@ -573,8 +600,17 @@
     });
   }
   function A() {
+    o.storageOwner = a()?.session?.user?.id || "device";
+    o.showKorean = !0;
+    o.rate = 0.78;
+    o.progress = {};
     try {
       const e = JSON.parse(localStorage.getItem(j()) || "{}");
+      for (const story of i) {
+        const line = e?.progress?.[story.id];
+        if (Number.isInteger(line) && line >= 0 && line <= story.lines.length)
+          o.progress[story.id] = line;
+      }
       ((o.showKorean = !1 !== e.showKorean),
         (o.rate = 0.95 === e.rate ? 0.95 : 0.78),
         (o.selectedId = i.some((t) => t.id === e.selectedId)
@@ -617,10 +653,12 @@
         <p class="english-story-summary" id="englishStorySummary"></p>
         <div class="english-player-actions">
           <button class="english-play-main" id="englishPlayButton" type="button"><span aria-hidden="true">▶</span><strong>전체 듣기</strong></button>
+          <button id="englishRestartButton" type="button"><span aria-hidden="true">↺</span><strong>처음부터 듣기</strong></button>
           <button id="englishSpeedButton" type="button"><span aria-hidden="true">🐢</span><strong>천천히</strong></button>
           <button id="englishTranslationButton" type="button"><span aria-hidden="true">가</span><strong>한글 뜻</strong></button>
         </div>
-        <div class="english-progress" aria-hidden="true"><i id="englishProgressBar"></i></div>
+        <p class="english-progress-status" id="englishProgressStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+        <div class="english-progress" id="englishProgress" role="progressbar" aria-label="동화 문장 진행" aria-valuemin="0"><i id="englishProgressBar"></i></div>
         <div class="english-sentence-list" id="englishSentenceList"></div>
         <div class="english-story-footer">
           <button type="button" id="englishPrevStory" aria-label="이전 동화">‹</button>
@@ -643,6 +681,7 @@
       .querySelector("#englishOpenToday")
       ?.addEventListener("click", () => b(l().id)),
     document.querySelector("#englishPlayButton")?.addEventListener("click", E),
+    document.querySelector("#englishRestartButton")?.addEventListener("click", () => B(0)),
     document.querySelector("#englishSpeedButton")?.addEventListener("click", k),
     document
       .querySelector("#englishTranslationButton")

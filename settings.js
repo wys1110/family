@@ -101,6 +101,83 @@
   currentThemeLabel.setAttribute('aria-live', 'polite');
   view.querySelector('.settings-heading').appendChild(currentThemeLabel);
 
+  const searchTools = document.createElement('div');
+  searchTools.className = 'settings-search-tools';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'search';
+  searchInput.placeholder = '설정 검색';
+  searchInput.setAttribute('aria-label', '설정 검색');
+  searchInput.dataset.settingsSearchInput = '';
+  const searchStatus = document.createElement('p');
+  searchStatus.dataset.settingsSearchStatus = '';
+  searchStatus.setAttribute('aria-live', 'polite');
+  const resetSearch = document.createElement('button');
+  resetSearch.type = 'button';
+  resetSearch.textContent = '검색 초기화';
+  resetSearch.hidden = true;
+  resetSearch.dataset.settingsSearchReset = '';
+  const searchJumps = document.createElement('div');
+  searchJumps.className = 'settings-search-jumps';
+  searchJumps.setAttribute('role', 'group');
+  searchJumps.setAttribute('aria-label', '설정 항목 바로가기');
+  searchJumps.dataset.settingsSearchJumps = '';
+  searchTools.append(searchInput, searchStatus, resetSearch, searchJumps);
+  view.insertBefore(searchTools, view.firstElementChild);
+
+  let renderedMatches = [];
+  const refreshSettingsSearch = () => {
+    if (view.firstElementChild !== searchTools) view.insertBefore(searchTools, view.firstElementChild);
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    const matches = [];
+    [...view.querySelectorAll('.settings-card')].forEach((card) => {
+      card.classList.remove('settings-search-hidden');
+      if (card.hidden || (typeof getComputedStyle === 'function' && getComputedStyle(card).display === 'none')) return;
+      const title = card.querySelector('h1, h2, h3, h4')?.textContent.trim() || '설정';
+      const matched = !query || `${title} ${card.textContent}`.toLocaleLowerCase().includes(query);
+      card.classList.toggle('settings-search-hidden', !matched);
+      if (matched) matches.push({ card, title });
+    });
+    const status = query && !matches.length ? '검색 결과가 없어요 (0개). 검색어를 지워 다시 확인해 보세요.' : `${matches.length}개 설정 항목`;
+    if (searchStatus.textContent !== status) searchStatus.textContent = status;
+    const showReset = Boolean(query && !matches.length);
+    if (resetSearch.hidden !== !showReset) resetSearch.hidden = !showReset;
+    if (matches.length !== renderedMatches.length || matches.some((match, index) => match.card !== renderedMatches[index].card || match.title !== renderedMatches[index].title)) {
+      searchJumps.textContent = '';
+      matches.forEach(({ card, title }) => {
+        const jump = document.createElement('button');
+        jump.type = 'button';
+        jump.textContent = title;
+        jump.addEventListener('click', () => {
+          card.tabIndex = -1;
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          card.focus({ preventScroll: true });
+        });
+        searchJumps.appendChild(jump);
+      });
+      renderedMatches = matches;
+    }
+  };
+  searchInput.addEventListener('input', refreshSettingsSearch);
+  resetSearch.addEventListener('click', () => {
+    searchInput.value = '';
+    refreshSettingsSearch();
+    searchInput.focus();
+  });
+  window.addEventListener('familycontextchange', refreshSettingsSearch);
+  window.addEventListener('familybabychange', refreshSettingsSearch);
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver((records) => {
+      const outsideSearchClass = (value) => String(value || '').split(/\s+/).filter((name) => name && name !== 'settings-search-hidden').sort().join(' ');
+      if (!records.length || records.some((record) => {
+        const { target } = record;
+        if (target === view) return true;
+        if (!(target.closest?.('.settings-card') || target.matches?.('.settings-card'))) return false;
+        return record.attributeName !== 'class' || outsideSearchClass(record.oldValue) !== outsideSearchClass(target.getAttribute('class'));
+      })) refreshSettingsSearch();
+    }).observe(view, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['hidden', 'class', 'style'] });
+  }
+  refreshSettingsSearch();
+
   const updateControls = (themeId) => {
     const selected = AVAILABLE_THEMES.find((theme) => theme.id === themeId) || AVAILABLE_THEMES[0];
     view.querySelectorAll('[data-theme-option]').forEach((button) => {
@@ -154,6 +231,7 @@
         if (target) target.hidden = true;
       });
       if (settingsView) settingsView.hidden = false;
+      refreshSettingsSearch();
       document.querySelectorAll('.view-tab').forEach((button) => {
         const active = button.dataset.view === VIEW_NAME;
         button.classList.toggle('active', active);

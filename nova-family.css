@@ -43,11 +43,11 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #ca
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-card { padding: 24px 14px 14px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar { margin-bottom: 16px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar h2 { font-size: 21px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.calendar-day,.calendar-empty) { background: transparent !important; box-shadow: none !important; border-radius: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.calendar-day,.calendar-empty) { background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-day.selected { background: color-mix(in srgb,var(--nova-lilac) 55%,var(--nova-card)) !important; outline: 1px solid color-mix(in srgb,var(--nova-accent) 22%,transparent); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-day.today .day-number { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border-radius: 50%; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.calendar-font-trigger,.today-button,.month-nav) { box-shadow: none !important; border: 1px solid var(--nova-line) !important; background: var(--nova-soft) !important; color: var(--nova-text) !important; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.agenda-card,.upcoming-event-card) { padding: 16px; border: 1px solid var(--nova-line); background: var(--nova-card); box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.agenda-item,.upcoming-event-item) { padding: 16px; color: var(--nova-text) !important; border: 1px solid var(--nova-line) !important; background: var(--nova-card) !important; box-shadow: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .count-badge { color: var(--nova-muted) !important; background: var(--nova-soft) !important; border: 0 !important; font-size: 11px; font-weight: 550; }
 /* Growth: profile, three equally accessible quick actions, readable daily data. */
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .growth-page-header { margin-bottom: 16px; }
@@ -208,3 +208,19 @@ html[data-family-design="nova"][data-family-theme-choice] [data-view="travel"] {
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card { background: var(--nova-card) !important; border-color: var(--nova-line) !important; color: var(--nova-text) !important; box-shadow: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishLibrary .english-library-card.active { border-color: var(--nova-accent) !important; background: var(--nova-lilac) !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView #englishPlayButton { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; box-shadow: none !important; }
+
+/* Native discovery controls use the same palette and touch targets in both themes. */
+.record-filter-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 16px 0; }
+.record-filter-controls label { display: grid; gap: 6px; min-width: 0; flex: 1 1 140px; font-size: 12px; color: var(--nova-muted); }
+.record-filter-controls :is(input,select,button) { min-width: 0; min-height: 44px; margin: 0; padding: 10px 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-card); color: var(--nova-text); }
+.record-view-toggle { display: flex; gap: 4px; padding: 4px; border-radius: 15px; background: var(--nova-soft); }
+.record-view-toggle button { border-color: transparent; background: transparent; }
+.record-view-toggle button[aria-pressed="true"] { background: var(--nova-card); color: var(--nova-accent); }
+.record-filter-controls :is(input,select,button):focus-visible { outline: 2px solid var(--nova-accent); outline-offset: 3px; }
+.record-filter-status { color: var(--nova-muted); font-size: 12px; line-height: 1.6; }
+.record-filter-status:empty { display: none; }
+#calendarMonthListView .upcoming-event-item { margin-bottom: 8px; }
+@media (max-width: 600px) {
+  .growth-record-filters > label:first-child { flex-basis: 100%; }
+  .growth-record-filters > label { flex-basis: 120px; }
+}

@@ -19,7 +19,7 @@ const loadApi = () => {
 
 describe('settings family management', () => {
   test('loads a compact settings module and style', () => {
-    expect(config).toContain('{ name: "settings-family-management", version: "20260913-records-v1" }');
+    expect(config).toContain('{ name: "settings-family-management", version: "20261005-core-quality-v5" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/settings-family-management.js")');
     expect(source).toContain('data-settings-family-members');
     expect(css).toContain('.settings-family-members-card');

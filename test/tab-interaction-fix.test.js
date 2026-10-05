@@ -6,7 +6,7 @@ const script = readFileSync("tab-interaction-fix.js", "utf8");
 const style = readFileSync("tab-interaction-fix.css", "utf8");
 
 test("탭 안정화 모듈을 모든 테마 보정 뒤에 불러온다", () => {
-  expect(config).toContain('{ name: "tab-interaction-fix", version: "20260722-ios-tab-ghost-v1" }');
+  expect(config).toContain('{ name: "tab-interaction-fix", version: "20261005-core-quality-v5" }');
   expect(config.indexOf('name: "tab-interaction-fix"')).toBeGreaterThan(config.indexOf('name: "night-theme-polish"'));
 });
 
