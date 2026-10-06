@@ -224,3 +224,61 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #en
   .growth-record-filters > label:first-child { flex-basis: 100%; }
   .growth-record-filters > label { flex-basis: 120px; }
 }
+
+/* Mobile calendar: compact the summary and controls without shrinking hit areas. */
+@media (max-width: 767.98px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) {
+    min-height: 124px;
+    padding: 16px;
+    margin-bottom: 8px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) > div:first-of-type {
+    max-width: calc(100% - 142px);
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) h2 {
+    font-size: 21px;
+    letter-spacing: -.03em;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .family-mascot {
+    width: 100px;
+    max-height: 100px;
+    right: 8px;
+    bottom: 0;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .family-stack {
+    max-width: 142px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions {
+    top: 8px;
+    right: 12px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions button {
+    min-height: 44px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .compact-primary-actions { margin: 8px 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-card { padding: 16px 12px 12px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar {
+    gap: 8px;
+    padding: 0 0 8px;
+    margin-bottom: 0;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .month-nav { grid-template-columns: 44px minmax(0,1fr) 44px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .month-picker-trigger {
+    justify-self: center;
+    min-height: 44px;
+    margin: 0;
+    letter-spacing: -.03em;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.icon-button,.today-button,.calendar-font-trigger) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.today-button,.calendar-font-trigger) { font-size: 12px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView #calendarViewControls {
+    align-items: end;
+    gap: 8px;
+    margin: 0 0 8px;
+  }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView #calendarViewControls label { flex-basis: 0; margin: 0; gap: 4px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .record-view-toggle { gap: 8px; }
+}
