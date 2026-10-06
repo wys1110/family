@@ -6,13 +6,13 @@
 .settings-family-space-card .settings-heading { grid-template-columns: 44px minmax(0, 1fr) auto; }
 .settings-family-count { color: var(--blue); font-size: 12px; white-space: nowrap; }
 .settings-family-members-list { display: grid; gap: 8px; margin-top: 14px; }
-.settings-family-member-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) 38px auto auto; gap: 7px; align-items: center; margin: 0; }
-.settings-family-member-row label { margin: 0; }
+.settings-family-member-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) 44px 44px 44px; gap: 8px; align-items: center; margin: 0; }
+.settings-family-member-row label { min-width: 0; margin: 0; }
 .settings-family-member-row input[name="memberName"],
 .settings-family-member-add input[name="memberName"] { width: 100%; min-height: 42px; margin: 0; padding: 0 11px; border: 1px solid var(--separator); border-radius: 12px; color: var(--label); background: var(--surface); font: inherit; font-size: 12px; }
 .settings-family-member-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--member-color, var(--blue)); }
 .settings-family-color { display: grid; gap: 3px; margin: 0; color: var(--secondary); font-size: 9px; }
-.settings-family-color input[type="color"] { width: 38px; height: 38px; margin: 0; padding: 3px; border: 1px solid var(--separator); border-radius: 10px; background: var(--surface); }
+.settings-family-color input[type="color"] { width: 44px; height: 44px; margin: 0; padding: 3px; border: 1px solid var(--separator); border-radius: 10px; background: var(--surface); }
 .settings-family-member-row button,
 .settings-family-member-add button,
 .settings-family-data-actions button,
@@ -20,11 +20,13 @@
 .settings-family-restore-button,
 .settings-family-space-actions button { min-height: 42px; padding: 0 10px; border: 1px solid var(--separator); border-radius: 11px; color: var(--label); background: var(--surface-2); font: inherit; font-size: 10px; font-weight: 750; white-space: nowrap; cursor: pointer; }
 .settings-family-member-row button[data-member-archive] { color: var(--red); }
+.settings-family-member-row button[data-member-save],
+.settings-family-member-row button[data-member-archive] { width: 44px; min-height: 44px; padding: 0; }
 .settings-family-member-row button:disabled,
 .settings-family-member-add button:disabled,
 .settings-family-data-actions button:disabled,
 .settings-family-restore-button:disabled { cursor: default; opacity: .55; }
-.settings-family-member-add { display: grid; grid-template-columns: minmax(0, 1fr) 38px auto; gap: 7px; align-items: end; margin: 12px 0 0; }
+.settings-family-member-add { display: grid; grid-template-columns: minmax(0, 1fr) 44px auto; gap: 8px; align-items: end; margin: 12px 0 0; }
 .settings-family-member-add label { display: grid; gap: 5px; margin: 0; color: var(--secondary); font-size: 9px; font-weight: 700; }
 .settings-family-member-add button { color: var(--blue); }
 .settings-family-members-status,
@@ -41,13 +43,6 @@
 .settings-family-restore-preview { margin-top: 10px; padding: 10px 11px; border-radius: 12px; color: var(--label); background: var(--surface-2); font-size: 10px; line-height: 1.45; }
 .settings-family-restore-button { width: 100%; margin-top: 8px; color: var(--green); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-
-@media (max-width: 430px) {
-  .settings-family-member-row { grid-template-columns: 9px minmax(0, 1fr) 34px auto; }
-  .settings-family-member-row button[data-member-archive] { grid-column: 2 / -1; justify-self: start; min-height: 34px; }
-  .settings-family-color input[type="color"] { width: 34px; height: 34px; }
-  .settings-family-member-row input[name="memberName"] { min-height: 40px; }
-}
 
 html[data-family-theme="night"] .settings-family-member-row input[name="memberName"],
 html[data-family-theme="night"] .settings-family-member-add input[name="memberName"],
