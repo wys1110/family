@@ -1,8 +1,9 @@
 /* Presentation only. Data, event handlers, permissions and photo pixels are untouched. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] { scroll-padding-top: calc(max(8px,env(safe-area-inset-top,0px)) + 82px); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body { background: radial-gradient(ellipse at 10% 0%, color-mix(in srgb,var(--nova-lilac) 42%,transparent),transparent 38rem),var(--nova-bg) !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] body::after { content: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell { width: min(100%,1060px); padding-inline: 22px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .topbar { padding: 8px 0 12px; margin-bottom: 18px; gap: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .topbar { padding: 8px 0 12px; margin-bottom: 18px; gap: 8px 12px; flex-wrap: wrap; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar > div:first-child { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 11px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark { display: grid; place-items: center; width: 42px; height: 48px; border-radius: 16px; background: linear-gradient(155deg,var(--nova-accent),var(--nova-accent-deep)); box-shadow: 0 5px 15px color-mix(in srgb,var(--nova-accent) 20%,transparent); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark::after { content: ''; width: 24px; height: 24px; mask: url('assets/icons/heart.svg') center/contain no-repeat; background: var(--nova-on-accent); }
@@ -10,7 +11,8 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .to
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 span { font-size: 11px; color: var(--nova-muted); font-weight: 500; letter-spacing: -.025em; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 strong { font-size: 25px; font-weight: 780; line-height: 1.4; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { gap: 4px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > button { width: 34px; min-width: 34px; min-height: 40px; border: 0 !important; background: transparent !important; color: var(--nova-muted) !important; border-radius: 12px; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > button { width: 44px; min-width: 44px; min-height: 44px; border: 0 !important; background: transparent !important; color: var(--nova-muted) !important; border-radius: 12px; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > #desktopLogoutButton { width: auto; min-width: max-content; padding: 0 12px; white-space: nowrap; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions #accountButton { background: var(--nova-lilac) !important; color: var(--nova-accent) !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions button svg { width: 19px; height: 19px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .daily-verse-card { padding: 9px 13px; border-radius: 15px; border: 1px solid var(--nova-line) !important; background: color-mix(in srgb,var(--nova-card) 70%,transparent) !important; box-shadow: none !important; gap: 3px 12px; }
@@ -35,9 +37,9 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .co
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions #addEventButton.fab > span { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-primary-actions { margin: 12px 0 18px; }
 /* Calendar: quiet canvas, clear selected day, original member colors preserved. */
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) { background: linear-gradient(120deg,var(--nova-lilac),color-mix(in srgb,var(--nova-lilac) 18%,var(--nova-card))) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line); box-shadow: none !important; border-radius: 25px; padding: 22px; min-height: 170px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) { background: linear-gradient(120deg,var(--nova-lilac),color-mix(in srgb,var(--nova-lilac) 18%,var(--nova-card))) !important; color: var(--nova-text) !important; border: 1px solid var(--nova-line); box-shadow: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper)::before, html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper)::after { content: none; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) h2 { color: var(--nova-text) !important; font-size: 25px; line-height: 1.25; max-width: 100%; letter-spacing: -.06em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) h2 { color: var(--nova-text) !important; line-height: 1.25; max-width: 100%; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) #todayLabel { color: var(--nova-muted) !important; font-size: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card .family-mascot { opacity: .92; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-card { padding: 24px 14px 14px; }
@@ -130,8 +132,6 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] but
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell { padding-inline: 14px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar > div:first-child { grid-template-columns: 32px 1fr; gap: 8px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark { width: 32px; height: 38px; border-radius: 12px; }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { gap: 0; }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions > button { width: 30px; min-width: 30px; padding: 5px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab { gap: 4px; font-size: 11px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab-label { font-size: 11px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-today-grid strong { font-size: 17px; }
@@ -159,9 +159,8 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #gr
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol::before { content: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .quick-symbol { display: grid; place-items: center; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView #careTimerCard .care-quick-block { border: 0 !important; padding-top: 0; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card > div:first-of-type { max-width: 58%; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions button { background: var(--nova-card) !important; color: var(--nova-muted) !important; border-color: var(--nova-line) !important; min-height: 32px; font-size: 11px; padding: 5px 10px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions { top: 12px; right: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card.has-wallpaper > div:first-of-type { max-width: 58%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions button { background: var(--nova-card) !important; color: var(--nova-muted) !important; border-color: var(--nova-line) !important; min-height: 44px; font-size: 11px; padding: 5px 10px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .album-stamp { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar { background: transparent !important; border: 0 !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-subtabs { background: var(--nova-soft) !important; border: 1px solid var(--nova-line); border-radius: 15px; padding: 4px; }
@@ -225,60 +224,91 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #en
   .growth-record-filters > label { flex-basis: 120px; }
 }
 
-/* Mobile calendar: compact the summary and controls without shrinking hit areas. */
-@media (max-width: 767.98px) {
+/* Reflow each group into its own space; keep matching controls the same size. */
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) {
-    min-height: 124px;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 100px;
+    grid-template-areas: "copy mascot" "family actions";
+    align-items: center;
+    gap: 12px;
+    min-height: 0;
     padding: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
+    border-radius: 20px;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) > div:first-of-type {
-    max-width: calc(100% - 142px);
+    grid-area: copy;
+    min-width: 0;
+    max-width: none;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) h2 {
     font-size: 21px;
     letter-spacing: -.03em;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .family-mascot {
-    width: 100px;
-    max-height: 100px;
-    right: 8px;
-    bottom: 0;
+    grid-area: mascot;
+    position: static;
+    justify-self: end;
+    width: 84px;
+    max-height: 84px;
+    animation: none;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .family-stack {
-    max-width: 142px;
+    grid-area: family;
+    position: static;
+    justify-content: start;
+    max-width: none;
+    min-width: 0;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions {
-    top: 8px;
-    right: 12px;
+    grid-area: actions;
+    position: static;
+    justify-self: end;
   }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .hero-card:not(.has-wallpaper) .wallpaper-actions button {
-    min-height: 44px;
-  }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .compact-primary-actions { margin: 8px 0; }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-card { padding: 16px 12px 12px; }
+@media (max-width: 899.98px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .compact-primary-actions { margin: 16px 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] :is(#calendarView .calendar-card,#growthView #careTimerCard,#growthView .compact-today,#settingsView .settings-card,#englishView .english-story-player,#englishView .english-name-card,#englishView .english-today-card) { padding: 16px; border-radius: 20px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-toolbar {
-    gap: 8px;
-    padding: 0 0 8px;
-    margin-bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    grid-template-areas: "month month" "today font";
+    gap: 12px;
+    padding: 0;
+    margin-bottom: 12px;
   }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .month-nav { grid-template-columns: 44px minmax(0,1fr) 44px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .month-nav { display: grid; grid-area: month; width: 100%; grid-template-columns: 44px minmax(0,1fr) 44px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .month-picker-trigger {
     justify-self: center;
+    width: 160px;
+    max-width: 100%;
     min-height: 44px;
     margin: 0;
+    font-size: 18px;
     letter-spacing: -.03em;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.icon-button,.today-button,.calendar-font-trigger) {
     min-width: 44px;
     min-height: 44px;
   }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.today-button,.calendar-font-trigger) { font-size: 12px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .today-button { grid-area: today; justify-self: stretch; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-font-toolbar { grid-area: font; justify-self: stretch; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .calendar-font-trigger { width: 100%; justify-content: center; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView :is(.today-button,.calendar-font-trigger) { font-size: 14px; border-radius: 12px; }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView #calendarViewControls {
     align-items: end;
-    gap: 8px;
-    margin: 0 0 8px;
+    gap: 12px;
+    margin: 0 0 12px;
   }
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView #calendarViewControls label { flex-basis: 0; margin: 0; gap: 4px; }
-  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .record-view-toggle { gap: 8px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .record-view-toggle { flex: 1 1 0; min-width: 0; padding: 0; gap: 4px; border-radius: 12px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #calendarView .record-view-toggle button { flex: 1; padding-inline: 8px; }
+}
+@media (max-width: 767.98px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar > div:first-child { grid-template-columns: 36px minmax(0,1fr); gap: 8px; min-width: 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .nova-brand-mark { width: 36px; height: 44px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar h1 strong { font-size: 23px; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .topbar-account-actions { margin-left: auto; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); padding: 4px; gap: 2px; overflow: visible; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab { flex-direction: column; justify-content: center; gap: 4px; min-width: 0; min-height: 56px; padding: 4px 0; }
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .app-shell .view-tabs .view-tab-label { font-size: 11px; }
 }

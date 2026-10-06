@@ -121,7 +121,7 @@ window.FAMILY_CONFIG = {
     { name: "family-backup-media", version: "20260913-records-v1", style: false },
     { name: "family-journal", version: "20260915-growth-performance-v1" },
     { name: "settings-backup", version: "20260913-records-v1", style: false },
-    { name: "settings-family-management", version: "20261005-core-quality-v5" },
+    { name: "settings-family-management", version: "20261006-layout-harmony-v2" },
     { name: "settings-data-export", version: "20260913-records-v1", style: false },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
@@ -191,12 +191,12 @@ window.FAMILY_CONFIG = {
     { name: "family-admin", version: "20260830-auth-recovery-v2", style: false },
     { name: "deferred-tabs", version: "20260918-v1", style: false },
     { name: "compact-family", version: "20260922-pattern-priority-v2" },
-    { name: "nova-family", version: "20261006-calendar-mobile-v1" },
+    { name: "nova-family", version: "20261006-layout-harmony-v2" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
     { name: "travel-data", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261005-core-quality-v5" },
+    { name: "travel", version: "20261006-layout-harmony-v2" },
   ];
 
   const deferredGroups = {
