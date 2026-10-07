@@ -98,15 +98,17 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .co
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-analysis > summary { color: var(--nova-accent); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools { gap: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button { background: var(--nova-card); border: 1px solid var(--nova-line); border-radius: 18px; padding: 18px; box-shadow: none; }
-/* Care clock: precise marks, quiet day/night tracks and legible totals. */
+/* Care clock: soft day/night gradient, precise record points and legible totals. */
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock { font-variant-numeric: tabular-nums; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-outer { fill: none; stroke: none; filter: none; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-face { stroke: var(--nova-soft); stroke-width: 37; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-night { stroke: color-mix(in srgb,var(--nova-lilac) 65%,var(--nova-card)); stroke-width: 37; opacity: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-face { stroke: url(#careClockDayNight); stroke-width: 38; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-night-color { stop-color: color-mix(in srgb,var(--nova-lilac) 75%,var(--nova-accent)); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-transition-color { stop-color: color-mix(in srgb,var(--nova-lilac) 35%,var(--nova-peach)); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-day-color { stop-color: var(--nova-peach); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-hour { fill: var(--nova-muted) !important; font-size: 13px; font-weight: 600; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-tick { stroke: var(--nova-line); stroke-width: 1; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-tick.major { stroke: var(--nova-muted); stroke-width: 1.5; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-mark { stroke-width: 7; filter: none; opacity: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-mark { fill: var(--nova-card); stroke-width: 2.5; filter: none; opacity: 1; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-sleep { stroke-width: 10; filter: none; opacity: 1; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-dot { stroke: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-now { stroke: var(--nova-accent); stroke-width: 1; opacity: .65; }
@@ -116,8 +118,9 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #gr
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-kicker { font-size: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-day { fill: var(--nova-text); font-size: 28px; font-weight: 750; letter-spacing: -.03em; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-caption { font-size: 10px; letter-spacing: 0; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods { inset: 25% auto 25% 50%; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods span { padding: 0; color: var(--nova-muted); background: transparent; border: 0; box-shadow: none; font-size: 11px; font-weight: 600; line-height: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods { inset: 30% auto 30% 50%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods span { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 7px; color: var(--nova-muted); background: var(--nova-card); border: 0; box-shadow: var(--nova-shadow); font-size: 11px; font-weight: 600; line-height: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods i { font-size: 14px; font-style: normal; }
 /* Story time: a book-like player and soft illustration covers. */
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header { padding: 0 2px 20px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header h2 { font-size: 30px; }
