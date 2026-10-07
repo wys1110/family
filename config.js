@@ -191,7 +191,7 @@ window.FAMILY_CONFIG = {
     { name: "family-admin", version: "20260830-auth-recovery-v2", style: false },
     { name: "deferred-tabs", version: "20260918-v1", style: false },
     { name: "compact-family", version: "20260922-pattern-priority-v2" },
-    { name: "nova-family", version: "20261006-layout-harmony-v2" },
+    { name: "nova-family", version: "20261007-growth-filter-alignment-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
     { name: "travel-data", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
