@@ -210,7 +210,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #en
 
 /* Native discovery controls use the same palette and touch targets in both themes. */
 .record-filter-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 16px 0; }
-.record-filter-controls label { display: grid; gap: 6px; min-width: 0; flex: 1 1 140px; font-size: 12px; color: var(--nova-muted); }
+.record-filter-controls label { display: grid; gap: 6px; min-width: 0; margin: 0; flex: 1 1 140px; font-size: 12px; color: var(--nova-muted); }
 .record-filter-controls :is(input,select,button) { min-width: 0; min-height: 44px; margin: 0; padding: 10px 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-card); color: var(--nova-text); }
 .record-view-toggle { display: flex; gap: 4px; padding: 4px; border-radius: 15px; background: var(--nova-soft); }
 .record-view-toggle button { border-color: transparent; background: transparent; }
@@ -222,6 +222,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #en
 @media (max-width: 600px) {
   .growth-record-filters > label:first-child { flex-basis: 100%; }
   .growth-record-filters > label { flex-basis: 120px; }
+  .growth-record-filters > button { flex-basis: 100%; }
 }
 
 /* Reflow each group into its own space; keep matching controls the same size. */
