@@ -98,6 +98,26 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .co
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] .compact-analysis > summary { color: var(--nova-accent); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools { gap: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .journal-tools button { background: var(--nova-card); border: 1px solid var(--nova-line); border-radius: 18px; padding: 18px; box-shadow: none; }
+/* Care clock: precise marks, quiet day/night tracks and legible totals. */
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock { font-variant-numeric: tabular-nums; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-outer { fill: none; stroke: none; filter: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-face { stroke: var(--nova-soft); stroke-width: 37; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-night { stroke: color-mix(in srgb,var(--nova-lilac) 65%,var(--nova-card)); stroke-width: 37; opacity: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-hour { fill: var(--nova-muted) !important; font-size: 13px; font-weight: 600; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-tick { stroke: var(--nova-line); stroke-width: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-tick.major { stroke: var(--nova-muted); stroke-width: 1.5; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-mark { stroke-width: 7; filter: none; opacity: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-sleep { stroke-width: 10; filter: none; opacity: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-dot { stroke: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-now { stroke: var(--nova-accent); stroke-width: 1; opacity: .65; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-now-dot { fill: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center { fill: var(--nova-card); stroke: none; filter: drop-shadow(var(--nova-shadow)); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView :is(.care-clock-center-kicker,.care-clock-center-caption) { fill: var(--nova-muted); font-weight: 600; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-kicker { font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-day { fill: var(--nova-text); font-size: 28px; font-weight: 750; letter-spacing: -.03em; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-center-caption { font-size: 10px; letter-spacing: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods { inset: 25% auto 25% 50%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #growthView .care-clock-periods span { padding: 0; color: var(--nova-muted); background: transparent; border: 0; box-shadow: none; font-size: 11px; font-weight: 600; line-height: 1; }
 /* Story time: a book-like player and soft illustration covers. */
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header { padding: 0 2px 20px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme] #englishView .english-page-header h2 { font-size: 30px; }
