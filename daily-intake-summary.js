@@ -2,12 +2,8 @@
   const baseRenderDailyCareClock = renderDailyCareClock;
 
   function feedingKind(entry) {
-    if (entry?.category !== "수유·이유식") return "";
-    const feedingType = String(entry.feedingType || "");
-    const title = String(entry.title || "");
-    if (feedingType === "유축모유" || title.includes("유축")) return "pumped";
-    if (feedingType === "모유" || title.includes("모유")) return "breast";
-    return "formula";
+    const type = growthCareType(entry);
+    return ["formula", "pumped", "breast"].includes(type) ? type : "";
   }
 
   function positiveNumber(value) {
@@ -82,7 +78,6 @@
       <section class="daily-intake-summary" aria-label="${dateContext} 수유 합계" aria-live="polite">
         <header>
           <div>
-            <span>DAILY FEEDING</span>
             <strong>${dateContext} 수유 합계</strong>
           </div>
           <p><b>${formatMl(totals.bottleMl)}</b><span>mL</span></p>
