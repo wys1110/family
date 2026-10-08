@@ -73,8 +73,8 @@
   const renderSummary = () => {
     const today = dateKey(new Date());
     const entries = window.FAMILY_DATA.splitSleepEntries(activeBabyEntries()).filter(entry => entry.date === today);
-    const sum = (category, field) => entries.filter(entry => entry.category === category).reduce((value, entry) => value + Math.max(0, Number(entry[field]) || 0), 0);
-    const metrics = [['수유량', `${sum('수유·이유식', 'feedingMl').toLocaleString('ko-KR')}mL`], ['직수', formatDuration(sum('수유·이유식', 'feedingMinutes'))], ['수면', formatDuration(sum('수면', 'sleepMinutes'))]];
+    const sum = (kinds, field) => entries.filter(entry => kinds.includes(growthCareType(entry))).reduce((value, entry) => value + Math.max(0, Number(entry[field]) || 0), 0);
+    const metrics = [['수유량', `${sum(['formula', 'pumped'], 'feedingMl').toLocaleString('ko-KR')}mL`], ['직수', formatDuration(sum(['breast'], 'feedingMinutes'))], ['수면', formatDuration(sum(['sleep'], 'sleepMinutes'))]];
     summary.querySelector('time').textContent = today.slice(5).replace('-', '.');
     summary.querySelector('time').dateTime = today;
     summary.querySelector('.compact-today-grid').replaceChildren(...metrics.map(([label, value]) => {

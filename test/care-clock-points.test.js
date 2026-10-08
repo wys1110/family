@@ -19,7 +19,6 @@ test("split care clock renders categorized points at the right times and retains
   const context = {
     carePatternDate: "2000-01-01",
     carePatternCategories: new Set(["formula", "breast", "sleep", "diaper", "health"]),
-    CARE_TYPES: ["formula", "breast", "sleep", "diaper", "health"],
     document: { querySelector: (selector) => elements[selector] },
     parseDate: (date) => new Date(`${date}T12:00:00`),
     dateKey: (date) => date.toISOString().slice(0, 10),
@@ -28,7 +27,7 @@ test("split care clock renders categorized points at the right times and retains
     activeBaby: () => null,
   };
   vm.createContext(context);
-  vm.runInContext(`${pointHelper}\n${splitType}\n${renderer}`, context);
+  vm.runInContext(`${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
   const entries = [
     { date: "2000-01-01", time: "00:00", category: "수유·이유식", feedingType: "젖병", feedingMl: 120, title: "분유" },
     { date: "2000-01-01", time: "06:00", category: "수유·이유식", feedingType: "모유", feedingMinutes: 18, title: "모유" },
@@ -47,8 +46,8 @@ test("split care clock renders categorized points at the right times and retains
     ["diaper", "180.0", "292.0"], ["health", "68.0", "180.0"],
   ]);
   expect(html).toContain("00:00 분유 120mL");
-  expect(html).toContain("06:00 모유 18분");
-  expect(html).toContain("18:00 체크 &lt;script&gt;");
+  expect(html).toContain("06:00 직수 18분");
+  expect(html).toContain("18:00 건강 체크 &lt;script&gt;");
   expect(html).not.toContain("<script>");
   expect(html).toContain('class="care-clock-dot formula" cx="180.0" cy="68.0" r="2.2"');
   expect(html).toContain('class="care-clock-sleep" cx="180" cy="180" r="112"');
