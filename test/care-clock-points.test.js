@@ -78,6 +78,12 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
     { date: "2000-01-01", time: "12:30", category: "건강·병원", title: "<img src=x onerror=alert(1)>" },
   ]);
   const html = elements["#carePatternContent"].innerHTML;
+  const lastRange = html.lastIndexOf('class="care-band-range');
+  const lastStripe = html.lastIndexOf('class="care-band-stripe');
+  const periodIcons = [...html.matchAll(/<svg class="care-band-period"/g)];
+  expect(periodIcons).toHaveLength(2);
+  expect(periodIcons.every((icon) => icon.index > lastRange && icon.index > lastStripe)).toBe(true);
+  expect((html.match(/class="care-band-period-background"/g) || [])).toHaveLength(2);
   expect(html).toContain('class="care-band-range breast" data-start="1410" data-duration="90"');
   const rangePath = (type) => html.match(new RegExp(`<path class="care-band-range ${type}"[^>]* d="([^"]+)"`))?.[1];
   const overnight = rangePath("breast");

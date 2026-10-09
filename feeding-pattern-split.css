@@ -66,6 +66,7 @@
 #growthView .care-band-total { fill: var(--band-ink); font-weight: 650; letter-spacing: -.025em; }
 #growthView .care-band-unit { fill: var(--band-muted); font-size: 15px; font-weight: 450; letter-spacing: 0; }
 #growthView .care-band-period { fill: none; stroke: var(--band-formula); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#growthView .care-band-period-background { fill: var(--band-surface); stroke: none; }
 #growthView .care-band-period-fill { fill: var(--band-formula); fill-opacity: .16; }
 #growthView .care-band-feeding { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 18px; border-top: 1px solid var(--band-rule); }
 #growthView .care-band-feeding article { min-width: 0; }
