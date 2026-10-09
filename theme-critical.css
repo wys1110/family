@@ -166,3 +166,32 @@ html[data-family-design="nova"] [data-theme-option="black"] .theme-preview {
   --preview-highlight: #39314f !important;
   --preview-text: #f0edf9 !important;
 }
+
+/* Care clock palette: the same semantic categories on light and dark bands. */
+:root {
+  --theme-care-band-surface: var(--nova-card);
+  --theme-care-band-ink: var(--nova-text);
+  --theme-care-band-muted: var(--nova-muted);
+  --theme-care-band-rule: var(--nova-line);
+  --theme-care-band-formula: #a56a1f;
+  --theme-care-band-pumped: #297c8c;
+  --theme-care-band-breast: #b25077;
+  --theme-care-band-sleep: #7964b6;
+  --theme-care-band-diaper: #358262;
+  --theme-care-band-solid: #658443;
+  --theme-care-band-night: #8c74b6;
+  --theme-care-band-transition: #a894ae;
+  --theme-care-band-day: #d8b18a;
+}
+html[data-family-theme-choice="black"] {
+  --theme-care-band-surface: #1a1c2c;
+  --theme-care-band-ink: #f5f1fc;
+  --theme-care-band-muted: #c6bfd8;
+  --theme-care-band-rule: #3b3b50;
+  --theme-care-band-formula: #e1b668;
+  --theme-care-band-pumped: #94c6d0;
+  --theme-care-band-breast: #ec9ab8;
+  --theme-care-band-sleep: #b5a1ef;
+  --theme-care-band-diaper: #86c7a5;
+  --theme-care-band-solid: #b2cd8e;
+}
