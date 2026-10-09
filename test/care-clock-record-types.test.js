@@ -84,12 +84,17 @@ test("daily clock and editable time list share all care record types and categor
   clock.context.renderDailyCareClock(entries);
   let html = clock.content.innerHTML;
   for (let i = 0; i < kinds.length; i++) {
-    if (kinds[i] === "sleep") expect(html).toContain('class="care-clock-sleep"');
-    else expect(html).toContain(`class="care-clock-mark ${kinds[i]}"`);
+    if (["sleep", "breast"].includes(kinds[i])) expect(html).toContain(`class="care-band-range ${kinds[i]}"`);
+    else expect(html).toContain(`class="care-band-stripe ${kinds[i]}"`);
     expect(html).toContain(labels[i]);
   }
   for (const tooltip of ["00:00 분유 120mL", "03:00 유축 90mL", "06:00 직수 왼쪽 · 18분", "09:00 이유식 60mL", "12:00 수면 90분", "15:00 기저귀 소변", "18:00 건강 열 &lt;체크&gt; · 37.4°C"]) expect(html).toContain(tooltip);
-  expect(html).toContain('class="care-clock-sleep"');
+  expect(html).toContain('class="care-band-range breast" data-start="360" data-duration="18"');
+  expect(html).toContain('class="care-band-range sleep" data-start="720" data-duration="90"');
+  expect(html).toContain('class="care-band-stripe pumped"');
+  expect(html).not.toContain('class="care-band-range pumped"');
+  expect(html).toContain('aria-label="선택한 날 수유 합계"');
+  expect(html).toContain("총 수유량 210밀리리터");
   expect(html).not.toContain("숨김");
   expect(html).not.toContain("다른 날짜");
 
@@ -103,7 +108,9 @@ test("daily clock and editable time list share all care record types and categor
 
   clock.context.carePatternCategories.delete("pumped");
   clock.context.renderDailyCareClock(entries);
-  expect(clock.content.innerHTML).not.toContain('class="care-clock-mark pumped"');
+  expect(clock.content.innerHTML).not.toContain('class="care-band-stripe pumped"');
+  expect(clock.content.innerHTML).toContain("총 수유량 210밀리리터");
+  expect(clock.content.innerHTML).toContain("유축 90밀리리터");
   html = timeList(kinds.filter((kind) => kind !== "pumped"));
   expect(html).not.toContain('data-care-entry-id="p"');
   expect(html).toContain('data-care-entry-id="s"');
