@@ -65,7 +65,8 @@
 #growthView .care-band-hour, .care-band-caption { fill: var(--band-muted); font-size: 14px; font-weight: 500; }
 #growthView .care-band-total { fill: var(--band-ink); font-weight: 650; letter-spacing: -.025em; }
 #growthView .care-band-unit { fill: var(--band-muted); font-size: 15px; font-weight: 450; letter-spacing: 0; }
-#growthView .care-band-period { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 18px; }
+#growthView .care-band-period { fill: none; stroke: var(--band-formula); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#growthView .care-band-period-fill { fill: var(--band-formula); fill-opacity: .16; }
 #growthView .care-band-feeding { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 18px; border-top: 1px solid var(--band-rule); }
 #growthView .care-band-feeding article { min-width: 0; }
 #growthView .care-band-feeding article > span, .care-band-other > span { display: flex; align-items: center; gap: 7px; color: var(--band-muted); font-size: 13px; white-space: nowrap; }
