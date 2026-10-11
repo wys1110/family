@@ -90,6 +90,9 @@ test("daily clock and editable time list share all care record types and categor
   }
   for (const tooltip of ["00:00 분유 120mL", "03:00 유축 90mL", "06:00 직수 왼쪽 · 18분", "09:00 이유식 60mL", "12:00 수면 90분", "15:00 기저귀 소변", "18:00 건강 열 &lt;체크&gt; · 37.4°C"]) expect(html).toContain(tooltip);
   expect(html).toContain('class="care-band-range breast" data-start="360" data-duration="18"');
+  expect(html).toContain('<g class="care-band-marker breast" data-start="360" transform="translate(291.9 184.4)">');
+  expect(html).toContain('aria-hidden="true">🤱</text>');
+  expect(html.indexOf('class="care-band-range sleep"')).toBeLessThan(html.indexOf('class="care-band-marker breast"'));
   expect(html).toContain('class="care-band-range sleep" data-start="720" data-duration="90"');
   expect(html).toContain('class="care-band-marker pumped"');
   for (const symbol of ["🍼", "🥛", "🥣", "🩺"]) expect(html).toContain(`aria-hidden="true">${symbol}</text>`);
@@ -110,8 +113,12 @@ test("daily clock and editable time list share all care record types and categor
   clock.context.carePatternCategories.delete("pumped");
   clock.context.renderDailyCareClock(entries);
   expect(clock.content.innerHTML).not.toContain('class="care-band-marker pumped"');
+  expect(clock.content.innerHTML).toContain('class="care-band-marker breast"');
   expect(clock.content.innerHTML).toContain("총 수유량 210밀리리터");
   expect(clock.content.innerHTML).toContain("유축 90밀리리터");
+  clock.context.carePatternCategories.delete("breast");
+  clock.context.renderDailyCareClock(entries);
+  expect(clock.content.innerHTML).not.toContain('class="care-band-marker breast"');
   html = timeList(kinds.filter((kind) => kind !== "pumped"));
   expect(html).not.toContain('data-care-entry-id="p"');
   expect(html).toContain('data-care-entry-id="s"');

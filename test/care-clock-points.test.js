@@ -41,22 +41,25 @@ test("split care clock renders categorized markers and duration ranges at the ri
 
   const html = elements["#carePatternContent"].innerHTML;
   const markers = [...html.matchAll(/<g class="care-band-marker (\w+)" data-start="(\d+)" transform="translate\(([-\d.]+) ([-\d.]+)\)">([\s\S]*?)<\/g>/g)];
-  expect(markers).toHaveLength(3);
-  expect(markers.map(([, type]) => type)).toEqual(["formula", "diaper", "health"]);
+  expect(markers).toHaveLength(4);
+  expect(markers.map(([, type]) => type)).toEqual(["formula", "breast", "diaper", "health"]);
   expect(markers.map(([, type, start, x, y]) => [type, start, Number(x), Number(y)])).toEqual([
-    ["formula", "0", 180, 68], ["diaper", "720", 180, 292], ["health", "1080", 68, 180],
+    ["formula", "0", 180, 68], ["breast", "360", 291.9, 184.4], ["diaper", "720", 180, 292], ["health", "1080", 68, 180],
   ]);
   expect(html).toContain('class="care-band-record-background" cx="0" cy="0" r="10"');
-  for (const symbol of ["🍼", "🧷", "🩺"]) expect(html).toMatch(new RegExp(`<text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${symbol}</text>`));
+  for (const symbol of ["🍼", "🧷", "🩺", "🤱"]) expect(html).toMatch(new RegExp(`<text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${symbol}</text>`));
   expect(html).toContain("<title>18:00 건강 체크 &lt;script&gt;</title>");
   expect(html).not.toContain("care-band-stripe");
-  expect(html).toContain("이모지는 시각 · 채운 구간은 시간 범위");
+  expect(html).toContain("이모지는 기록 종류 · 채운 구간은 시간 범위");
+  expect(html).toContain("이모지는 기록 종류, 채운 구간은 시간 범위.");
   expect(html).toContain("00:00 분유 120mL");
   expect(html).toContain("06:00 직수 18분");
   expect(html).toContain("18:00 건강 체크 &lt;script&gt;");
   expect(html).not.toContain("<script>");
   expect(html).toContain('<path class="care-band-range breast" data-start="360" data-duration="18"');
   expect(html).toContain('<path class="care-band-range sleep" data-start="120" data-duration="90"');
+  expect(html).toContain('<g class="care-band-marker breast" data-start="360" transform="translate(291.9 184.4)">');
+  expect(html.indexOf('class="care-band-range sleep"')).toBeLessThan(html.indexOf('class="care-band-marker breast"'));
   expect(html).toContain("02:00 수면 90분");
   expect(html).not.toContain("숨김");
   expect(html).not.toContain("다른 날짜");
@@ -79,6 +82,8 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
   vm.runInContext(`${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
   context.renderDailyCareClock([
     { date: "2000-01-01", time: "23:30", category: "수유·이유식", feedingType: "모유", feedingMinutes: 90 },
+    { date: "2000-01-01", time: "02:00", category: "수유·이유식", feedingType: "모유", feedingMinutes: 1 },
+    { date: "2000-01-01", time: "10:00", category: "수유·이유식", feedingType: "모유", feedingMinutes: 2000 },
     { date: "2000-01-01", time: "00:00", category: "수면", sleepMinutes: 1441 },
     ...[0, -2, NaN].map((duration, index) => ({ date: "2000-01-01", time: `0${index + 1}:00`, category: "수면", sleepMinutes: duration })),
     { date: "2000-01-01", time: "24:00", category: "건강·병원", title: "invalid time" },
@@ -94,6 +99,12 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
   expect(html).toContain('<svg class="care-band-period" x="169" y="241"');
   expect((html.match(/class="care-band-period-background"/g) || [])).toHaveLength(2);
   expect(html).toContain('class="care-band-range breast" data-start="1410" data-duration="90"');
+  expect(html).toContain('class="care-band-range breast" data-start="120" data-duration="1"');
+  expect(html).toContain('class="care-band-range breast" data-start="600" data-duration="1440"');
+  expect(html).toContain('<g class="care-band-marker breast" data-start="1410" transform="translate(187.3 68.2)">');
+  expect(html).toContain('<g class="care-band-marker breast" data-start="120" transform="translate(236.2 83.1)">');
+  expect(html).toContain('<g class="care-band-marker breast" data-start="600" transform="translate(124.0 83.0)">');
+  expect((html.match(/class="care-band-marker breast"/g) || [])).toHaveLength(3);
   const rangePath = (type) => html.match(new RegExp(`<path class="care-band-range ${type}"[^>]* d="([^"]+)"`))?.[1];
   const overnight = rangePath("breast");
   const overnightSegments = overnight?.match(/^M([\d.-]+) ([\d.-]+) A137 137 0 0 1 ([\d.-]+) ([\d.-]+) L([\d.-]+) ([\d.-]+) A87 87 0 0 0 ([\d.-]+) ([\d.-]+) Z$/);
