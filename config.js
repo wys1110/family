@@ -1,6 +1,7 @@
 window.FAMILY_CONFIG = {
   supabaseUrl: "https://ljutcgmgtqfkwkxdbiyb.supabase.co",
   supabaseAnonKey: ["sb", "publishable", "PlEeuwC", "", "Ft2Gtv3iT4OcA", "hV461WbY"].join("_"),
+  kakaoJavaScriptKey: "__KAKAO_JAVASCRIPT_KEY__",
 };
 
 (() => {
@@ -194,9 +195,9 @@ window.FAMILY_CONFIG = {
     { name: "nova-family", version: "20261012-hourly-record-emojis-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
     { name: "travel-data", version: "20261011-place-discovery-v1", style: false },
-    { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
+    { name: "travel-map", version: "20261012-kakao-map-v1", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261011-place-discovery-v1" },
+    { name: "travel", version: "20261012-kakao-map-v1" },
   ];
 
   const deferredGroups = {

@@ -140,8 +140,8 @@
     const previousFilters=$('.travel-itinerary-filters',view),previousFocus=document.activeElement;
     const focusedFilter=previousFilters?.contains(previousFocus);
     const selection=focusedFilter&&previousFocus.matches('[data-travel-itinerary-query]')?[previousFocus.selectionStart,previousFocus.selectionEnd]:null;
-    const previousMap=$('.travel-map-card .travel-leaflet-map',view);
-    const previousHistoryMap=$('.travel-history-map .travel-leaflet-map',view);
+    const previousMap=$('.travel-map-card .travel-kakao-map',view);
+    const previousHistoryMap=$('.travel-history-map .travel-kakao-map',view);
     const previousDateScroll=$('.travel-day-tabs',view)?.scrollLeft;
     const active=current.page==='manage'?trip():null;
     if(active){
@@ -165,7 +165,7 @@
     }
     if(current.bulkBusy)$('.travel-workspace',view)?.querySelectorAll('button,input,select').forEach(control=>control.disabled=true);
     restoreHistoryMap(previousHistoryMap);
-    const nextMap=$('.travel-map-card .travel-leaflet-map',view);
+    const nextMap=$('.travel-map-card .travel-kakao-map',view);
     if(previousMap&&nextMap)nextMap.replaceWith(previousMap);
     if(!nextMap)map.destroy();
     view.dataset.renderedTab=current.tab;
@@ -191,7 +191,7 @@
     return map.mount($('.travel-map-card',view),{items:activeItems(active).filter(entry=>entry.type==='place'),activeId:current.activeItemId,grouped:current.tab==='all',scope:`${active.id}:${current.tab}`,center:[active.centerLat,active.centerLng],onSelect:selectMapItem,retry,focus});
   };
   const restoreHistoryMap = previous => {
-    const next=$('.travel-history-map .travel-leaflet-map',view);
+    const next=$('.travel-history-map .travel-kakao-map',view);
     if(previous&&next)next.replaceWith(previous);
     if(!next)historyMap.destroy();
   };

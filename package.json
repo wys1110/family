@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "map:configure": "node scripts/configure-kakao-map.mjs",
     "android:add": "npx cap add android",
     "android:prepare": "node scripts/prepare-capacitor.mjs",
     "android:sync": "npm run android:prepare && npx cap sync android",
