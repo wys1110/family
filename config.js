@@ -131,7 +131,7 @@ window.FAMILY_CONFIG = {
     { name: "daily-briefing", version: "20260915-push-diagnostics-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
-    { name: "tab-emojis", version: "20260918-lazy-tabs-v1" },
+    { name: "tab-emojis", version: "20261011-travel-tab-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20260913-records-v1" },
     { name: "notification-center", version: "20260830-auth-recovery-v2" },
@@ -193,10 +193,10 @@ window.FAMILY_CONFIG = {
     { name: "compact-family", version: "20261008-care-record-consistency-v1" },
     { name: "nova-family", version: "20261009-care-wide-band-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
-    { name: "travel-data", version: "20261004-travel-bulk-v2", style: false },
+    { name: "travel-data", version: "20261011-place-discovery-v1", style: false },
     { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261011-trip-form-v1" },
+    { name: "travel", version: "20261011-place-discovery-v1" },
   ];
 
   const deferredGroups = {

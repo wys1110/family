@@ -24,12 +24,13 @@ describe('storybook typography and emoji system', () => {
     const script = read('tab-emojis.js');
     expect(script).toContain("growth: ['🌱', '성장']");
     expect(script).toContain("settings: ['⚙️', '설정']");
+    expect(script).toContain("travel: ['✈️', '여행']");
   });
 
   it('bumps the dynamic module versions so browsers receive the new design', () => {
     const config = read('config.js');
     expect(config).toContain('{ name: "growth-dedup", version: "20260919-compact-v1" }');
-    expect(config).toContain('{ name: "tab-emojis", version: "20260918-lazy-tabs-v1" }');
+    expect(config).toContain('{ name: "tab-emojis", version: "20261011-travel-tab-v1" }');
     expect(config).toContain('{ name: "typography-system", version: "20260824-event-change-push-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
   });
