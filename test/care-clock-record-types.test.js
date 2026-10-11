@@ -85,13 +85,14 @@ test("daily clock and editable time list share all care record types and categor
   let html = clock.content.innerHTML;
   for (let i = 0; i < kinds.length; i++) {
     if (["sleep", "breast"].includes(kinds[i])) expect(html).toContain(`class="care-band-range ${kinds[i]}"`);
-    else expect(html).toContain(`class="care-band-stripe ${kinds[i]}"`);
+    else expect(html).toContain(`class="care-band-marker ${kinds[i]}"`);
     expect(html).toContain(labels[i]);
   }
   for (const tooltip of ["00:00 분유 120mL", "03:00 유축 90mL", "06:00 직수 왼쪽 · 18분", "09:00 이유식 60mL", "12:00 수면 90분", "15:00 기저귀 소변", "18:00 건강 열 &lt;체크&gt; · 37.4°C"]) expect(html).toContain(tooltip);
   expect(html).toContain('class="care-band-range breast" data-start="360" data-duration="18"');
   expect(html).toContain('class="care-band-range sleep" data-start="720" data-duration="90"');
-  expect(html).toContain('class="care-band-stripe pumped"');
+  expect(html).toContain('class="care-band-marker pumped"');
+  for (const symbol of ["🍼", "🥛", "🥣", "🩺"]) expect(html).toContain(`aria-hidden="true">${symbol}</text>`);
   expect(html).not.toContain('class="care-band-range pumped"');
   expect(html).toContain('aria-label="선택한 날 수유 합계"');
   expect(html).toContain("총 수유량 210밀리리터");
@@ -108,7 +109,7 @@ test("daily clock and editable time list share all care record types and categor
 
   clock.context.carePatternCategories.delete("pumped");
   clock.context.renderDailyCareClock(entries);
-  expect(clock.content.innerHTML).not.toContain('class="care-band-stripe pumped"');
+  expect(clock.content.innerHTML).not.toContain('class="care-band-marker pumped"');
   expect(clock.content.innerHTML).toContain("총 수유량 210밀리리터");
   expect(clock.content.innerHTML).toContain("유축 90밀리리터");
   html = timeList(kinds.filter((kind) => kind !== "pumped"));
@@ -116,7 +117,7 @@ test("daily clock and editable time list share all care record types and categor
   expect(html).toContain('data-care-entry-id="s"');
 });
 
-test("poop records get decorative badges in the care clock and editable time list", () => {
+test("poop records use stool markers in the care clock and editable time list", () => {
   const records = [
     { id: "poop-midnight", date: "2000-01-01", time: "00:00", category: "기저귀", diaperKind: "대변 <b>확인</b>", title: "대변 기록" },
     { id: "poop-mixed", date: "2000-01-01", time: "12:00", category: "기저귀", diaperKind: "소변·대변", title: "혼합" },
@@ -129,8 +130,10 @@ test("poop records get decorative badges in the care clock and editable time lis
   const clock = clockContext(categories);
   clock.context.renderDailyCareClock(records);
   const clockHtml = clock.content.innerHTML;
-  expect(clockHtml.match(/class="care-band-poop"/g)).toHaveLength(2);
+  expect(clockHtml.match(/class="care-band-marker diaper"/g)).toHaveLength(4);
   expect(clockHtml.match(/💩/g)).toHaveLength(2);
+  expect(clockHtml).toContain('aria-hidden="true">💧</text>');
+  expect(clockHtml).toContain('aria-hidden="true">🧷</text>');
   expect(clockHtml).toContain("대변 &lt;b&gt;확인&lt;/b&gt;");
   expect(clockHtml).not.toContain("<b>확인</b>");
 
@@ -142,8 +145,23 @@ test("poop records get decorative badges in the care clock and editable time lis
 
   clock.context.carePatternCategories.delete("diaper");
   clock.context.renderDailyCareClock(records);
-  expect(clock.content.innerHTML).not.toContain("care-band-poop");
+  expect(clock.content.innerHTML).not.toContain('class="care-band-marker diaper"');
   const filteredList = timeList(["health"], records);
   expect(filteredList).not.toContain("care-time-poop");
   expect(filteredList).not.toContain("💩");
+});
+
+test("breast and sleep without positive durations render centered instant markers", () => {
+  const clock = clockContext(["breast", "sleep"]);
+  clock.context.renderDailyCareClock([
+    { date: "2000-01-01", time: "03:00", category: "수유·이유식", feedingType: "모유", title: "직수" },
+    { date: "2000-01-01", time: "09:00", category: "수면", sleepMinutes: 0, title: "짧은 잠" },
+  ]);
+  const html = clock.content.innerHTML;
+  expect(html).toContain('<g class="care-band-marker breast" data-start="180" transform="translate(259.2 100.8)">');
+  expect(html).toContain('<g class="care-band-marker sleep" data-start="540" transform="translate(259.2 259.2)">');
+  expect(html).toContain('aria-hidden="true">🤱</text>');
+  expect(html).toContain('aria-hidden="true">💤</text>');
+  expect(html).not.toContain('class="care-band-range breast"');
+  expect(html).not.toContain('class="care-band-range sleep"');
 });
