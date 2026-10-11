@@ -44,12 +44,11 @@
       <div class="care-time-list-items">
         ${items.map(({ entry, type }) => {
           const [label, detail] = careCopy(entry, type);
-          const poop = type === "diaper" && entry.diaperKind?.includes("대변") ? '<span class="care-time-poop" aria-hidden="true">💩</span> ' : "";
           const editLabel = `${entry.time} ${label} ${String(detail || "")} 기록 수정`;
           return `<button type="button" class="care-time-row ${type}" data-care-entry-id="${escapeHtml(String(entry.id || ""))}" aria-label="${escapeHtml(editLabel)}" aria-haspopup="dialog">
             <time datetime="${escapeHtml(`${entry.date}T${entry.time}`)}">${escapeHtml(entry.time)}</time>
-            <i aria-hidden="true"></i>
-            <span><strong>${escapeHtml(label)}</strong><small>${poop}${escapeHtml(String(detail || ""))}</small></span>
+            <i class="care-time-emoji" aria-hidden="true">${careRecordEmoji(entry, type)}</i>
+            <span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(String(detail || ""))}</small></span>
           </button>`;
         }).join("")}
       </div>

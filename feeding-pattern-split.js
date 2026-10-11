@@ -1,3 +1,8 @@
+function careRecordEmoji(entry, type) {
+  return type === "diaper" ? entry.diaperKind?.includes("대변") ? "💩" : entry.diaperKind?.includes("소변") ? "💧" : "🧷"
+    : { formula: "🍼", pumped: "🥛", breast: "🤱", solid: "🥣", sleep: "💤", health: "🩺" }[type];
+}
+
 (() => {
   const CARE_TYPES = ["formula", "breast", "sleep", "diaper", "health"];
 
@@ -114,8 +119,7 @@
       const range = duration ? `<path class="care-band-range ${type}" data-start="${start}" data-duration="${span}" d="${sector(start, duration)}" fill-rule="evenodd">${title}</path>` : "";
       if (type === "sleep" && duration) return { range, marker: "" };
       const point = clockPoint((start + span / 2) / 4, 112);
-      const emoji = type === "diaper" ? entry.diaperKind?.includes("대변") ? "💩" : entry.diaperKind?.includes("소변") ? "💧" : "🧷"
-        : { formula: "🍼", pumped: "🥛", breast: "🤱", solid: "🥣", sleep: "💤", health: "🩺" }[type];
+      const emoji = careRecordEmoji(entry, type);
       return { range, marker: `<g class="care-band-marker ${type}" data-start="${start}" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">${title}<circle class="care-band-record-background" cx="0" cy="0" r="10"></circle><text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${emoji}</text></g>` };
     });
     const ticks = Array.from({ length: 24 }, (_, hour) => {

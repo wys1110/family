@@ -6,6 +6,7 @@ const read = (file) => readFileSync(file, "utf8");
 const adaptive = read("adaptive-feeding.js");
 const typeOf = adaptive.slice(adaptive.indexOf("  function typeOf(entry)"), adaptive.indexOf("\n  function entries()"));
 const splitSource = read("feeding-pattern-split.js");
+const recordEmoji = splitSource.slice(0, splitSource.indexOf("\n\n(() => {"));
 const dailyClock = splitSource.slice(splitSource.indexOf("  renderDailyCareClock = function renderSplitDailyCareClock"), splitSource.indexOf("\n\n  renderWeeklyCarePattern"));
 const app = read("app.js");
 const clockPoint = app.slice(app.indexOf("function clockPoint("), app.indexOf("\n\nfunction renderDailyCareClock"));
@@ -16,6 +17,7 @@ const compactSource = read("compact-family.js");
 const summaryStart = compactSource.indexOf("  const renderSummary = () => {");
 const renderSummary = compactSource.slice(summaryStart, compactSource.indexOf("\n  const previousRender", summaryStart));
 const escapeHtml = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+const rowFor = (html, id) => html.match(new RegExp(`<button\\b(?=[^>]*data-care-entry-id="${id}")[\\s\\S]*?<\\/button>`))?.[0] || "";
 const entries = [
   { id: "f", date: "2000-01-01", time: "00:00", category: "수유·이유식", feedingType: "분유", feedingMl: 120, title: "분유 수유" },
   { id: "p", date: "2000-01-01", time: "03:00", category: "수유·이유식", feedingType: "유축모유", feedingMl: 90, feedingMinutes: 12, title: "유축모유 수유" },
@@ -37,7 +39,7 @@ function clockContext(categories) {
     formatDuration: (minutes) => `${minutes}분`, escapeHtml, activeBaby: () => null,
   };
   vm.createContext(context);
-  vm.runInContext(`${typeOf}\ngrowthCareType = typeOf;\n${clockPoint}\n${dailyClock}`, context);
+  vm.runInContext(`${recordEmoji}\n${typeOf}\ngrowthCareType = typeOf;\n${clockPoint}\n${dailyClock}`, context);
   return { context, content: elements["#carePatternContent"] };
 }
 
@@ -49,7 +51,7 @@ function timeList(categories, records = entries) {
     document: { querySelector: () => content, createElement: () => ({ setAttribute() {} }) },
   };
   vm.createContext(context);
-  vm.runInContext(`${typeOf}\ngrowthCareType = typeOf;\n${emphasis}`, context);
+  vm.runInContext(`${recordEmoji}\n${typeOf}\ngrowthCareType = typeOf;\n${emphasis}`, context);
   context.renderDailyCareClock(records);
   return content.appended[0].innerHTML;
 }
@@ -103,12 +105,17 @@ test("daily clock and editable time list share all care record types and categor
   expect(html).not.toContain("다른 날짜");
 
   html = timeList(kinds);
+  for (const [id, emoji] of [["f", "🍼"], ["p", "🥛"], ["b", "🤱"], ["s", "🥣"], ["z", "💤"], ["d", "💧"], ["h&lt;&amp;", "🩺"]]) {
+    expect(rowFor(html, id)).toContain(emoji);
+  }
   expect(html.indexOf('data-care-entry-id="h&lt;&amp;"')).toBeLessThan(html.indexOf('data-care-entry-id="d"'));
   expect(html).toMatch(/aria-label="18:00 건강 열 &lt;체크&gt; · 37\.4°C 기록 수정"/);
   expect(html).toContain("열 &lt;체크&gt; · 37.4°C");
   expect(html).toContain('aria-haspopup="dialog"');
   for (const label of labels) expect(html).toContain(`<strong>${label}</strong>`);
   expect(html).toContain("왼쪽 · 18분");
+  expect(html).not.toContain("다른 날짜");
+  expect(html).not.toContain("숨김");
 
   clock.context.carePatternCategories.delete("pumped");
   clock.context.renderDailyCareClock(entries);
@@ -122,6 +129,7 @@ test("daily clock and editable time list share all care record types and categor
   html = timeList(kinds.filter((kind) => kind !== "pumped"));
   expect(html).not.toContain('data-care-entry-id="p"');
   expect(html).toContain('data-care-entry-id="s"');
+  expect(html).not.toContain("🥛");
 });
 
 test("poop records use stool markers in the care clock and editable time list", () => {
@@ -145,17 +153,24 @@ test("poop records use stool markers in the care clock and editable time list", 
   expect(clockHtml).not.toContain("<b>확인</b>");
 
   const html = timeList(categories, records);
-  expect(html.match(/class="care-time-poop" aria-hidden="true"/g)).toHaveLength(2);
+  for (const [id, emoji] of [["poop-midnight", "💩"], ["poop-mixed", "💩"], ["urine", "💧"], ["empty", "🧷"]]) {
+    expect(rowFor(html, id)).toContain(emoji);
+    expect(rowFor(html, id).match(new RegExp(emoji, "g"))).toHaveLength(1);
+  }
+  expect(rowFor(html, "poop-midnight")).toContain('aria-haspopup="dialog"');
+  expect(rowFor(html, "poop-midnight")).toContain('aria-label="00:00 기저귀 대변 &lt;b&gt;확인&lt;/b&gt; 기록 수정"');
   expect(html.match(/💩/g)).toHaveLength(2);
   expect(html).toContain("대변 &lt;b&gt;확인&lt;/b&gt;");
   expect(html).not.toContain("<b>확인</b>");
+  expect(html).not.toContain('data-care-entry-id="other-date"');
 
   clock.context.carePatternCategories.delete("diaper");
   clock.context.renderDailyCareClock(records);
   expect(clock.content.innerHTML).not.toContain('class="care-band-marker diaper"');
   const filteredList = timeList(["health"], records);
-  expect(filteredList).not.toContain("care-time-poop");
   expect(filteredList).not.toContain("💩");
+  expect(filteredList).not.toContain("💧");
+  expect(filteredList).not.toContain("🧷");
 });
 
 test("breast and sleep without positive durations render centered instant markers", () => {

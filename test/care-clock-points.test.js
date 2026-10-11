@@ -3,6 +3,7 @@ import vm from "node:vm";
 import { expect, test } from "vitest";
 
 const source = readFileSync("feeding-pattern-split.js", "utf8");
+const emojiHelper = source.slice(0, source.indexOf("\n\n(() => {"));
 const splitType = source.slice(source.indexOf("  function splitCareType"), source.indexOf("\n\n  const originalQuickPresets"));
 const rendererStart = source.indexOf("  renderDailyCareClock = function renderSplitDailyCareClock");
 const rendererEnd = source.indexOf("\n\n  renderWeeklyCarePattern", rendererStart);
@@ -27,7 +28,7 @@ test("split care clock renders categorized markers and duration ranges at the ri
     activeBaby: () => null,
   };
   vm.createContext(context);
-  vm.runInContext(`${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
+  vm.runInContext(`${emojiHelper}\n${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
   const entries = [
     { date: "2000-01-01", time: "00:00", category: "수유·이유식", feedingType: "젖병", feedingMl: 120, title: "분유" },
     { date: "2000-01-01", time: "06:00", category: "수유·이유식", feedingType: "모유", feedingMinutes: 18, title: "모유" },
@@ -79,7 +80,7 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
     activeBaby: () => null,
   };
   vm.createContext(context);
-  vm.runInContext(`${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
+  vm.runInContext(`${emojiHelper}\n${pointHelper}\n${splitType}\ngrowthCareType = splitCareType;\n${renderer}`, context);
   context.renderDailyCareClock([
     { date: "2000-01-01", time: "23:30", category: "수유·이유식", feedingType: "모유", feedingMinutes: 90 },
     { date: "2000-01-01", time: "02:00", category: "수유·이유식", feedingType: "모유", feedingMinutes: 1 },
