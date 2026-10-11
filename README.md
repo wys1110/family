@@ -197,3 +197,14 @@ select baby_id, due_at, status, attempt_count from public.baby_ai_refresh_queue 
 ```
 
 마이그레이션이나 Function Secret이 적용되지 않은 환경에서도 캘린더와 성장일기는 그대로 동작하며 AI 카드에 관리자 설정 안내만 표시됩니다. `service_role`, Gemini 키, cron 비밀값은 `config.js`, GitHub Actions 로그, 이슈 또는 채팅에 넣지 마세요.
+
+## 여행 장소 검색
+
+장소 추가에서 지역과 관광지·음식점·카페·숙소를 고르면 카카오 키워드 검색 결과를 보여 줍니다. 결과를 누르면 이름·주소·좌표·출처와 선택한 날짜·방문 여부가 함께 저장되고, 같은 창에서 다음 장소를 추가할 수 있습니다. 검색 결과는 카카오 검색 순서이며 가족 맞춤 추천이나 현재 GPS 주변 추천은 아닙니다. 이름으로 직접 남기는 기록은 좌표를 추정하지 않습니다.
+
+1. [카카오 개발자 앱](https://developers.kakao.com/console/app)의 REST API 키를 준비합니다.
+2. [Supabase Edge Function Secrets](https://supabase.com/dashboard/project/ljutcgmgtqfkwkxdbiyb/functions/secrets)에 `KAKAO_REST_API_KEY`로 등록합니다. 키는 브라우저 코드나 채팅에 넣지 않습니다.
+3. `supabase functions deploy travel-place-search --project-ref ljutcgmgtqfkwkxdbiyb`로 배포합니다. JWT 검증과 함수 내부의 로그인·가구 가입 검증이 모두 필요합니다.
+4. 가족 계정으로 장소 추가를 열고 지역을 입력해 실제 결과·추가·지도 위치를 확인합니다. 키 존재 확인은 실제 검색 성공을 뜻하지 않습니다.
+
+데모·비로그인 상태나 키가 없는 환경에서는 검색 영역을 숨기고 이름으로 추가할 수 있게 합니다. 검색 실패는 입력을 보존하고 오류를 표시합니다. 기존 Geoapify 검색 경로는 사용하지 않습니다.

@@ -239,11 +239,11 @@
   const addExpense = async (id, input) => updateLocal(id, trip => ({ ...trip, expenses: [...trip.expenses, { ...input, id: makeId('expense'), spentAt: input.spentAt || todayKey() }] }));
   const unsupported = async () => { throw new Error('항공·숙소 후보 기능은 여행 기록 범위에 포함되지 않아요.'); }; const addCandidate = unsupported; const updateCandidate = unsupported; const addBooking = unsupported; const removeTrip = archiveTrip;
   const searchPlaces = async (query, options = {}) => {
-    const text = String(query || '').trim(); if (!text) return { items: [], status: 'empty' };
+    const text = String(query || '').trim(); if (!text && options.action !== 'status') return { items: [], status: 'empty' };
     if (typeof window.FAMILY_TRAVEL_GEOCODER === 'function') return window.FAMILY_TRAVEL_GEOCODER(text, options);
     const client = window.FAMILY_APP_STATE?.supabase;
-    if (!client || !window.FAMILY_APP_STATE?.session?.user?.id || !window.FAMILY_APP_STATE?.household?.id) return { items: [], status: 'unavailable', message: '가족 계정에서 장소 검색을 사용할 수 있어요. 지금은 이름과 주소를 직접 기록해 주세요.' };
-    const { data: payload, error } = await client.functions.invoke('travel-place-search', { body: { query: text, limit: Math.min(10, options.limit || 10) }, headers: { 'x-family-household': window.FAMILY_APP_STATE.household.id } });
+    if (!client || !window.FAMILY_APP_STATE?.session?.user?.id || !window.FAMILY_APP_STATE?.household?.id) return { items: [], status: 'unavailable', message: '가족 계정에서 장소 검색을 사용할 수 있어요. 지금은 장소 이름만으로 추가할 수 있어요.' };
+    const { data: payload, error } = await client.functions.invoke('travel-place-search', { body: { action: options.action, query: text, limit: Math.min(10, options.limit || 10) }, headers: { 'x-family-household': window.FAMILY_APP_STATE.household.id } });
     if (error) return { items: [], status: 'error', message: '장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요.' };
     return payload || { items: [], status: 'ok' };
   };

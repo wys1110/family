@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.daily-briefing-push]
 verify_jwt = false
+
+[functions.travel-place-search]
+verify_jwt = true

@@ -9,13 +9,13 @@ const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
 const appSource = readFileSync('app.js', 'utf8');
 const travelCssSource = readFileSync('travel.css', 'utf8');
 
-function loadData({ demoMode = false, savedTrips, shared = false } = {}) {
+function loadData({ demoMode = false, savedTrips, shared = false, supabase } = {}) {
   const store = new Map();
   const key = 'family-travel-v1:household-a';
   if (savedTrips !== undefined) store.set(key, JSON.stringify(savedTrips));
   const window = {
     FAMILY_DEMO_MODE: demoMode,
-    FAMILY_APP_STATE: { household: { id: 'household-a' } },
+    FAMILY_APP_STATE: { household: { id: 'household-a' }, session: supabase ? { user: { id: 'user-a' } } : undefined, supabase },
     FAMILY_TRAVEL_SHARING: shared ? { enabled: () => true, load: async () => [] } : undefined,
     localStorage: { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) },
     addEventListener: () => {}, dispatchEvent: () => {},
@@ -66,6 +66,18 @@ test('travel records remain scoped to the current family and retain places and m
   expect(saved.items).toHaveLength(1);
   expect(saved.memories).toHaveLength(1);
   expect([...store.keys()]).toEqual(['family-travel-v1:household-a']);
+});
+
+test('place search sends an empty-query status request to the connected provider', async () => {
+  const calls = [];
+  const supabase = { functions: { invoke: async (...args) => { calls.push(args); return { data: { status: 'ok' }, error: null }; } } };
+  const { api } = loadData({ supabase });
+
+  expect(await api.searchPlaces('', { action: 'status' })).toEqual({ status: 'ok' });
+  expect(calls).toEqual([['travel-place-search', {
+    body: { action: 'status', query: '', limit: 10 },
+    headers: { 'x-family-household': 'household-a' },
+  }]]);
 });
 
 test('travel history summary validates dates, classifies per-trip timezones, deduplicates ids and ignores archived state', () => {
@@ -168,7 +180,7 @@ test('travel tab loads only archive modules and has no booking-search workspace'
   expect(deferredSource).toContain("createTab('travel', '✈️ 여행')");
   expect(travelSource).toContain('FAMILY TRAVEL ARCHIVE');
   expect(travelSource).toContain('data-travel-page="summary"');
-  expect(travelSource).toContain('방문한 장소 남기기');
+  expect(travelSource).toContain('data-travel-add-place');
   expect(travelSource).not.toContain('항공·숙소 찾기');
   expect(travelSource).not.toContain('예약처 열기');
   expect(travelSource).not.toMatch(/service_role|sk-[A-Za-z0-9]{20,}/i);
@@ -245,7 +257,7 @@ test('travel modal uses the top layer, closes cleanly, and fits a mobile keyboar
     showModal() { this.open = true; showCount++; },
     close() { this.open = false; closeCount++; },
   };
-  const current = { modalMode: 'trip', selectedPlace: { name: 'Naha' } };
+  const current = { modalMode: 'trip', searchRequest: 0 };
   const context = { current, view: {}, window: { visualViewport: viewport }, $: selector => selector === '#travelModal' ? modal : null };
   vm.createContext(context);
   vm.runInContext(`let travelViewportListener = null;\nconst clearTravelViewport = node => { if(travelViewportListener){window.visualViewport.removeEventListener('resize',travelViewportListener);window.visualViewport.removeEventListener('scroll',travelViewportListener);} travelViewportListener=null; node.style.removeProperty('--travel-viewport-height'); node.style.removeProperty('--travel-viewport-top'); };\n${showLine}\n${closeLine}`, context);
@@ -261,11 +273,12 @@ test('travel modal uses the top layer, closes cleanly, and fits a mobile keyboar
   expect(styleValues.get('--travel-viewport-height')).toBe('300px');
   expect(styleValues.get('--travel-viewport-top')).toBe('20px');
   vm.runInContext('closeModal()', context);
+  expect(current.searchRequest).toBe(1);
   expect(closeCount).toBe(1);
   expect(modal.hidden).toBe(true);
   expect(viewportListeners.size).toBe(0);
   expect(styleValues.size).toBe(0);
-  expect(current).toEqual({ modalMode: null, selectedPlace: null });
+  expect(current).toEqual({ modalMode: null, searchRequest: 1 });
   vm.runInContext('showModal("새 여행", "<form></form>")', context);
   expect(showCount).toBe(2);
   expect(panelFocusCount).toBe(2);
@@ -415,7 +428,7 @@ test('planner capture controls preserve day context, details clicks, and null in
   expect(handler).toBeTruthy();
   const current = { tab: 'all', modalMode: null };
   const trip = { id: 'trip-1' };
-  const calls = { render: 0, move: [], show: [] };
+  const calls = { render: 0, move: [], show: [], prepare: 0 };
   const context = {
     current,
     trip: () => trip,
@@ -423,6 +436,7 @@ test('planner capture controls preserve day context, details clicks, and null in
     placeForm: (_trip, day) => `place-day:${day}`,
     noteForm: (_trip, day) => `note-day:${day}`,
     showModal: (...args) => calls.show.push(args),
+    preparePlaceSearch: async () => calls.prepare++,
     render: () => calls.render++,
     data: { moveItem: async (...args) => calls.move.push(args) },
     Number,
@@ -442,6 +456,7 @@ test('planner capture controls preserve day context, details clicks, and null in
   const add = { add: true, dataset: { travelDayIndex: '2' }, hasAttribute: name => name === 'data-travel-day-index', matches: selector => selector === '[data-travel-add-place]', closest: selector => selector === '[data-travel-add-place],[data-travel-add-note]' ? add : null };
   await vm.runInContext('handlePlannerControls(event)', Object.assign(context, { event: makeEvent(add) }));
   expect(calls.show).toEqual([['장소 추가', 'place-day:2']]);
+  expect(calls.prepare).toBe(1);
 
   let selectRenderCount = calls.render;
   const details = { querySelector: () => ({ value: '' }) };
