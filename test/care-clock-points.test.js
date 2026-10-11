@@ -10,7 +10,7 @@ const renderer = source.slice(rendererStart, rendererEnd);
 const app = readFileSync("app.js", "utf8");
 const pointHelper = app.slice(app.indexOf("function clockPoint("), app.indexOf("\n\nfunction renderDailyCareClock"));
 
-test("split care clock renders categorized stripes and duration ranges at the right times", () => {
+test("split care clock renders categorized markers and duration ranges at the right times", () => {
   const elements = {
     "#carePatternDateLabel": {},
     "#carePatternDateNav [data-pattern-day='1']": {},
@@ -40,10 +40,17 @@ test("split care clock renders categorized stripes and duration ranges at the ri
   context.renderDailyCareClock(entries);
 
   const html = elements["#carePatternContent"].innerHTML;
-  const stripes = [...html.matchAll(/<line class="care-band-stripe (\w+)" x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)">/g)].map((match) => match.slice(1));
-  expect(stripes).toHaveLength(3);
-  expect(stripes.map(([type]) => type)).toEqual(["formula", "diaper", "health"]);
-  expect(stripes[0]).toEqual(["formula", "180.0", "92.0", "180.0", "44.0"]);
+  const markers = [...html.matchAll(/<g class="care-band-marker (\w+)" data-start="(\d+)" transform="translate\(([-\d.]+) ([-\d.]+)\)">([\s\S]*?)<\/g>/g)];
+  expect(markers).toHaveLength(3);
+  expect(markers.map(([, type]) => type)).toEqual(["formula", "diaper", "health"]);
+  expect(markers.map(([, type, start, x, y]) => [type, start, Number(x), Number(y)])).toEqual([
+    ["formula", "0", 180, 68], ["diaper", "720", 180, 292], ["health", "1080", 68, 180],
+  ]);
+  expect(html).toContain('class="care-band-record-background" cx="0" cy="0" r="10"');
+  for (const symbol of ["🍼", "🧷", "🩺"]) expect(html).toMatch(new RegExp(`<text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${symbol}</text>`));
+  expect(html).toContain("<title>18:00 건강 체크 &lt;script&gt;</title>");
+  expect(html).not.toContain("care-band-stripe");
+  expect(html).toContain("이모지는 시각 · 채운 구간은 시간 범위");
   expect(html).toContain("00:00 분유 120mL");
   expect(html).toContain("06:00 직수 18분");
   expect(html).toContain("18:00 건강 체크 &lt;script&gt;");
@@ -55,7 +62,7 @@ test("split care clock renders categorized stripes and duration ranges at the ri
   expect(html).not.toContain("다른 날짜");
   context.carePatternCategories.delete("formula");
   context.renderDailyCareClock(entries);
-  expect(elements["#carePatternContent"].innerHTML).not.toContain('class="care-band-stripe formula"');
+  expect(elements["#carePatternContent"].innerHTML).not.toContain('class="care-band-marker formula"');
   expect(elements["#carePatternContent"].innerHTML).toContain("분유 120밀리리터");
 });
 
@@ -79,10 +86,12 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
   ]);
   const html = elements["#carePatternContent"].innerHTML;
   const lastRange = html.lastIndexOf('class="care-band-range');
-  const lastStripe = html.lastIndexOf('class="care-band-stripe');
+  const lastMarker = html.lastIndexOf('class="care-band-marker');
   const periodIcons = [...html.matchAll(/<svg class="care-band-period"/g)];
   expect(periodIcons).toHaveLength(2);
-  expect(periodIcons.every((icon) => icon.index > lastRange && icon.index > lastStripe)).toBe(true);
+  expect(periodIcons.every((icon) => icon.index > lastRange && icon.index > lastMarker)).toBe(true);
+  expect(html).toContain('<svg class="care-band-period" x="169" y="97"');
+  expect(html).toContain('<svg class="care-band-period" x="169" y="241"');
   expect((html.match(/class="care-band-period-background"/g) || [])).toHaveLength(2);
   expect(html).toContain('class="care-band-range breast" data-start="1410" data-duration="90"');
   const rangePath = (type) => html.match(new RegExp(`<path class="care-band-range ${type}"[^>]* d="([^"]+)"`))?.[1];
@@ -103,7 +112,7 @@ test("duration ranges cross midnight, cap at one day, and invalid durations rema
   expect(fullRing).toBe("M180 43 A137 137 0 1 1 180 317 A137 137 0 1 1 180 43 M180 93 A87 87 0 1 0 180 267 A87 87 0 1 0 180 93");
   expect((fullRing.match(/A137 137 0 1 1/g) || [])).toHaveLength(2);
   expect((fullRing.match(/A87 87 0 1 0/g) || [])).toHaveLength(2);
-  expect((html.match(/class="care-band-stripe sleep"/g) || [])).toHaveLength(3);
+  expect((html.match(/class="care-band-marker sleep"/g) || [])).toHaveLength(3);
   expect(html).not.toContain("24:00");
   expect(html).toContain("12:30 건강 &lt;img src=x onerror=alert(1)&gt;");
   expect(html).not.toContain("<img src=x onerror=alert(1)>");

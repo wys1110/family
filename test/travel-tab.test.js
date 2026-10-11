@@ -275,44 +275,103 @@ test('travel modal uses the top layer, closes cleanly, and fits a mobile keyboar
   expect(travelSource).toContain("event.target.matches('.travel-modal-backdrop')");
 });
 
-test('trip destination can be a preset or a custom value without stale-field overrides', () => {
-  const resolveLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const resolveDestination ='));
-  const reconcileLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const reconcileDestinationInputs ='));
-  const formLine = travelSource.split('\n').find(line => line.trimStart().startsWith('const tripForm ='));
-  expect(resolveLine).toBeTruthy();
-  expect(reconcileLine).toBeTruthy();
-  expect(formLine).toBeTruthy();
-  const context = { esc: value => String(value ?? ''), destinationGroups: [], destinationOptions: value => `<option>${value || ''}</option>` };
+test('trip destination requires a preset or custom choice and preserves unknown edit values safely', () => {
+  const sourceLines = travelSource.split('\n');
+  const helperNames = ['destinationGroups', 'destinationOptions', 'resolveDestination', 'reconcileDestinationInputs'];
+  const helperLines = helperNames.map(name => sourceLines.find(line => line.trimStart().startsWith(`const ${name} =`)));
+  const formBlock = travelSource.match(/  const tripForm = item => \{[\s\S]*?\n  \};/)?.[0];
+  expect(helperLines.every(Boolean)).toBe(true);
+  expect(formBlock).toBeTruthy();
+  const destinationHelpers = [...helperLines, formBlock].join('\n');
+  const context = { esc: value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;') };
   vm.createContext(context);
-  vm.runInContext(`${resolveLine}\n${reconcileLine}\n${formLine}`, context);
+  vm.runInContext(destinationHelpers, context);
 
-  expect(vm.runInContext('resolveDestination({destination:"제주", destinationCustom:""})', context)).toBe('제주');
-  expect(vm.runInContext('resolveDestination({destination:"", destinationCustom:"영종도"})', context)).toBe('영종도');
-  expect(vm.runInContext('resolveDestination({destination:"제주", destinationCustom:"  "})', context)).toBe('제주');
-  expect(vm.runInContext('resolveDestination({destination:"  ", destinationCustom:"  "})', context)).toBe('');
+  expect(vm.runInContext('resolveDestination({destination:"제주", destinationCustom:"영종도"})', context)).toBe('제주');
+  expect(vm.runInContext('resolveDestination({destination:"__custom", destinationCustom:" 영종도 "})', context)).toBe('영종도');
+  expect(vm.runInContext('resolveDestination({destination:"__custom", destinationCustom:"  "})', context)).toBe('');
+  expect(vm.runInContext('resolveDestination({destination:"", destinationCustom:"영종도"})', context)).toBe('');
 
-  const fields = { destination: { value: '제주' }, destinationCustom: { value: '영종도' } };
+  const fields = {
+    destination: { value: '__custom' },
+    destinationCustom: { value: '영종도', disabled: false, required: true, parentElement: { hidden: false } },
+  };
   const form = { elements: fields };
-  context.form = form;
-  context.target = { closest: selector => selector === '#travelTripForm' ? form : null };
-  context.target = fields.destinationCustom;
-  // Emulate custom input after editing a preset: the old preset is cleared.
-  context.target.closest = selector => selector === '#travelTripForm' ? form : null;
-  vm.runInContext('reconcileDestinationInputs(target)', context);
-  expect(fields.destination.value).toBe('');
-  fields.destination.value = '제주';
-  fields.destinationCustom.value = '영종도';
+  for (const name of Object.keys(fields)) fields[name].closest = selector => selector === '#travelTripForm' ? form : null;
   context.target = fields.destination;
-  context.target.closest = selector => selector === '#travelTripForm' ? form : null;
   vm.runInContext('reconcileDestinationInputs(target)', context);
-  expect(fields.destinationCustom.value).toBe('');
+  expect(fields.destinationCustom).toMatchObject({ disabled: false, required: true, parentElement: { hidden: false }, value: '영종도' });
+  fields.destination.value = '제주';
+  context.target = fields.destination;
+  vm.runInContext('reconcileDestinationInputs(target)', context);
+  expect(fields.destinationCustom).toMatchObject({ disabled: true, required: false, parentElement: { hidden: true }, value: '영종도' });
+  fields.destination.value = '__custom';
+  context.target = fields.destination;
+  vm.runInContext('reconcileDestinationInputs(target)', context);
+  expect(fields.destinationCustom).toMatchObject({ disabled: false, required: true, parentElement: { hidden: false }, value: '영종도' });
+  context.target = fields.destinationCustom;
+  vm.runInContext('reconcileDestinationInputs(target)', context);
+  expect(fields.destination.value).toBe('__custom');
 
+  const createForm = vm.runInContext('tripForm()', context);
   const editPreset = vm.runInContext('tripForm({destinationLabel:"제주", title:"제주 여행"})', context);
-  const editCustom = vm.runInContext('tripForm({destinationLabel:"영종도", title:"영종도 여행"})', context);
+  const editCustom = vm.runInContext('tripForm({destinationLabel:"<영종도 & 제주>", title:"영종도 여행"})', context);
+  expect(createForm).toContain('<select name="destination" required><option value="" selected>');
+  expect(createForm).toMatch(/<option value="__custom"\s*>직접 입력<\/option>/);
+  expect(createForm).toContain('<optgroup');
+  expect(createForm).toContain('name="destinationCustom"');
   expect(editPreset).toContain('name="destination"');
-  expect(editPreset).not.toContain('name="destination" required');
-  expect(editCustom).toContain('name="destinationCustom"');
-  expect(editCustom).toContain('value="영종도"');
+  expect(editPreset).toContain('value="제주" selected');
+  expect(editPreset).toContain('name="destinationCustom"');
+  expect(editCustom).toContain('value="__custom" selected');
+  expect(editCustom).toContain('value="&lt;영종도 &amp; 제주&gt;"');
+  expect(editCustom).not.toContain('(기존)');
+  expect(editCustom).toContain('출발일');
+  expect(editCustom).toContain('마지막 날');
+  expect(editCustom).toMatch(/class="[^"]*travel-trip-dates/);
+  expect(travelCssSource).toMatch(/@media\s*\(max-width:\s*560px\)[\s\S]*?travel-trip-dates[^\n{]*\{[^}]*grid-template-columns:\s*(?:minmax\(0,\s*)?1fr/);
+});
+
+test('trip save shows a safe inline error and retries with the entered preset', async () => {
+  const lines = travelSource.split('\n');
+  const resolveLine = lines.find(line => line.trimStart().startsWith('const resolveDestination ='));
+  const submitBlock = travelSource.slice(travelSource.indexOf('  const submit ='), travelSource.indexOf('  const click ='));
+  expect(resolveLine).toBeTruthy();
+  expect(submitBlock).toBeTruthy();
+  const fields = { title: '우리 가족 여행', destination: '제주', destinationCustom: '<stale>', startDate: '2026-11-01', endDate: '2026-11-03', intro: '기억할 이야기' };
+  const errorNotice = { hidden: true, textContent: '', innerHTML: '' };
+  class TestForm {}
+  const form = Object.assign(new TestForm(), { id: 'travelTripForm', querySelector: selector => selector === '.travel-trip-error' ? errorNotice : null });
+  let attempts = 0;
+  let closeCount = 0;
+  const createdTrips = [];
+  const alerts = [];
+  const context = {
+    current: { bulkBusy: false, editingId: null, page: 'summary', tripId: null, tab: 'summary' },
+    HTMLFormElement: TestForm,
+    FormData: class { constructor() { } entries() { return Object.entries(fields); } },
+    data: { createTrip: async trip => { if (!attempts++) throw new Error('<storage unavailable>'); createdTrips.push(trip); return { id: 'saved-trip' }; } },
+    resolveDestination: undefined,
+    trip: () => null,
+    clearSelection: () => {}, clearItineraryFilters: () => {}, closeModal: () => closeCount++, render: () => {},
+    window: { alert: message => alerts.push(message) },
+  };
+  vm.createContext(context);
+  vm.runInContext(`${resolveLine}\n${submitBlock}`, context);
+  const event = { target: form, preventDefault() {} };
+  context.event = event;
+
+  await vm.runInContext('submit(event)', context);
+  expect(errorNotice).toMatchObject({ hidden: false, textContent: '<storage unavailable>', innerHTML: '' });
+  expect(fields).toMatchObject({ title: '우리 가족 여행', destination: '제주', destinationCustom: '<stale>' });
+  expect(alerts).toEqual([]);
+  expect(closeCount).toBe(0);
+
+  await vm.runInContext('submit(event)', context);
+  expect(errorNotice.hidden).toBe(true);
+  expect(createdTrips[0]).toMatchObject({ title: '우리 가족 여행', destination: '제주', destinationLabel: '제주', startDate: '2026-11-01', endDate: '2026-11-03' });
+  expect(alerts).toEqual([]);
+  expect(closeCount).toBe(1);
 });
 
 test('day-scoped add defaults and external map route use the selected date or inbox', () => {

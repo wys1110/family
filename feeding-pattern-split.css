@@ -22,7 +22,7 @@
   .care-rhythm-chart.split-feeding .care-rhythm-bars { gap:1px; }
   .care-rhythm-chart.split-feeding .care-rhythm-bars i { width:min(6px,22%); }
 }
-/* A 24-hour band: full-width seams for moments, filled spans for durations. */
+/* A 24-hour band: centered emoji for moments, filled spans for durations. */
 #growthView .care-band-card {
   --band-ink: var(--theme-care-band-ink);
   --band-muted: var(--theme-care-band-muted);
@@ -59,7 +59,6 @@
 #growthView .care-band-card .diaper { --band-color: var(--band-diaper); }
 #growthView .care-band-card .solid { --band-color: var(--band-solid); }
 #growthView .care-band-card .health { --band-color: var(--band-health); }
-#growthView .care-band-stripe { stroke: var(--band-color); stroke-width: 3.5; stroke-linecap: round; }
 #growthView .care-band-range { fill: var(--band-color); fill-opacity: .88; stroke: var(--band-surface); stroke-width: 1; stroke-opacity: .9; }
 #growthView .care-band-tick { stroke: var(--band-muted); stroke-opacity: .5; stroke-width: 1; }
 #growthView .care-band-hour, .care-band-caption { fill: var(--band-muted); font-size: 14px; font-weight: 500; }
@@ -67,7 +66,7 @@
 #growthView .care-band-unit { fill: var(--band-muted); font-size: 15px; font-weight: 450; letter-spacing: 0; }
 #growthView .care-band-period { fill: none; stroke: var(--band-formula); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 #growthView .care-band-period-background, #growthView .care-band-record-background { fill: var(--band-surface); stroke: none; }
-#growthView .care-band-poop-symbol { fill: var(--band-ink); font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 16px; }
+#growthView .care-band-record-symbol { fill: var(--band-ink); font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 20px; }
 #growthView .care-band-period-fill { fill: var(--band-formula); fill-opacity: .16; }
 #growthView .care-band-feeding { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 18px; border-top: 1px solid var(--band-rule); }
 #growthView .care-band-feeding article { min-width: 0; }

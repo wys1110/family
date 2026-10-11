@@ -398,6 +398,17 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-it
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-menu select { width:100%; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel > header { position:sticky; top:-1px; z-index:3; padding:2px 0 10px; background:var(--nova-card); }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel form { padding-bottom:64px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm { gap:16px; padding-bottom:0; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm label { min-width:0; margin:0; gap:8px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm label[hidden] { display:none; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm :is(input,select,textarea) { margin:0; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm textarea { min-height:72px; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm .travel-trip-error { margin:0; color:var(--red); font-size:14px; line-height:1.5; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm input[type="date"] { display:block; height:48px; padding-block:0; overflow:hidden; text-align:left; font-variant-numeric:tabular-nums; -webkit-appearance:none; appearance:none; }
+html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm input[type="date"]::-webkit-date-and-time-value { min-width:0; margin:0; text-align:left; }
+@media (max-width:560px) {
+  html[data-family-design="nova"][data-family-theme-choice] #travelView #travelTripForm .travel-trip-dates { grid-template-columns:minmax(0,1fr); gap:16px; }
+}
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel form > button[type="submit"] { position:sticky; bottom:0; z-index:2; min-height:48px; box-shadow:0 -8px 18px color-mix(in srgb,var(--nova-text) 9%,transparent); }
 
 /* Travel archive: places and stories, not booking comparison. */
