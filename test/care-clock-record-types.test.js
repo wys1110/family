@@ -41,7 +41,7 @@ function clockContext(categories) {
   return { context, content: elements["#carePatternContent"] };
 }
 
-function timeList(categories) {
+function timeList(categories, records = entries) {
   const content = { innerHTML: "clock", appended: [], appendChild(element) { this.appended.push(element); } };
   const context = {
     carePatternDate: "2000-01-01", carePatternCategories: new Set(categories), growthCareType: null,
@@ -50,7 +50,7 @@ function timeList(categories) {
   };
   vm.createContext(context);
   vm.runInContext(`${typeOf}\ngrowthCareType = typeOf;\n${emphasis}`, context);
-  context.renderDailyCareClock(entries);
+  context.renderDailyCareClock(records);
   return content.appended[0].innerHTML;
 }
 
@@ -114,4 +114,36 @@ test("daily clock and editable time list share all care record types and categor
   html = timeList(kinds.filter((kind) => kind !== "pumped"));
   expect(html).not.toContain('data-care-entry-id="p"');
   expect(html).toContain('data-care-entry-id="s"');
+});
+
+test("poop records get decorative badges in the care clock and editable time list", () => {
+  const records = [
+    { id: "poop-midnight", date: "2000-01-01", time: "00:00", category: "기저귀", diaperKind: "대변 <b>확인</b>", title: "대변 기록" },
+    { id: "poop-mixed", date: "2000-01-01", time: "12:00", category: "기저귀", diaperKind: "소변·대변", title: "혼합" },
+    { id: "urine", date: "2000-01-01", time: "06:00", category: "기저귀", diaperKind: "소변", title: "소변" },
+    { id: "empty", date: "2000-01-01", time: "07:00", category: "기저귀", diaperKind: "", title: "기록" },
+    { id: "other-date", date: "2000-01-02", time: "08:00", category: "기저귀", diaperKind: "대변", title: "다른 날짜" },
+    { id: "health", date: "2000-01-01", time: "09:00", category: "건강·병원", diaperKind: "대변", title: "건강 기록" },
+  ];
+  const categories = ["diaper", "health"];
+  const clock = clockContext(categories);
+  clock.context.renderDailyCareClock(records);
+  const clockHtml = clock.content.innerHTML;
+  expect(clockHtml.match(/class="care-band-poop"/g)).toHaveLength(2);
+  expect(clockHtml.match(/💩/g)).toHaveLength(2);
+  expect(clockHtml).toContain("대변 &lt;b&gt;확인&lt;/b&gt;");
+  expect(clockHtml).not.toContain("<b>확인</b>");
+
+  const html = timeList(categories, records);
+  expect(html.match(/class="care-time-poop" aria-hidden="true"/g)).toHaveLength(2);
+  expect(html.match(/💩/g)).toHaveLength(2);
+  expect(html).toContain("대변 &lt;b&gt;확인&lt;/b&gt;");
+  expect(html).not.toContain("<b>확인</b>");
+
+  clock.context.carePatternCategories.delete("diaper");
+  clock.context.renderDailyCareClock(records);
+  expect(clock.content.innerHTML).not.toContain("care-band-poop");
+  const filteredList = timeList(["health"], records);
+  expect(filteredList).not.toContain("care-time-poop");
+  expect(filteredList).not.toContain("💩");
 });
