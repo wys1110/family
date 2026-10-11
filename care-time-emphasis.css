@@ -41,7 +41,7 @@
 .care-time-row {
   --care-time-color:#6f7f70;
   display:grid;
-  grid-template-columns:76px 10px minmax(0,1fr);
+  grid-template-columns:76px 24px minmax(0,1fr);
   gap:10px;
   align-items:center;
   box-sizing:border-box;
@@ -87,12 +87,14 @@
   font-variant-numeric:tabular-nums;
 }
 
-.care-time-row > i {
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--care-time-color);
-  box-shadow:0 0 0 4px color-mix(in srgb,var(--care-time-color) 16%,transparent);
+.care-time-emoji {
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  font-size:20px;
+  font-style:normal;
+  line-height:1;
 }
 
 .care-time-row > span {
@@ -121,7 +123,7 @@
   .care-clock-hour { font-size:var(--type-label-size); }
   .care-time-list { padding:20px; }
   .care-time-list-items { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-  .care-time-row { min-height:70px; grid-template-columns:92px 11px minmax(0,1fr); padding:10px 14px; }
+  .care-time-row { min-height:70px; grid-template-columns:92px 24px minmax(0,1fr); padding:10px 14px; }
   .care-time-row time { font-size:30px; }
   .care-time-row > span strong { font-size:14px; }
   .care-time-row > span small { font-size:12px; }

@@ -136,12 +136,6 @@ html[data-family-theme="night"] #growthView .care-pattern-section {
   font-weight: 600;
 }
 
-#growthView .care-time-row > i {
-  width: 9px;
-  height: 9px;
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--care-time-color) 19%, transparent);
-}
-
 html[data-family-theme="night"] #growthView .care-time-list {
   border-color: rgba(142, 185, 255, .19);
   background:
