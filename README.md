@@ -198,6 +198,20 @@ select baby_id, due_at, status, attempt_count from public.baby_ai_refresh_queue 
 
 마이그레이션이나 Function Secret이 적용되지 않은 환경에서도 캘린더와 성장일기는 그대로 동작하며 AI 카드에 관리자 설정 안내만 표시됩니다. `service_role`, Gemini 키, cron 비밀값은 `config.js`, GitHub Actions 로그, 이슈 또는 채팅에 넣지 마세요.
 
+## 여행 지도
+
+여행 지도는 카카오 지도 JavaScript SDK를 사용합니다. 전체 요약은 이름 없이 점으로 표시하고, 여행 일정은 날짜별 장소 번호와 방문 순서를 표시합니다. 선은 방문 순서이며 실제 길찾기 경로가 아닙니다.
+
+1. [카카오 개발자 앱](https://developers.kakao.com/console/app)에서 기존 우리 가족 앱을 선택하고 카카오맵 사용 설정을 켭니다.
+2. [앱] > [앱 설정] > [앱] > [플랫폼 키]에서 JavaScript 키를 선택하고 SDK 도메인에 `https://wys1110.github.io`, 로컬 검증용 `http://localhost:8766`, Android WebView용 `https://localhost`를 등록합니다. [공식 준비 가이드](https://apis.map.kakao.com/web/guide/)에서 현재 메뉴 경로를 확인할 수 있습니다.
+3. JavaScript 키를 GitHub 저장소의 Actions secret `KAKAO_JAVASCRIPT_KEY`에 등록합니다. REST API 키나 어드민 키를 사용하지 않습니다.
+4. Pages와 Android 빌드는 `scripts/configure-kakao-map.mjs`로 키를 주입합니다. 키가 없으면 배포를 중단합니다. JavaScript 키는 브라우저에 전달되는 앱 식별값이므로 등록된 도메인으로 사용을 제한해야 합니다. 실제 값은 소스나 채팅에 저장하지 않습니다.
+5. 공개 화면에서 배경 지도와 핀 선택·확대·날짜 전환을 확인한 뒤 완료로 판단합니다. 빌드 검사나 키 등록만으로 실제 지도 연결이 확인된 것은 아닙니다.
+
+카카오는 국내 지도를 중심으로 제공합니다. 해외 여행의 지도 지원 범위는 별도 검증이 필요하며, 이번 교체로 해외 지도까지 확인한 것으로 보지 않습니다.
+
+로컬 실행 시 환경 변수 `KAKAO_JAVASCRIPT_KEY`를 설정한 뒤 `npm run map:configure`를 실행합니다. 이 명령은 로컬 `config.js`의 키 자리표시자를 바꾸므로 실제 값이 들어간 파일을 커밋하지 않습니다.
+
 ## 여행 장소 검색
 
 장소 추가에서 지역과 관광지·음식점·카페·숙소를 고르면 카카오 키워드 검색 결과를 보여 줍니다. 결과를 누르면 이름·주소·좌표·출처와 선택한 날짜·방문 여부가 함께 저장되고, 같은 창에서 다음 장소를 추가할 수 있습니다. 검색 결과는 카카오 검색 순서이며 가족 맞춤 추천이나 현재 GPS 주변 추천은 아닙니다. 이름으로 직접 남기는 기록은 좌표를 추정하지 않습니다.

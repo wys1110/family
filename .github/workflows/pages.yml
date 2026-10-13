@@ -35,6 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Configure Kakao map
+        env:
+          KAKAO_JAVASCRIPT_KEY: ${{ secrets.KAKAO_JAVASCRIPT_KEY }}
+        run: node scripts/configure-kakao-map.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
