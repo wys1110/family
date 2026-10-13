@@ -3,7 +3,7 @@
 
   const VIEW = 'admin';
   const ADMIN_EMAIL = 'wys1110@gmail.com';
-  const ACTIVE_VIEW_KEY = 'family-active-view-v1';
+  const ACTIVE_VIEW_STORAGE_KEY = ACTIVE_VIEW_KEY;
   const main = document.querySelector('.app-shell main');
   const nav = document.querySelector('.view-tabs');
   if (!main || !nav) return;
@@ -240,7 +240,7 @@
       if (!allowed) return;
       previous('calendar');
       if (typeof state !== 'undefined') state.activeView = VIEW;
-      try { localStorage.setItem(ACTIVE_VIEW_KEY, VIEW); } catch { /* current screen only */ }
+      try { localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, VIEW); } catch { /* current screen only */ }
       ['calendarView', 'growthView', 'englishView', 'privateView', 'featureRequestView', 'settingsView'].forEach((id) => {
         const target = document.getElementById(id);
         if (target) target.hidden = true;
@@ -264,7 +264,7 @@
   const restore = (attempt = 0) => {
     if (!installView()) { if (attempt < 50) setTimeout(() => restore(attempt + 1), 100); return; }
     let saved = null;
-    try { saved = localStorage.getItem(ACTIVE_VIEW_KEY); } catch { /* default */ }
+    try { saved = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY); } catch { /* default */ }
     waitContext().then(async (current) => {
       setAllowed(await verify(current));
       if (saved === VIEW && allowed && typeof switchView === 'function') switchView(VIEW);

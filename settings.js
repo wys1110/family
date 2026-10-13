@@ -2,7 +2,7 @@
   if (document.querySelector('[data-theme-settings-module]')) return;
 
   const VIEW_NAME = 'settings';
-  const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
+  const ACTIVE_VIEW_STORAGE_KEY = ACTIVE_VIEW_KEY;
   const THEME_STORAGE_KEY = 'family-theme-v1';
   const THEME_CHOICE_STORAGE_KEY = 'family-theme-choice-v1';
   const DEMO_THEME_STORAGE_KEY = 'family-demo-theme-v1';
