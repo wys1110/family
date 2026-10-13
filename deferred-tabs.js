@@ -60,7 +60,7 @@
       tab.classList.toggle('active', active); tab.setAttribute('aria-selected', String(active));
     });
     document.querySelector('#addEventButton').hidden = true;
-    try { localStorage.setItem(ACTIVE_VIEW_KEY, requestedView); localStorage.setItem('family-active-view-v1', requestedView); } catch { /* Current view still works. */ }
+    try { localStorage.setItem(ACTIVE_VIEW_KEY, requestedView); } catch { /* Current view still works. */ }
     renderNotice(requestedView);
     const current = () => requestId === id && scope() === context && state.activeView === requestedView;
     ensure(requestedView).then(() => {

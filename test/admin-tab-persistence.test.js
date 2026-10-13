@@ -6,7 +6,7 @@ const adminModule = readFileSync("family-admin.js", "utf8");
 
 describe("admin tab persistence", () => {
   test("captures the persisted admin view before delayed admin modules load", () => {
-    const captureIndex = moduleLoader.indexOf("localStorage.getItem('family-active-view-v1') === 'admin'");
+    const captureIndex = moduleLoader.indexOf("localStorage.getItem(ACTIVE_VIEW_KEY) === 'admin'");
     const adminLoadIndex = moduleLoader.indexOf("if (!window.FAMILY_DEFERRED_MODULES) restorePersistedAdminView()");
 
     expect(captureIndex).toBeGreaterThan(-1);
@@ -22,6 +22,6 @@ describe("admin tab persistence", () => {
   });
 
   test("the admin module continues to persist admin as the active view", () => {
-    expect(adminModule).toContain("localStorage.setItem(ACTIVE_VIEW_KEY, VIEW)");
+    expect(adminModule).toContain("localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, VIEW)");
   });
 });

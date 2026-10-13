@@ -36,6 +36,7 @@ function setup({ user = 'a', store = new Map(), demo = false } = {}) {
     SpeechSynthesisUtterance: class { constructor(text) { this.text = text; } },
     toast: notice => notices.push(notice), setTimeout() {}, switchView: view => { state.activeView = view; },
   };
+  context.ACTIVE_VIEW_KEY = demo ? 'family-demo-active-view-v1' : 'family-active-view-v1';
   vm.createContext(context);
   vm.runInContext(readFileSync('demo-mode.js', 'utf8'), context);
   vm.runInContext(source, context);

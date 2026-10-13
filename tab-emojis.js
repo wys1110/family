@@ -12,7 +12,7 @@
   };
   let shouldRestoreAdmin = false;
   try {
-    shouldRestoreAdmin = localStorage.getItem('family-active-view-v1') === 'admin';
+    shouldRestoreAdmin = localStorage.getItem(ACTIVE_VIEW_KEY) === 'admin';
   } catch { /* 저장소 접근이 막히면 기본 탭 사용 */ }
 
   const navigation = document.querySelector('.view-tabs');

@@ -460,7 +460,7 @@ describe('family wallpaper', () => {
 
   test('delivers the wallpaper editor assets past mobile and PWA caches', () => {
     expect(html).toContain('theme-critical.css?v=20261009-care-wide-band-v1');
-    expect(html).toContain('config.js?v=20261013-speed-v1');
+    expect(html).toContain('config.js?v=20261013-view-storage-v1');
     expect(html).toContain('app.js?v=20261013-speed-v1');
     expect(config).toContain('{ name: "family-wallpapers", version: "20260914-original-photo-v2", script: false }');
     expect(config).toContain('{ name: "wallpaper-editor", version: "20260815-v1" }');
