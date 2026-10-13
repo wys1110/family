@@ -9,7 +9,7 @@ const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
 const appSource = readFileSync('app.js', 'utf8');
 const travelCssSource = readFileSync('travel.css', 'utf8');
 
-function loadData({ demoMode = false, savedTrips, shared = false, supabase } = {}) {
+function loadData({ demoMode = false, savedTrips, shared = false, supabase, uuid = () => 'id-1' } = {}) {
   const store = new Map();
   const key = 'family-travel-v1:household-a';
   if (savedTrips !== undefined) store.set(key, JSON.stringify(savedTrips));
@@ -21,7 +21,7 @@ function loadData({ demoMode = false, savedTrips, shared = false, supabase } = {
     addEventListener: () => {}, dispatchEvent: () => {},
   };
   window.CustomEvent = class { constructor(type, init) { this.type = type; this.detail = init?.detail; } };
-  const context = { window, localStorage: window.localStorage, CustomEvent: window.CustomEvent, crypto: { randomUUID: () => 'id-1' } };
+  const context = { window, localStorage: window.localStorage, CustomEvent: window.CustomEvent, crypto: { randomUUID: uuid } };
   vm.createContext(context); vm.runInContext(dataSource, context);
   return { api: window.FAMILY_TRAVEL_DATA, store };
 }
@@ -66,6 +66,38 @@ test('travel records remain scoped to the current family and retain places and m
   expect(saved.items).toHaveLength(1);
   expect(saved.memories).toHaveLength(1);
   expect([...store.keys()]).toEqual(['family-travel-v1:household-a']);
+});
+
+test.each([
+  ['America/New_York', '2024-03-09', '2025-03-09', '2025-03-10'],
+  ['Pacific/Kiritimati', '2026-12-31', '2027-12-31', '2028-01-01'],
+])('calendar date helpers stay aligned in %s', async (timezone, startDate, endDate, overLimitEndDate) => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = timezone;
+  try {
+    let nextId = 0;
+    const { api } = loadData({ uuid: () => `id-${++nextId}` });
+    const created = await api.createTrip({ title: '달력 경계 여행', destinationLabel: '제주', startDate, endDate });
+    await expect(api.createTrip({ title: '너무 긴 여행', destinationLabel: '제주', startDate, endDate: overLimitEndDate })).rejects.toThrow('최대 366일');
+    await expect(api.createTrip({ title: '잘못된 날짜', destinationLabel: '제주', startDate: '2026-02-30', endDate: '2026-02-30' })).rejects.toThrow('날짜를 확인');
+    const dataDates = api.dateList(startDate, endDate);
+    expect(dataDates).toHaveLength(366);
+    expect(dataDates[0]).toBe(startDate);
+    expect(dataDates.at(-1)).toBe(endDate);
+
+    const daysDeclaration = travelSource.match(/const days = trip => [^;]+;/)?.[0];
+    expect(daysDeclaration).toBe('const days = trip => data.dateList(trip.startDate, trip.endDate);');
+    const uiContext = { data: api, trip: created };
+    vm.createContext(uiContext);
+    vm.runInContext(`${daysDeclaration}\nglobalThis.uiDates = days(trip);`, uiContext);
+    expect(Array.from(uiContext.uiDates)).toEqual(dataDates);
+
+    await api.addNote(created.id, { title: '마지막 날짜', dayIndex: 365 });
+    expect(api.getTrip(created.id).items[0].localDate).toBe(endDate);
+  } finally {
+    if (previousTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTimezone;
+  }
 });
 
 test('place search sends an empty-query status request to the connected provider', async () => {

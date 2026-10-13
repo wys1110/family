@@ -10,8 +10,7 @@
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[char]));
   const $ = (selector, root = document) => root.querySelector(selector);
   const fmtDate = value => { const date = new Date(`${value}T12:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('ko-KR', { month:'short', day:'numeric', weekday:'short' }).format(date); };
-  const dateList = (start, end) => { const result=[]; const cursor=new Date(`${start}T12:00:00`); const last=new Date(`${end}T12:00:00`); while(cursor<=last && result.length<366){ result.push(cursor.toISOString().slice(0,10)); cursor.setDate(cursor.getDate()+1); } return result; };
-  const days = trip => dateList(trip.startDate, trip.endDate);
+  const days = trip => data.dateList(trip.startDate, trip.endDate);
   const dayLabel = (trip, index) => `DAY ${index + 1}`;
   const current = { page:'manage', query:'', filter:'all', itineraryQuery:'', itineraryStatus:'all', selecting:false, selectedIds:new Set(), bulkDay:'choose', bulkBusy:false, bulkMessage:'', bulkError:false, tripId:null, tab:'all', layout:'map', activeItemId:null, editingId:null, modalMode:null, placeSaving:false, searchRequest:0 };
   let bulkRequest=0;

@@ -25,6 +25,16 @@ function loadApi() {
 }
 
 describe('family auth recovery', () => {
+  test('does not start an operation for a context that already changed', async () => {
+    const { api, events } = loadApi();
+    const operation = vi.fn(async () => ({ data: ['stale'], error: null }));
+    const result = await api.withRecovery(operation, { isCurrent: () => false });
+    expect(operation).not.toHaveBeenCalled();
+    expect(result.data).toBeNull();
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
+    expect(api.isAuthError(result.error)).toBe(false);
+    expect(events).toEqual([]);
+  });
   test('recognizes Supabase authentication failures without swallowing ordinary errors', () => {
     const { api } = loadApi();
 
@@ -33,6 +43,19 @@ describe('family auth recovery', () => {
     expect(api.isAuthError({ code: 'PGRST303', message: 'JWT issued at future' })).toBe(true);
     expect(api.isAuthError({ status: 403, message: 'permission denied' })).toBe(false);
     expect(api.isAuthError({ code: '23505', message: 'duplicate key' })).toBe(false);
+  });
+
+  test('discards a successful first response when its context changed in flight', async () => {
+    const { api, events } = loadApi();
+    let resolve;
+    let current = true;
+    const pending = api.withRecovery(() => new Promise((done) => { resolve = done; }), { isCurrent: () => current });
+    current = false;
+    resolve({ data: ['old household'], error: null });
+    const result = await pending;
+    expect(result.data).toBeNull();
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
+    expect(events).toEqual([]);
   });
 
   test('refreshes once and retries the failed operation once', async () => {
@@ -182,6 +205,28 @@ describe('family auth recovery', () => {
     expect(events.map((event) => event.type)).toEqual(['family:auth-expired']);
   });
 
+  test('keeps a shared refresh usable for a current request when another request becomes stale', async () => {
+    const { api, events } = loadApi();
+    let resolveRefresh;
+    let firstCurrent = true;
+    const supabase = { auth: { refreshSession: vi.fn(() => new Promise((resolve) => { resolveRefresh = resolve; })) } };
+    const firstOperation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
+    let secondCalls = 0;
+    const secondOperation = vi.fn(async () => ++secondCalls === 1
+      ? { data: null, error: { status: 401 } }
+      : { data: ['current'], error: null });
+    const first = api.withRecovery(firstOperation, { supabase, userId: 'user-1', isCurrent: () => firstCurrent });
+    const second = api.withRecovery(secondOperation, { supabase, userId: 'user-1', isCurrent: () => true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    firstCurrent = false;
+    resolveRefresh({ data: { session: { user: { id: 'user-1' } } }, error: null });
+    const [stale, current] = await Promise.all([first, second]);
+    expect(stale.error.code).toBe('FAMILY_CONTEXT_CHANGED');
+    expect(current.data).toEqual(['current']);
+    expect(supabase.auth.refreshSession).toHaveBeenCalledTimes(1);
+    expect(events.some((event) => event.type === 'family:auth-expired')).toBe(false);
+  });
+
   test('expires the session when the refreshed token is rejected again', async () => {
     const { api, events } = loadApi();
     const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
@@ -228,19 +273,20 @@ describe('family auth recovery', () => {
 
   test('does not retry an operation after its context changes during refresh', async () => {
     const { api, events } = loadApi();
+    let current = true;
     const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
     const result = await api.withRecovery(operation, {
-      supabase: { auth: { refreshSession: async () => ({
+      supabase: { auth: { refreshSession: async () => { current = false; return ({
         data: { session: { user: { id: 'user-1' } } },
         error: null,
-      }) } },
+      }); } } },
       userId: 'user-1',
-      isCurrent: () => false,
+      isCurrent: () => current,
     });
 
-    expect(result.error.status).toBe(401);
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
     expect(operation).toHaveBeenCalledTimes(1);
-    expect(events.map((event) => event.type)).toEqual(['family:auth-session-refreshed']);
+    expect(events).toEqual([]);
   });
 
   test('does not return stale success data when context changes during retry', async () => {
@@ -262,8 +308,49 @@ describe('family auth recovery', () => {
       isCurrent: () => current,
     });
 
-    expect(result.error.status).toBe(401);
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
     expect(result.data).toBeNull();
+  });
+
+  test('does not expire the next context when session recovery fails after a switch', async () => {
+    const { api, events } = loadApi();
+    let current = true;
+    const refreshSession = vi.fn();
+    const operation = vi.fn(async () => ({ data: null, error: { status: 401 } }));
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: {
+        getSession: async () => { current = false; return { data: { session: null }, error: null }; },
+        refreshSession,
+      } },
+      isCurrent: () => current,
+    });
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(events).toEqual([]);
+  });
+
+  test('discards final retry success after the context changes', async () => {
+    const { api, events } = loadApi();
+    let current = true;
+    let calls = 0;
+    const operation = vi.fn(async () => {
+      if (++calls < 3) return { data: null, error: { status: 401 } };
+      current = false;
+      return { data: ['stale'], error: null };
+    });
+    const session = { user: { id: 'user-1' }, expires_at: Math.floor(Date.now() / 1000) + 300 };
+    const result = await api.withRecovery(operation, {
+      supabase: { auth: {
+        getSession: async () => ({ data: { session }, error: null }),
+        refreshSession: async () => ({ data: { session }, error: null }),
+      } },
+      userId: 'user-1',
+      isCurrent: () => current,
+    });
+    expect(operation).toHaveBeenCalledTimes(3);
+    expect(result.data).toBeNull();
+    expect(result.error.code).toBe('FAMILY_CONTEXT_CHANGED');
+    expect(events.some((event) => event.type === 'family:auth-expired')).toBe(false);
   });
 
   test('connects auth recovery to the app and every remote activity reader', () => {
@@ -345,11 +432,11 @@ describe('family auth recovery', () => {
     const packageJson = read('package.json');
     const serviceWorker = read('service-worker.js');
 
-    expect(index).toContain('<script src="family-auth.js?v=20260830-data-load-v3" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20261005-core-quality-v5"></script>');
-    expect(config).toContain('{ name: "family-auth", version: "20260830-data-load-v3", style: false }');
+    expect(index).toContain('<script src="family-auth.js?v=20261013-code-reliability-v1" data-module="family-auth"></script>');
+    expect(index).toContain('<script src="app.js?v=20261013-speed-v1"></script>');
+    expect(config).toContain('{ name: "family-auth", version: "20261013-code-reliability-v1", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
-    expect(index).toContain('config.js?v=20261005-core-quality-v5');
+    expect(index).toContain('config.js?v=20261013-speed-v1');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });
 });

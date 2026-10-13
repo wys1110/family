@@ -139,11 +139,11 @@ describe("upcoming family events", () => {
   });
 
   test("bumps the premium UI stylesheet version", () => {
-    expect(config).toContain('{ name: "premium-ui", version: "20260722-upcoming-v1", script: false }');
+    expect(config).toContain('{ name: "premium-ui", version: "20261013-code-reliability-v1", script: false }');
   });
 
   test("loads the core app with the growth and upcoming delivery version", () => {
-    expect(index).toContain('<script src="app.js?v=20261005-core-quality-v5"></script>');
+    expect(index).toContain('<script src="app.js?v=20261013-speed-v1"></script>');
     expect(index).not.toContain('app.js?v=20260718-logic-audit-v1');
   });
 });
