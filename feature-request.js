@@ -2,7 +2,7 @@
   if (document.querySelector('[data-feature-request-module]')) return;
 
   const VIEW_NAME = 'feature-request';
-  const ACTIVE_VIEW_STORAGE_KEY = 'family-active-view-v1';
+  const ACTIVE_VIEW_STORAGE_KEY = ACTIVE_VIEW_KEY;
   const DRAFT_KEY = 'family-feature-request-draft-v1';
   const MAX_LENGTH = 500;
   const STATUS_OPTIONS = [

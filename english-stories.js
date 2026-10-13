@@ -1,6 +1,5 @@
 (() => {
   const e = "english",
-    t = "family-active-view-v1",
     n = "family-english-story-settings-v1",
     i = [
       {
@@ -357,7 +356,7 @@
         r && (r.activeView = e);
         try {
           localStorage.setItem(
-            "undefined" != typeof ACTIVE_VIEW_KEY ? ACTIVE_VIEW_KEY : t,
+            ACTIVE_VIEW_KEY,
             e,
           );
         } catch {}
@@ -707,7 +706,7 @@
         return void (
           (() => {
             try {
-              return localStorage.getItem(t);
+              return localStorage.getItem(ACTIVE_VIEW_KEY);
             } catch {
               return null;
             }
