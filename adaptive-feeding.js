@@ -202,6 +202,7 @@
   quickPresets = (category) => category === "수유·이유식" ? presets(source) : baseQuickPresets(category);
   const baseOpenGrowthQuick = openGrowthQuick;
   openGrowthQuick = function adaptiveOpenQuick(category) {
+    if (quickGrowthSaveInProgress) return toast("기록을 저장 중이에요");
     const dialog = document.querySelector("#quickLogDialog");
     if (category !== "수유·이유식") {
       document.querySelector("#feedingQuickTabs")?.setAttribute("hidden", "");

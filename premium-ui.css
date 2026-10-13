@@ -15,7 +15,6 @@
 html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 72px); }
 html, body { touch-action: auto; }
 body {
-  min-width: 320px;
   background:
     radial-gradient(circle at 8% -4%, color-mix(in srgb, var(--blue) 7%, transparent), transparent 28rem),
     radial-gradient(circle at 96% 15%, color-mix(in srgb, var(--pink) 6%, transparent), transparent 24rem),

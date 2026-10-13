@@ -100,7 +100,7 @@ window.FAMILY_CONFIG = {
   installRefreshFallback();
 
   const modules = [
-    { name: "family-auth", version: "20260830-data-load-v3", style: false },
+    { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20260918-lazy-tabs-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20261005-core-quality-v5" },
@@ -137,7 +137,7 @@ window.FAMILY_CONFIG = {
     { name: "notification-center", version: "20260830-auth-recovery-v2" },
     { name: "family-onboarding", version: "20260830-auth-recovery-v2" },
     { name: "family-search", version: "20260805-family-search-v1" },
-    { name: "adaptive-feeding", version: "20260915-growth-performance-v1" },
+    { name: "adaptive-feeding", version: "20261013-code-reliability-v1" },
     { name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" },
     { name: "care-entry-edit-fix", version: "20260915-growth-performance-v1" },
     { name: "feeding-stepper-fix", version: "20260717-button-handler-v1", style: false },
@@ -153,7 +153,7 @@ window.FAMILY_CONFIG = {
     { name: "weekly-care-extra-feeding", version: "20260806-health-pattern-v1", script: false },
     { name: "growth-measurements", version: "20260718-combined-growth-v2" },
     { name: "growth-chart-polish", version: "20260718-premium-chart-v1" },
-    { name: "premium-ui", version: "20260722-upcoming-v1", script: false },
+    { name: "premium-ui", version: "20261013-code-reliability-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false },
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
     { name: "care-timeline-dedup", version: "20260718-remove-duplicate-summary-v1", style: false },
@@ -193,10 +193,10 @@ window.FAMILY_CONFIG = {
     { name: "compact-family", version: "20261008-care-record-consistency-v1" },
     { name: "nova-family", version: "20261012-hourly-record-emojis-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
-    { name: "travel-data", version: "20261011-place-discovery-v1", style: false },
+    { name: "travel-data", version: "20261013-code-reliability-v1", style: false },
     { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261011-place-discovery-v1" },
+    { name: "travel", version: "20261013-code-reliability-v1" },
   ];
 
   const deferredGroups = {
@@ -263,7 +263,7 @@ window.FAMILY_CONFIG = {
     document.head.appendChild(growthHistoryAddHideStyle);
   }
 
-  const loadScript = ({ name, version }) => new Promise((resolve) => {
+  const loadScript = ({ name, version }) => new Promise((resolve, reject) => {
     if (document.querySelector(`script[data-module="${name}"]`)) return resolve();
     const script = document.createElement("script");
     script.src = `${name}.js?v=${version}`;
@@ -275,7 +275,8 @@ window.FAMILY_CONFIG = {
     script.onload = resolve;
     script.onerror = () => {
       console.error(`가족 앱 모듈을 불러오지 못했어요: ${name}`);
-      resolve();
+      script.remove();
+      reject(new Error(`Failed to load ${name}`));
     };
     document.body.appendChild(script);
   });
@@ -307,7 +308,17 @@ window.FAMILY_CONFIG = {
       if (document.documentElement.dataset.familyModulesLoading) return;
       document.documentElement.dataset.familyModulesLoading = "true";
       const scripts = modules.filter((module) => module.script !== false && !deferredNames.has(module.name));
-      await Promise.all(scripts.map(loadScript));
+      const results = await Promise.allSettled(scripts.map(loadScript));
+      if (results.some((result) => result.status === "rejected")) {
+        delete document.documentElement.dataset.familyModulesLoading;
+        if (typeof toast === "function") {
+          toast("일부 기능을 불러오지 못했어요. 다시 시도해 주세요", {
+            label: "다시 시도",
+            run: startModules,
+          });
+        }
+        return;
+      }
       await window.FAMILY_DEFERRED_TABS?.restoreInitial();
       document.documentElement.dataset.familyModulesReady = "true";
       resolve();

@@ -12,17 +12,18 @@
   const clone = value => JSON.parse(JSON.stringify(value));
   const todayKey = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
   const dateValue = value => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return null;
-    const date = new Date(`${value}T12:00:00`);
-    return Number.isNaN(date.getTime()) ? null : date;
+    const key = String(value || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+    const date = new Date(`${key}T12:00:00Z`);
+    return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== key ? null : date;
   };
   const dateList = (start, end) => {
     const result = [];
     const cursor = dateValue(start);
     const last = dateValue(end);
     while (cursor && last && cursor <= last && result.length < MAX_DAYS) {
-      result.push(new Intl.DateTimeFormat('sv-SE').format(cursor));
-      cursor.setDate(cursor.getDate() + 1);
+      result.push(cursor.toISOString().slice(0, 10));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return result;
   };
@@ -251,5 +252,5 @@
   const importLocalTrip = async id => { const local = readRaw(); const candidate = (Array.isArray(local) ? local : []).find(item => item.id === id); if (!candidate) throw new Error('기존 여행을 찾을 수 없어요.'); const created = normalizeTrip(candidate); const originalId = created.id; await commit([...trips, created]); return clone(trips.find(item => item.id === originalId || item.legacy?.originalLocalId === originalId) || created); };
   const getLocalTrips = () => shared() ? read().filter(local => !trips.some(remote => remote.id === local.id)) : [];
   window.addEventListener('familycontextchange', () => { generation++; refreshing = null; trips = shared() ? [] : read(); emit(); });
-  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, getTrips, summarizeTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, movePlaces, setPlacesVisited, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
+  window.FAMILY_TRAVEL_DATA = Object.freeze({ VERSION, dateList, getTrips, summarizeTrips, getTrip, getArchivedTrips, createTrip, updateTrip, moveOutOfRangeToInbox, addItem, addPlace, addNote, updateItem, deleteItem, moveItem, movePlaces, setPlacesVisited, reorderItem, toggleVisited, archiveTrip, restoreTrip, addMemory, toggleTask, addExpense, addCandidate, updateCandidate, addBooking, removeTrip, searchPlaces, refresh, importLocalTrip, getLocalTrips, contextKey, isLocal: () => !shared() });
 })();

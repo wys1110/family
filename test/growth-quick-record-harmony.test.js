@@ -28,7 +28,10 @@ describe("growth quick record harmony", () => {
       { label: "왼쪽 20분", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 20 },
       { label: "오른쪽 25분", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 25 },
     ];
+    const button = { dataset: { presetIndex: "1" }, disabled: false };
     const context = {
+      quickGrowthSaveInProgress: false,
+      bootstrapRequestId: 1,
       activeQuickPresets: presets,
       activeQuickCategory: "수유·이유식",
       state: { activeBabyId: "baby-1", growthEntries: [], supabase: null, session: null },
@@ -36,7 +39,7 @@ describe("growth quick record harmony", () => {
       dateKey: () => "2026-07-22",
       localStorage: { setItem() {} },
       GROWTH_STORAGE_KEY: "growth",
-      $: () => ({ close: () => closed.push(true) }),
+      $: () => ({ close: () => closed.push(true), querySelectorAll: () => [button] }),
       renderGrowth() {},
       showGrowthComplete() {},
       dispatchGrowthEntrySaved() {},
@@ -45,7 +48,6 @@ describe("growth quick record harmony", () => {
     };
     vm.runInNewContext(`${extractFunction(app, "saveGrowthPresetFromEvent")}; this.handler = saveGrowthPresetFromEvent;`, context);
 
-    const button = { dataset: { presetIndex: "1" }, disabled: false };
     await context.handler({
       target: {
         closest: (selector) => selector === "[data-preset-index]" ? button : null,
@@ -59,7 +61,7 @@ describe("growth quick record harmony", () => {
       feedingMinutes: 25,
     });
     expect(closed).toEqual([true]);
-    expect(button.disabled).toBe(true);
+    expect(button.disabled).toBe(false);
     expect(adaptive).toContain('data-preset-index="0"');
     expect(app).toContain('$("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent)');
   });
@@ -90,7 +92,7 @@ describe("growth quick record harmony", () => {
   });
 
   test("bumps both feeding module cache versions", () => {
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20260915-growth-performance-v1" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20261013-code-reliability-v1" }');
     expect(config).toContain('{ name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" }');
   });
 });
