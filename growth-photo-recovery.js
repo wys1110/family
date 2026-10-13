@@ -87,6 +87,13 @@
     return result;
   };
 
+  const baseRenderGrowthList = renderGrowthList;
+  renderGrowthList = function renderGrowthListWithPhotoRecovery(...args) {
+    const result = baseRenderGrowthList(...args);
+    queueMicrotask(bindPhotoErrorRecovery);
+    return result;
+  };
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshGrowthPhotoUrls();
   });

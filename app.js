@@ -943,14 +943,15 @@ function bindUi() {
     state.growthCategory = $("#growthCategoryFilter").value;
     state.growthFrom = $("#growthFrom").value; state.growthTo = $("#growthTo").value;
     if (event.target.type === "date" && state.growthFilter === "today") state.growthFilter = "all";
-    renderGrowth();
+    renderGrowthFilters(); renderGrowthList();
   });
   $("#growthResetFilters").addEventListener("click", () => {
-    state.growthFilter = "all"; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = ""; renderGrowth();
+    state.growthFilter = "all"; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = ""; renderGrowthFilters(); renderGrowthList();
   });
   window.addEventListener("familycontextchange", () => {
     state.calendarMember = ""; state.growthCategory = ""; state.growthFrom = ""; state.growthTo = "";
-    renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth();
+    renderCalendar(); renderAgenda(); renderUpcomingEvents();
+    if (state.activeView === "growth") renderGrowth();
   });
   $("#growthSummaryPeriod").addEventListener("click", changeGrowthSummaryPeriod);
   $("#careTimerStarts").addEventListener("click", startCareTimerFromEvent);
@@ -1025,7 +1026,7 @@ function finishCalendarSwipe(event) {
   slideMonth(dx < 0 ? 1 : -1);
 }
 function cancelCalendarSwipe() { calendarSwipeState = null; }
-function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderGrowth(); renderWallpapers(); switchView(state.activeView); updateSyncBadge(); }
+function render() { renderHeader(); renderMemberControls(); renderCalendar(); renderAgenda(); renderUpcomingEvents(); renderWallpapers(); switchView(state.activeView); updateSyncBadge(); }
 function renderMemberControls() {
   const selector = $("#eventMemberSelector");
   const selected = $("#eventMember").value || state.familyMembers[0]?.name || "가족";
@@ -1087,6 +1088,7 @@ function switchView(view) {
   addButton.hidden = false;
   addButton.innerHTML = nextView === "calendar" ? "<span>＋</span> 일정 추가" : "<span>＋</span> 성장 기록";
   addButton.setAttribute("aria-label", nextView === "calendar" ? "새 일정 추가" : "새 성장 기록");
+  if (nextView === "growth") renderGrowth();
 }
 
 function publicHolidayEvent(key) {
@@ -1651,6 +1653,12 @@ function renderGrowth() {
   renderGrowthInsights(allEntries);
   renderRecentPhotos(allEntries);
   renderGrowthFilters();
+  renderGrowthList(allEntries);
+}
+
+function renderGrowthList(allEntries = activeBabyEntries()) {
+  const baby = activeBaby();
+  if (!baby) return;
   const listContext = `${state.activeBabyId}|${state.growthFilter}|${state.growthCategory}|${state.growthFrom}|${state.growthTo}`;
   if (growthListContext !== listContext) { growthListContext = listContext; growthListLimit = 100; }
   const entries = filterGrowthEntries(allEntries).sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
@@ -1667,7 +1675,7 @@ function renderGrowth() {
   if (entries.length > growthListLimit) {
     const more = document.createElement("button"); more.type = "button"; more.className = "growth-load-more";
     more.textContent = `기록 더 보기 (${growthListLimit} / ${entries.length})`;
-    more.addEventListener("click", () => { const top = window.scrollY; growthListLimit += 100; renderGrowth(); window.scrollTo({top, behavior: "instant"}); });
+    more.addEventListener("click", () => { const top = window.scrollY; growthListLimit += 100; renderGrowthList(); window.scrollTo({top, behavior: "instant"}); });
     list.appendChild(more);
   }
   list.querySelectorAll(".growth-entry").forEach((item) => item.addEventListener("click", () => openGrowthDialog(state.growthEntries.find((entry) => entry.id === item.dataset.id))));
@@ -2049,8 +2057,14 @@ function syncGrowthSummaryDisclosure() {
 }
 
 function renderGrowthInsights(entries) {
-  const measured = entries.filter((entry) => entry.height || entry.weight || entry.head).sort((a, b) => `${b.date}T${b.time || "00:00"}`.localeCompare(`${a.date}T${a.time || "00:00"}`));
-  const latest = measured[0]; const baby = activeBaby();
+  let latest;
+  let latestTime = "";
+  for (const entry of entries) {
+    if (!(entry.height || entry.weight || entry.head)) continue;
+    const time = `${entry.date}T${entry.time || "00:00"}`;
+    if (!latest || time.localeCompare(latestTime) > 0) { latest = entry; latestTime = time; }
+  }
+  const baby = activeBaby();
   if (!latest) {
     $("#growthInsightRow").innerHTML = `<article class="growth-insight-empty"><div><p class="eyebrow">GROWTH</p><strong>첫 성장 측정을 남겨보세요</strong><span>키·몸무게·머리둘레의 변화를 이어서 볼 수 있어요.</span></div><button type="button" data-growth-quick="성장">측정 기록</button></article>`;
     $("#growthInsightRow [data-growth-quick]").addEventListener("click", () => openGrowthDialog(null, "성장"));
@@ -2061,7 +2075,7 @@ function renderGrowthInsights(entries) {
 }
 
 function renderRecentPhotos(entries) {
-  allPhotoItems = [...entries].sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`)).flatMap((entry) => (entry.photoUrls || []).map((url, index) => ({ url, thumbnailUrl: entry.photoThumbnailUrls?.[index] || url, entry, filePromise: null }))).filter((item) => item.url);
+  allPhotoItems = entries.filter((entry) => entry.photoUrls?.some(Boolean)).sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`)).flatMap((entry) => (entry.photoUrls || []).map((url, index) => ({ url, thumbnailUrl: entry.photoThumbnailUrls?.[index] || url, entry, filePromise: null }))).filter((item) => item.url);
   recentPhotoItems = allPhotoItems.slice(0, 4);
   $("#recentPhotoSection").hidden = !recentPhotoItems.length;
   if (!recentPhotoItems.length) {
@@ -2183,7 +2197,7 @@ function renderGrowthFilters() {
 
 function changeGrowthFilter(event) {
   const button = event.target.closest("[data-growth-filter]"); if (!button) return;
-  state.growthFilter = button.dataset.growthFilter; renderGrowth();
+  state.growthFilter = button.dataset.growthFilter; renderGrowthFilters(); renderGrowthList();
 }
 
 function selectBabyFromEvent(event) {

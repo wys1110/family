@@ -43,7 +43,7 @@ test('setting a period preserves a non-today mode in the actual input handler',(
  const start=source.indexOf('  $("#growthRecordFilters").addEventListener("change"');
  const script=source.slice(start,source.indexOf('  $("#growthResetFilters")',start));
  const nodes={'#growthRecordFilters':{addEventListener:(_name,fn)=>{handler=fn;}},'#growthCategoryFilter':{value:'수면'},'#growthFrom':{value:'2026-08-01'},'#growthTo':{value:'2026-08-31'}};
- vm.runInNewContext(script,{state,$:selector=>nodes[selector],renderGrowth(){}});
+ vm.runInNewContext(script,{state,$:selector=>nodes[selector],renderGrowthFilters(){},renderGrowthList(){}});
  handler({target:{type:'date'}});expect(state.growthFilter).toBe('photo');
  expect(state.growthCategory).toBe('수면');state.growthFilter='today';handler({target:{type:'date'}});expect(state.growthFilter).toBe('all');
 });

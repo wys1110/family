@@ -30,7 +30,7 @@ test('failed deletion preserves the record and open editor',async()=>{
  const h=deleteHarness({error:new Error('offline')});await h.click();expect(h.state.growthEntries).toHaveLength(1006);expect(h.dialog.close).not.toHaveBeenCalled();expect(h.toast.mock.calls[0][0]).toContain('삭제하지 못');
 });
 function photoHarness(sign){
- const context={state:{session:{user:{id:'u'}},household:{id:'h'},supabase:{storage:{from:()=>({createSignedUrls:sign})}}},GROWTH_PHOTO_BUCKET:'photos',hydrateGrowthPhotoUrls:()=>{},renderGrowth(){},queueMicrotask(){},document:{addEventListener(){},querySelectorAll:()=>[]},window:{FAMILY_AUTH_API:{withRecovery:op=>op()},addEventListener(){},setTimeout(){},setInterval(){}}};
+ const context={state:{session:{user:{id:'u'}},household:{id:'h'},supabase:{storage:{from:()=>({createSignedUrls:sign})}}},GROWTH_PHOTO_BUCKET:'photos',hydrateGrowthPhotoUrls:()=>{},renderGrowth(){},renderGrowthList(){},queueMicrotask(){},document:{addEventListener(){},querySelectorAll:()=>[]},window:{FAMILY_AUTH_API:{withRecovery:op=>op()},addEventListener(){},setTimeout(){},setInterval(){}}};
  vm.createContext(context);vm.runInContext(source('family-data.js'),context);vm.runInContext(source('growth-photo-recovery.js'),context);return context;
 }
 test('photo URLs are batched and reused; changing families clears the cache',async()=>{

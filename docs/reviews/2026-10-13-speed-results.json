@@ -1,0 +1,1336 @@
+{
+  "createdAt": "2026-10-13T09:29:44.160Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "note": "resource counts and bytes include same-origin entries only; transferSize may be 0 for cache hits",
+  "samples": [
+    {
+      "version": "baseline",
+      "sample": 1,
+      "calendarReadyMs": 390.4,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953232,
+        "encodedBodyBytes": 3351366,
+        "decodedBodyBytes": 3351366
+      },
+      "travelFirstReadyMs": 54.4,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3045888,
+        "encodedBodyBytes": 3461339,
+        "decodedBodyBytes": 3461339
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              50.2,
+              40.2,
+              44.6,
+              40.3,
+              51.5
+            ],
+            "medianMs": 44.6,
+            "samplesSyncMs": [
+              8.5,
+              7,
+              5.5,
+              6.2,
+              6.1
+            ],
+            "medianSyncMs": 6.2,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              33.4,
+              32.8,
+              30.5,
+              30.9,
+              31.2
+            ],
+            "medianMs": 31.2,
+            "samplesSyncMs": [
+              7,
+              7,
+              6.8,
+              6.6,
+              6.9
+            ],
+            "medianSyncMs": 6.9,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              34.2,
+              32,
+              32.2,
+              33.2,
+              33.3
+            ],
+            "medianMs": 33.2,
+            "samplesSyncMs": [
+              8.5,
+              7,
+              6.8,
+              6.9,
+              7.1
+            ],
+            "medianSyncMs": 7,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              53,
+              49,
+              65.7,
+              51.7,
+              62.7
+            ],
+            "medianMs": 53,
+            "samplesSyncMs": [
+              17.6,
+              16.6,
+              15.9,
+              18.9,
+              15.8
+            ],
+            "medianSyncMs": 16.6,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              53.1,
+              48.9,
+              45.9,
+              48.4,
+              45.3
+            ],
+            "medianMs": 48.4,
+            "samplesSyncMs": [
+              15.2,
+              15.2,
+              16.3,
+              16.7,
+              16.3
+            ],
+            "medianSyncMs": 16.3,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              36.4,
+              41.5,
+              38.6,
+              47,
+              42.4
+            ],
+            "medianMs": 41.5,
+            "samplesSyncMs": [
+              17.1,
+              16.9,
+              17.6,
+              17,
+              21.3
+            ],
+            "medianSyncMs": 17.1,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              76.9,
+              95.8,
+              92.8,
+              78.4,
+              82.4
+            ],
+            "medianMs": 82.4,
+            "samplesSyncMs": [
+              33.2,
+              46.8,
+              32.4,
+              34.7,
+              34.6
+            ],
+            "medianSyncMs": 34.6,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              72.7,
+              68.8,
+              67.2,
+              68.1,
+              67.5
+            ],
+            "medianMs": 68.1,
+            "samplesSyncMs": [
+              33.4,
+              29.3,
+              28.9,
+              29.4,
+              29.3
+            ],
+            "medianSyncMs": 29.3,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              57.4,
+              58.9,
+              53.9,
+              58.5,
+              53.6
+            ],
+            "medianMs": 57.4,
+            "samplesSyncMs": [
+              32.3,
+              32.4,
+              32.4,
+              31.4,
+              32.6
+            ],
+            "medianSyncMs": 32.4,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    },
+    {
+      "version": "candidate",
+      "sample": 1,
+      "calendarReadyMs": 320,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953654,
+        "encodedBodyBytes": 3352027,
+        "decodedBodyBytes": 3352027
+      },
+      "travelFirstReadyMs": 53,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3046310,
+        "encodedBodyBytes": 3461996,
+        "decodedBodyBytes": 3461996
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              40.1,
+              42.9,
+              37.7,
+              53.8,
+              46.5
+            ],
+            "medianMs": 42.9,
+            "samplesSyncMs": [
+              6.1,
+              5.5,
+              5.8,
+              5.8,
+              6.7
+            ],
+            "medianSyncMs": 5.8,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              26.7,
+              32.8,
+              32.6,
+              34.9,
+              33.2
+            ],
+            "medianMs": 32.8,
+            "samplesSyncMs": [
+              1.8,
+              2.2,
+              2.2,
+              2.3,
+              2.1
+            ],
+            "medianSyncMs": 2.2,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.4,
+              33.3,
+              33.3,
+              33.3,
+              33.4
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              2.5,
+              2.3,
+              2.4,
+              2.5,
+              2.3
+            ],
+            "medianSyncMs": 2.4,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              49.7,
+              55.1,
+              80.4,
+              48.2,
+              71.9
+            ],
+            "medianMs": 55.1,
+            "samplesSyncMs": [
+              13.7,
+              21.3,
+              15.4,
+              14.6,
+              19.2
+            ],
+            "medianSyncMs": 15.4,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              25.6,
+              33.2,
+              33.1,
+              31.6,
+              33.2
+            ],
+            "medianMs": 33.1,
+            "samplesSyncMs": [
+              2.7,
+              3.1,
+              3.2,
+              3.1,
+              3.2
+            ],
+            "medianSyncMs": 3.1,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              35.2,
+              34,
+              32.7,
+              33.3,
+              32.4
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              2.5,
+              2.5,
+              2.4,
+              2.2,
+              2.4
+            ],
+            "medianSyncMs": 2.4,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              74.9,
+              60.5,
+              80.5,
+              60.1,
+              67.5
+            ],
+            "medianMs": 67.5,
+            "samplesSyncMs": [
+              24.8,
+              24.7,
+              24.3,
+              25.5,
+              23.6
+            ],
+            "medianSyncMs": 24.7,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              27.6,
+              32.9,
+              33.2,
+              33,
+              33.3
+            ],
+            "medianMs": 33,
+            "samplesSyncMs": [
+              4.6,
+              4.1,
+              4.1,
+              4.1,
+              4.1
+            ],
+            "medianSyncMs": 4.1,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.4,
+              31.6,
+              35,
+              33.4,
+              33.4
+            ],
+            "medianMs": 33.4,
+            "samplesSyncMs": [
+              2.2,
+              2.9,
+              2.3,
+              2.4,
+              2.3
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    },
+    {
+      "version": "baseline",
+      "sample": 2,
+      "calendarReadyMs": 382.5,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953232,
+        "encodedBodyBytes": 3351366,
+        "decodedBodyBytes": 3351366
+      },
+      "travelFirstReadyMs": 60.1,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3045888,
+        "encodedBodyBytes": 3461339,
+        "decodedBodyBytes": 3461339
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              55.2,
+              49.9,
+              50.1,
+              55.9,
+              43.9
+            ],
+            "medianMs": 50.1,
+            "samplesSyncMs": [
+              8,
+              8.5,
+              6.7,
+              6.6,
+              8.5
+            ],
+            "medianSyncMs": 8,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              29.9,
+              34.4,
+              36.3,
+              28,
+              33.5
+            ],
+            "medianMs": 33.5,
+            "samplesSyncMs": [
+              7,
+              7.8,
+              7.2,
+              6.3,
+              6.3
+            ],
+            "medianSyncMs": 7,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              30.2,
+              32.7,
+              33.2,
+              33.4,
+              33.4
+            ],
+            "medianMs": 33.2,
+            "samplesSyncMs": [
+              6.9,
+              7.3,
+              6.7,
+              7.1,
+              7.2
+            ],
+            "medianSyncMs": 7.1,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              55,
+              50.3,
+              63.9,
+              52.5,
+              50.3
+            ],
+            "medianMs": 52.5,
+            "samplesSyncMs": [
+              17.4,
+              16.1,
+              15.3,
+              18,
+              15.7
+            ],
+            "medianSyncMs": 16.1,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              43.6,
+              44.6,
+              67.2,
+              56.7,
+              48.4
+            ],
+            "medianMs": 48.4,
+            "samplesSyncMs": [
+              15.4,
+              15.8,
+              32.4,
+              17.2,
+              15.9
+            ],
+            "medianSyncMs": 15.9,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              36.1,
+              37.3,
+              34.3,
+              43.1,
+              35.1
+            ],
+            "medianMs": 36.1,
+            "samplesSyncMs": [
+              17.9,
+              16.9,
+              16.7,
+              17.8,
+              16.8
+            ],
+            "medianSyncMs": 16.9,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              70.3,
+              65.7,
+              83.6,
+              67.6,
+              66.8
+            ],
+            "medianMs": 67.6,
+            "samplesSyncMs": [
+              30.9,
+              29.2,
+              28.6,
+              31.7,
+              28.5
+            ],
+            "medianSyncMs": 29.2,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              64.6,
+              66.6,
+              66.3,
+              73,
+              69.8
+            ],
+            "medianMs": 66.6,
+            "samplesSyncMs": [
+              27.4,
+              28.8,
+              28.5,
+              29.7,
+              27.8
+            ],
+            "medianSyncMs": 28.5,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              53.3,
+              63.4,
+              53.2,
+              57.2,
+              50.6
+            ],
+            "medianMs": 53.3,
+            "samplesSyncMs": [
+              30.7,
+              31.8,
+              32.6,
+              31,
+              30.6
+            ],
+            "medianSyncMs": 31,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    },
+    {
+      "version": "candidate",
+      "sample": 2,
+      "calendarReadyMs": 400.7,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953654,
+        "encodedBodyBytes": 3352027,
+        "decodedBodyBytes": 3352027
+      },
+      "travelFirstReadyMs": 57,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3046310,
+        "encodedBodyBytes": 3461996,
+        "decodedBodyBytes": 3461996
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              39.1,
+              44.6,
+              40.6,
+              50.7,
+              42.9
+            ],
+            "medianMs": 42.9,
+            "samplesSyncMs": [
+              6,
+              5.3,
+              6,
+              5.7,
+              6.7
+            ],
+            "medianSyncMs": 6,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              25.5,
+              32.8,
+              33.2,
+              33,
+              32.7
+            ],
+            "medianMs": 32.8,
+            "samplesSyncMs": [
+              2.5,
+              2.3,
+              2.3,
+              2.2,
+              2.3
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.9,
+              33.2,
+              32.7,
+              34.2,
+              33.3
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              2.5,
+              3,
+              2.5,
+              2.5,
+              2.4
+            ],
+            "medianSyncMs": 2.5,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              62.2,
+              50,
+              61.9,
+              56.2,
+              48.6
+            ],
+            "medianMs": 56.2,
+            "samplesSyncMs": [
+              18.2,
+              15.7,
+              13.5,
+              15.1,
+              13.2
+            ],
+            "medianSyncMs": 15.1,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              30.7,
+              32.3,
+              33.5,
+              33.4,
+              32.9
+            ],
+            "medianMs": 32.9,
+            "samplesSyncMs": [
+              2.9,
+              3.5,
+              3.4,
+              3.2,
+              3.4
+            ],
+            "medianSyncMs": 3.4,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              30.8,
+              32.9,
+              32.3,
+              33.4,
+              33.4
+            ],
+            "medianMs": 32.9,
+            "samplesSyncMs": [
+              2.5,
+              2,
+              2.3,
+              2.3,
+              2.4
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              67.7,
+              58.1,
+              78.3,
+              62.6,
+              66.6
+            ],
+            "medianMs": 66.6,
+            "samplesSyncMs": [
+              24.5,
+              24.4,
+              23.7,
+              26.2,
+              24.3
+            ],
+            "medianSyncMs": 24.4,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              23.1,
+              30.1,
+              33.2,
+              33.4,
+              33
+            ],
+            "medianMs": 33,
+            "samplesSyncMs": [
+              3.7,
+              3.8,
+              4,
+              3.9,
+              4
+            ],
+            "medianSyncMs": 3.9,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.4,
+              33.3,
+              33.4,
+              33.3,
+              33.4
+            ],
+            "medianMs": 33.4,
+            "samplesSyncMs": [
+              2.2,
+              2.4,
+              2.3,
+              2.4,
+              2.3
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    },
+    {
+      "version": "baseline",
+      "sample": 3,
+      "calendarReadyMs": 377.8,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953232,
+        "encodedBodyBytes": 3351366,
+        "decodedBodyBytes": 3351366
+      },
+      "travelFirstReadyMs": 52,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3045888,
+        "encodedBodyBytes": 3461339,
+        "decodedBodyBytes": 3461339
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              53.3,
+              40.4,
+              48.4,
+              49.5,
+              51.1
+            ],
+            "medianMs": 49.5,
+            "samplesSyncMs": [
+              9.3,
+              6.2,
+              5.9,
+              9.2,
+              7.5
+            ],
+            "medianSyncMs": 7.5,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              30.1,
+              38.1,
+              31.8,
+              34.7,
+              35
+            ],
+            "medianMs": 34.7,
+            "samplesSyncMs": [
+              6,
+              6.4,
+              6.3,
+              6.3,
+              6.1
+            ],
+            "medianSyncMs": 6.3,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              32.9,
+              30.4,
+              33.3,
+              33.3,
+              33.3
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              6.4,
+              6.4,
+              6.8,
+              6.5,
+              7.3
+            ],
+            "medianSyncMs": 6.5,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              54.8,
+              56.6,
+              61.6,
+              51,
+              66.4
+            ],
+            "medianMs": 56.6,
+            "samplesSyncMs": [
+              16.7,
+              22,
+              15.4,
+              18.4,
+              18.2
+            ],
+            "medianSyncMs": 18.2,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              47.3,
+              47.3,
+              44,
+              49.9,
+              43
+            ],
+            "medianMs": 47.3,
+            "samplesSyncMs": [
+              14.5,
+              16.2,
+              15.7,
+              15.5,
+              15.8
+            ],
+            "medianSyncMs": 15.7,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              36.7,
+              47.2,
+              37.1,
+              47,
+              41
+            ],
+            "medianMs": 41,
+            "samplesSyncMs": [
+              16.6,
+              17.4,
+              18.4,
+              17.1,
+              21.4
+            ],
+            "medianSyncMs": 17.4,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              69.1,
+              63.6,
+              84.3,
+              67.2,
+              67.9
+            ],
+            "medianMs": 67.9,
+            "samplesSyncMs": [
+              32,
+              28.9,
+              28.9,
+              30.3,
+              29.1
+            ],
+            "medianSyncMs": 29.1,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              67.1,
+              64.4,
+              79.1,
+              69.8,
+              64.5
+            ],
+            "medianMs": 67.1,
+            "samplesSyncMs": [
+              28.3,
+              28,
+              38.9,
+              27.6,
+              27.6
+            ],
+            "medianSyncMs": 28,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              52.8,
+              55.9,
+              51.8,
+              58.2,
+              51.4
+            ],
+            "medianMs": 52.8,
+            "samplesSyncMs": [
+              30.8,
+              30.9,
+              31.6,
+              30.7,
+              31.1
+            ],
+            "medianSyncMs": 30.9,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 5,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    },
+    {
+      "version": "candidate",
+      "sample": 3,
+      "calendarReadyMs": 349.6,
+      "calendarResources": {
+        "count": 148,
+        "transferBytes": 2953654,
+        "encodedBodyBytes": 3352027,
+        "decodedBodyBytes": 3352027
+      },
+      "travelFirstReadyMs": 60.7,
+      "resourcesAfterTravel": {
+        "count": 153,
+        "transferBytes": 3046310,
+        "encodedBodyBytes": 3461996,
+        "decodedBodyBytes": 3461996
+      },
+      "fixtures": [
+        {
+          "records": 1000,
+          "growthRender": {
+            "samplesMs": [
+              53.1,
+              47.7,
+              36,
+              50.9,
+              37.3
+            ],
+            "medianMs": 47.7,
+            "samplesSyncMs": [
+              8.7,
+              9.8,
+              5.5,
+              5.5,
+              6.4
+            ],
+            "medianSyncMs": 6.4,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              23.6,
+              31.4,
+              33.2,
+              33.1,
+              33.3
+            ],
+            "medianMs": 33.1,
+            "samplesSyncMs": [
+              3.1,
+              2.2,
+              2.2,
+              2.4,
+              2.2
+            ],
+            "medianSyncMs": 2.2,
+            "visibleRows": 6,
+            "totalRows": "6개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.4,
+              33.3,
+              33.4,
+              33.2,
+              33.3
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              2.3,
+              2.3,
+              2.4,
+              2.3,
+              2.5
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 5000,
+          "growthRender": {
+            "samplesMs": [
+              66.6,
+              54.3,
+              70.1,
+              49.1,
+              61.1
+            ],
+            "medianMs": 61.1,
+            "samplesSyncMs": [
+              15.5,
+              15,
+              13.3,
+              15.9,
+              13.6
+            ],
+            "medianSyncMs": 15,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              35.1,
+              33.2,
+              32.2,
+              33.2,
+              33.3
+            ],
+            "medianMs": 33.2,
+            "samplesSyncMs": [
+              2.9,
+              3.2,
+              3.2,
+              3,
+              3
+            ],
+            "medianSyncMs": 3,
+            "visibleRows": 14,
+            "totalRows": "14개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.4,
+              33.4,
+              32.3,
+              34.2,
+              33.3
+            ],
+            "medianMs": 33.4,
+            "samplesSyncMs": [
+              2.2,
+              2.5,
+              2.3,
+              2.2,
+              2.4
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        },
+        {
+          "records": 10000,
+          "growthRender": {
+            "samplesMs": [
+              66.9,
+              59.3,
+              79,
+              62.8,
+              85.5
+            ],
+            "medianMs": 66.9,
+            "samplesSyncMs": [
+              24.8,
+              24.8,
+              24,
+              25.4,
+              33.7
+            ],
+            "medianSyncMs": 24.8,
+            "visibleRows": 100,
+            "viewVisible": true
+          },
+          "todayFilterTransition": {
+            "samplesMs": [
+              27.3,
+              32.7,
+              30.7,
+              33.2,
+              33.1
+            ],
+            "medianMs": 32.7,
+            "samplesSyncMs": [
+              3.5,
+              4.1,
+              4,
+              4.1,
+              3.9
+            ],
+            "medianSyncMs": 4,
+            "visibleRows": 24,
+            "totalRows": "24개 기록",
+            "transition": "all -> today via the rendered filter button"
+          },
+          "calendarRender": {
+            "samplesMs": [
+              33.5,
+              33.3,
+              33.4,
+              33.2,
+              33.1
+            ],
+            "medianMs": 33.3,
+            "samplesSyncMs": [
+              2.3,
+              2.3,
+              2.2,
+              2.4,
+              2.2
+            ],
+            "medianSyncMs": 2.3,
+            "visibleRows": 100,
+            "calendarVisible": true
+          },
+          "splitSleepEntriesCallsPerRender": 5,
+          "calendarSplitCallsPerRender": 0,
+          "originalDemoIdsPreserved": true
+        }
+      ]
+    }
+  ]
+}
