@@ -71,6 +71,7 @@ let growthPhotoDraft = { existingPaths: [], existingUrls: [], removedPaths: [], 
 let activeQuickCategory = null;
 let activeQuickPresets = [];
 let growthSaveInProgress = false;
+let quickGrowthSaveInProgress = false;
 let growthDialogReturnPosition = null;
 let growthListLimit = 100;
 let growthListContext = "";
@@ -93,6 +94,7 @@ let lastAuthSessionKey = null;
 let bootstrapRequestId = 0;
 let bootstrapRetryTimer = null;
 let eventSaveInProgress = false;
+const eventMovePromises = new Map();
 let eventDialogReturnPosition = null;
 let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
@@ -1467,19 +1469,36 @@ function finishEventDrag(pointerEvent) {
 }
 
 async function moveEventToDate(id, targetDate, offerUndo = true) {
+  const client = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
+  const contextGeneration = bootstrapRequestId;
   const event = state.events.find((item) => item.id === id);
-  if (!event || event.date === targetDate) return toast("같은 날짜의 일정이에요");
-  const previousDate = event.date;
-  const previousEndDate = event.endDate || event.date;
-  const duration = dayDistance(previousDate, previousEndDate);
-  event.date = targetDate;
-  event.endDate = addDays(targetDate, duration);
-  state.selectedDate = targetDate;
-  state.viewDate = startOfMonth(parseDate(targetDate));
-  render();
-  if (state.supabase && state.session) {
-    const { error } = await withAuthRecovery(() => state.supabase.from("events").update({ event_date: targetDate, event_end_date: event.endDate, updated_at: new Date().toISOString() }).eq("household_id", state.household.id).eq("id", id));
-    if (error) {
+  const current = () => state.supabase === client && state.session?.user?.id === userId
+    && state.household?.id === householdId && bootstrapRequestId === contextGeneration && state.events.includes(event);
+  const previousMove = eventMovePromises.get(id);
+  // Serialize each event so the last requested move cannot be undone by an older response.
+  const pending = (async () => {
+    if (previousMove) await previousMove.catch(() => {});
+    if (!current()) return;
+    if (!event || event.date === targetDate) return toast("같은 날짜의 일정이에요");
+    const previousDate = event.date;
+    const previousEndDate = event.endDate || event.date;
+    const duration = dayDistance(previousDate, previousEndDate);
+    const endDate = addDays(targetDate, duration);
+    event.date = targetDate;
+    event.endDate = endDate;
+    state.selectedDate = targetDate;
+    state.viewDate = startOfMonth(parseDate(targetDate));
+    render();
+    try {
+      if (client && state.session) {
+        const { error } = await withAuthRecovery(() => client.from("events").update({ event_date: targetDate, event_end_date: endDate, updated_at: new Date().toISOString() }).eq("household_id", householdId).eq("id", id), client, userId, current);
+        if (!current()) return;
+        if (error) throw error;
+      } else {
+        persistLocal();
+      }
+    } catch (error) {
+      if (!current()) return;
       event.date = previousDate;
       event.endDate = previousEndDate;
       state.selectedDate = previousDate;
@@ -1487,11 +1506,13 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
       render();
       return toast("일정을 이동하지 못했어요");
     }
-  } else {
-    persistLocal();
-  }
-  const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(targetDate));
-  toast(`${formatted}로${duration ? ` ${duration + 1}일 기간을` : ""} 이동했어요`, offerUndo ? { label: "되돌리기", run: () => moveEventToDate(id, previousDate, false) } : null);
+    if (!current()) return;
+    const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(targetDate));
+    toast(`${formatted}로${duration ? ` ${duration + 1}일 기간을` : ""} 이동했어요`, offerUndo ? { label: "되돌리기", run: () => { if (current()) moveEventToDate(id, previousDate, false); } } : null);
+  })();
+  eventMovePromises.set(id, pending);
+  try { await pending; }
+  finally { if (eventMovePromises.get(id) === pending) eventMovePromises.delete(id); }
 }
 
 async function storeEvent(item) {
@@ -2211,6 +2232,7 @@ function quickPresets(category) {
 }
 
 function openGrowthQuick(category) {
+  if (quickGrowthSaveInProgress) return toast("기록을 저장 중이에요");
   if (!activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
   const presets = quickPresets(category);
   if (!presets.length) { openGrowthDialog(null, category); return; }
@@ -2223,23 +2245,40 @@ function openGrowthQuick(category) {
 }
 
 async function saveGrowthPresetFromEvent(event) {
+  if (quickGrowthSaveInProgress) return;
   const button = event.target.closest("[data-preset-index]"); if (!button) return;
   const preset = activeQuickPresets[Number(button.dataset.presetIndex)]; if (!preset) return;
-  button.disabled = true;
+  const client = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
+  const babyId = state.activeBabyId, contextGeneration = bootstrapRequestId;
+  const current = () => state.supabase === client && state.session?.user?.id === userId
+    && state.household?.id === householdId && state.activeBabyId === babyId && bootstrapRequestId === contextGeneration;
+  const controls = [...$("#quickLogDialog").querySelectorAll("button, input, select")].map((control) => ({ control, disabled: control.disabled }));
+  quickGrowthSaveInProgress = true;
+  controls.forEach(({ control }) => { control.disabled = true; });
   const now = new Date();
   const entry = {
     id: uid(), babyId: state.activeBabyId, title: preset.title, date: dateKey(now), time: now.toTimeString().slice(0, 5), category: activeQuickCategory,
     height: null, weight: null, head: null, feedingMl: preset.feedingMl || null, feedingType: preset.feedingType || "", feedingSide: preset.feedingSide || "", feedingMinutes: preset.feedingMinutes || null,
     sleepMinutes: preset.sleepMinutes || null, temperature: preset.temperature || null, diaperKind: preset.diaperKind || "", note: "", photoPaths: [], photoUrls: [],
   };
-  if (state.supabase && state.session) {
-    const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
-    if (error) { button.disabled = false; return toast("기록하지 못했어요. DB 업데이트를 확인해 주세요"); }
+  try {
+    if (client && state.session) {
+      const payload = toGrowthRemote(entry);
+      const { error } = await withAuthRecovery(() => client.from("growth_entries").upsert(payload), client, userId, current);
+      if (!current()) return;
+      if (error) return toast("기록하지 못했어요. DB 업데이트를 확인해 주세요");
+    }
+    if (!current()) return;
+    if (!state.growthEntries.some((item) => item.id === entry.id)) state.growthEntries.push(entry);
+    if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
+    dispatchGrowthEntrySaved(entry);
+    $("#quickLogDialog").close(); renderGrowth(); showGrowthComplete(`${preset.label} 기록을 저장했어요.`);
+  } catch (error) {
+    if (current()) toast("기록하지 못했어요. 다시 시도해 주세요");
+  } finally {
+    quickGrowthSaveInProgress = false;
+    controls.forEach(({ control, disabled }) => { control.disabled = disabled; });
   }
-  state.growthEntries.push(entry);
-  if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
-  dispatchGrowthEntrySaved(entry);
-  $("#quickLogDialog").close(); renderGrowth(); showGrowthComplete(`${preset.label} 기록을 저장했어요.`);
 }
 
 function defaultGrowthTitle(category) {
