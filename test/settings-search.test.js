@@ -101,8 +101,8 @@ const runSettings = () => {
     setTimeout: () => {},
   };
   window.switchView = context.switchView;
-  new Function('window', 'document', 'localStorage', 'state', 'switchView', 'toast', 'CustomEvent', 'MutationObserver', 'getComputedStyle', 'setTimeout', readFileSync('settings.js', 'utf8'))(
-    window, document, storage, context.state, context.switchView, context.toast, context.CustomEvent, context.MutationObserver, getComputedStyle, context.setTimeout,
+  new Function('ACTIVE_VIEW_KEY', 'window', 'document', 'localStorage', 'state', 'switchView', 'toast', 'CustomEvent', 'MutationObserver', 'getComputedStyle', 'setTimeout', readFileSync('settings.js', 'utf8'))(
+    'family-active-view-v1', window, document, storage, context.state, context.switchView, context.toast, context.CustomEvent, context.MutationObserver, getComputedStyle, context.setTimeout,
   );
   const view = main.children.find((child) => child.id === 'settingsView');
   return { view, window, windowListeners, observer };
