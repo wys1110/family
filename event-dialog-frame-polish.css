@@ -19,10 +19,24 @@
 
 #eventDialog #eventForm {
   box-sizing: border-box;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   max-height: var(--event-dialog-max-height);
-  padding: 12px 20px max(18px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding: 0;
+}
+
+#eventDialog .event-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 20px 12px;
   scroll-padding-top: 12px;
-  scroll-padding-bottom: 136px;
+  scrollbar-width: none;
+}
+
+#eventDialog .event-dialog-body::-webkit-scrollbar {
+  display: none;
 }
 
 #eventDialog .sheet-handle,
@@ -32,8 +46,32 @@
 }
 
 #eventDialog .dialog-header {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   padding: 0 2px;
+}
+
+#eventDialog .title-field {
+  margin-bottom: 10px;
+}
+
+#eventDialog .date-shortcuts {
+  margin-bottom: 10px;
+}
+
+#eventDialog .event-date-fields {
+  margin-bottom: 9px;
+}
+
+#eventDialog .all-day-row {
+  margin-bottom: 8px;
+}
+
+#eventDialog .notification-reminder-field {
+  margin-bottom: 13px;
+}
+
+#eventDialog .member-fieldset {
+  margin-bottom: 10px;
 }
 
 #eventDialog .dialog-header > div {
@@ -41,10 +79,10 @@
 }
 
 #eventDialog .dialog-actions {
-  position: sticky;
+  position: relative;
   z-index: 6;
-  bottom: 0;
-  margin: 18px -20px calc(-1 * max(18px, env(safe-area-inset-bottom)));
+  bottom: auto;
+  margin: 0;
   padding: 14px 20px max(18px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--event-frame-line-soft);
   background:
@@ -88,13 +126,16 @@ html[data-family-theme="night"] #eventDialog {
   }
 
   #eventDialog #eventForm {
+    padding: 0;
+  }
+
+  #eventDialog .event-dialog-body {
     padding-right: 18px;
     padding-left: 18px;
   }
 
   #eventDialog .dialog-actions {
-    margin-right: -18px;
-    margin-left: -18px;
+    margin: 0;
     padding-right: 18px;
     padding-left: 18px;
   }
@@ -107,13 +148,16 @@ html[data-family-theme="night"] #eventDialog {
   }
 
   #eventDialog #eventForm {
+    padding: 0;
+  }
+
+  #eventDialog .event-dialog-body {
     padding-right: 15px;
     padding-left: 15px;
   }
 
   #eventDialog .dialog-actions {
-    margin-right: -15px;
-    margin-left: -15px;
+    margin: 0;
     padding-right: 15px;
     padding-left: 15px;
   }
