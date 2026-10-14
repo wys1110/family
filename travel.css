@@ -495,7 +495,7 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-it
 @media (max-width:560px) {
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header { gap:10px; margin:8px 0 12px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header h2 { font-size:23px; }
-  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header p:not(.eyebrow) { font-size:13px; }
+  html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-page-header p:not(.eyebrow) { font-size:13px; word-break:keep-all; overflow-wrap:break-word; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace { border-radius:20px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head { align-items:flex-start; gap:8px; padding:14px 12px 8px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-workspace-head h2 { font-size:21px; }

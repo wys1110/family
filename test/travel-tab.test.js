@@ -218,6 +218,11 @@ test('travel tab loads only archive modules and has no booking-search workspace'
   expect(travelSource).not.toMatch(/service_role|sk-[A-Za-z0-9]{20,}/i);
 });
 
+test('travel page introduction keeps Korean words together on narrow mobile headers', () => {
+  expect(travelCssSource).toMatch(/\.travel-page-header p:not\(\.eyebrow\)[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s);
+  expect(configSource).toContain('{ name: "travel", version: "20261014-header-wrap-v1" }');
+});
+
 test('the dynamically-created travel tab remains navigable after its deferred load', () => {
   expect(deferredSource).toContain('if (!tab || !groups[tab.dataset.view] || loaded.has(tab.dataset.view)) return;');
 
