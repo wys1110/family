@@ -176,7 +176,7 @@ window.FAMILY_CONFIG = {
     { name: "night-feature-request-polish", version: "20260722-layout-harmony-v1", script: false },
     { name: "night-english-story-polish", version: "20260720-v1", script: false },
     { name: "event-dialog-layout-polish", version: "20260720-v2", script: false },
-    { name: "event-dialog-frame-polish", version: "20260721-v2", script: false },
+    { name: "event-dialog-frame-polish", version: "20261014-footer-layout-v1", script: false },
     { name: "tab-interaction-fix", version: "20261005-core-quality-v5" },
     { name: "care-color-separation", version: "20261012-hourly-record-emojis-v1", script: false },
     { name: "night-page-palette", version: "20260824-event-change-push-v1", script: false },
