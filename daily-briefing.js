@@ -446,8 +446,8 @@
       <p id="eventChangePushStatus" class="event-change-push-status" role="status" aria-live="polite"></p>
       <div class="push-diagnostic-actions"><button id="pushDiagnoseButton" type="button">알림 상태 확인</button><button id="pushTestButton" type="button">테스트 알림 보내기</button></div>
       <p id="pushDiagnosis" class="push-diagnosis" role="status" aria-live="polite"></p>
-      <p class="event-change-push-ios-note"><span>본인이 작성한 기록은 본인에게 푸시를 보내지 않아요. 테스트 알림은 현재 기기로만 보내요.</span></p>
-      <p class="event-change-push-ios-note"><strong>iPhone 안내</strong><span>Safari 공유 버튼 → 홈 화면에 추가 → 앱 아이콘으로 열어야 잠금 화면 알림을 받을 수 있어요.</span></p>`;
+      <p class="event-change-push-ios-note"><span>내가 작성한 기록은 나에게 알림이 오지 않아요. 테스트 알림은 이 기기로만 보내요.</span></p>
+      <p class="event-change-push-ios-note"><strong>iPhone 안내</strong><span>Safari에서 홈 화면에 추가한 뒤 앱 아이콘으로 열면 잠금 화면 알림을 받을 수 있어요.</span></p>`;
     settingsView.appendChild(card);
 
     card.querySelector("#eventChangePushToggle").addEventListener("click", () => {

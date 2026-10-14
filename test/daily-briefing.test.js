@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
 const client = readFileSync("daily-briefing.js", "utf8");
+const style = readFileSync("daily-briefing.css", "utf8");
 const worker = readFileSync("service-worker.js", "utf8");
 const edge = readFileSync("supabase/functions/daily-briefing-push/index.ts", "utf8");
 const migration = readFileSync("supabase/migrations/20260719_daily_briefing_push.sql", "utf8");
@@ -10,10 +11,18 @@ const cron = readFileSync("supabase/daily-briefing-cron.sql", "utf8");
 
 test("가족 일정 변경 푸시 모듈을 설정 화면에 연결한다", () => {
   const config = readFileSync("config.js", "utf8");
-  expect(config).toContain('{ name: "daily-briefing", version: "20260915-push-diagnostics-v1" }');
+  expect(config).toContain('{ name: "daily-briefing", version: "20261014-mobile-copy-v1" }');
   expect(client).toContain('const SUBSCRIPTION_TIME = "09:00"');
   expect(client).toContain('card.id = "eventChangePushSettings"');
   expect(client).toContain('Notification.requestPermission()');
+});
+
+test("모바일 알림 안내는 한글 단어를 쪼개지 않고 짧게 읽힌다", () => {
+  expect(style).toContain(".event-change-push-ios-note span {");
+  expect(style).toContain("word-break: keep-all");
+  expect(style).toContain("overflow-wrap: break-word");
+  expect(client).toContain("내가 작성한 기록은 나에게 알림이 오지 않아요.");
+  expect(client).toContain("Safari에서 홈 화면에 추가한 뒤 앱 아이콘으로 열면");
 });
 
 test("iPhone은 홈 화면 앱에서만 푸시 권한을 요청하도록 안내한다", () => {
