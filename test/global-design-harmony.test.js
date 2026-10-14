@@ -69,8 +69,14 @@ describe("global design harmony", () => {
     expect(typographyCss).toMatch(/#settingsView :is\(\.feeding-reminder-presets button, \.feeding-reminder-permission, #eventChangePushToggle\)[^{]*\{[^}]*min-height:\s*var\(--control-touch-min\);/s);
   });
 
+  test("keeps the growth empty state readable in both color themes", () => {
+    expect(baseCss).toMatch(/\.premium-empty\s*\{[^}]*background:\s*var\(--surface\);/s);
+    expect(baseCss).toMatch(/\.premium-empty\s*\{[^}]*border:\s*1px dashed var\(--separator\);/s);
+    expect(baseCss).not.toMatch(/\.premium-empty\s*\{[^}]*rgba\(255,\s*254,\s*250,/s);
+  });
+
   test("updates every affected stylesheet cache version", () => {
-    expect(index).toContain('styles.css?v=20260816-growth-monogram-v1');
+    expect(index).toContain('styles.css?v=20261014-growth-empty-v1');
     expect(index).toContain('<script src="app.js?v=20261013-speed-v1"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20261013-view-storage-v1" }');
