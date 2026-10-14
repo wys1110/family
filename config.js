@@ -128,7 +128,7 @@ window.FAMILY_CONFIG = {
     { name: "settings-layout-polish", version: "20260824-event-change-push-v1", script: false },
     { name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false },
     { name: "feeding-reminder", version: "20260719-single-alert-v1" },
-    { name: "daily-briefing", version: "20260915-push-diagnostics-v1" },
+    { name: "daily-briefing", version: "20261014-mobile-copy-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20261013-view-storage-v1" },

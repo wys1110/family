@@ -100,6 +100,11 @@
   white-space: nowrap;
 }
 
+.event-change-push-ios-note span {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 @media (max-width: 420px) {
   .event-change-push-settings {
     padding: 16px;
