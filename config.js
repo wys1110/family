@@ -196,7 +196,7 @@ window.FAMILY_CONFIG = {
     { name: "travel-data", version: "20261013-code-reliability-v1", style: false },
     { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261013-code-reliability-v1" },
+    { name: "travel", version: "20261014-header-wrap-v1" },
   ];
 
   const deferredGroups = {
