@@ -105,7 +105,7 @@ window.FAMILY_CONFIG = {
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20261013-view-storage-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
-    { name: "feeding-pattern-split", version: "20261015-current-time-v1" },
+    { name: "feeding-pattern-split", version: "20261016-current-time-guide-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
     { name: "care-ring-timeline", version: "20260921-feeding-clock-default-v1" },
     { name: "care-date-nav-position", version: "20260718-above-timeline-v1", style: false },

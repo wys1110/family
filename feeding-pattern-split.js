@@ -6,8 +6,9 @@ function careRecordEmoji(entry, type) {
 function careCurrentTimeMarker(now) {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const angle = minutes / 4;
-  const lineStart = clockPoint(angle, 138);
-  const lineEnd = clockPoint(angle, 150);
+  const guideStart = clockPoint(angle, 72);
+  const lineStart = clockPoint(angle, 128);
+  const lineEnd = clockPoint(angle, 138);
   const labelBase = clockPoint(angle, 150);
   const radians = angle * Math.PI / 180;
   const nearestCardinal = Math.round(angle / 90) * 90;
@@ -17,7 +18,7 @@ function careCurrentTimeMarker(now) {
   const labelY = Math.max(31, Math.min(329, labelBase.y + Math.sin(radians) * 35 * labelDirection));
   const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const accessibleTime = `${now.getHours()}시 ${now.getMinutes()}분`;
-  return `<g class="care-band-current-time" data-current-minute="${minutes}" role="img" aria-label="현재 시각 ${accessibleTime}"><title>현재 시각 ${time}</title><line class="care-band-now-line" x1="${lineStart.x.toFixed(1)}" y1="${lineStart.y.toFixed(1)}" x2="${lineEnd.x.toFixed(1)}" y2="${lineEnd.y.toFixed(1)}"></line><circle class="care-band-now-halo" cx="${lineEnd.x.toFixed(1)}" cy="${lineEnd.y.toFixed(1)}" r="5"></circle><circle class="care-band-now-dot" cx="${lineEnd.x.toFixed(1)}" cy="${lineEnd.y.toFixed(1)}" r="2.5"></circle><rect class="care-band-now-label" x="${(labelX - 23).toFixed(1)}" y="${(labelY - 10).toFixed(1)}" width="46" height="20" rx="10"></rect><text class="care-band-now-text" x="${labelX.toFixed(1)}" y="${(labelY + 3.5).toFixed(1)}" text-anchor="middle">${time}</text></g>`;
+  return `<g class="care-band-current-time" data-current-minute="${minutes}" role="img" aria-label="현재 시각 ${accessibleTime}"><title>현재 시각 ${time}</title><line class="care-band-now-guide" x1="${guideStart.x.toFixed(1)}" y1="${guideStart.y.toFixed(1)}" x2="${lineStart.x.toFixed(1)}" y2="${lineStart.y.toFixed(1)}"></line><line class="care-band-now-line" x1="${lineStart.x.toFixed(1)}" y1="${lineStart.y.toFixed(1)}" x2="${lineEnd.x.toFixed(1)}" y2="${lineEnd.y.toFixed(1)}"></line><circle class="care-band-now-halo" cx="${lineStart.x.toFixed(1)}" cy="${lineStart.y.toFixed(1)}" r="5"></circle><circle class="care-band-now-dot" cx="${lineStart.x.toFixed(1)}" cy="${lineStart.y.toFixed(1)}" r="2.5"></circle><rect class="care-band-now-label" x="${(labelX - 23).toFixed(1)}" y="${(labelY - 10).toFixed(1)}" width="46" height="20" rx="10"></rect><text class="care-band-now-text" x="${labelX.toFixed(1)}" y="${(labelY + 3.5).toFixed(1)}" text-anchor="middle">${time}</text></g>`;
 }
 
 (() => {
@@ -155,11 +156,10 @@ function careCurrentTimeMarker(now) {
           <svg class="care-clock care-band-dial" viewBox="20 20 320 320" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴, 총 수유량 ${total}밀리리터, 분유 ${ml(formulaMl)}밀리리터, 유축 ${ml(pumpedMl)}밀리리터, 직수 ${breastMinutes}분, 수면 ${sleepTotal}분, 이유식 ${count("solid")}회, 기저귀 ${count("diaper")}회, 건강 ${count("health")}회. 00시는 위, 06시는 오른쪽, 12시는 아래, 18시는 왼쪽. 이모지는 기록 종류, 채운 구간은 시간 범위.">
             <defs><linearGradient id="careClockDayNight" x1="0" y1="0" x2="0" y2="1"><stop class="care-band-night-color"></stop><stop class="care-band-transition-color" offset=".5"></stop><stop class="care-band-day-color" offset="1"></stop></linearGradient></defs>
             <circle class="care-band-track" cx="180" cy="180" r="112"></circle>
-            ${records.map((record) => record.range).join("")}${ticks}${records.map((record) => record.marker).join("")}
+            ${records.map((record) => record.range).join("")}${ticks}${currentTimeMarker}${records.map((record) => record.marker).join("")}
             <svg class="care-band-period" x="169" y="97" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle class="care-band-period-background" cx="12" cy="12" r="12"></circle><path class="care-band-period-fill" d="M20 15A9 9 0 0 1 9 4 9 9 0 1 0 20 15Z"></path></svg>
             <svg class="care-band-period" x="169" y="241" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle class="care-band-period-background" cx="12" cy="12" r="12"></circle><circle class="care-band-period-fill" cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"></path></svg>
             <text class="care-band-hour" x="180" y="37" text-anchor="middle">00</text><text class="care-band-hour" x="327" y="185" text-anchor="middle">06</text><text class="care-band-hour" x="180" y="330" text-anchor="middle">12</text><text class="care-band-hour" x="33" y="185" text-anchor="middle">18</text>
-            ${currentTimeMarker}
             <text class="care-band-caption" x="180" y="154" text-anchor="middle">분유 + 유축</text><text class="care-band-total" x="180" y="201" text-anchor="middle" style="font-size:${totalSize}px">${total}<tspan class="care-band-unit" dx="4">mL</tspan></text>
           </svg>
         </div>
