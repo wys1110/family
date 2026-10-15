@@ -22,6 +22,7 @@ test("current time marker stays outside the care band and shows a readable time"
   expect(html).toContain('data-current-minute="618"');
   expect(html).toContain('aria-label="현재 시각 10시 18분"');
   expect(html).toContain('>10:18</text>');
+  expect(html).toMatch(/class="care-band-now-guide" x1="[\d.]+" y1="[\d.]+" x2="[\d.]+" y2="[\d.]+"/);
   expect(html).toMatch(/class="care-band-now-line" x1="[\d.]+" y1="[\d.]+" x2="[\d.]+" y2="[\d.]+"/);
   expect(html).toMatch(/class="care-band-now-label" x="[\d.]+" y="[\d.]+" width="46" height="20" rx="10"/);
 });
