@@ -11,6 +11,21 @@ const renderer = source.slice(rendererStart, rendererEnd);
 const app = readFileSync("app.js", "utf8");
 const pointHelper = app.slice(app.indexOf("function clockPoint("), app.indexOf("\n\nfunction renderDailyCareClock"));
 
+test("current time marker stays outside the care band and shows a readable time", () => {
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(`${pointHelper}\n${emojiHelper}`, context);
+
+  const html = context.careCurrentTimeMarker(new Date(2000, 0, 1, 10, 18));
+
+  expect(html).toContain('class="care-band-current-time"');
+  expect(html).toContain('data-current-minute="618"');
+  expect(html).toContain('aria-label="현재 시각 10시 18분"');
+  expect(html).toContain('>10:18</text>');
+  expect(html).toMatch(/class="care-band-now-line" x1="[\d.]+" y1="[\d.]+" x2="[\d.]+" y2="[\d.]+"/);
+  expect(html).toMatch(/class="care-band-now-label" x="[\d.]+" y="[\d.]+" width="46" height="20" rx="10"/);
+});
+
 test("split care clock renders categorized markers and duration ranges at the right times", () => {
   const elements = {
     "#carePatternDateLabel": {},

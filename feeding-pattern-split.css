@@ -68,6 +68,12 @@
 #growthView .care-band-period-background, #growthView .care-band-record-background { fill: var(--band-surface); stroke: none; }
 #growthView .care-band-record-symbol { fill: var(--band-ink); font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 20px; }
 #growthView .care-band-period-fill { fill: var(--band-formula); fill-opacity: .16; }
+#growthView .care-band-current-time { pointer-events: none; }
+#growthView .care-band-now-line { stroke: var(--band-formula); stroke-width: 2.4; stroke-linecap: round; }
+#growthView .care-band-now-halo { fill: var(--band-surface); stroke: var(--band-formula); stroke-width: 1.5; }
+#growthView .care-band-now-dot { fill: var(--band-formula); }
+#growthView .care-band-now-label { fill: var(--band-surface); stroke: var(--band-formula); stroke-width: 1; }
+#growthView .care-band-now-text { fill: var(--band-ink); font-size: 10px; font-weight: 700; letter-spacing: -.01em; }
 #growthView .care-band-feeding { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 18px; border-top: 1px solid var(--band-rule); }
 #growthView .care-band-feeding article { min-width: 0; }
 #growthView .care-band-feeding article > span, .care-band-other > span { display: flex; align-items: center; gap: 7px; color: var(--band-muted); font-size: 13px; white-space: nowrap; }
