@@ -17,7 +17,7 @@
   const setVerse = expanded => {
     verse.dataset.expanded = String(expanded);
     toggle.setAttribute('aria-expanded', String(expanded));
-    toggle.textContent = expanded ? '오늘의 말씀 · 접기' : '오늘의 말씀 · 펼치기';
+    toggle.textContent = '오늘의 말씀';
   };
   setVerse(false);
   toggle.addEventListener('click', () => setVerse(toggle.getAttribute('aria-expanded') !== 'true'));
@@ -55,9 +55,10 @@
 
   // Primary actions stay in document flow: no calendar dates or records are covered.
   const action = $('#addEventButton');
-  const calendarActions = document.createElement('div');
-  calendarActions.className = 'compact-primary-actions';
-  $('#calendarView .calendar-card').before(calendarActions);
+  const calendarActions = document.createElement('header');
+  calendarActions.className = 'compact-primary-actions calendar-page-header';
+  calendarActions.innerHTML = '<h2>일정</h2>';
+  $('#calendarView').prepend(calendarActions);
   const growthActions = document.createElement('div');
   growthActions.className = 'compact-primary-actions';
   timer.appendChild(growthActions);

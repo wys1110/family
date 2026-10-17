@@ -103,6 +103,8 @@
 
   const searchTools = document.createElement('div');
   searchTools.className = 'settings-search-tools';
+  const searchHeading = document.createElement('h2');
+  searchHeading.textContent = '설정';
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
   searchInput.placeholder = '설정 검색';
@@ -121,8 +123,15 @@
   searchJumps.setAttribute('role', 'group');
   searchJumps.setAttribute('aria-label', '설정 항목 바로가기');
   searchJumps.dataset.settingsSearchJumps = '';
-  searchTools.append(searchInput, searchStatus, resetSearch, searchJumps);
+  searchTools.append(searchHeading, searchInput, searchStatus, resetSearch, searchJumps);
   view.insertBefore(searchTools, view.firstElementChild);
+
+  const jumpGroups = [
+    { label: '가족', matches: ({ card, title }) => card.classList.contains('family-profile-settings') || card.classList.contains('settings-family-space-card') || card.classList.contains('settings-family-members-card') || /가족 구성원|가족 프로필|현재 공간/.test(title) },
+    { label: '화면 꾸미기', matches: ({ title }) => title.includes('테마') || title.includes('화면') },
+    { label: '기록과 알림', matches: ({ card, title }) => card.classList.contains('settings-family-data-card') || card.classList.contains('settings-data-export-card') || card.id === 'eventChangePushSettings' || card.id === 'feedingReminderSettings' || /백업|복원|내보내기|알림|기록/.test(title) },
+    { label: '앱과 도움말', matches: () => true },
+  ];
 
   let renderedMatches = [];
   const refreshSettingsSearch = () => {
@@ -143,16 +152,31 @@
     if (resetSearch.hidden !== !showReset) resetSearch.hidden = !showReset;
     if (matches.length !== renderedMatches.length || matches.some((match, index) => match.card !== renderedMatches[index].card || match.title !== renderedMatches[index].title)) {
       searchJumps.textContent = '';
-      matches.forEach(({ card, title }) => {
-        const jump = document.createElement('button');
-        jump.type = 'button';
-        jump.textContent = title;
-        jump.addEventListener('click', () => {
-          card.tabIndex = -1;
-          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          card.focus({ preventScroll: true });
+      const groupedMatches = new Set();
+      jumpGroups.forEach(({ label, matches: belongsToGroup }) => {
+        const groupMatches = matches.filter((match) => !groupedMatches.has(match) && belongsToGroup(match));
+        if (!groupMatches.length) return;
+        const group = document.createElement('div');
+        group.className = 'settings-search-group';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', label);
+        const heading = document.createElement('h3');
+        heading.textContent = label;
+        group.appendChild(heading);
+        groupMatches.forEach((match) => {
+          const { card, title } = match;
+          const jump = document.createElement('button');
+          jump.type = 'button';
+          jump.textContent = title;
+          jump.addEventListener('click', () => {
+            card.tabIndex = -1;
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            card.focus({ preventScroll: true });
+          });
+          group.appendChild(jump);
+          groupedMatches.add(match);
         });
-        searchJumps.appendChild(jump);
+        searchJumps.appendChild(group);
       });
       renderedMatches = matches;
     }

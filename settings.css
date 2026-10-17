@@ -169,15 +169,12 @@ body,
   display: grid;
   grid-column: 1 / -1;
   gap: 10px;
-  margin-top: 18px;
-  padding: 16px;
-  border: 1px solid var(--separator);
-  border-radius: 18px;
-  background: var(--surface);
+  margin-top: 0;
+  padding: 0 0 16px;
 }
 
 .settings-search-tools input {
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 12px;
   border: 1px solid var(--separator);
   border-radius: 12px;
@@ -193,17 +190,62 @@ body,
 }
 
 .settings-search-jumps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  gap: 14px;
 }
 
-.settings-search-jumps button,
+.settings-search-group {
+  display: grid;
+}
+
+.settings-search-group h3 {
+  margin: 0 0 4px;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.settings-search-jumps button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--separator);
+  border-radius: 0;
+  color: var(--label);
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-search-jumps button::after {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.settings-search-jumps button:focus-visible,
+.settings-search-tools > button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .settings-search-tools > button {
   min-height: 44px;
+  justify-self: start;
   padding: 7px 11px;
   border: 1px solid var(--separator);
-  border-radius: 999px;
+  border-radius: 12px;
   color: var(--label);
   background: var(--surface-2);
   font: inherit;

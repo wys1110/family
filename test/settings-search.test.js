@@ -24,7 +24,7 @@ class Element {
   set innerHTML(value) {
     if (value.includes('class="settings-card"')) {
       const card = new Element('section'); card.className = 'settings-card';
-      card.textContent = '화면 테마 가족 공간의 분위기를 취향에 맞게 바꿔보세요.';
+      card.textContent = '화면 테마 취향에 맞게 바꿔보세요.';
       card.querySelector = (selector) => selector === 'h1, h2, h3, h4' ? { textContent: '화면 테마' } : null;
       this.appendChild(card);
     }
@@ -47,6 +47,12 @@ class Element {
     }
     return null;
   }
+  findAll(predicate) {
+    return this.children.flatMap((child) => [
+      ...(predicate(child) ? [child] : []),
+      ...child.findAll(predicate),
+    ]);
+  }
   querySelector(selector) {
     if (selector === '.settings-heading') return this.heading || null;
     if (selector === '[data-settings-search-input]') return this.findDescendant((child) => child.dataset.settingsSearchInput !== undefined);
@@ -61,7 +67,7 @@ class Element {
     if (selector === '.view-tab') return this.children.filter((child) => child.dataset.view !== undefined);
     if (selector === '[data-settings-search-jumps] button') {
       const jumps = this.querySelector('[data-settings-search-jumps]');
-      return jumps?.children || [];
+      return jumps?.findAll((child) => child.tagName === 'BUTTON') || [];
     }
     return [];
   }
@@ -120,22 +126,25 @@ describe('settings search', () => {
     hidden.querySelector = (selector) => selector === 'h1, h2, h3, h4' ? { textContent: 'Excel 보고서' } : null;
     view.appendChild(hidden);
     const prepended = new Element('section');
-    prepended.className = 'settings-card'; prepended.textContent = '아기 정보';
-    prepended.querySelector = (selector) => selector === 'h1, h2, h3, h4' ? { textContent: '가족 프로필' } : null;
+    prepended.className = 'settings-card family-profile-settings'; prepended.textContent = '가족 프로필과 이름';
+    prepended.querySelector = (selector) => selector === 'h1, h2, h3, h4' ? { textContent: '가족 이름' } : null;
     view.insertBefore(prepended, themeCard);
     const late = new Element('section');
-    late.className = 'settings-card'; late.textContent = '초대 링크와 가족 구성원';
+    late.className = 'settings-card settings-family-space-card'; late.textContent = '가족 공간 초대 링크와 구성원';
     late.querySelector = (selector) => selector === 'h1, h2, h3, h4' ? { textContent: '가족 구성원' } : null;
     view.appendChild(late);
     observer.trigger?.([{ type: 'childList', target: view, addedNodes: [hidden, prepended, late], removedNodes: [] }]);
     expect(view.firstElementChild).toBe(view.querySelector('[data-settings-search-input]').parentElement);
 
-    search.value = '초대'; search.dispatch('input');
+    search.value = '가족'; search.dispatch('input');
+    const familyRows = view.querySelectorAll('[data-settings-search-jumps] button');
+    expect(familyRows.map((row) => row.textContent)).toEqual(['가족 이름', '가족 구성원']);
+    expect(view.querySelector('[data-settings-search-jumps]').findAll((node) => node.tagName === 'H3').map((heading) => heading.textContent)).toEqual(['가족']);
     expect(late.classList.contains('settings-search-hidden')).toBe(false);
     expect(themeCard.classList.contains('settings-search-hidden')).toBe(true);
     expect(hidden.hidden).toBe(true);
     expect(hidden.classList.contains('settings-search-hidden')).toBe(false);
-    const jump = view.querySelector('[data-settings-search-jumps]').children[0];
+    const jump = familyRows.find((row) => row.textContent === '가족 구성원');
     expect(jump.textContent).toBe('가족 구성원');
     jump.dispatch('click');
     expect(late.scrolled).toBe(true);
@@ -147,5 +156,8 @@ describe('settings search', () => {
     expect(search.value).toBe('');
     expect(themeCard.classList.contains('settings-search-hidden')).toBe(false);
     expect(hidden.hidden).toBe(true);
+    const allRows = view.querySelectorAll('[data-settings-search-jumps] button');
+    expect(allRows).toHaveLength(3);
+    expect(new Set(allRows.map((row) => row.textContent)).size).toBe(3);
   });
 });
