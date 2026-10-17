@@ -31,6 +31,7 @@ function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", bi
     addEventListener(type, listener) { listeners[type] = listener; },
     querySelector(selector) {
       if (selector === ".growth-inline-card") return markup.includes("growth-inline-card") ? {} : null;
+      if (selector.startsWith(".growth-inline-point--")) return { focus: () => { focusCalls += 1; } };
       if (selector === "[data-growth-inline-history-toggle]") {
         return markup.includes("data-growth-inline-history-toggle")
           ? { focus: () => { focusCalls += 1; } }
@@ -67,6 +68,7 @@ function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", bi
   const click = (kind, id = "") => listeners.click({
     target: {
       closest(selector) {
+        if (kind === "point" && selector === "[data-growth-chart-entry]") return { dataset: { growthChartEntry: id, growthPointMetric: "weight" } };
         if (kind === "toggle" && selector === "[data-growth-inline-history-toggle]") return {};
         if (kind === "entry" && selector === "[data-growth-inline-entry]") {
           return { dataset: { growthInlineEntry: id } };
@@ -80,6 +82,7 @@ function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", bi
 
   return {
     click,
+    keyPoint: (id, key) => listeners.keydown({ key, preventDefault() {}, target: { closest: () => ({ dataset: { growthChartEntry: id, growthPointMetric: "weight" } }) } }),
     dialogCalls,
     entries,
     setBaby: (nextBaby) => { baby = nextBaby; },
@@ -95,7 +98,7 @@ function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", bi
 const datedEntry = (id, date, weight = 4) => ({ id, date, time: "08:00", weight, height: 55, head: 36 });
 const markers = (markup) => [...markup.matchAll(/<g class="growth-inline-milestone" data-milestone="([^"]+)" data-date="([^"]+)"[^>]*>([\s\S]*?)<\/g>/g)]
   .map(([, label, date, body]) => ({ label, date, body }));
-const pointX = (markup, id) => Number(markup.match(new RegExp(`<g class="growth-inline-point[^>]*data-growth-inline-entry="${id}"[^>]*>[\\s\\S]*?<circle cx="([^"]+)"`))?.[1]);
+const pointX = (markup, id) => Number(markup.match(new RegExp(`<g class="growth-inline-point[^>]*data-growth-chart-entry="${id}"[^>]*>[\\s\\S]*?<circle cx="([^"]+)"`))?.[1]);
 
 describe("inline growth measurement history", () => {
   test("places measurements and visible milestones on an elapsed-date scale", () => {
@@ -169,7 +172,55 @@ describe("inline growth measurement history", () => {
     expect(milestoneLabels).toHaveLength(2);
     const rows = milestoneLabels.map(({ body }) => Number(body.match(/<text[^>]*y="([^"]+)"/)[1]));
     expect(rows[1]).toBeGreaterThan(rows[0]);
-    expect(markup).toContain('aria-label="몸무게 성장 변화 그래프 · 100일 2020.04.09 · 돌 2021.01.01"');
+    expect(markup).toContain('aria-label="키·몸무게·머리둘레 성장 변화 그래프 · 왼쪽 cm, 오른쪽 kg · 100일 2020.04.09 · 돌 2021.01.01"');
+  });
+
+  test("shows all three lines, a shared cm scale, and a separate kg scale", () => {
+    const markup = createHarness([datedEntry("a", "2026-07-01"), { ...datedEntry("b", "2026-08-01", 6), height: 60, head: 40 }]).markup();
+    for (const key of ["height", "weight", "head"]) expect(markup).toContain(`growth-inline-line--${key}`);
+    expect(markup).not.toContain("growth-metric-tabs");
+    expect(markup).toContain('class="weight-axis"');
+    expect(markup).toContain("왼쪽 cm, 오른쪽 kg");
+    const y = (key) => Number(markup.match(new RegExp(`growth-inline-point--${key}[^>]*data-growth-chart-entry="b"[^>]*>[\\s\\S]*?cy="([^"]+)"`))[1]);
+    expect(y("height")).toBeLessThan(y("head"));
+  });
+
+  test("selects a point without editing and shows only that record's values", () => {
+    const entries = [datedEntry("full", "2026-07-01"), { id: "partial", date: "2026-08-01", time: "12:30", weight: 6.2 }];
+    const harness = createHarness(entries);
+    const readings = () => harness.markup().match(/class="growth-inline-readings">([\s\S]*?)<\/div>\s*<\/div>/)[1];
+    expect(readings()).toContain("6.2");
+    expect((readings().match(/—/g) || [])).toHaveLength(2);
+    expect(readings()).not.toContain("55");
+    harness.click("point", "full"); harness.flushFrame();
+    expect(harness.dialogCalls).toEqual([]);
+    expect(harness.markup()).toContain("2026.07.01 · 08:00");
+    expect(readings()).toContain("55");
+    expect(harness.markup()).toMatch(/data-growth-inline-entry="full">기록 수정/);
+    expect(harness.focusCalls()).toBe(1);
+    harness.click("entry", "full");
+    expect(harness.dialogCalls).toEqual([[entries[0]]]);
+  });
+
+  test("supports keyboard selection and falls back when the selected record is removed", () => {
+    const entries = [datedEntry("a", "2026-07-01"), datedEntry("b", "2026-08-01")];
+    const harness = createHarness(entries);
+    harness.keyPoint("a", "Enter"); harness.flushFrame();
+    expect(harness.markup()).toContain("2026.07.01 · 08:00");
+    expect(harness.dialogCalls).toEqual([]);
+    entries.shift(); harness.triggerMutation(); harness.flushFrame();
+    expect(harness.markup()).toContain("2026.08.01 · 08:00");
+    harness.keyPoint("b", " "); harness.flushFrame();
+    expect(harness.dialogCalls).toEqual([]);
+  });
+
+  test("limits the combined plot to 90 records without dropping partial measurements", () => {
+    const entries = Array.from({ length: 91 }, (_, i) => ({ id: `e${i}`, date: new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10), [i % 2 ? "weight" : "height"]: i % 2 ? 4 : 55 }));
+    const markup = createHarness(entries).markup();
+    expect(markup).not.toContain('data-growth-chart-entry="e0"');
+    expect([...markup.matchAll(/data-growth-chart-entry=/g)]).toHaveLength(90);
+    expect(markup).toContain('data-growth-chart-entry="e90"');
+    expect(markup).not.toContain("NaN");
   });
 
   test("renders the latest five rows first and expands to the full history", () => {
@@ -230,7 +281,7 @@ describe("inline growth measurement history", () => {
     expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20261017-growth-milestones-v1" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20261017-growth-combined-v1" }');
     expect(config).toContain('{ name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false }');
   });

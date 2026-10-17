@@ -195,3 +195,15 @@ html[data-family-theme-choice="black"] {
   --theme-care-band-diaper: #86c7a5;
   --theme-care-band-solid: #b2cd8e;
 }
+
+/* Growth series keep their identity across units and themes. */
+:root {
+  --theme-growth-height: #d76586;
+  --theme-growth-weight: #547fb8;
+  --theme-growth-head: #6da45c;
+}
+html[data-family-theme-choice="black"] {
+  --theme-growth-height: #ed96b1;
+  --theme-growth-weight: #91b6e6;
+  --theme-growth-head: #a1ce91;
+}
