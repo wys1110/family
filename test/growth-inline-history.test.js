@@ -18,11 +18,12 @@ const entry = (id, day) => ({
   head: 34 + day / 10,
 });
 
-function createHarness(entries) {
+function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", birthDate: "2026-01-01" }) {
   const listeners = {};
   const frames = [];
   const dialogCalls = [];
   let markup = "";
+  let baby = initialBaby;
   let focusCalls = 0;
   let mutationCallback = null;
 
@@ -42,7 +43,7 @@ function createHarness(entries) {
   };
 
   const context = {
-    activeBaby: () => ({ id: "baby-1", name: "아기" }),
+    activeBaby: () => baby,
     activeBabyEntries: () => entries,
     document: {
       documentElement: { dataset: {} },
@@ -81,6 +82,7 @@ function createHarness(entries) {
     click,
     dialogCalls,
     entries,
+    setBaby: (nextBaby) => { baby = nextBaby; },
     flushFrame,
     focusCalls: () => focusCalls,
     historyIds: () => [...markup.matchAll(/class="growth-inline-history-row"\s+data-growth-inline-entry="([^"]+)"/g)]
@@ -90,7 +92,86 @@ function createHarness(entries) {
   };
 }
 
+const datedEntry = (id, date, weight = 4) => ({ id, date, time: "08:00", weight, height: 55, head: 36 });
+const markers = (markup) => [...markup.matchAll(/<g class="growth-inline-milestone" data-milestone="([^"]+)" data-date="([^"]+)"[^>]*>([\s\S]*?)<\/g>/g)]
+  .map(([, label, date, body]) => ({ label, date, body }));
+const pointX = (markup, id) => Number(markup.match(new RegExp(`<g class="growth-inline-point[^>]*data-growth-inline-entry="${id}"[^>]*>[\\s\\S]*?<circle cx="([^"]+)"`))?.[1]);
+
 describe("inline growth measurement history", () => {
+  test("places measurements and visible milestones on an elapsed-date scale", () => {
+    const harness = createHarness([
+      datedEntry("early", "2025-03-30"),
+      datedEntry("middle", "2025-04-20"),
+      datedEntry("late", "2026-01-10"),
+    ], { id: "baby-1", name: "아기", birthDate: "2025-01-01" });
+    const markup = harness.markup();
+    const points = [pointX(markup, "early"), pointX(markup, "middle"), pointX(markup, "late")];
+    const [hundred, birthday] = markers(markup);
+
+    expect((points[1] - points[0]) / (points[2] - points[0])).toBeCloseTo(21 / 286, 2);
+    expect([hundred.label, hundred.date]).toEqual(["100일", "2025-04-10"]);
+    expect([birthday.label, birthday.date]).toEqual(["돌", "2026-01-01"]);
+    expect(Number(hundred.body.match(/<line[^>]*x1="([^"]+)"/)?.[1])).toBeCloseTo(points[0] + (points[2] - points[0]) * (11 / 286), 1);
+    expect(hundred.body).toMatch(/<line[^>]*x1="([^"]+)"[^>]*x2="\1"/);
+    expect(hundred.body).toContain("100일");
+  });
+
+  test("does not extend the chart to future milestones and ignores a missing birth date", () => {
+    const future = createHarness([datedEntry("now", "2025-02-01")], { id: "baby-1", name: "아기", birthDate: "2025-01-01" });
+    expect(markers(future.markup())).toHaveLength(0);
+    const unknown = createHarness([datedEntry("now", "2025-04-01")], { id: "baby-1", name: "아기" });
+    expect(markers(unknown.markup())).toHaveLength(0);
+  });
+
+  test("rerenders when birth date changes and clamps leap-day birthdays", () => {
+    const leap = createHarness([datedEntry("a", "2025-02-27"), datedEntry("b", "2025-03-01")], { id: "baby-1", name: "아기", birthDate: "2024-02-29" });
+    expect(markers(leap.markup()).map(({ label, date }) => [label, date])).toContainEqual(["돌", "2025-02-28"]);
+
+    const harness = createHarness([datedEntry("a", "2025-02-27"), datedEntry("b", "2025-04-11")], { id: "baby-1", name: "아기", birthDate: "2025-01-01" });
+    expect(markers(harness.markup()).map(({ label, date }) => [label, date])).toContainEqual(["100일", "2025-04-10"]);
+    harness.setBaby({ id: "baby-1", name: "아기", birthDate: "2025-01-02" });
+    harness.triggerMutation();
+    harness.flushFrame();
+    expect(markers(harness.markup()).map(({ label, date }) => [label, date])).toContainEqual(["100일", "2025-04-11"]);
+    expect(markers(harness.markup()).map(({ label }) => label)).not.toContain("돌");
+  });
+
+  test("keeps single-day and duplicate-date chart coordinates finite", () => {
+    for (const entries of [
+      [datedEntry("one", "2025-04-10")],
+      [datedEntry("a", "2025-04-10"), datedEntry("b", "2025-04-10")],
+    ]) {
+      const markup = createHarness(entries, { id: "baby-1", name: "아기", birthDate: "2025-01-01" }).markup();
+      expect([...markup.matchAll(/(?:cx|cy|x1|x2|y1|y2)="([^"]+)"/g)].every(([, value]) => Number.isFinite(Number(value)))).toBe(true);
+      expect(markers(markup).map(({ label }) => label)).toEqual(["100일"]);
+    }
+  });
+
+  test("keeps curve control points within each date interval and culls clustered inner dates", () => {
+    const entries = ["2025-01-01", "2025-01-02", "2025-01-03", "2025-12-31"].map((date, index) => datedEntry(`e${index}`, date, 4 + index));
+    const markup = createHarness(entries).markup();
+    const xs = entries.map(({ id }) => pointX(markup, id));
+    const path = markup.match(/class="growth-inline-line[^>]*d="([^"]+)"/)[1];
+    const segments = [...path.matchAll(/C ([\d.-]+) [\d.-]+, ([\d.-]+) [\d.-]+, ([\d.-]+) [\d.-]+/g)];
+    expect(segments).toHaveLength(entries.length - 1);
+    segments.forEach((segment, index) => {
+      for (const x of segment.slice(1).map(Number)) {
+        expect(x).toBeGreaterThanOrEqual(xs[index]);
+        expect(x).toBeLessThanOrEqual(xs[index + 1]);
+      }
+    });
+    expect(markup).not.toMatch(/class="growth-inline-date"[^>]*>1\.3<\/text>/);
+  });
+
+  test("separates close milestone labels and includes their dates in the accessible chart name", () => {
+    const markup = createHarness([datedEntry("start", "2020-01-01"), datedEntry("end", "2026-01-01")], { id: "baby-1", name: "아기", birthDate: "2020-01-01" }).markup();
+    const milestoneLabels = markers(markup);
+    expect(milestoneLabels).toHaveLength(2);
+    const rows = milestoneLabels.map(({ body }) => Number(body.match(/<text[^>]*y="([^"]+)"/)[1]));
+    expect(rows[1]).toBeGreaterThan(rows[0]);
+    expect(markup).toContain('aria-label="몸무게 성장 변화 그래프 · 100일 2020.04.09 · 돌 2021.01.01"');
+  });
+
   test("renders the latest five rows first and expands to the full history", () => {
     const entries = [entry("e4", 4), entry("e1", 1), entry("e7", 7), entry("e3", 3), entry("e6", 6), entry("e2", 2), entry("e5", 5)];
     const harness = createHarness(entries);
@@ -149,7 +230,7 @@ describe("inline growth measurement history", () => {
     expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20260915-growth-performance-v1" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20261017-growth-milestones-v1" }');
     expect(config).toContain('{ name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false }');
   });
