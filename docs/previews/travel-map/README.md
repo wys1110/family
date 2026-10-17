@@ -1,15 +1,9 @@
-# Travel map verification — 2026-10-03
+# Travel map preview status — 2026-10-17
 
-Generic local demo at `http://127.0.0.1:4173/?demo=1`; no authenticated family-data verification.
+The current provider is Kakao Maps Web JavaScript SDK. Load the JavaScript key from `FAMILY_CONFIG.kakaoMapsJavaScriptKey`; place search remains behind the authenticated Supabase function and its separate `KAKAO_REST_API_KEY` secret. See the [Kakao Maps Web API guide](https://apis.map.kakao.com/web/guide/).
 
-- 390×844 dark, 375×812 white, 1440×900 desktop dark: real OSM tiles and numbered markers render, no horizontal overflow.
-- Marker → matching card highlight and scroll; card → map center without resetting zoom; list-only → card selection restores map and itinerary.
-- Date selection filters pins; all-date pins distinguish days. Date/inbox route separation, missing-coordinate numbering, map reuse, tile retry and destroy covered by `test/travel-map.test.js`.
-- CSS computed pin transform is `none`, avoiding a second offset on top of Leaflet's icon anchor.
-- Screenshots: `mobile-dark.jpg`, `mobile-light.jpg`, `desktop-dark.jpg`.
-- Physical iOS PWA/Android WebView and authenticated two-account flows were not tested in this change.
+The Family Kakao Developers app has these JavaScript origins configured: `https://wys1110.github.io`, `http://localhost:8774`, and `https://localhost` for Capacitor WebView. Origins have no path component. The map is for South Korea; overseas detailed coverage is limited and Japan support is not claimed. The JavaScript key and origins are configured; place search is also locally confirmed through the authenticated flow, with ten real Seoul cafe results returned.
 
-Pinned third-party source: https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz . License: `assets/vendor/leaflet-1.9.4/LICENSE`.
-SHA-256 leaflet.js: `db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a`.
-SHA-256 leaflet.css: `a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6`.
-Tiles follow https://operations.osmfoundation.org/policies/tiles/ : visible attribution, normal browser referrer/cache, no tile prefetch or offline caching.
+Local browser verification of Kakao Maps: at 390px wide, nine map tiles loaded, all three numbered pin buttons were 44px tall, and the map had no horizontal overflow. Zooming from an approximately 500m to 250m view and selecting a place kept the 250m view, confirming selection preserves the user's current zoom. These are local checks only; public deployment is pending.
+
+At 320px wide, local history-map verification loaded 18 Kakao tiles, kept all three pins within map bounds, and showed no horizontal overflow. Pressing Return selected the history detail. These are local checks only; public deployment and actual iOS/Android device checks remain pending. The earlier screenshots and checks in this preview document concerned the retired Leaflet/OpenStreetMap implementation and are not evidence for the current Kakao provider.

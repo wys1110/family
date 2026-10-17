@@ -13,14 +13,15 @@
 - 지도 실패나 위치 없는 기록에서도 일정 목록과 메모 사용 가능
 - 기존 로컬 여행의 `items`, `memories`, `legacy` 자료 보존 및 새 문서 형식으로 정규화
 - `family_trips` 행 단위 저장 마이그레이션, 가족 소속 RLS, revision 조건부 저장과 충돌 거부
-- Geoapify 키가 설정된 경우 인증된 앱 흐름에서 장소 검색 결과를 저장할 수 있는 공급자 훅
+- Kakao Maps Web JavaScript SDK 지도와 핀 렌더링; JavaScript 키는 `FAMILY_CONFIG.kakaoMapsJavaScriptKey`에서 읽는다. 지도 제공자 대체 경로나 fallback은 없다.
+- 장소 검색은 인증된 앱 흐름의 Supabase Edge Function이 Kakao REST API를 호출한다. REST 키는 서버의 `KAKAO_REST_API_KEY` secret으로만 설정한다.
 
 ## 운영 설정 전 확인할 항목
 
 - `supabase/migrations/20260923000000_family_trips.sql` 적용과 운영 RLS 정책 확인
-- `FAMILY_CONFIG.geoapifyKey` 서버 프록시 연동. 브라우저에 비밀 키를 직접 넣지 않으며, 현재 키가 없으면 검색 설정 안내를 표시한다.
-- 실제 Geoapify 한국어·일본어 장소 품질과 사용량 한도 확인
-- 모바일 375/390px, iOS PWA, Android WebView 지도 터치·키보드·safe area 실기기 확인
+- Kakao JavaScript 앱 키와 다음 origin 설정 완료: `https://wys1110.github.io`, `http://localhost:8774`, `https://localhost` (Capacitor WebView). Origin에는 경로를 포함하지 않는다. 인증된 로컬 서울 카페 검색에서 실제 결과 10건을 확인했다.
+- Kakao Maps Web SDK의 상세 지도 범위는 대한민국이며, 해외 상세 지도 및 일본 지원은 확인·보장하지 않는다.
+- 로컬 UI 확인: 390px itinerary 지도와 320px history 지도. 공개 배포 및 실제 iOS/Android 기기 지도 터치·키보드·safe area 확인은 남아 있다.
 - 두 가족 계정으로 동시 저장 충돌·재연결·가족 전환 시 초안 격리 확인
 
 항공·숙소 상품 검색과 예약 완료 상태는 이 버전의 범위에 포함하지 않는다. 외부 지도 링크는 사용자가 확인할 수 있는 보조 경로로만 제공한다.

@@ -1,4 +1,5 @@
 window.FAMILY_CONFIG = {
+  kakaoMapsJavaScriptKey: "41fe2b837588bbcc2e61c0a1eb45edb4",
   supabaseUrl: "https://ljutcgmgtqfkwkxdbiyb.supabase.co",
   supabaseAnonKey: ["sb", "publishable", "PlEeuwC", "", "Ft2Gtv3iT4OcA", "hV461WbY"].join("_"),
 };
@@ -194,9 +195,9 @@ window.FAMILY_CONFIG = {
     { name: "nova-family", version: "20261017-design-harmony-v1" },
     { name: "travel-sharing", version: "20260923-planner-v2", style: false },
     { name: "travel-data", version: "20261013-code-reliability-v1", style: false },
-    { name: "travel-map", version: "20261004-travel-bulk-v2", style: false },
+    { name: "travel-map", version: "20261017-kakao-map-v1", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
-    { name: "travel", version: "20261017-design-harmony-v1" },
+    { name: "travel", version: "20261017-kakao-map-v1" },
   ];
 
   const deferredGroups = {

@@ -49,7 +49,7 @@ test('search and visit status use the same visible records for list, map, route 
  await app.query('  CAFE  ');
  expect(app.ids()).toEqual(['middle']);
  expect(app.calls.render.at(-1)).toEqual(['middle']);expect(app.calls.mount.at(-1)).toEqual(['middle']);
- expect(decodeURIComponent(app.view.innerHTML)).toContain('query=중앙로');
+ expect(decodeURIComponent(app.view.innerHTML)).toContain('link/map/Cafe,33.1,126.1');
  await app.query('아기 의자');expect(app.ids()).toEqual(['middle','note']);
  await app.status('visited');expect(app.ids()).toEqual(['middle']);
  await app.click('data-travel-bulk-start');await app.click('data-travel-bulk-visible');

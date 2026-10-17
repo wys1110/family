@@ -7,17 +7,17 @@
 별도 설정 없이 열면 브라우저의 로컬 저장소에 일정이 저장됩니다.
 
 ```bash
-python3 -m http.server 4173
+python3 -m http.server 8774
 ```
 
-브라우저에서 `http://localhost:4173`을 엽니다.
+브라우저에서 `http://localhost:8774`을 엽니다.
 
 ## 테스트 로그인
 
 로그인 화면의 **테스트 모드로 둘러보기**를 누르거나 주소 뒤에 `?demo=1`을 붙이면 가상 가족 데이터로 앱 전체를 확인할 수 있습니다.
 
 ```text
-http://localhost:4173/?demo=1
+http://localhost:8774/?demo=1
 https://wys1110.github.io/family/?demo=1
 ```
 
@@ -34,10 +34,23 @@ https://wys1110.github.io/family/?demo=1
 window.FAMILY_CONFIG = {
   supabaseUrl: "https://YOUR_PROJECT.supabase.co",
   supabaseAnonKey: "YOUR_ANON_KEY",
+  kakaoMapsJavaScriptKey: "YOUR_KAKAO_JAVASCRIPT_KEY",
 };
 ```
 
 anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema.sql`의 Row Level Security 정책이 담당합니다. `service_role` 키는 절대 넣지 마세요.
+
+## 카카오 지도 설정
+
+여행 지도는 카카오맵 Web JavaScript SDK를 사용합니다. 카카오 개발자 앱 `우리 가족` (ID `1604339`)의 JavaScript 키를 `config.js`의 `FAMILY_CONFIG.kakaoMapsJavaScriptKey`에 넣고, 앱 설정의 Web 플랫폼에 다음 JavaScript 출처를 등록합니다.
+
+- 공개 웹: `https://wys1110.github.io`
+- 로컬 미리보기: `http://localhost:8774`
+- Capacitor WebView 출처: `https://localhost`
+
+출처는 경로 없이 origin만 등록합니다. JavaScript 키는 브라우저 지도용 공개 키로 `config.js`에 설정하지만, REST 키는 브라우저에 넣지 않습니다. 지도가 표시되지 않으면 등록된 origin, Web 플랫폼, JavaScript 키를 확인합니다. [카카오맵 Web API 안내](https://apis.map.kakao.com/web/guide/)
+
+카카오 지도는 대한민국 지도 사용을 기준으로 합니다. 해외 지역의 상세 지도 지원은 제한적이며 일본을 포함한 해외 지도를 지원한다고 가정하지 않습니다. `https://localhost` 설정의 Android 기기 동작은 아직 실제 기기에서 확인되지 않았습니다.
 
 ## 로그인은 됐는데 가족 데이터가 안 보일 때
 
@@ -202,9 +215,9 @@ select baby_id, due_at, status, attempt_count from public.baby_ai_refresh_queue 
 
 장소 추가에서 지역과 관광지·음식점·카페·숙소를 고르면 카카오 키워드 검색 결과를 보여 줍니다. 결과를 누르면 이름·주소·좌표·출처와 선택한 날짜·방문 여부가 함께 저장되고, 같은 창에서 다음 장소를 추가할 수 있습니다. 검색 결과는 카카오 검색 순서이며 가족 맞춤 추천이나 현재 GPS 주변 추천은 아닙니다. 이름으로 직접 남기는 기록은 좌표를 추정하지 않습니다.
 
-1. [카카오 개발자 앱](https://developers.kakao.com/console/app)의 REST API 키를 준비합니다.
+1. [카카오 개발자 앱](https://developers.kakao.com/console/app)의 REST API 키를 준비합니다. 지도용 JavaScript 키와는 별도입니다.
 2. [Supabase Edge Function Secrets](https://supabase.com/dashboard/project/ljutcgmgtqfkwkxdbiyb/functions/secrets)에 `KAKAO_REST_API_KEY`로 등록합니다. 키는 브라우저 코드나 채팅에 넣지 않습니다.
 3. `supabase functions deploy travel-place-search --project-ref ljutcgmgtqfkwkxdbiyb`로 배포합니다. JWT 검증과 함수 내부의 로그인·가구 가입 검증이 모두 필요합니다.
 4. 가족 계정으로 장소 추가를 열고 지역을 입력해 실제 결과·추가·지도 위치를 확인합니다. 키 존재 확인은 실제 검색 성공을 뜻하지 않습니다.
 
-데모·비로그인 상태나 키가 없는 환경에서는 검색 영역을 숨기고 이름으로 추가할 수 있게 합니다. 검색 실패는 입력을 보존하고 오류를 표시합니다. 기존 Geoapify 검색 경로는 사용하지 않습니다.
+데모·비로그인 상태나 키가 없는 환경에서는 검색 영역을 숨기고 이름으로 추가할 수 있게 합니다. 검색 실패는 입력을 보존하고 오류를 표시합니다.
