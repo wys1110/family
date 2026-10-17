@@ -46,6 +46,18 @@
       : `${month}.${day}`;
   };
 
+  const dayNumber = (date) => Date.parse(`${date}T00:00:00Z`) / 86400000;
+
+  const babyMilestones = () => {
+    const birthDate = typeof activeBaby === "function" ? activeBaby()?.birthDate : "";
+    const birthDay = dayNumber(birthDate);
+    if (!Number.isFinite(birthDay) || new Date(birthDay * 86400000).toISOString().slice(0, 10) !== birthDate) return [];
+    const [year, month, day] = birthDate.split("-").map(Number);
+    const birthday = Date.UTC(year + 1, month - 1, Math.min(day, new Date(Date.UTC(year + 1, month, 0)).getUTCDate())) / 86400000;
+    // Birth is day one for the 100-day celebration; 돌 is the next calendar birthday.
+    return [{ label: "100일", day: birthDay + 99 }, { label: "돌", day: birthday }];
+  };
+
   const formatValue = (value, metricKey, withUnit = true) => {
     const number = numberValue(value);
     if (number === null) return "—";
@@ -94,9 +106,9 @@
       const p1 = points[index];
       const p2 = points[index + 1];
       const p3 = points[index + 2] || p2;
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1x = Math.min(p2.x, p1.x + (p2.x - p0.x) / 6);
       const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2x = Math.max(p1.x, p2.x - (p3.x - p1.x) / 6);
       const cp2y = p2.y - (p3.y - p1.y) / 6;
       path += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
     }
@@ -120,9 +132,16 @@
     entries = entries.filter(entry => numberValue(entry[selectedMetric]) !== null).slice(-90);
     if (!entries.length) return `<p class="growth-metric-empty">${escapeText(metrics[selectedMetric].label)} 기록이 아직 없어요.</p>`;
     const width = 420;
-    const height = 252;
     const padding = { left: 43, right: 25, top: 25, bottom: 38 };
     const plotWidth = width - padding.left - padding.right;
+    const firstDay = dayNumber(entries[0].date);
+    const lastDay = dayNumber(entries.at(-1).date);
+    const milestones = babyMilestones().filter(({ day }) => day >= firstDay && day <= lastDay)
+      .map((milestone) => ({ ...milestone, date: new Date(milestone.day * 86400000).toISOString().slice(0, 10) }));
+    const crowdedMilestones = milestones.length === 2 && (milestones[1].day - milestones[0].day) / (lastDay - firstDay) * plotWidth < 56;
+    const milestoneSpace = milestones.length ? (crowdedMilestones ? 48 : 24) : 0;
+    const height = 252 + milestoneSpace;
+    padding.bottom += milestoneSpace;
     const plotHeight = height - padding.top - padding.bottom;
     const defaultRanges = {
       height: { min: 45, max: 65 },
@@ -138,9 +157,10 @@
         fallbackMargins[key],
       ),
     ]));
-    const xForIndex = (index) => entries.length === 1
+    const xForDay = (day) => firstDay === lastDay
       ? padding.left + plotWidth / 2
-      : padding.left + (index / (entries.length - 1)) * plotWidth;
+      : padding.left + ((day - firstDay) / (lastDay - firstDay)) * plotWidth;
+    const xForIndex = (index) => xForDay(dayNumber(entries[index].date));
     const yForValue = (value, metricKey) => {
       const scale = scales[metricKey];
       return padding.top + ((scale.max - value) / scale.range) * plotHeight;
@@ -193,19 +213,34 @@
     const labelIndexes = entries.length === 1
       ? [0]
       : [...new Set([0, Math.round((entries.length - 1) / 2), entries.length - 1])];
-    const dates = labelIndexes.map((index, labelIndex) => {
-      const anchor = labelIndex === 0 && entries.length > 1
+    const dateIndexes = [...new Set(labelIndexes.map((index) => entries.findIndex((entry) => entry.date === entries[index].date)))].filter((index, position, indexes) =>
+      position === 0 || position === indexes.length - 1 || (xForIndex(index) - padding.left >= 56 && width - padding.right - xForIndex(index) >= 56));
+    const dates = dateIndexes.map((index, labelIndex) => {
+      const anchor = labelIndex === 0 && firstDay !== lastDay
         ? "start"
-        : labelIndex === labelIndexes.length - 1 && entries.length > 1
+        : labelIndex === dateIndexes.length - 1 && firstDay !== lastDay
           ? "end"
           : "middle";
-      return `<text class="growth-inline-date" x="${xForIndex(index).toFixed(2)}" y="${height - 10}" text-anchor="${anchor}">${escapeText(formatDate(entries[index].date))}</text>`;
+      return `<text class="growth-inline-date" x="${xForIndex(index).toFixed(2)}" y="${height - padding.bottom + 28}" text-anchor="${anchor}">${escapeText(formatDate(entries[index].date))}</text>`;
+    }).join("");
+
+    const milestoneMarkers = milestones.map(({ label, day, date }, index) => {
+      const x = xForDay(day);
+      const labelX = Math.max(padding.left + 22, Math.min(width - padding.right - 22, x));
+      const labelY = height - padding.bottom + 52 + (crowdedMilestones ? index * 24 : 0);
+      return `<g class="growth-inline-milestone" data-milestone="${label}" data-date="${date}">
+        <title>${label} · ${escapeText(formatDate(date, true))}</title>
+        <line x1="${x.toFixed(2)}" y1="${padding.top}" x2="${x.toFixed(2)}" y2="${height - padding.bottom + 7}"></line>
+        <rect x="${(labelX - 22).toFixed(2)}" y="${labelY - 15}" width="44" height="21" rx="10.5"></rect>
+        <text x="${labelX.toFixed(2)}" y="${labelY}">${label}</text>
+      </g>`;
     }).join("");
 
     return `
-      <svg class="growth-inline-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeText(metrics[selectedMetric].label)} 성장 변화 그래프">
+      <svg class="growth-inline-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeText(metrics[selectedMetric].label)} 성장 변화 그래프${milestones.map(({ label, date }) => ` · ${label} ${formatDate(date, true)}`).join("")}">
         ${grid}
         <line class="growth-inline-baseline" x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}"></line>
+        ${milestoneMarkers}
         ${series}
         ${dates}
       </svg>
@@ -213,8 +248,8 @@
   };
 
   const signatureFor = (entries) => {
-    const babyId = typeof activeBaby === "function" ? activeBaby()?.id || "" : "";
-    return `${babyId}|${entries.map((entry) => [entry.id, entry.date, entry.time || "", entry.height || "", entry.weight || "", entry.head || ""].join(":")).join("|")}`;
+    const baby = typeof activeBaby === "function" ? activeBaby() : null;
+    return `${baby?.id || ""}:${baby?.birthDate || ""}|${entries.map((entry) => [entry.id, entry.date, entry.time || "", entry.height || "", entry.weight || "", entry.head || ""].join(":")).join("|")}`;
   };
 
   const renderInlineChart = () => {

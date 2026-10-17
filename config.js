@@ -163,7 +163,7 @@ window.FAMILY_CONFIG = {
     { name: "calendar-event-range", version: "20260720-mobile-font-step-up-v5", script: false },
     { name: "daily-verse-typography", version: "20260718-font-v2", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
-    { name: "growth-inline-chart", version: "20260915-growth-performance-v1" },
+    { name: "growth-inline-chart", version: "20261017-growth-milestones-v1" },
     { name: "growth-inline-icon-cleanup", version: "20260718-v1", style: false },
     { name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false },
     { name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false },
