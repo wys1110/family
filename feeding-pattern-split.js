@@ -8,17 +8,17 @@ function careCurrentTimeMarker(now) {
   const angle = minutes / 4;
   const guideStart = clockPoint(angle, 88);
   const lineStart = clockPoint(angle, 134);
-  const labelBase = clockPoint(angle, 156);
+  const labelBase = clockPoint(angle, 165);
   const radians = angle * Math.PI / 180;
   const nearestCardinal = Math.round(angle / 90) * 90;
   const cardinalOffset = (angle - nearestCardinal + 540) % 360 - 180;
   const labelDirection = cardinalOffset < 0 ? -1 : 1;
-  const labelOffset = Math.max(0, 32 - Math.abs(cardinalOffset) * 1.2) * labelDirection;
+  const labelOffset = Math.max(0, 35 - Math.abs(cardinalOffset) * 1.2) * labelDirection;
   const labelX = Math.max(45, Math.min(315, labelBase.x + Math.cos(radians) * labelOffset));
   const labelY = Math.max(31, Math.min(329, labelBase.y + Math.sin(radians) * labelOffset));
   const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const accessibleTime = `${now.getHours()}시 ${now.getMinutes()}분`;
-  return `<g class="care-band-current-time" data-current-minute="${minutes}" role="img" aria-label="현재 시각 ${accessibleTime}"><title>현재 시각 ${time}</title><line class="care-band-now-guide" x1="${guideStart.x.toFixed(1)}" y1="${guideStart.y.toFixed(1)}" x2="${lineStart.x.toFixed(1)}" y2="${lineStart.y.toFixed(1)}"></line><circle class="care-band-now-dot" cx="${lineStart.x.toFixed(1)}" cy="${lineStart.y.toFixed(1)}" r="3"></circle><text class="care-band-now-text" x="${labelX.toFixed(1)}" y="${(labelY + 3.5).toFixed(1)}" text-anchor="middle">${time}</text></g>`;
+  return `<g class="care-band-current-time" data-current-minute="${minutes}" role="img" aria-label="현재 시각 ${accessibleTime}"><title>현재 시각 ${time}</title><line class="care-band-now-guide" x1="${guideStart.x.toFixed(1)}" y1="${guideStart.y.toFixed(1)}" x2="${lineStart.x.toFixed(1)}" y2="${lineStart.y.toFixed(1)}"></line><circle class="care-band-now-dot" cx="${lineStart.x.toFixed(1)}" cy="${lineStart.y.toFixed(1)}" r="3"></circle><rect class="care-band-now-label" x="${(labelX - 23).toFixed(1)}" y="${(labelY - 10).toFixed(1)}" width="46" height="20" rx="10"></rect><text class="care-band-now-text" x="${labelX.toFixed(1)}" y="${(labelY + 3.5).toFixed(1)}" text-anchor="middle">${time}</text></g>`;
 }
 
 (() => {
