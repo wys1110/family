@@ -27,6 +27,22 @@ test("current time marker stays within the care band and shows a readable time",
   expect(html).toMatch(/class="care-band-now-label" x="[\d.]+" y="[\d.]+" width="46" height="20" rx="10"/);
 });
 
+test("current time dotted guide stays inside the band at each clock quadrant", () => {
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(`${pointHelper}\n${emojiHelper}`, context);
+  const css = readFileSync("feeding-pattern-split.css", "utf8");
+  const radius = Number(renderer.match(/class="care-band-track"[^>]+r="([\d.]+)"/)[1]);
+  const bandWidth = Number(css.match(/\.care-band-track\s*\{[^}]*stroke-width:\s*([\d.]+)/)[1]);
+  const cap = Number(css.match(/\.care-band-now-guide\s*\{[^}]*stroke-width:\s*([\d.]+)/)[1]) / 2;
+  for (const minutes of [0, 360, 720, 913, 1080, 1439]) {
+    const html = context.careCurrentTimeMarker(new Date(2000, 0, 1, 0, minutes));
+    const [, x1, y1, x2, y2] = html.match(/class="care-band-now-guide" x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)"/).map(Number);
+    expect(Math.hypot(x1 - 180, y1 - 180) - cap, `inner edge at minute ${minutes}`).toBeGreaterThanOrEqual(radius - bandWidth / 2);
+    expect(Math.hypot(x2 - 180, y2 - 180) + cap, `outer edge at minute ${minutes}`).toBeLessThanOrEqual(radius + bandWidth / 2);
+  }
+});
+
 test("split care clock renders categorized markers and duration ranges at the right times", () => {
   const elements = {
     "#carePatternDateLabel": {},

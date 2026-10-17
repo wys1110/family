@@ -6,7 +6,7 @@ function careRecordEmoji(entry, type) {
 function careCurrentTimeMarker(now) {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const angle = minutes / 4;
-  const guideStart = clockPoint(angle, 72);
+  const guideStart = clockPoint(angle, 88);
   const lineStart = clockPoint(angle, 128);
   const labelBase = clockPoint(angle, 150);
   const radians = angle * Math.PI / 180;
