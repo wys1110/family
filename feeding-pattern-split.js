@@ -7,13 +7,13 @@ function careCurrentTimeMarker(now) {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const angle = minutes / 4;
   const guideStart = clockPoint(angle, 88);
-  const lineStart = clockPoint(angle, 128);
-  const labelBase = clockPoint(angle, 150);
+  const lineStart = clockPoint(angle, 134);
+  const labelBase = clockPoint(angle, 156);
   const radians = angle * Math.PI / 180;
   const nearestCardinal = Math.round(angle / 90) * 90;
   const cardinalOffset = (angle - nearestCardinal + 540) % 360 - 180;
   const labelDirection = cardinalOffset < 0 ? -1 : 1;
-  const labelOffset = Math.max(0, 28 - Math.abs(cardinalOffset) * 1.4) * labelDirection;
+  const labelOffset = Math.max(0, 32 - Math.abs(cardinalOffset) * 1.2) * labelDirection;
   const labelX = Math.max(45, Math.min(315, labelBase.x + Math.cos(radians) * labelOffset));
   const labelY = Math.max(31, Math.min(329, labelBase.y + Math.sin(radians) * labelOffset));
   const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
