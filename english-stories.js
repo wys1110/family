@@ -384,12 +384,7 @@
       (switchView = i));
   }
   function p() {
-    const e = l();
-    ((document.querySelector("#englishTodayTitle").textContent = e.title),
-      (document.querySelector("#englishTodayCopy").textContent = e.koreanTitle),
-      v(),
-      S(),
-      w());
+    (v(), S(), w());
   }
   function v() {
     const e = d();
@@ -640,8 +635,7 @@
       </header>
 
       <section class="english-today-card">
-        <div><span class="english-today-label">TODAY'S STORY</span><h3 id="englishTodayTitle"></h3><p id="englishTodayCopy"></p></div>
-        <button type="button" id="englishOpenToday">오늘의 동화 보기 <i>›</i></button>
+        <button type="button" id="englishOpenToday" aria-label="오늘의 동화 보기">오늘의 동화 보기 <i aria-hidden="true">›</i></button>
       </section>
 
       <section class="english-story-player" id="englishStoryPlayer">

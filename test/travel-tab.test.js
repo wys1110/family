@@ -210,7 +210,7 @@ test('travel tab loads only archive modules and has no booking-search workspace'
   expect(configSource).toContain("travel: ['travel-data', 'travel-map', 'travel-management', 'travel']");
   expect(configSource).not.toContain("travel: ['travel-data', 'travel-providers', 'travel-map', 'travel']");
   expect(deferredSource).toContain("createTab('travel', '✈️ 여행')");
-  expect(travelSource).toContain('FAMILY TRAVEL ARCHIVE');
+  expect(travelSource).not.toContain('FAMILY TRAVEL ARCHIVE');
   expect(travelSource).toContain('data-travel-page="summary"');
   expect(travelSource).toContain('data-travel-add-place');
   expect(travelSource).not.toContain('항공·숙소 찾기');
@@ -220,7 +220,7 @@ test('travel tab loads only archive modules and has no booking-search workspace'
 
 test('travel page introduction keeps Korean words together on narrow mobile headers', () => {
   expect(travelCssSource).toMatch(/\.travel-page-header p:not\(\.eyebrow\)[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s);
-  expect(configSource).toContain('{ name: "travel", version: "20261014-header-wrap-v1" }');
+  expect(configSource).toContain('{ name: "travel", version: "20261017-design-harmony-v1" }');
 });
 
 test('the dynamically-created travel tab remains navigable after its deferred load', () => {

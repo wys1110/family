@@ -43,10 +43,20 @@ function setup({ user = 'a', store = new Map(), demo = false } = {}) {
   const node = id => nodes.get(`#${id}`);
   const choose = id => node('englishLibrary').click({ closest: () => ({ dataset: { storyId: id } }) });
   return { node, choose, context, state, events, spoken, notices, store, play: () => node('englishPlayButton').click(),
+    today: () => node('englishOpenToday').click(),
     leave: () => context.switchView('calendar'), end: () => spoken.at(-1).onend(),
     line: index => node('englishSentenceList').click({ closest: () => ({ dataset: { playLine: String(index) } }) }),
   };
 }
+
+test('today action returns to the daily story after choosing a library story', () => {
+  const h = setup();
+  const todayTitle = h.node('englishStoryTitle').textContent;
+  h.choose('moon-soft-blanket');
+  expect(h.node('englishStoryTitle').textContent).not.toBe(todayTitle);
+  h.today();
+  expect(h.node('englishStoryTitle').textContent).toBe(todayTitle);
+});
 
 function interrupted(h) { h.choose(storyId); h.play(); h.end(); h.end(); h.leave(); }
 

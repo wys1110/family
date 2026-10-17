@@ -33,6 +33,7 @@
   view.dataset.familyAdminModule = '';
   view.hidden = true;
   view.innerHTML = `
+    <header class="admin-page-header"><h2>관리</h2><span>앱 전체 운영</span></header>
     <section class="settings-card global-admin-card" aria-labelledby="globalAdminTitle" data-admin-collapsed="true">
       <div class="settings-heading global-admin-heading">
         <span class="settings-mark" aria-hidden="true">♛</span>
