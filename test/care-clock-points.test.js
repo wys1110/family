@@ -24,7 +24,21 @@ test("current time marker stays within the care band and shows a readable time",
   expect(html).toContain('>10:18</text>');
   expect(html).toMatch(/class="care-band-now-guide" x1="[\d.]+" y1="[\d.]+" x2="[\d.]+" y2="[\d.]+"/);
   expect(html).not.toContain('class="care-band-now-line"');
-  expect(html).toMatch(/class="care-band-now-label" x="[\d.]+" y="[\d.]+" width="46" height="20" rx="10"/);
+  expect(html).not.toContain('class="care-band-now-halo"');
+  expect(html).not.toContain("<rect");
+  expect(html).toMatch(/class="care-band-now-dot"[^>]+r="3"/);
+});
+
+test("current time label follows the guide and only shifts clear of hour numbers", () => {
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(`${pointHelper}\n${emojiHelper}`, context);
+  for (const [hour, minute, x, y] of [[15, 40, 57.1, 269.5], [0, 0, 208, 34.5], [6, 0, 315, 211.5]]) {
+    const html = context.careCurrentTimeMarker(new Date(2000, 0, 1, hour, minute));
+    const [, labelX, labelY] = html.match(/class="care-band-now-text" x="([\d.]+)" y="([\d.]+)"/).map(Number);
+    expect(labelX).toBeCloseTo(x, 1);
+    expect(labelY).toBeCloseTo(y, 1);
+  }
 });
 
 test("current time dotted guide stays inside the band at each clock quadrant", () => {
