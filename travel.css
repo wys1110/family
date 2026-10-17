@@ -534,24 +534,25 @@ html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-mo
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-modal-panel form :is(button[type="submit"],.travel-manual-place > button[type="submit"]) { position:sticky; bottom:0; z-index:2; min-height:48px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-item-menu .travel-delete-action { color:var(--red); }
 
-/* Leaflet owns its panes and transforms; the map stays below dialogs and tabs. */
+/* Kakao owns the map panes; keep them below dialogs and tabs. */
 #travelView .travel-map-canvas { isolation:isolate; }
-#travelView .travel-leaflet-map { height:300px; width:100%; background:var(--nova-soft); }
+#travelView .travel-kakao-map { position:relative; z-index:0; height:300px; width:100%; background:var(--nova-soft); }
+#travelView .travel-map-zoom { position:absolute; top:10px; right:10px; z-index:2; display:grid; gap:4px; }
+#travelView .travel-map-zoom button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid var(--nova-line); border-radius:10px; background:var(--nova-card); color:var(--nova-text); font-size:23px; cursor:pointer; }
+#travelView .travel-map-zoom button:focus-visible { outline:3px solid var(--nova-accent); outline-offset:2px; }
 #travelView .travel-map-status { color:var(--nova-muted); font-size:13px; }
 html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-map-marker .travel-map-pin { inset:0; transform:none; }
+#travelView :is(.travel-map-marker,.travel-history-marker) { position:relative; display:block; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; border:0; background:transparent; cursor:pointer; }
 #travelView .travel-map-marker:focus-visible { outline:3px solid var(--nova-accent); border-radius:50%; }
-#travelView .leaflet-control-attribution { background:var(--nova-card); color:var(--nova-text); }
-#travelView .leaflet-control-attribution a { color:var(--nova-accent); }
-#travelView .leaflet-control-zoom a { width:44px; height:44px; line-height:44px; background:var(--nova-card); color:var(--nova-text); }
 #travelView button.travel-item-number { border:0; cursor:pointer; min-width:44px; min-height:44px; }
 #travelView .travel-history-map h4 { margin:0 0 10px; font-size:14px; }
-#travelView .travel-history-map .travel-leaflet-map { height:320px; }
+#travelView .travel-history-map .travel-kakao-map { height:320px; }
 #travelView .travel-history-dot { position:absolute; top:50%; left:50%; width:14px; height:14px; border:2px solid var(--nova-card); border-radius:50%; background:var(--nova-accent); box-shadow:var(--nova-shadow); transform:translate(-50%,-50%); }
 #travelView .travel-history-dot.active { width:18px; height:18px; outline:2px solid var(--nova-accent); outline-offset:2px; }
 #travelView .travel-history-marker:focus-visible { outline:3px solid var(--nova-accent); border-radius:50%; }
 #travelView .travel-history-map .travel-map-selected span { display:grid; gap:2px; padding-top:6px; }
 #travelView .travel-history-map .travel-map-selected small { color:var(--nova-muted); font-size:11px; }
 @media(max-width:767px) {
-  #travelView .travel-leaflet-map { height:260px; }
+  #travelView .travel-kakao-map { height:260px; }
   html[data-family-design="nova"][data-family-theme-choice] #travelView .travel-itinerary-item { grid-template-columns:44px minmax(0,1fr); }
 }

@@ -220,7 +220,7 @@ test('travel tab loads only archive modules and has no booking-search workspace'
 
 test('travel page introduction keeps Korean words together on narrow mobile headers', () => {
   expect(travelCssSource).toMatch(/\.travel-page-header p:not\(\.eyebrow\)[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s);
-  expect(configSource).toContain('{ name: "travel", version: "20261017-design-harmony-v1" }');
+  expect(configSource).toContain('{ name: "travel", version: "20261017-kakao-map-v1" }');
 });
 
 test('the dynamically-created travel tab remains navigable after its deferred load', () => {
@@ -427,11 +427,13 @@ test('trip save shows a safe inline error and retries with the entered preset', 
 test('day-scoped add defaults and external map route use the selected date or inbox', () => {
   const lines = travelSource.split('\n');
   const activeItems = travelSource.match(/  const activeItems = item => \{[\s\S]*?\n  \};/)?.[0];
-  const functions = ['const itineraryOrder =', 'const defaultDayIndex =', 'const daySelect =', 'const routeUrl ='];
-  const extracted = [activeItems, ...functions.map(prefix => lines.find(line => line.trimStart().startsWith(prefix)))];
+  const functions = ['const itineraryOrder =', 'const defaultDayIndex =', 'const daySelect ='];
+  const route = travelSource.match(/  const routeUrl = item => \{[\s\S]*?\n  \};/)?.[0];
+  const extracted = [activeItems, route, ...functions.map(prefix => lines.find(line => line.trimStart().startsWith(prefix)))];
   expect(extracted.every(Boolean)).toBe(true);
   const context = {
     current: { tab: 'day-1' },
+    map: { placePoints: items => items.filter(item => Number.isFinite(item.place?.lat) && Number.isFinite(item.place?.lng)) },
     days: () => ['2026-10-01', '2026-10-02'],
     dayLabel: (_trip, index) => `DAY ${index + 1}`,
     fmtDate: value => value,
@@ -451,13 +453,18 @@ test('day-scoped add defaults and external map route use the selected date or in
     { id: 'inbox', type: 'place', title: '미정', dayIndex: null, order: 1, place: { address: '주소 미정' } },
   ] };
   context.trip = trip;
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://www.google.com/maps/search/?api=1&query=%EC%A3%BC%EC%86%8C%20B');
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/search/%EC%A3%BC%EC%86%8C%20B');
   context.current.tab = 'inbox';
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://www.google.com/maps/search/?api=1&query=%EC%A3%BC%EC%86%8C%20%EB%AF%B8%EC%A0%95');
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/search/%EC%A3%BC%EC%86%8C%20%EB%AF%B8%EC%A0%95');
   context.current.tab = 'all';
   const allUrl = vm.runInContext('decodeURIComponent(routeUrl(trip))', context);
   expect(allUrl).toContain('주소 A');
-  expect(allUrl).toContain('주소 미정');
+  expect(allUrl).not.toContain('google.com');
+  trip.items[0].place = { lat:37.56,lng:126.97 };
+  trip.items[1].place = { lat:37.57,lng:126.98 };
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/from/A,37.56,126.97/to/B,37.57,126.98');
+  context.current.tab = 'day-1';
+  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/map/B,37.57,126.98');
 });
 
 test('planner capture controls preserve day context, details clicks, and null inbox moves', async () => {

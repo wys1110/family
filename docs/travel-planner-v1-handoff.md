@@ -49,18 +49,18 @@ V1 제외: 항공·숙소 상품 검색/예약, AI 추천, 자동 동선 최적�
 
 ## 3. 지도와 검색 — 결정
 
-- Leaflet + Geoapify 래스터 지도 타일. Leaflet 버전 고정, 필요한 자산은 여행 탭 최초 진입 때만 로드.
-- 이름/주소 검색: Geoapify Geocoding. 주변 분류 검색을 추가한다면 Places API로 분리하며 V1 필수 아님.
-- Geoapify 무료 플랜으로 시작: 공식 가격표 확인 시 3,000 credits/day, 최대 5 requests/sec. 크레딧은 검색 횟수와 같지 않고 타일 요청도 소비한다. 무제한 무료를 약속하지 않는다.
-- 카드/핀에는 사용자가 확인한 장소 스냅샷과 좌표 저장. 공급자·place ID·출처를 함께 남긴다.
-- 지도에 Geoapify/OSM 출처 표시 유지. 공급자 필드를 두어 추후 교체 가능하게 한다.
-- 검색은 인증된 서버 프록시 경유. 사용자·프로젝트 요청 제한과 짧은 검색 캐시 적용. 검색용 키는 서버 secret에만 보관.
-- 타일용 브라우저 키는 별도로 분리, 허용 도메인 제한. Android WebView origin은 따로 검증. 제한을 없애 해결하지 않는다.
+- 지도: 카카오맵 Web JavaScript SDK. Leaflet, Geoapify 타일 및 OpenStreetMap 타일은 사용하지 않는다. SDK와 필요한 스타일은 여행 탭 진입 시 로드한다.
+- 장소 검색: 인증된 Supabase Edge Function이 카카오 Local 키워드 검색 REST API를 호출한다. `KAKAO_REST_API_KEY`는 함수 secret으로만 보관하며 지도용 JavaScript 키와 분리한다.
+- 지도용 공개 키는 `FAMILY_CONFIG.kakaoMapsJavaScriptKey`로 설정하고, 카카오 개발자 앱 `우리 가족` (ID `1604339`)의 Web 플랫폼 출처 제한에 등록한다. 허용 origin은 `https://wys1110.github.io`, 로컬 미리보기 `http://localhost:8774`, Capacitor WebView `https://localhost`이다. 경로는 등록하지 않는다.
+- 지도는 대한민국 지도를 기준으로 한다. 해외 상세 지도는 제한적이며, 일본 등 해외 범위는 지원한다고 가정하지 않는다.
+- 카드/핀에는 사용자가 확인한 장소 스냅샷과 좌표를 저장하고 카카오 출처와 place ID를 보존한다.
+- 로컬/웹 출처 제한을 풀어 오류를 해결하지 않는다. Android WebView 설정은 실제 기기에서 확인하기 전까지 검증 완료로 보고하지 않는다.
+- 공식 안내: [카카오맵 Web API](https://apis.map.kakao.com/web/guide/).
 - 응답 대기 중 새 검색 시작 시 이전 응답 폐기. 가족 전환 시 진행 중 요청도 취소/무효화.
 - 연결선은 장소 순서를 잇는 직선이며 항상 '방문 순서 · 실제 이동 경로 아님' 표시. 메모는 연결선에 영향 없음.
 - 길찾기는 선택한 두 장소의 좌표를 이용한 외부 지도 링크로 연다. 다중 경유지 제한을 피하고 실제 이동시간을 추정 표시하지 않는다.
 - 지도 로딩 실패 시 일정 목록은 사용 가능. 검색 실패 시 입력 보존, 재시도 제공. 지도도 불가하면 위치 없는 메모만 허용.
-- 한국어/일본어 POI 품질은 아직 실측하지 않았다. 키 설정 후 오키나와 숙소·음식점·관광지 및 국내 장소로 검증한다. 검색 기능을 주소 검색만으로 충족했다고 보고하지 않는다. 품질이 부족하면 결과를 보고하고 공급자 변경은 별도 결정한다.
+- Kakao 지도는 로컬 브라우저에서 390px itinerary 및 320px history 너비로 타일·핀·선택 동작을 확인했다. 인증된 로컬 서울 카페 검색은 실제 결과 10건을 반환했다. 해외 상세 지도나 일본 지원은 주장하지 않는다. 공급자 범위 밖 지명 검색 결과를 실제 지도 지원으로 간주하지 않는다.
 
 ## 4. 데이터와 저장
 
@@ -139,10 +139,7 @@ V1 제외: 항공·숙소 상품 검색/예약, AI 추천, 자동 동선 최적�
 
 ## 근거 / 남은 환경 준비
 
-- Leaflet: https://leafletjs.com/reference.html
-- Geoapify 가격: https://www.geoapify.com/pricing/ (2026-09-23 조회)
-- Places 저장 허용/출처: https://apidocs.geoapify.com/docs/places/
-- 이름·주소 검색: https://apidocs.geoapify.com/docs/geocoding/
+- Kakao Maps Web API: https://apis.map.kakao.com/web/guide/
 - RLS: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase changelog markdown은 이번 조회 도구에서 content-type 제한으로 읽지 못했다. 실제 구현 전 다시 확인한다.
-- Geoapify 키 발급/설정, 실제 검색 품질, 운영 DB 스키마/접근권한, WebView 키 제한은 검증 대기. 설계 결정과 실행 환경 준비를 혼동하지 않는다.
+- Kakao JavaScript 키·허용 origin 설정 및 인증된 국내 장소 검색은 완료했다. 공개 배포, 운영 DB 스키마/접근권한, 실제 iOS/Android WebView 동작은 검증 대기다. 로컬 실행 확인과 운영 환경 검증을 혼동하지 않는다.
