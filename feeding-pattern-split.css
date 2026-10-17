@@ -70,7 +70,6 @@
 #growthView .care-band-period-fill { fill: var(--band-formula); fill-opacity: .16; }
 #growthView .care-band-current-time { pointer-events: none; }
 #growthView .care-band-now-guide { stroke: var(--band-formula); stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 2 4; stroke-opacity: .66; }
-#growthView .care-band-now-line { stroke: var(--band-formula); stroke-width: 2.4; stroke-linecap: round; }
 #growthView .care-band-now-halo { fill: var(--band-surface); stroke: var(--band-formula); stroke-width: 1.5; }
 #growthView .care-band-now-dot { fill: var(--band-formula); }
 #growthView .care-band-now-label { fill: var(--band-surface); stroke: var(--band-formula); stroke-width: 1; }
