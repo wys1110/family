@@ -11,7 +11,7 @@ describe("demo theme boundary", () => {
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
     expect(config).toContain('{ name: "settings", version: "20261013-view-storage-v1" }');
-    expect(read("index.html")).toContain('config.js?v=20261016-care-current-time-guide-v1');
+    expect(read("index.html")).toContain('config.js?v=20261017-care-current-time-contained-v1');
     expect(settings).toContain("const AVAILABLE_THEMES = THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");
