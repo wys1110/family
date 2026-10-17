@@ -33,7 +33,7 @@ test("current time label follows the guide and only shifts clear of hour numbers
   const context = {};
   vm.createContext(context);
   vm.runInContext(`${pointHelper}\n${emojiHelper}`, context);
-  for (const [hour, minute, x, y] of [[15, 40, 57.1, 269.5], [0, 0, 208, 34.5], [6, 0, 315, 211.5]]) {
+  for (const [hour, minute, x, y] of [[15, 40, 52.2, 273], [0, 0, 212, 34.5], [6, 0, 315, 215.5]]) {
     const html = context.careCurrentTimeMarker(new Date(2000, 0, 1, hour, minute));
     const [, labelX, labelY] = html.match(/class="care-band-now-text" x="([\d.]+)" y="([\d.]+)"/).map(Number);
     expect(labelX).toBeCloseTo(x, 1);
@@ -54,6 +54,8 @@ test("current time dotted guide stays inside the band at each clock quadrant", (
     const [, x1, y1, x2, y2] = html.match(/class="care-band-now-guide" x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)"/).map(Number);
     expect(Math.hypot(x1 - 180, y1 - 180) - cap, `inner edge at minute ${minutes}`).toBeGreaterThanOrEqual(radius - bandWidth / 2);
     expect(Math.hypot(x2 - 180, y2 - 180) + cap, `outer edge at minute ${minutes}`).toBeLessThanOrEqual(radius + bandWidth / 2);
+    expect(Math.hypot(x2 - x1, y2 - y1), `guide length at minute ${minutes}`).toBeGreaterThan(45.8);
+    expect(Math.hypot(x2 - 180, y2 - 180) + 3, `dot edge at minute ${minutes}`).toBeLessThan(radius + bandWidth / 2);
   }
 });
 
