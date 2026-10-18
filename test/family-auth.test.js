@@ -436,7 +436,7 @@ describe('family auth recovery', () => {
     expect(index).toContain('<script src="app.js?v=20261018-startup-review-v1"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20261013-code-reliability-v1", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
-    expect(index).toContain('config.js?v=20261018-parenting-chat-v1');
+    expect(index).toContain('config.js?v=20261018-parenting-codex-v1');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-auth.js")');
   });
 });

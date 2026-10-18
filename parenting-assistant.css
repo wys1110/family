@@ -30,3 +30,11 @@
 .assistant-send span { margin-left: 8px; }
 #assistantView .assistant-send:disabled { opacity: .45; cursor: default; }
 .assistant-privacy { margin: 16px 0 0; color: var(--nova-muted); font-size: 12px; line-height: 1.65; word-break: keep-all; overflow-wrap: anywhere; }
+.assistant-child { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--nova-line); }
+.assistant-child > label { display: block; margin-bottom: 8px; font-size: 14px; }
+.assistant-child select { width: 100%; min-height: 44px; border: 1px solid var(--nova-line); border-radius: 12px; padding: 8px 12px; font: inherit; color: var(--nova-text); background: var(--nova-card); }
+.assistant-child .assistant-context-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 8px 0; }
+.assistant-child input { width: 18px; height: 18px; accent-color: var(--nova-accent); }
+.assistant-child summary { cursor: pointer; min-height: 32px; font-size: 13px; color: var(--nova-muted); }
+.assistant-child pre { font: inherit; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-child p { font-size: 12px; line-height: 1.6; color: var(--nova-muted); margin: 4px 0 0; }
