@@ -5,6 +5,7 @@
   const labels = {
     calendar: ['🗓️', '일정'],
     growth: ['🌱', '성장'],
+    assistant: ['💬', '육아'],
     english: ['📖', '동화'],
     travel: ['✈️', '여행'],
     settings: ['⚙️', '설정'],

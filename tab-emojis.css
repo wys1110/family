@@ -44,3 +44,5 @@
   line-height: 1;
   vertical-align: -0.25em;
 }
+
+.view-tab[data-view="assistant"] { --nova-icon: url('assets/icons/chat.svg'); }
