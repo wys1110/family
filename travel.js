@@ -12,7 +12,7 @@
   const fmtDate = value => { const date = new Date(`${value}T12:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('ko-KR', { month:'short', day:'numeric', weekday:'short' }).format(date); };
   const days = trip => data.dateList(trip.startDate, trip.endDate);
   const dayLabel = (trip, index) => `DAY ${index + 1}`;
-  const current = { page:'manage', query:'', filter:'all', itineraryQuery:'', itineraryStatus:'all', selecting:false, selectedIds:new Set(), bulkDay:'choose', bulkBusy:false, bulkMessage:'', bulkError:false, tripId:null, tab:'all', layout:'map', activeItemId:null, editingId:null, modalMode:null, placeSaving:false, searchRequest:0 };
+  const current = { page:'summary', query:'', filter:'all', itineraryQuery:'', itineraryStatus:'all', selecting:false, selectedIds:new Set(), bulkDay:'choose', bulkBusy:false, bulkMessage:'', bulkError:false, tripId:null, tab:'all', layout:'map', activeItemId:null, editingId:null, modalMode:null, placeSaving:false, searchRequest:0 };
   let bulkRequest=0;
   let view;
   let refreshPromise = null;
@@ -99,7 +99,7 @@
     historyItems = summary.historyDestinations;
     const mapped = maps.placePoints(historyItems);
     const missing = historyItems.filter(item => !mapped.includes(item));
-    const history = `<section class="travel-history-map"><h4>다녀온 여행지</h4>${mapped.length ? historyMap.render({items:historyItems,activeId:historyActiveId,kind:'history'}) : '<p class="travel-history-empty">위치가 있는 지난 여행 기록이 쌓이면 지도에 표시돼요.</p>'}${missing.length ? `<p class="travel-history-notice">위치 정보 없음: ${missing.map(item=>esc(item.title)).join(', ')} · 해당 여행에 위치가 있는 장소를 추가하면 지도에 표시돼요.</p>` : ''}</section>`;
+    const history = `<section class="travel-history-map"><h4>다녀온 여행지</h4><p class="travel-history-notice">카카오맵은 국내 상세지도 기준이에요. 해외 여행도 아래 요약과 여행 관리에 포함돼요.</p>${mapped.length ? historyMap.render({items:historyItems,activeId:historyActiveId,kind:'history'}) : '<p class="travel-history-empty">위치가 있는 지난 여행 기록이 쌓이면 지도에 표시돼요.</p>'}${missing.length ? `<p class="travel-history-notice">위치 정보 없음: ${missing.map(item=>esc(item.title)).join(', ')} · 해당 여행에 위치가 있는 장소를 추가하면 지도에 표시돼요.</p>` : ''}</section>`;
     const maximum = Math.max(1, ...summary.topDestinations.map(item => item.trips));
     const destinations = summary.topDestinations.length
       ? `<ol class="travel-history-destinations">${summary.topDestinations.map(item => `<li><span class="travel-history-destination-name">${esc(item.name)}</span><span class="travel-history-bar-track" aria-hidden="true"><span style="width:${Math.round(item.trips / maximum * 100)}%"></span></span><span class="travel-history-destination-count">${item.trips}회 · ${item.nights}박</span></li>`).join('')}</ol>`
@@ -345,6 +345,6 @@
   const baseSwitch=window.switchView;
   window.switchView=function travelSwitch(next){if(next!=='travel'){clearSelection();if($('#travelModal',view)?.open)closeModal();view?.setAttribute('hidden','');return baseSwitch(next);}ensure();if(window.FAMILY_APP_STATE)window.FAMILY_APP_STATE.activeView='travel';document.querySelectorAll('.view-tab[data-view]').forEach(tab=>{const selected=tab.dataset.view==='travel';tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;});document.querySelector('main')?.querySelectorAll(':scope > [id$="View"]').forEach(other=>{if(other!==view)other.hidden=true;});$('#addEventButton')?.setAttribute('hidden','');view.hidden=false;mountMap();mountHistoryMap();};
   window.switchView.__familyTravelInstalled=true; window.FAMILY_TRAVEL_READY=true;
-  window.addEventListener('family:travel-change',()=>{if(!current.placeSaving&&view&&window.FAMILY_APP_STATE?.activeView==='travel')render();}); window.addEventListener('familycontextchange',()=>{map.destroy();historyMap.destroy();historyActiveId=null;historyItems=[];clearSelection();clearItineraryFilters();current.page='manage';current.query='';current.filter='all';current.tripId=null;current.activeItemId=null;current.tab='all';render();refreshPromise=null;if(view&&window.FAMILY_APP_STATE?.activeView==='travel')ensure();}); ensure();
+  window.addEventListener('family:travel-change',()=>{if(!current.placeSaving&&view&&window.FAMILY_APP_STATE?.activeView==='travel')render();}); window.addEventListener('familycontextchange',()=>{map.destroy();historyMap.destroy();historyActiveId=null;historyItems=[];clearSelection();clearItineraryFilters();current.page='summary';current.query='';current.filter='all';current.tripId=null;current.activeItemId=null;current.tab='all';render();refreshPromise=null;if(view&&window.FAMILY_APP_STATE?.activeView==='travel')ensure();}); ensure();
   window.addEventListener('family:travel-remote-change',()=>{ if(!view||window.FAMILY_APP_STATE?.activeView!=='travel'||!$('#travelModal',view)?.hidden)return; data.refresh().then(()=>render()).catch(()=>{}); });
 })();
