@@ -22,7 +22,7 @@ test.each([demoKey, liveKey])('deferred navigation persists only the core view k
   const nav = { ...element(), querySelector: () => ({ hidden: false }) };
   const main = element(), action = element();
   const state = { activeView: 'growth' };
-  const window = { FAMILY_DEFERRED_MODULES: { groups: { travel: ['travel'] }, load: () => new Promise(() => {}) }, addEventListener() {} };
+  const window = { FAMILY_DEFERRED_MODULES: { groups: { travel: ['travel'] }, prepare: vi.fn(), load: () => new Promise(() => {}) }, addEventListener() {} };
   const context = { ACTIVE_VIEW_KEY: key, state, window, localStorage: { setItem: (k, v) => store.set(k, v) }, switchView: view => { state.activeView = view; }, document: { querySelector: selector => selector === '.view-tabs' ? nav : selector === 'main' ? main : action, createElement: element, addEventListener() {} } };
   vm.createContext(context);
   vm.runInContext(readFileSync('deferred-tabs.js', 'utf8'), context);

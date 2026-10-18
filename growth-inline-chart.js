@@ -94,7 +94,7 @@
       <section class="growth-inline-history" aria-labelledby="growthInlineHistoryTitle">
         <header><div><h4 id="growthInlineHistoryTitle">측정 기록</h4><p>최근 기록부터 확인하고 수정할 수 있어요.</p></div><span>${ordered.length}개</span></header>
         <div class="growth-inline-history-list">${rows}</div>
-        <div class="growth-inline-history-footer">${toggle}<button type="button" data-growth-inline-action="add">새 측정 기록</button></div>
+        <div class="growth-inline-history-footer">${toggle}<button type="button" data-growth-inline-action="add"><span class="growth-inline-action-icon" aria-hidden="true">🌱</span>새 측정 기록</button></div>
       </section>`;
   };
 
@@ -263,7 +263,7 @@
       insightRow.innerHTML = `
         <article class="growth-inline-card growth-inline-empty">
           <div><p class="eyebrow">LATEST GROWTH</p><h3>${escapeText(babyName)}의 성장 기록</h3><span>첫 측정값을 기록하면 변화 그래프가 여기에 표시돼요.</span></div>
-          <button type="button" data-growth-inline-action="add"><span aria-hidden="true">＋</span> 기록 추가</button>
+          <button type="button" data-growth-inline-action="add"><span class="growth-inline-action-icon" aria-hidden="true">🌱</span> 기록 추가</button>
         </article>
       `;
       rendering = false;
@@ -280,7 +280,7 @@
           <div class="growth-inline-meta">
             <time datetime="${escapeText(latest.date)}">${escapeText(formatDate(latest.date, true))}</time>
             <div class="growth-inline-actions" aria-label="성장 기록 관리">
-              <button type="button" class="primary" data-growth-inline-action="add"><span aria-hidden="true">＋</span> 기록 추가</button>
+              <button type="button" class="primary" data-growth-inline-action="add"><span class="growth-inline-action-icon" aria-hidden="true">🌱</span> 기록 추가</button>
             </div>
           </div>
         </header>

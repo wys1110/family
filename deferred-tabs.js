@@ -33,6 +33,7 @@
   const ensure = view => {
     if (loaded.has(view)) return Promise.resolve();
     if (pending.has(view)) return pending.get(view);
+    api.prepare(view);
     const task = (async () => {
       // Preserve declared dependency order; successful modules survive a retry.
       for (const name of groups[view]) await api.load(name);

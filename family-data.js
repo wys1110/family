@@ -43,5 +43,27 @@
   });
   const thumbnailPath = path => typeof path === 'string' && /--preview\.(?:jpg|jpeg|png|webp)$/.test(path) ? `${path}.thumb.jpg` : null;
   const photoStoragePaths = paths => [...new Set(paths.flatMap(path => [path, thumbnailPath(path)].filter(Boolean)))];
-  window.FAMILY_DATA = { readAll, splitSleepEntries, thumbnailPath, photoStoragePaths };
+  const removeUnreferencedGrowthPhotos = async ({ supabase, householdId, paths, run = operation => operation(), isCurrent = () => true }) => {
+    const current = () => { if (!isCurrent()) throw new Error('가족 공간이 변경됐어요.'); };
+    const removable = [];
+    for (const path of new Set(paths)) {
+      current();
+      if (typeof path !== 'string' || !path.startsWith(`${householdId}/`)) throw new Error('사진 경로를 확인할 수 없어요.');
+      const { data, error } = await run(() => {
+        current();
+        return supabase.from('growth_entries').select('id').eq('household_id', householdId).contains('photo_paths', [path]).limit(1);
+      });
+      current();
+      if (error) throw error;
+      if (!Array.isArray(data)) throw new Error('사진 연결을 확인할 수 없어요.');
+      if (!data.length) removable.push(path);
+    }
+    if (!removable.length) return;
+    const { error } = await run(() => {
+      current();
+      return supabase.storage.from('growth-photos').remove(photoStoragePaths(removable));
+    });
+    if (error) throw error;
+  };
+  window.FAMILY_DATA = { readAll, splitSleepEntries, thumbnailPath, photoStoragePaths, removeUnreferencedGrowthPhotos };
 })();

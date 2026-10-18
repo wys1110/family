@@ -58,8 +58,9 @@
           assertCurrent(ctx); const saved = resultData(inserted); rows.set(trip.id, { ...row, ...saved }); continue;
         }
         if (sameRow(previous, row)) continue;
-        const expected = Number(previous.revision ?? trip.revision ?? 0);
         if (mutationId && previous.last_mutation_id === mutationId) continue;
+        const expected = Number(options.expectedRevision ?? trip.revision ?? 0);
+        if (expected !== Number(previous.revision)) { status = 'conflict'; message = '가족이 먼저 수정했어요. 최신 내용을 불러온 뒤 내 초안을 다시 적용해 주세요.'; throw new Error(message); }
         const updated = await table.update({ title: row.title, destination_label: row.destination_label, center_lat: row.center_lat, center_lng: row.center_lng, timezone: row.timezone, start_date: row.start_date, end_date: row.end_date, document: row.document, archived_at: row.archived_at, updated_by: ctx.user, last_mutation_id: mutationId, revision: expected + 1 }).eq('id', trip.id).eq('household_id', ctx.household).eq('revision', expected).select('id,revision,updated_at,last_mutation_id').maybeSingle();
         assertCurrent(ctx);
         if (updated.error) throw new Error(updated.error.message || '가족 여행을 저장하지 못했어요.');

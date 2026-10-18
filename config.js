@@ -102,7 +102,7 @@ window.FAMILY_CONFIG = {
 
   const modules = [
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
-    { name: "growth-delete-sync", version: "20260918-lazy-tabs-v1" },
+    { name: "growth-delete-sync", version: "20261018-review-performance-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20261017-design-harmony-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
@@ -119,7 +119,7 @@ window.FAMILY_CONFIG = {
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "family-permissions", version: "20260805-family-permissions-v1", style: false },
     { name: "settings", version: "20261017-design-harmony-v1" },
-    { name: "family-backup-media", version: "20260913-records-v1", style: false },
+    { name: "family-backup-media", version: "20261018-review-performance-v1", style: false },
     { name: "family-journal", version: "20260915-growth-performance-v1" },
     { name: "settings-backup", version: "20260913-records-v1", style: false },
     { name: "settings-family-management", version: "20261006-layout-harmony-v2" },
@@ -152,8 +152,6 @@ window.FAMILY_CONFIG = {
     { name: "daily-intake-summary", version: "20261009-care-wide-band-v1" },
     { name: "weekly-care-summary", version: "20260806-health-pattern-v1" },
     { name: "weekly-care-extra-feeding", version: "20260806-health-pattern-v1", script: false },
-    { name: "growth-measurements", version: "20260718-combined-growth-v2" },
-    { name: "growth-chart-polish", version: "20260718-premium-chart-v1" },
     { name: "premium-ui", version: "20261013-code-reliability-v1", script: false },
     { name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false },
     { name: "date-time-system", version: "20260718-all-fields-v1", script: false },
@@ -163,8 +161,7 @@ window.FAMILY_CONFIG = {
     { name: "calendar-event-range", version: "20260720-mobile-font-step-up-v5", script: false },
     { name: "daily-verse-typography", version: "20260718-font-v2", script: false },
     { name: "growth-width-fix", version: "20260718-mobile-overflow-v1", script: false },
-    { name: "growth-inline-chart", version: "20261017-growth-combined-v1" },
-    { name: "growth-inline-icon-cleanup", version: "20260718-v1", style: false },
+    { name: "growth-inline-chart", version: "20261018-direct-action-icons-v1" },
     { name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false },
     { name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false },
     { name: "invite-link", version: "20260912-security-v1" },
@@ -189,12 +186,12 @@ window.FAMILY_CONFIG = {
     { name: "family-wallpapers", version: "20260914-original-photo-v2", script: false },
     { name: "wallpaper-editor", version: "20260815-v1" },
     { name: "motion-system", version: "20260915-tab-position-v1" },
-    { name: "family-admin", version: "20261017-design-harmony-v1", style: false },
-    { name: "deferred-tabs", version: "20261013-view-storage-v1", style: false },
+    { name: "family-admin", version: "20261018-deferred-loading-v1", style: false },
+    { name: "deferred-tabs", version: "20261018-deferred-loading-v1", style: false },
     { name: "compact-family", version: "20261017-design-harmony-v1" },
     { name: "nova-family", version: "20261017-design-harmony-v1" },
-    { name: "travel-sharing", version: "20260923-planner-v2", style: false },
-    { name: "travel-data", version: "20261013-code-reliability-v1", style: false },
+    { name: "travel-sharing", version: "20261018-review-performance-v1", style: false },
+    { name: "travel-data", version: "20261018-review-performance-v1", style: false },
     { name: "travel-map", version: "20261017-kakao-map-v1", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
     { name: "travel", version: "20261017-kakao-map-v1" },
@@ -203,7 +200,7 @@ window.FAMILY_CONFIG = {
   const deferredGroups = {
     english: ['english-stories', 'english-story-name'],
     settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
-    admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity'],
+    admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity', 'admin-ops'],
     travel: ['travel-data', 'travel-map', 'travel-management', 'travel'],
   };
   const deferredNames = new Set(Object.values(deferredGroups).flat());
@@ -212,6 +209,7 @@ window.FAMILY_CONFIG = {
     {name:'admin-resource-usage', version:'20260830-auth-recovery-v2'},
     {name:'platform-request-admin', version:'20260830-auth-recovery-v2'},
     {name:'admin-recent-activity', version:'20260830-auth-recovery-v2'},
+    {name:'admin-ops', version:'20260830-auth-recovery-v2', style:false},
   ];
 
   window.FAMILY_MODULE_SIGNATURE = [...modules, ...extraModules].map(({ name, version }) => `${name}@${version}`).join("|");
@@ -220,7 +218,8 @@ window.FAMILY_CONFIG = {
     if (document.querySelector(`link[data-module="${name}"]`)) return;
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = `${name}.css?v=${version}`;
+    // Reserve cascade order without requesting styles for unopened tabs.
+    if (!deferredNames.has(name)) stylesheet.href = `${name}.css?v=${version}`;
     stylesheet.dataset.module = name;
     document.head.appendChild(stylesheet);
   });
@@ -288,6 +287,20 @@ window.FAMILY_CONFIG = {
   window.FAMILY_DEFERRED_MODULES = {
     groups: deferredGroups,
     initialView,
+    prepare: view => {
+      for (const name of deferredGroups[view]) {
+        const module = [...modules, ...extraModules].find(item => item.name === name);
+        const stylesheet = document.querySelector(`link[data-module="${name}"]`);
+        if (stylesheet && !stylesheet.getAttribute("href")) stylesheet.href = `${name}.css?v=${module.version}`;
+        if (document.querySelector(`link[data-module-preload="${name}"]`)) continue;
+        const preload = document.createElement("link");
+        preload.rel = "preload";
+        preload.as = "script";
+        preload.href = `${name}.js?v=${module.version}`;
+        preload.dataset.modulePreload = name;
+        document.head.appendChild(preload);
+      }
+    },
     load: name => {
       if (deferredLoads.has(name)) return deferredLoads.get(name);
       const module = [...modules, ...extraModules].find(item => item.name === name);

@@ -14,14 +14,16 @@ test('sleep is split at midnight without changing the original or its edit ID',(
 function deleteHarness(result={data:[{id:'0'}]},storageError=false){
  let click;const button={dataset:{},addEventListener:(_,fn)=>{click=fn;},setAttribute(){},removeAttribute(){}};
  const dialog={close:vi.fn()};const query={delete:vi.fn(function(){return this;}),eq(){return this;},select:vi.fn(()=>result)};
- const supabase={from:vi.fn(()=>query),storage:{from:()=>({remove:async()=>{if(storageError)throw new Error('storage offline');return {};}})}};
+ const references={select:vi.fn(function(){return this;}),eq:vi.fn(function(){return this;}),contains:vi.fn(function(){return this;}),limit:vi.fn(async()=>({data:[],error:null}))};
+ const remove=vi.fn(async()=>{if(storageError)throw new Error('storage offline');return {};});
+ const supabase={from:vi.fn().mockReturnValueOnce(query).mockReturnValue(references),storage:{from:()=>({remove})}};
  const state={supabase,session:{user:{id:'u'}},household:{id:'h'},growthEntries:Array.from({length:1006},(_,i)=>({id:String(i),babyId:'b',photoPaths:i===0?['h/photo']:[]}))};
  const toast=vi.fn(),renderGrowth=vi.fn(),dispatchEvent=vi.fn();
  vm.runInNewContext(source('growth-delete-sync.js'),{state,document:{querySelector:s=>s==='#deleteGrowthButton'?button:s==='#growthId'?{value:'0'}:dialog},window:{FAMILY_DATA:dataWindow.FAMILY_DATA,confirm:()=>true,FAMILY_AUTH_API:{withRecovery:op=>op()},dispatchEvent},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail;}},toast,renderGrowth,resetGrowthPhotoDraft:vi.fn(),GROWTH_PHOTO_BUCKET:'photos',console:{error(){},warn(){}}});
- return {state,dialog,query,supabase,toast,renderGrowth,dispatchEvent,click:()=>click({preventDefault(){},stopImmediatePropagation(){}})};
+ return {state,dialog,query,references,remove,supabase,toast,renderGrowth,dispatchEvent,click:()=>click({preventDefault(){},stopImmediatePropagation(){}})};
 }
 test('deletion keeps all remaining rows without a capped reload; photo cleanup cannot reverse success',async()=>{
- const h=deleteHarness(undefined,true);await h.click();expect(h.state.growthEntries).toHaveLength(1005);expect(h.state.growthEntries[1004].id).toBe('1005');expect(h.supabase.from).toHaveBeenCalledTimes(1);expect(h.dialog.close).toHaveBeenCalledTimes(1);expect(h.toast).toHaveBeenCalledExactlyOnceWith('성장 기록을 삭제했어요');expect(h.dispatchEvent).toHaveBeenCalledTimes(1);
+ const h=deleteHarness(undefined,true);await h.click();expect(h.state.growthEntries).toHaveLength(1005);expect(h.state.growthEntries[1004].id).toBe('1005');expect(h.query.delete).toHaveBeenCalledTimes(1);expect(h.supabase.from).toHaveBeenCalledTimes(2);expect(h.references.select).toHaveBeenCalledExactlyOnceWith('id');expect(h.references.contains).toHaveBeenCalledExactlyOnceWith('photo_paths',['h/photo']);expect(h.references.limit).toHaveBeenCalledExactlyOnceWith(1);expect(h.remove).toHaveBeenCalledExactlyOnceWith(['h/photo']);expect(h.dialog.close).toHaveBeenCalledTimes(1);expect(h.toast).toHaveBeenCalledExactlyOnceWith('성장 기록을 삭제했어요');expect(h.dispatchEvent).toHaveBeenCalledTimes(1);
 });
 test('a normal successful response from the old household cannot overwrite the new household',async()=>{
  let resolve;const h=deleteHarness(new Promise(r=>resolve=r));const pending=h.click();h.state.household={id:'other'};const other=[{id:'new'}];h.state.growthEntries=other;resolve({data:[{id:'0'}]});await pending;expect(h.state.growthEntries).toBe(other);expect(h.dialog.close).not.toHaveBeenCalled();expect(h.renderGrowth).not.toHaveBeenCalled();

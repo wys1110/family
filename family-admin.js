@@ -308,10 +308,4 @@
   syncColumns();
   restore();
 
-  if (!document.querySelector('script[data-admin-operations-module]')) {
-    const operationsScript = document.createElement('script');
-    operationsScript.src = 'admin-ops.js?v=20260830-auth-recovery-v2';
-    operationsScript.dataset.adminOperationsModule = '';
-    document.head.appendChild(operationsScript);
-  }
 })();
