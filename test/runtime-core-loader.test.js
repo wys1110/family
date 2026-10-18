@@ -42,7 +42,7 @@ function createLoader() {
   };
   const context = {
     window, document, toast, console: { error: vi.fn() },
-    URLSearchParams, localStorage: { getItem: () => null }, navigator: {},
+    URLSearchParams, clearTimeout, localStorage: { getItem: () => null }, navigator: {},
   };
   vm.runInNewContext(source, context);
   window.__familyCoreReady = true;
@@ -53,6 +53,28 @@ function createLoader() {
 }
 
 const settle = async () => { for (let i = 0; i < 8; i += 1) await Promise.resolve(); };
+
+test('core readiness does not wait for a saved deferred tab', async () => {
+  const loader = createLoader();
+  loader.window.FAMILY_DEFERRED_TABS = { restoreInitial: vi.fn(() => new Promise(() => {})) };
+  const ready = vi.fn();
+  loader.window.FAMILY_MODULES_READY.then(ready);
+  for (const script of loader.scripts) script.onload();
+  await settle();
+  expect(ready).toHaveBeenCalledOnce();
+  expect(loader.window.FAMILY_DEFERRED_TABS.restoreInitial).not.toHaveBeenCalled();
+});
+
+test('navigation before deferred code loads cancels saved-tab restoration', () => {
+  const loader = createLoader();
+  const api = loader.window.FAMILY_DEFERRED_MODULES;
+  api.initialView = 'travel';
+  const clicked = loader.document.addEventListener.mock.calls.find(([name]) => name === 'click')[1];
+  clicked({ target: { closest: () => null } });
+  expect(api.initialView).toBe('travel');
+  clicked({ target: { closest: () => ({ dataset: { view: 'growth' } }) } });
+  expect(api.initialView).toBeNull();
+});
 
 test('core failures remain unready and retry only failed scripts', async () => {
   const loader = createLoader();

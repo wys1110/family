@@ -312,6 +312,7 @@
   const restoreLocal = (tables, context, backupId) => {
     if (typeof state === 'undefined') return { duplicate: false };
     if (backupApi.isDuplicateBackup?.(backupId, readImportedBackups(context.householdId))) return { duplicate: true };
+    if (tables.family_todos?.length) window.FAMILY_TODO_API.assertWritable();
     const babyIdMap = new Map();
     const babies = (tables.babies || []).map((row) => {
       const id = newId();

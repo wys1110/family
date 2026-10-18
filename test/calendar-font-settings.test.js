@@ -39,6 +39,6 @@ describe("calendar font size presets", () => {
     expect(polish).not.toContain(".calendar-font-number-input");
     expect(config).toContain('{ name: "calendar-font-settings", version: "20260805-toolbar-v1", style: false }');
     expect(config).toContain('{ name: "settings-layout-polish", version: "20260824-event-change-push-v1", script: false }');
-    expect(index).toContain('config.js?v=20261018-review-performance-v1');
+    expect(index).toContain('config.js?v=20261018-startup-review-v1');
   });
 });

@@ -5,6 +5,7 @@
   const loaded = new Set(), pending = new Map();
   let requestId = 0;
   let loadingView = null;
+  let initialContextReady = false;
   const nav = document.querySelector('.view-tabs');
   const main = document.querySelector('main');
   const scope = () => `${state.session?.user?.id}|${state.household?.id}`;
@@ -83,15 +84,25 @@
     event.preventDefault(); event.stopImmediatePropagation();
     window.switchView(tab.dataset.view);
   }, true);
-  window.addEventListener('familycontextchange', () => { requestId++; loadingView = null; notice.hidden = true; });
+  window.addEventListener('familycontextchange', () => {
+    const wasLoading = Boolean(loadingView);
+    requestId++; loadingView = null; notice.hidden = true;
+    if (initialContextReady) {
+      api.initialView = null;
+      if (wasLoading) original('calendar');
+      return;
+    }
+    initialContextReady = true;
+    window.FAMILY_DEFERRED_TABS.restoreInitial();
+  });
   window.FAMILY_DEFERRED_TABS = {
     ensure,
-    restoreInitial: async () => {
+    restoreInitial: () => {
+      if (!initialContextReady) return;
       const saved = api.initialView;
-      const id = requestId;
       if (groups[saved] && (saved !== 'admin' || !nav.querySelector('[data-view="admin"]').hidden)) {
-        await ensure(saved).catch(error => console.warn('저장된 탭 로딩 실패', error));
-        if (requestId === id) window.switchView(saved);
+        api.initialView = null;
+        window.switchView(saved);
       }
     },
   };

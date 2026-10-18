@@ -69,7 +69,8 @@
         const photo = photos.get(ref.id);
         if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');
         // Each source entry owns its files; deterministic paths keep retries safe.
-        const path = `${context.householdId}/backup/${entryKey}/${photo.sha256}.${MIME.get(photo.mime)}`;
+        const fileKey = await digest(new TextEncoder().encode(`${entryKey}:${photo.sha256}`));
+        const path = `${context.householdId}/backup/${fileKey}.${MIME.get(photo.mime)}`;
         const result = await run(() => context.supabase.storage.from('growth-photos').upload(path, photo.bytes, {contentType:photo.mime,upsert:false}));
         if(result.error) {
           if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');

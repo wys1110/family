@@ -264,11 +264,9 @@
 
   const restore = (attempt = 0) => {
     if (!installView()) { if (attempt < 50) setTimeout(() => restore(attempt + 1), 100); return; }
-    let saved = null;
-    try { saved = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY); } catch { /* default */ }
     waitContext().then(async (current) => {
       setAllowed(await verify(current));
-      if (saved === VIEW && allowed && typeof switchView === 'function') switchView(VIEW);
+      if (allowed) window.FAMILY_DEFERRED_TABS?.restoreInitial();
     });
   };
 
