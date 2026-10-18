@@ -51,15 +51,22 @@ export async function askCodex(messages, signal, context = '') {
   } finally { await rm(cwd, { recursive: true, force: true }); }
 }
 
-export function createChatServer({ root, reply = askCodex }) {
+export function createChatServer({ root, reply = askCodex, remoteOrigin = '', ownerLogin = '' }) {
+  if (remoteOrigin || ownerLogin) {
+    if (!/^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.ts\.net$/.test(remoteOrigin) || !ownerLogin || ownerLogin.trim() !== ownerLogin || !/^[\x21-\x7e]{1,254}$/.test(ownerLogin)) throw new Error('비공개 HTTPS 주소와 Tailscale 본인 로그인 이름을 함께 설정해 주세요.');
+  }
+  const allowedOrigin = remoteOrigin || origin;
+  const allowedHost = new URL(allowedOrigin).host;
   const token = randomBytes(32).toString('hex');
   let busy = false;
   return createServer(async (req, res) => {
     const json = (status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(body)); };
-    if (req.headers.host !== '127.0.0.1:8775' || (req.headers.origin && req.headers.origin !== origin) || (req.url.startsWith('/api/') && req.headers['sec-fetch-site'] === 'cross-site')) return json(403, { error: '접근할 수 없어요.' });
+    // Serve replaces identity headers; keep this server bound to loopback so remote clients cannot forge them.
+    if (remoteOrigin && req.headers['tailscale-user-login'] !== ownerLogin) return json(403, { error: '본인 Tailscale 계정으로 연결해 주세요.' });
+    if (![allowedHost, '127.0.0.1:8775'].includes(req.headers.host) || (req.headers.origin && req.headers.origin !== allowedOrigin) || (req.url.startsWith('/api/') && req.headers['sec-fetch-site'] === 'cross-site')) return json(403, { error: '접근할 수 없어요.' });
     if (req.url === '/api/parenting/status' && req.method === 'GET') return json(200, { provider: 'codex-local', token });
     if (req.url === '/api/parenting/chat') {
-      if (req.method !== 'POST' || req.headers.origin !== origin || req.headers['x-chat-token'] !== token || req.headers['content-type'] !== 'application/json') return json(403, { error: '이 Mac의 육아 탭에서 다시 시도해 주세요.' });
+      if (req.method !== 'POST' || req.headers.origin !== allowedOrigin || req.headers['x-chat-token'] !== token || req.headers['content-type'] !== 'application/json') return json(403, { error: '연결된 육아 탭에서 다시 시도해 주세요.' });
       if (busy) return json(429, { error: '이전 답변을 준비 중이에요. 잠시 뒤 다시 시도해 주세요.' });
       busy = true;
       const controller = new AbortController();
@@ -96,9 +103,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   check.on('close', async code => {
     if (code !== 0 || !status.includes('ChatGPT')) { console.error('codex login으로 ChatGPT 계정에 로그인해 주세요. API 키 로그인은 사용하지 않습니다.'); process.exitCode = 1; return; }
     const root = await realpath(fileURLToPath(new URL('../dist', import.meta.url)));
-    const server = createChatServer({ root });
+    let server;
+    const remoteOrigin = process.env.FAMILY_CHAT_ORIGIN || '';
+    try { server = createChatServer({ root, remoteOrigin, ownerLogin: process.env.FAMILY_CHAT_OWNER_LOGIN || '' }); }
+    catch (error) { console.error(error.message); process.exitCode = 1; return; }
     server.requestTimeout = 100000;
     server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? '8775 포트가 이미 사용 중입니다.' : '서버를 시작하지 못했습니다.'); process.exitCode = 1; });
-    server.listen(8775, '127.0.0.1', () => console.log(`개인용 Codex 육아 채팅: ${origin}/?demo=1 (이 Mac에서만 접근 가능)`));
+    server.listen(8775, '127.0.0.1', () => console.log(`개인용 Codex 육아 채팅: ${remoteOrigin || origin}/ (${remoteOrigin ? 'Tailscale 본인 계정 전용' : '이 Mac에서만 접근 가능'})`));
   });
 }

@@ -60,14 +60,14 @@
   babySelect.addEventListener('change', () => { reset(); selectedBabyId = babySelect.value; refreshContext(); });
   useRecords.addEventListener('change', () => { reset(); refreshContext(); });
   refreshContext();
-  // shortcut: subscription access is personal and local; hosted chat requires an approved authentication route.
-  if (window.location?.origin === 'http://127.0.0.1:8775') {
+  // shortcut: personal access uses loopback or owner-authenticated Tailscale Serve; shared hosting needs its own auth route.
+  if (window.location?.origin === 'http://127.0.0.1:8775' || /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.ts\.net$/.test(window.location?.origin || '')) {
     fetch('/api/parenting/status', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(status => {
       if (status?.provider !== 'codex-local' || !status.token) throw new Error('offline');
       connection = status.token;
-      setConnectionText('Codex · 5.6 Sol', '이 Mac의 Codex 구독으로 답변받아요. 선택한 기록 요약·질문·최근 대화를 OpenAI로 보내요. 새로고침하면 대화가 사라져요. AI 답변은 틀릴 수 있어요.');
+      setConnectionText('Codex · 5.6 Sol', '연결된 Mac의 Codex 구독으로 답변받아요. 선택한 기록 요약·질문·최근 대화를 OpenAI로 보내요. 새로고침하면 대화가 사라져요. AI 답변은 틀릴 수 있어요.');
       send.textContent = '질문 보내기 ↑';
-    }).catch(() => setConnectionText('연결 끊김', 'Mac에서 npm run chat:local을 실행하고 이 화면을 새로고침해 주세요.'));
+    }).catch(() => setConnectionText('연결 끊김', 'Mac의 채팅 서버와 Tailscale 연결을 확인한 뒤 새로고침해 주세요.'));
   }
   const appendMessage = (kind, label, text) => {
     const message = document.createElement('article');
