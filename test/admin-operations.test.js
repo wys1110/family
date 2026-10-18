@@ -6,6 +6,7 @@ const read = (path) => {
 };
 const operations = read('admin-ops.js');
 const admin = read('family-admin.js');
+const manifest = read('config.js');
 const requests = read('platform-request-admin.js');
 const serviceWorker = read('service-worker.js');
 const migration = read('supabase/migrations/20260804_platform_admin_operations.sql');
@@ -36,8 +37,10 @@ describe('admin operations dashboard', () => {
     expect(operations).toContain("export_csv");
   });
 
-  test('loads the module and bypasses stale service-worker copies', () => {
-    expect(admin).toContain('admin-ops.js?v=20260830-auth-recovery-v2');
+  test('defers operations to the admin group and keeps versioned caching', () => {
+    expect(admin).not.toContain('admin-ops.js');
+    expect(manifest).toContain("'admin-recent-activity', 'admin-ops'");
+    expect(manifest).toContain("{name:'admin-ops', version:'20260830-auth-recovery-v2', style:false}");
     expect(serviceWorker).toContain('url.pathname.endsWith("/admin-ops.js")');
   });
 

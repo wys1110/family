@@ -68,6 +68,7 @@ function createHarness(entries, initialBaby = { id: "baby-1", name: "아기", bi
   const click = (kind, id = "") => listeners.click({
     target: {
       closest(selector) {
+        if (kind === "add" && selector === "[data-growth-inline-action]") return { dataset: { growthInlineAction: "add" } };
         if (kind === "point" && selector === "[data-growth-chart-entry]") return { dataset: { growthChartEntry: id, growthPointMetric: "weight" } };
         if (kind === "toggle" && selector === "[data-growth-inline-history-toggle]") return {};
         if (kind === "entry" && selector === "[data-growth-inline-entry]") {
@@ -281,7 +282,7 @@ describe("inline growth measurement history", () => {
     expect(script).not.toContain('data-growth-inline-action="edit"');
     expect(polish).toContain('#growthDialog[data-simple-category="성장"] [data-growth-fields="성장"]');
     expect(config).toContain('{ name: "growth-edit-sheet-polish", version: "20260722-measurement-focus-v2", script: false }');
-    expect(config).toContain('{ name: "growth-inline-chart", version: "20261017-growth-combined-v1" }');
+    expect(config).toContain('{ name: "growth-inline-chart", version: "20261018-direct-action-icons-v1" }');
     expect(config).toContain('{ name: "growth-inline-visual-polish", version: "20260722-header-meta-v2", script: false }');
     expect(config).toContain('{ name: "growth-inline-approved-polish", version: "20260722-legend-stack-v1", script: false }');
   });
@@ -295,4 +296,25 @@ describe("inline growth measurement history", () => {
     expect(visual).not.toContain(".growth-inline-title time");
     expect(visual).toMatch(/@media \(max-width: 620px\)[\s\S]*?\.growth-inline-actions\s*\{[^}]*width:\s*auto;/s);
   });
+});
+
+
+test("renders the existing add icons directly and opens the growth form in empty and populated states", () => {
+  for (const entries of [[], [entry("first", 1)]]) {
+    const harness = createHarness(entries);
+    const buttons = [...harness.markup().matchAll(/<button[^>]*data-growth-inline-action="add"[^>]*>([\s\S]*?)<\/button>/g)];
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const [, markup] of buttons) {
+      expect(markup).toContain('<span class="growth-inline-action-icon" aria-hidden="true">🌱</span>');
+      expect(markup).not.toContain('＋');
+    }
+    harness.click("add");
+    expect(harness.dialogCalls).toEqual([[null, "성장"]]);
+  }
+});
+
+test("loads only the current inline growth chart implementation", () => {
+  for (const retired of ["growth-measurements", "growth-chart-polish", "growth-inline-icon-cleanup"]) {
+    expect(config).not.toContain(`name: "${retired}"`);
+  }
 });

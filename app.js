@@ -909,7 +909,6 @@ function bindUi() {
   $("#memberColorPalette").addEventListener("click", selectMemberColor);
   document.querySelectorAll("[data-date-shortcut]").forEach((button) => button.addEventListener("click", () => applyDateShortcut(button.dataset.dateShortcut)));
   $("#growthForm").addEventListener("submit", saveGrowthEntry);
-  $("#deleteGrowthButton").addEventListener("click", deleteGrowthEntry);
   $("#growthCategory").addEventListener("change", syncGrowthFields);
   $("#growthPhotos").addEventListener("change", addGrowthPhotos);
   $("#wallpaperPhotoInput").addEventListener("change", async (event) => {
@@ -2519,14 +2518,12 @@ async function createGrowthThumbnail(file) {
   finally { bitmap?.close(); }
 }
 
-async function uploadGrowthPhotos(entryId) {
+async function uploadGrowthPhotos(entryId, { client, householdId, userId, current, photos }) {
   const uploaded = [], attempted = [];
-  const client = state.supabase, householdId = state.household.id, userId = state.session?.user?.id;
-  const photos = [...growthPhotoDraft.newPhotos];
   const storage = client.storage.from(GROWTH_PHOTO_BUCKET);
-  const current = () => state.supabase === client && state.household?.id === householdId && state.session?.user?.id === userId;
   try {
     for (const photo of photos) {
+      if (!current()) throw new Error('Family context changed');
       const type = photo.file.type || "image/jpeg";
       const extension = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("heic") ? "heic" : "jpg";
       const base = `${householdId}/${entryId}/${uid()}`;
@@ -2541,22 +2538,24 @@ async function uploadGrowthPhotos(entryId) {
           const { error } = await withAuthRecovery(() => {
             if (!current()) throw new Error('Family context changed');
             return storage.upload(previewPath, thumbnail, {contentType:'image/jpeg', cacheControl:'3600', upsert:false});
-          });
+          }, client, userId, current);
+          if (!current()) throw new Error('Family context changed');
           if (!error) path = candidate;
         } catch { /* A preview failure must not prevent saving the photo. */ }
       }
+      if (!current()) throw new Error('Family context changed');
       attempted.push(path);
       const { error } = await withAuthRecovery(() => {
         if (!current()) throw new Error('Family context changed');
         return storage.upload(path, photo.file, {contentType:type, cacheControl:'3600', upsert:false});
-      });
+      }, client, userId, current);
       if (error) throw error;
       if (!current()) throw new Error('Family context changed');
       uploaded.push(path);
     }
     return uploaded;
   } catch (error) {
-    try { if (attempted.length) await storage.remove(attempted); } catch { /* Preserve the upload error. */ }
+    try { if (current() && attempted.length) await withAuthRecovery(() => storage.remove(attempted), client, userId, current); } catch { /* Preserve the upload error. */ }
     throw error;
   }
 }
@@ -2566,6 +2565,17 @@ async function saveGrowthEntry(event) {
   if (growthSaveInProgress) return;
   const isNewEntry = !$("#growthId").value;
   const returnPosition = growthDialogReturnPosition;
+  const client = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
+  const babyId = state.activeBabyId, contextGeneration = bootstrapRequestId, draft = growthPhotoDraft;
+  const photos = [...draft.newPhotos], removedPaths = [...draft.removedPaths], existingPaths = [...draft.existingPaths];
+  const form = $("#growthForm");
+  const fields = [...form.querySelectorAll("input, select, textarea")].map((control) => ({ control, value: control.value }));
+  const current = () => state.supabase === client && state.session?.user?.id === userId
+    && state.household?.id === householdId && state.activeBabyId === babyId && bootstrapRequestId === contextGeneration
+    && growthPhotoDraft === draft && fields.every(({ control, value }) => control.value === value)
+    && photos.length === draft.newPhotos.length && photos.every((photo, index) => photo === draft.newPhotos[index])
+    && removedPaths.length === draft.removedPaths.length && removedPaths.every((path, index) => path === draft.removedPaths[index])
+    && existingPaths.length === draft.existingPaths.length && existingPaths.every((path, index) => path === draft.existingPaths[index]);
   setGrowthSaving(true);
   try {
     if (state.supabase && !state.household) { $("#growthDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
@@ -2587,15 +2597,29 @@ async function saveGrowthEntry(event) {
     note: $("#growthNote").value.trim(), photoPaths: [...growthPhotoDraft.existingPaths], photoUrls: [...growthPhotoDraft.existingUrls],
     };
     let uploadedPaths = [];
-    if (state.supabase && state.session) {
-      try { uploadedPaths = await uploadGrowthPhotos(entry.id); } catch { return toast("사진을 올리지 못했어요. 다시 시도해 주세요"); }
+    if (client && userId) {
+      try { uploadedPaths = await uploadGrowthPhotos(entry.id, { client, householdId, userId, current, photos }); }
+      catch { if (current()) toast("사진을 올리지 못했어요. 다시 시도해 주세요"); return; }
+      if (!current()) return;
       entry.photoPaths.push(...uploadedPaths);
-      const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
+      const payload = toGrowthRemote(entry);
+      const { error } = await withAuthRecovery(() => client.from("growth_entries").upsert(payload), client, userId, current);
+      if (!current()) return;
       if (error) {
-        if (uploadedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(uploadedPaths)));
+        if (uploadedPaths.length) await withAuthRecovery(() => client.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(uploadedPaths)), client, userId, current);
+        if (!current()) return;
         return toast("성장 기록을 저장하지 못했어요. DB 업데이트를 확인해 주세요");
       }
-      if (growthPhotoDraft.removedPaths.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(growthPhotoDraft.removedPaths)));
+      if (removedPaths.length) {
+        try {
+          await window.FAMILY_DATA.removeUnreferencedGrowthPhotos({
+            supabase: client, householdId, paths: removedPaths,
+            run: (operation) => withAuthRecovery(operation, client, userId, current), isCurrent: current,
+          });
+        }
+        catch (error) { console.warn("성장 사진 정리 실패", error); }
+        if (!current()) return;
+      }
       try {
         await hydrateGrowthPhotoUrls([entry]);
       } catch (error) {
@@ -2605,6 +2629,7 @@ async function saveGrowthEntry(event) {
         console.warn("성장 사진 미리보기 주소를 불러오지 못했어요", error);
       }
     }
+    if (!current()) return;
     const index = state.growthEntries.findIndex((item) => item.id === entry.id); if (index >= 0) state.growthEntries[index] = entry; else state.growthEntries.push(entry);
     if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
     if (isNewEntry) dispatchGrowthEntrySaved(entry);
@@ -2615,22 +2640,12 @@ async function saveGrowthEntry(event) {
     else { restoreGrowthPosition(returnPosition); toast("성장 기록을 수정했어요"); }
   } catch (error) {
     console.error(error);
-    toast("성장 기록을 저장하지 못했어요. 다시 시도해 주세요");
+    if (current()) toast("성장 기록을 저장하지 못했어요. 다시 시도해 주세요");
   } finally {
     setGrowthSaving(false);
   }
 }
 function numberOrNull(value) { return value === "" ? null : Number(value); }
-async function deleteGrowthEntry() {
-  const id = $("#growthId").value; if (!id || !confirm("이 성장 기록을 삭제할까요?")) return;
-  const target = state.growthEntries.find((entry) => entry.id === id);
-  if (state.supabase && state.session) {
-    const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("기록을 삭제하지 못했어요");
-    if (target?.photoPaths?.length) await withAuthRecovery(() => state.supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(target.photoPaths)));
-  }
-  state.growthEntries = state.growthEntries.filter((entry) => entry.id !== id); if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries)); resetGrowthPhotoDraft(); $("#growthDialog").close(); renderGrowth(); window.dispatchEvent(new CustomEvent('family:growth-entry-deleted', { detail: { babyId: target?.babyId || null, deletedAt: new Date().toISOString() } })); toast("성장 기록을 삭제했어요");
-}
-
 function openAccountDialog() { renderAccount(); $("#accountDialog").showModal(); }
 function currentNotificationRole() {
   const role = state.session?.user?.user_metadata?.family_role;

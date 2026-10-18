@@ -56,20 +56,32 @@
     return byId;
   };
   const restore = async (payload, context, run, progress, isCurrent) => {
-    const photos = await validate(payload); const paths = new Map(); let done = 0;
-    for(const photo of photos.values()) {
-      if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');
-      // Content-addressed paths make retries safe after an ambiguous network failure.
-      const path = `${context.householdId}/backup/${photo.sha256}.${MIME.get(photo.mime)}`;
-      const result = await run(() => context.supabase.storage.from('growth-photos').upload(path, photo.bytes, {contentType:photo.mime,upsert:false}));
-      if(result.error) {
-        const existing = await run(() => context.supabase.storage.from('growth-photos').download(path));
-        if(existing.error || await digest(await existing.data.arrayBuffer()) !== photo.sha256) throw new Error('사진 복원에 실패했어요. 같은 파일로 다시 시도할 수 있어요.');
+    const photos = await validate(payload); let done = 0;
+    const backupKey = payload.backupId || await digest(new TextEncoder().encode(JSON.stringify(payload.tables)));
+    const rows = payload.tables.growth_entries;
+    const total = rows.reduce((count, row) => count + new Set((row.photo_refs || []).map(ref => ref.id)).size, 0);
+    const restored = [];
+    for (const [index, row] of rows.entries()) {
+      const paths = new Map();
+      const entryKey = await digest(new TextEncoder().encode(`${backupKey}:${row.id || ''}:${index}`));
+      for (const ref of row.photo_refs || []) {
+        if (paths.has(ref.id)) continue;
+        const photo = photos.get(ref.id);
+        if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');
+        // Each source entry owns its files; deterministic paths keep retries safe.
+        const path = `${context.householdId}/backup/${entryKey}/${photo.sha256}.${MIME.get(photo.mime)}`;
+        const result = await run(() => context.supabase.storage.from('growth-photos').upload(path, photo.bytes, {contentType:photo.mime,upsert:false}));
+        if(result.error) {
+          if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');
+          const existing = await run(() => context.supabase.storage.from('growth-photos').download(path));
+          if(existing.error || await digest(await existing.data.arrayBuffer()) !== photo.sha256) throw new Error('사진 복원에 실패했어요. 같은 파일로 다시 시도할 수 있어요.');
+        }
+        paths.set(photo.id,path); progress(++done,total);
       }
-      paths.set(photo.id,path); progress(++done,photos.size);
+      restored.push({...row,photo_paths:(row.photo_refs||[]).map(ref=>paths.get(ref.id))});
     }
     if(!isCurrent()) throw new Error('가족 공간이 변경됐어요.');
-    return payload.tables.growth_entries.map(row=>({...row,photo_paths:(row.photo_refs||[]).map(ref=>paths.get(ref.id))}));
+    return restored;
   };
   window.FAMILY_BACKUP_MEDIA = { collect, validate, restore, MAX_BYTES };
 })();

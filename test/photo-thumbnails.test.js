@@ -7,6 +7,11 @@ function harness(upload){
  const context={window:{},state:{household:{id:'h'},session:{user:{id:'u'}},supabase:{storage:{from:()=>({upload,remove})}}},growthPhotoDraft:{newPhotos:[{file:{type:'image/jpeg'}}]},GROWTH_PHOTO_BUCKET:'photos',uid:()=> 'id',withAuthRecovery:op=>op(),createGrowthThumbnail:async()=>({thumbnail:true})};
  vm.createContext(context);vm.runInContext(readFileSync('family-data.js','utf8'),context);
  vm.runInContext(app.slice(app.indexOf('async function uploadGrowthPhotos('),app.indexOf('async function saveGrowthEntry(')),context);
+ const uploadPhotos = context.uploadGrowthPhotos;
+ context.uploadGrowthPhotos = entryId => {
+  const client = context.state.supabase, householdId = context.state.household.id, userId = context.state.session.user.id;
+  return uploadPhotos(entryId, { client, householdId, userId, photos: [...context.growthPhotoDraft.newPhotos], current: () => context.state.supabase === client && context.state.household.id === householdId && context.state.session.user.id === userId });
+ };
  return {...context,remove};
 }
 test('new photos use paired thumbnails; legacy paths remain unchanged',async()=>{
@@ -28,4 +33,15 @@ test('switching families during thumbnail preparation cannot upload to the new f
  const upload=vi.fn(),h=harness(upload);h.createGrowthThumbnail=async()=>null;
  const pending=h.uploadGrowthPhotos('entry');h.state.household={id:'other'};
  await expect(pending).rejects.toThrow('Family context changed');expect(upload).not.toHaveBeenCalled();
+});
+test('a preview upload completing after an account switch cannot upload or clean up in the new account',async()=>{
+ let finish;
+ const upload=vi.fn(()=>new Promise(resolve=>{finish=resolve;})),h=harness(upload);
+ const pending=h.uploadGrowthPhotos('entry');
+ await new Promise(resolve=>setTimeout(resolve,0));
+ h.state.session={user:{id:'next-user'}};
+ finish({});
+ await expect(pending).rejects.toThrow('Family context changed');
+ expect(upload).toHaveBeenCalledTimes(1);
+ expect(h.remove).not.toHaveBeenCalled();
 });

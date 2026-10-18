@@ -75,8 +75,7 @@
       // Storage cleanup is best-effort after the database deletion is committed.
       if (remote && target?.photoPaths?.length && isCurrent()) {
         try {
-          const { error } = await withAuthRecovery(() => supabase.storage.from(GROWTH_PHOTO_BUCKET).remove(window.FAMILY_DATA.photoStoragePaths(target.photoPaths)));
-          if (error) console.warn("성장 기록 사진 정리 실패", error);
+          await window.FAMILY_DATA.removeUnreferencedGrowthPhotos({ supabase, householdId, paths: target.photoPaths, run: withAuthRecovery, isCurrent });
         } catch (error) { console.warn("성장 기록 사진 정리 실패", error); }
       }
     } catch (error) {

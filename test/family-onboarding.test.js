@@ -79,6 +79,6 @@ describe('family activation onboarding', () => {
     expect(css).toContain('min-height: 44px');
     expect(css).toContain('var(--surface)');
     expect(config).toContain('{ name: "family-onboarding", version: "20260830-auth-recovery-v2" }');
-    expect(appSource).toContain("new CustomEvent('family:growth-entry-deleted'");
+    expect(read('growth-delete-sync.js')).toContain("new CustomEvent('family:growth-entry-deleted'");
   });
 });
