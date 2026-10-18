@@ -3,8 +3,8 @@ import { request } from 'node:http';
 import { createChatServer, validateMessages, codexArgs } from '../scripts/parenting-codex-server.mjs';
 const servers = [];
 afterEach(async () => { for (const server of servers.splice(0)) await new Promise(resolve => server.close(resolve)); });
-async function setup(reply = vi.fn(async () => '테스트 답변')) {
-  const server = createChatServer({ root: '/tmp', reply }); servers.push(server);
+async function setup(reply = vi.fn(async () => '테스트 답변'), config = {}) {
+  const server = createChatServer({ root: '/tmp', reply, ...config }); servers.push(server);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const call = (path, { method = 'GET', headers = {}, body } = {}) => new Promise((resolve, reject) => {
     const req = request({ hostname: '127.0.0.1', port: server.address().port, path, method, headers: { host: '127.0.0.1:8775', ...headers } }, res => {
@@ -52,4 +52,39 @@ test('the reply is returned without persistence and failures allow retry', async
   expect(failed.status).toBe(503); expect(JSON.stringify(failed.data)).not.toContain('secret');
   const success = await call('/api/parenting/chat', options);
   expect(success.data.answer).toBe('실제 답변'); expect(success.headers['cache-control']).toBe('no-store');
+});
+
+test('private mobile chat requires the exact owner, origin and token, including through a rewritten proxy host', async () => {
+  const remoteOrigin = 'https://family-mac.example-tail.ts.net';
+  const ownerLogin = 'owner@example.test';
+  const { call, reply } = await setup(undefined, { remoteOrigin, ownerLogin });
+  const identity = { host: 'family-mac.example-tail.ts.net', 'tailscale-user-login': ownerLogin };
+  for (const path of ['/', '/api/parenting/status', '/api/parenting/chat']) {
+    for (const headers of [{}, { host: identity.host }, { ...identity, 'tailscale-user-login': 'other@example.test' }, { ...identity, 'tailscale-user-login': '' }]) {
+      expect((await call(path, { headers })).status).toBe(403);
+    }
+  }
+  const status = await call('/api/parenting/status', { headers: identity });
+  expect(status.status).toBe(200);
+  expect(status.data.token).toMatch(/^[a-f0-9]{64}$/);
+  const headers = { ...identity, origin: remoteOrigin, 'content-type': 'application/json', 'x-chat-token': status.data.token };
+  const body = JSON.stringify({ messages: [{ role: 'user', content: '질문' }], context: '생후 100일' });
+  for (const invalid of [{ origin: 'http://127.0.0.1:8775' }, { origin: 'https://evil.test' }, { origin: '' }, { 'x-chat-token': '' }, { host: 'evil.test' }, { 'sec-fetch-site': 'cross-site' }]) {
+    expect((await call('/api/parenting/chat', { method: 'POST', headers: { ...headers, ...invalid }, body })).status).toBe(403);
+  }
+  expect(reply).not.toHaveBeenCalled();
+  for (const host of [identity.host, '127.0.0.1:8775']) {
+    expect((await call('/api/parenting/chat', { method: 'POST', headers: { ...headers, host }, body })).data.answer).toBe('테스트 답변');
+  }
+  expect(reply).toHaveBeenCalledTimes(2);
+  expect(reply.mock.calls[0][2]).toBe('생후 100일');
+});
+
+test('partial or unsafe private configuration fails closed', () => {
+  for (const config of [
+    { ownerLogin: 'owner@example.test' },
+    ...['', 'http://mac.tail.ts.net', 'https://mac.tail.ts.net/path', 'https://mac.tail.ts.net.evil.test', 'https://owner@mac.tail.ts.net', 'https://mac.tail.ts.net:443'].map(remoteOrigin => ({ remoteOrigin, ownerLogin: 'owner@example.test' })),
+    { remoteOrigin: 'https://mac.tail.ts.net' },
+    { remoteOrigin: 'https://mac.tail.ts.net', ownerLogin: ' owner@example.test' }
+  ]) expect(() => createChatServer({ root: '/tmp', ...config })).toThrow('함께 설정');
 });

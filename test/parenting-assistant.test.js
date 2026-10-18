@@ -123,3 +123,27 @@ test('turning off records clears prior context and sends only the question',asyn
  await app.submit('새 질문');
  expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({messages:[{role:'user',content:'새 질문'}],context:''});
 });
+
+test('private mobile chat discovers only its same-origin server and uses its token',async()=>{
+ const fetch=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({provider:'codex-local',token:'private-token'})}).mockResolvedValue({ok:true,json:async()=>({answer:'휴대폰 답변'})});
+ const app=load({origin:'https://family-mac.example-tail.ts.net',fetch});
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 5.6 Sol'));
+ expect(app.privacy.textContent).toContain('연결된 Mac');
+ await app.submit('질문');
+ expect(fetch.mock.calls.map(call=>call[0])).toEqual(['/api/parenting/status','/api/parenting/chat']);
+ expect(fetch.mock.calls[1][1].headers['X-Chat-Token']).toBe('private-token');
+ expect(app.log.children[1].children[1].textContent).toBe('휴대폰 답변');
+});
+
+test('public and lookalike origins never try the private server; failed private auth stays disconnected',async()=>{
+ const fetch=vi.fn().mockResolvedValue({ok:false});
+ for(const origin of ['https://wys1110.github.io','http://mac.tail.ts.net','https://mac.tail.ts.net.evil.test']) {
+   const app=load({origin,fetch}); await app.submit('질문');
+ }
+ expect(fetch).not.toHaveBeenCalled();
+ const app=load({origin:'https://mac.tail.ts.net',fetch});
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('연결 끊김'));
+ await app.submit('질문');
+ expect(fetch).toHaveBeenCalledTimes(1);
+ expect(app.log.children[1].children[1].textContent).toContain('외부로 전송하지 않고');
+});
