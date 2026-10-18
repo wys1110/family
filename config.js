@@ -195,12 +195,13 @@ window.FAMILY_CONFIG = {
     { name: "travel-map", version: "20261017-kakao-map-v1", style: false },
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
     { name: "parenting-context", version: "20261018-parenting-codex-v1", style: false },
-    { name: "parenting-assistant", version: "20261018-parenting-mobile-v1" },
+    { name: "parenting-history", version: "20261018-parenting-queue-v1", style: false },
+    { name: "parenting-assistant", version: "20261018-parenting-queue-v1" },
     { name: "travel", version: "20261018-travel-summary-v1" },
   ];
 
   const deferredGroups = {
-    assistant: ['parenting-context', 'parenting-assistant'],
+    assistant: ['parenting-context', 'parenting-history', 'parenting-assistant'],
     english: ['english-stories', 'english-story-name'],
     settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
     admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity', 'admin-ops'],

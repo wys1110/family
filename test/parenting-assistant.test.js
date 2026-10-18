@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { expect, test, vi } from 'vitest';
 const source = readFileSync('parenting-assistant.js', 'utf8');
-function load({ origin, fetch } = {}) {
+function load({ origin, fetch, store } = {}) {
   class Element {
     constructor() { this.children=[]; this.events={}; this.attrs={}; this.hidden=false; this.value=''; this.classList={toggle:vi.fn()}; }
     setAttribute(name,value){this.attrs[name]=value;}
@@ -17,7 +17,8 @@ function load({ origin, fetch } = {}) {
   const input=new Element(),form=new Element(),log=new Element(),welcome=new Element(),send=new Element(),clear=new Element();
   const prompts=['수유 간격은 어떻게 잡으면 좋을까요?','밤에 자주 깨는데 무엇을 살펴볼까요?'].map(text=>Object.assign(new Element(),{textContent:text}));
   const status=new Element(),privacy=new Element(),babySelect=new Element(),useRecords=new Element(),contextPreview=new Element(); useRecords.checked=true;
-  const controls={'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
+  const savedList=new Element(),savedStatus=new Element(),savedCount=new Element(),savedSection=new Element();
+  const controls={'#assistantSavedList':savedList,'#assistantSavedStatus':savedStatus,'#assistantSavedCount':savedCount,'.assistant-saved':savedSection,'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
   const views=[new Element(),new Element()];
   const tabs=['calendar','growth','assistant','travel'].map(view=>Object.assign(new Element(),{dataset:{view}}));
   const main=new Element(); main.appendChild=child=>{views.push(child);}; main.querySelectorAll=()=>views;
@@ -27,21 +28,22 @@ function load({ origin, fetch } = {}) {
     const element=new Element();element.querySelector=s=>controls[s];element.querySelectorAll=()=>prompts;return element;
   }};
   const events={},storage=new Map();
-  const window={location:{origin},FAMILY_APP_STATE:{activeView:'calendar'},switchView:vi.fn(next=>{window.FAMILY_APP_STATE.activeView=next;}),addEventListener:(name,fn)=>{events[name]=fn;},confirm:vi.fn(()=>true)};
+  const window={FAMILY_PARENTING_HISTORY:store,location:{origin},FAMILY_APP_STATE:{activeView:'calendar'},switchView:vi.fn(next=>{window.FAMILY_APP_STATE.activeView=next;}),addEventListener:(name,fn)=>{events[name]=fn;},confirm:vi.fn(()=>true)};
   window.switchView.existingMarker=true;
-  vm.runInNewContext(source,{window,document,fetch,AbortController,localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
+  let poll;
+  vm.runInNewContext(source,{window,document,fetch,AbortController,crypto:{randomUUID:()=> 'new-id'},setInterval:fn=>{poll=fn;},localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
   const submit=value=>{input.value=value;return form.events.submit({preventDefault(){}});};
-  return {window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
+  return {poll:()=>poll(),savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
 }
 
 test('the chat is deferred and remains explicitly disconnected without sending data',()=>{
  const config=readFileSync('config.js','utf8');
- expect(config).toContain("assistant: ['parenting-context', 'parenting-assistant']");
+ expect(config).toContain("assistant: ['parenting-context', 'parenting-history', 'parenting-assistant']");
  const app=load();
  expect(app.view.hidden).toBe(true);
  expect(app.view.innerHTML).toContain('AI 연결 전');
  expect(app.view.innerHTML).toContain('새로고침하면 사라져요.');
- expect(source).not.toMatch(/supabase|OPENAI_API_KEY|setItem\([^,]*,\s*(question|input|log)/);
+ expect(source).not.toMatch(/OPENAI_API_KEY|setItem\([^,]*,\s*(question|input|log)/);
  app.window.switchView('assistant');
  expect(app.view.hidden).toBe(false);
  expect(app.views.slice(0,-1).every(view=>view.hidden)).toBe(true);
@@ -79,10 +81,8 @@ test('suggestions prepare editable questions, drafts survive navigation, and fam
  expect(app.welcome.hidden).toBe(false);expect(app.clear.hidden).toBe(true);
 });
 
-test('clearing questions can be cancelled and reopening the injected tab works',()=>{
+test('new conversation resets the screen without deleting saved questions',()=>{
  const app=load();app.submit('질문');
- app.window.confirm.mockReturnValueOnce(false);app.clear.events.click();
- expect(app.log.children).toHaveLength(2);
  app.clear.events.click();expect(app.log.children).toHaveLength(0);
  app.nav.events.click({target:{closest:()=>({dataset:{view:'assistant'}})}});
  expect(app.window.FAMILY_APP_STATE.activeView).toBe('assistant');
@@ -146,4 +146,32 @@ test('public and lookalike origins never try the private server; failed private 
  await app.submit('질문');
  expect(fetch).toHaveBeenCalledTimes(1);
  expect(app.log.children[1].children[1].textContent).toContain('외부로 전송하지 않고');
+});
+
+test('signed-in public app queues questions and restores the saved answer without a private network',async()=>{
+ let rows=[];
+ const ctx={userId:'owner',householdId:'home'};
+ const store={context:()=>ctx,status:vi.fn(async()=>({registered:true,online:true})),list:vi.fn(async()=>rows),enqueue:vi.fn(async(_,q)=>{rows=[{id:q.id,question:q.question,status:'queued',created_at:'2026-10-18'}];})};
+ const fetch=vi.fn();
+ const app=load({origin:'https://wys1110.github.io',fetch,store});
+ app.window.switchView('assistant');
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 연결됨'));
+ await app.submit('저장할 질문');
+ expect(store.enqueue).toHaveBeenCalledOnce();expect(fetch).not.toHaveBeenCalled();
+ expect(app.send.disabled).toBe(true);
+ rows=[{...rows[0],status:'completed',answer:'DB 답변'}]; app.poll();
+ await vi.waitFor(()=>expect(app.log.children[1].children[1].textContent).toBe('DB 답변'));
+ const reloaded=load({origin:'https://wys1110.github.io',store});
+ await vi.waitFor(()=>expect(reloaded.savedList.children).toHaveLength(1));
+ reloaded.savedList.children[0].events.click();
+ expect(reloaded.log.children[1].children[1].textContent).toBe('DB 답변');
+});
+
+test('late saved history is discarded after switching family',async()=>{
+ let finish;
+ const store={context:()=>({}),status:async()=>({online:true}),list:()=>new Promise(resolve=>{finish=resolve;})};
+ const app=load({store}); app.events.familycontextchange();
+ finish([{id:'old',question:'private previous family',status:'completed',answer:'old answer'}]);
+ await Promise.resolve(); await Promise.resolve();
+ expect(app.savedList.children).toHaveLength(0);expect(app.log.children).toHaveLength(0);
 });

@@ -38,3 +38,8 @@
 .assistant-child summary { cursor: pointer; min-height: 32px; font-size: 13px; color: var(--nova-muted); }
 .assistant-child pre { font: inherit; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .assistant-child p { font-size: 12px; line-height: 1.6; color: var(--nova-muted); margin: 4px 0 0; }
+.assistant-saved { margin-bottom: 20px; border-bottom: 1px solid var(--nova-line); padding-bottom: 16px; }
+.assistant-saved summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 650; }
+#assistantSavedStatus { color: var(--nova-muted); font-size: 13px; line-height: 1.6; }
+#assistantSavedList { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+#assistantSavedList button { width: 100%; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-soft); color: var(--nova-text); text-align: left; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
