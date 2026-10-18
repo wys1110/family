@@ -175,3 +175,13 @@ test('late saved history is discarded after switching family',async()=>{
  await Promise.resolve(); await Promise.resolve();
  expect(app.savedList.children).toHaveLength(0);expect(app.log.children).toHaveLength(0);
 });
+
+test('reload restores a pending question and idle polls preserve list focus',async()=>{
+ const rows=[{id:'pending',question:'waiting question',status:'queued',created_at:'2026-10-18'}];
+ const store={context:()=>({}),list:async()=>rows,status:async()=>({registered:true,online:true})};
+ const app=load({store});app.window.switchView('assistant');
+ await vi.waitFor(()=>expect(app.log.children[0]?.children[1].textContent).toBe('waiting question'));
+ const button=app.savedList.children[0];button.focus();app.poll();
+ await Promise.resolve();await Promise.resolve();
+ expect(app.savedList.children[0]).toBe(button);expect(button.focused).toBe(true);
+});

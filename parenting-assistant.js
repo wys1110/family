@@ -100,20 +100,22 @@
       const [rows, status] = await Promise.all([store.list(ctx,baby),store.status(ctx)]);
       if (generation!==current || baby!==selectedBabyId) return;
       const previous=saved.find(row=>row.id===activeQuestion);
+      const changed=JSON.stringify(saved)!==JSON.stringify(rows || []);
       saved=rows || [];
       cloudBusy=saved.some(row=>['queued','processing'].includes(row.status));
       setConnectionText(status.online ? 'Codex · 연결됨' : status.registered ? 'Mac 연결 대기' : 'Mac 등록 필요',
         '질문과 답변은 본인 계정에 저장돼요. 질문·선택한 기록 요약·최근 대화를 Mac의 Codex를 통해 OpenAI로 보내요. 기록 요약은 처리 후 지워요. AI 답변은 틀릴 수 있어요.');
       savedCount.textContent=saved.length ? `(${saved.length})` : '';
       savedStatus.textContent=status.online ? (saved.length ? '최근 질문 20개 · 본인만 볼 수 있어요.' : '저장된 질문이 없어요. 첫 질문을 남겨 보세요.') : 'Mac이 켜지고 연결되면 답변해요. 질문은 DB에 저장됩니다.';
-      savedList.replaceChildren();
-      for (const row of saved) {
+      if (changed) savedList.replaceChildren();
+      for (const row of changed ? saved : []) {
         const button=document.createElement('button'); button.type='button';
         const label={queued:'대기',processing:'답변 중',completed:'답변 완료',failed:'실패'}[row.status];
         button.textContent=`${new Date(row.created_at).toLocaleDateString('ko-KR')} · ${label} — ${row.question}`;
         button.addEventListener('click',()=>{ reset(); showSaved(row); savedSection.open=false; });
         savedList.appendChild(button);
       }
+      if (!activeQuestion && !log.children.length && !input.value && cloudBusy) activeQuestion=saved.find(row=>['queued','processing'].includes(row.status)).id;
       const active=saved.find(row=>row.id===activeQuestion);
       if (active && (!previous || previous.status!==active.status || previous.answer!==active.answer)) showSaved(active);
       send.textContent=cloudBusy ? '답변 대기 중…' : '질문 보내기 ↑'; updateSend();
