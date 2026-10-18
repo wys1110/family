@@ -6,11 +6,11 @@ const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(
 function setup(saved = 'travel') {
   const events = {}, clicks = [], loads = [];
   const element = () => ({ hidden: false, dataset: {}, children: [], classList: { toggle() {} }, setAttribute() {}, addEventListener() {}, appendChild(child) { this.children.push(child); }, replaceChildren() { this.children = []; }, querySelectorAll: () => [] });
-  const tabs = Object.fromEntries(['calendar', 'growth', 'english', 'travel', 'settings', 'admin'].map(name => [name, { ...element(), dataset: { view: name } }]));
+  const tabs = Object.fromEntries(['calendar', 'growth', 'assistant', 'english', 'travel', 'settings', 'admin'].map(name => [name, { ...element(), dataset: { view: name } }]));
   tabs.admin.hidden = true;
   const nav = { ...element(), querySelector: selector => tabs[selector.match(/data-view="([^"]+)"/)?.[1]], querySelectorAll: () => Object.values(tabs) };
   const main = element(), button = element();
-  const api = { initialView: saved, groups: { travel: ['travel'], settings: ['settings'], admin: ['admin'] }, prepare() {}, load: vi.fn(() => new Promise((resolve, reject) => loads.push({ resolve, reject }))) };
+  const api = { initialView: saved, groups: { assistant: ['parenting-assistant'], travel: ['travel'], settings: ['settings'], admin: ['admin'] }, prepare() {}, load: vi.fn(() => new Promise((resolve, reject) => loads.push({ resolve, reject }))) };
   const ctx = { state: { activeView: 'calendar', session: { user: { id: 'a' } }, household: { id: 'home' } }, FAMILY_DEFERRED_MODULES: api,
     addEventListener: (name, fn) => { events[name] = fn; }, console: { warn: vi.fn() }, ACTIVE_VIEW_KEY: 'view', localStorage: { setItem() {} },
     document: { querySelector: selector => selector === '.view-tabs' ? nav : selector === 'main' ? main : button, createElement: element, addEventListener: (_name, fn) => clicks.push(fn) },
@@ -69,4 +69,14 @@ test('saved admin tab waits for permission and never overrides later user naviga
   const other = setup('admin'); other.context(); other.click('growth');
   other.tabs.admin.hidden = false; other.ctx.FAMILY_DEFERRED_TABS.restoreInitial();
   expect(other.loads).toHaveLength(0);
+});
+
+test('the saved parenting assistant restores through the deferred loader', async () => {
+  const h = setup('assistant');
+  h.context();
+  expect(h.ctx.state.activeView).toBe('assistant');
+  expect(h.api.load).toHaveBeenCalledWith('parenting-assistant');
+  h.loads[0].resolve(); await settle();
+  expect(h.ctx.state.activeView).toBe('assistant');
+  expect(h.notice.hidden).toBe(true);
 });

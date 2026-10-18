@@ -137,7 +137,7 @@ test('deferred styles keep their cascade slots and script downloads are discover
   const stylesheetLinks = links.filter(link => link.rel === 'stylesheet');
   const deferredNames = new Set(Object.values(api.groups).flat());
   const dormant = stylesheetLinks.filter(link => deferredNames.has(link.dataset.module));
-  expect(dormant.map(link => link.dataset.module)).toEqual(['english-stories', 'feature-request', 'settings-family-management', 'travel']);
+  expect(dormant.map(link => link.dataset.module)).toEqual(['english-stories', 'feature-request', 'settings-family-management', 'parenting-assistant', 'travel']);
   expect(dormant.every(link => !link.href)).toBe(true);
   expect(links.filter(link => link.rel === 'preload')).toHaveLength(0);
   expect(scripts.some(script => script.dataset.module === 'admin-ops')).toBe(false);

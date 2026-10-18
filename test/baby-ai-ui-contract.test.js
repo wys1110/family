@@ -5,7 +5,7 @@ const html = readFileSync("index.html", "utf8");
 const config = readFileSync("config.js", "utf8");
 const packageJson = readFileSync("package.json", "utf8");
 
-test("사용하지 않는 AI 육아 도우미 UI와 브라우저 코드를 제공하지 않는다", () => {
+test("기존 Gemini 육아 도우미 UI와 브라우저 코드는 다시 제공하지 않는다", () => {
   expect(html).not.toContain('id="babyAiAssistant"');
   expect(html).not.toContain('id="babyAiStatus"');
   expect(config).not.toContain('{ name: "baby-ai"');
