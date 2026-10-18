@@ -30,19 +30,31 @@ function load({save=async()=>{}}={}){
  };
  const document={activeElement:null,querySelector:s=>s==='#travelView'?view:null,querySelectorAll:()=>[],addEventListener(){}};
  const maps={create:()=>({render:options=>{calls.render.push(options.items.map(item=>item.id));return '';},mount:(_root,options)=>{calls.mount.push(options.items.map(item=>item.id));calls.active.push(options.activeId);},destroy(){},placePoints:items=>items.filter(item=>item.place?.lat!=null)}),placePoints:()=>[]};
- const data={getTrip:id=>id?trip:null,getTrips:()=>[trip],isLocal:()=>true,createTrip:async()=>({id:'new'}),dateList:(start,end)=>{const dates=[],cursor=new Date(`${start}T12:00:00Z`),last=new Date(`${end}T12:00:00Z`);while(cursor<=last&&dates.length<366){dates.push(cursor.toISOString().slice(0,10));cursor.setUTCDate(cursor.getUTCDate()+1);}return dates;},toggleVisited:async(_trip,id)=>{calls.saves.push(id);trip.items.find(item=>item.id===id).visited=!trip.items.find(item=>item.id===id).visited;}};
+ const data={summarizeTrips:()=>({historyDestinations:[],topDestinations:[],pastTrips:1,totalNights:2,destinations:1,ongoingTrips:0,upcomingTrips:0}),getTrip:id=>id?trip:null,getTrips:()=>[trip],isLocal:()=>true,createTrip:async()=>({id:'new'}),dateList:(start,end)=>{const dates=[],cursor=new Date(`${start}T12:00:00Z`),last=new Date(`${end}T12:00:00Z`);while(cursor<=last&&dates.length<366){dates.push(cursor.toISOString().slice(0,10));cursor.setUTCDate(cursor.getUTCDate()+1);}return dates;},toggleVisited:async(_trip,id)=>{calls.saves.push(id);trip.items.find(item=>item.id===id).visited=!trip.items.find(item=>item.id===id).visited;}};
  data.setPlacesVisited=async(_trip,ids,visited)=>{calls.saves.push(ids);await save();trip.items.filter(item=>ids.includes(item.id)).forEach(item=>item.visited=visited);};
  const window={FAMILY_APP_STATE:{activeView:'travel'},FAMILY_TRAVEL_DATA:data,FAMILY_TRAVEL_MAP:maps,FAMILY_TRAVEL_MANAGEMENT:{render:()=>'',renderResults:()=>''},addEventListener:(name,fn)=>{events[name]=fn;},switchView(){},matchMedia:()=>({matches:false}),scrollTo(){}};
  const context={window,document,HTMLFormElement:class{},FormData:class{constructor(form){this.form=form;}entries(){return Object.entries(this.form.values);}}};
  vm.runInNewContext(source,context);
  const emit=async(type,target,options={})=>{for(const fn of listeners[type]??[])await fn({target,preventDefault(){},...options});};
- const click=async(attr,value)=>{const target={dataset:{[attr.replace(/^data-/,'').replace(/-([a-z])/g,(_,char)=>char.toUpperCase())]:value},matches:s=>s===`[${attr}]`,closest:s=>s==='button,a,[data-map-item]'?target:null};await emit('click',target);};
+ const click=async(attr,value)=>{if(attr==='data-travel-open')await click('data-travel-page','manage');const target={dataset:{[attr.replace(/^data-/,'').replace(/-([a-z])/g,(_,char)=>char.toUpperCase())]:value},matches:s=>s===`[${attr}]`,closest:s=>s==='button,a,[data-map-item]'?target:null};await emit('click',target);};
  const query=async(value)=>{const input=filters?.query??control('query');input.value=value;input.selectionStart=input.selectionEnd=value.length;input.focus();await emit('input',input);return input;};
  const status=async(value)=>{const select=filters?.status??control('status');select.value=value;await emit('change',select);};
  const bulkSave=action=>emit('submit',Object.assign(new context.HTMLFormElement(),{id:'travelBulkForm',values:{}}),{submitter:{dataset:{travelBulkAction:action}}});
  const ids=()=>[...view.innerHTML.matchAll(/data-map-item="([^"]+)"/g)].map(match=>match[1]);
  return {view,document,calls,events,window,click,query,status,ids,emit,bulkSave,filters:()=>filters};
 }
+
+test('travel opens on the family summary, preserves management navigation, and resets on family change',async()=>{
+ const app=load();
+ expect(app.view.innerHTML).toContain('id="travelHistoryTitle">우리 가족 여행 요약');
+ expect(app.view.innerHTML).toContain('data-travel-page="summary" aria-pressed="true"');
+ await app.click('data-travel-open','trip-a');
+ expect(app.ids()).toHaveLength(5);
+ expect(app.view.innerHTML).toContain('data-travel-page="manage" aria-pressed="true"');
+ app.events.familycontextchange();
+ expect(app.view.innerHTML).toContain('id="travelHistoryTitle">우리 가족 여행 요약');
+ expect(app.ids()).toHaveLength(0);
+});
 
 test('search and visit status use the same visible records for list, map, route and bulk selection',async()=>{
  const app=load();await app.click('data-travel-open','trip-a');

@@ -195,7 +195,10 @@ test('history map groups all past destinations, retains archived dates and uses 
   expect(saved.items[0].place.lat).toBeNull();
 });
 
-test('travel summary is separate from the management list and itinerary', () => {
+test('travel summary opens first and stays separate from the management list and itinerary', () => {
+  expect(travelSource).toContain("const current = { page:'summary'");
+  expect(travelSource).toContain("clearItineraryFilters();current.page='summary';current.query=''");
+  expect(travelSource).toContain('해외 여행도 아래 요약과 여행 관리에 포함돼요.');
   expect(travelSource).toContain('data.getTrips({ includeArchived: true })');
   expect(travelSource).toContain('종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이');
   expect(dataSource).toContain('여행지 미지정');
@@ -220,7 +223,7 @@ test('travel tab loads only archive modules and has no booking-search workspace'
 
 test('travel page introduction keeps Korean words together on narrow mobile headers', () => {
   expect(travelCssSource).toMatch(/\.travel-page-header p:not\(\.eyebrow\)[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s);
-  expect(configSource).toContain('{ name: "travel", version: "20261017-kakao-map-v1" }');
+  expect(configSource).toContain('{ name: "travel", version: "20261018-travel-summary-v1" }');
 });
 
 test('the dynamically-created travel tab remains navigable after its deferred load', () => {
