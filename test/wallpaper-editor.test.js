@@ -95,20 +95,17 @@ function appSlice(startMarker, endMarker) {
 }
 
 function createModuleWaitHarness(modulesReady) {
-  let releaseTimeout;
   const initializeWallpaperEditor = vi.fn(() => true);
   const renderWallpapers = vi.fn();
-  const setTimeout = vi.fn((resolve) => { releaseTimeout = resolve; });
-  const source = appSlice("async function waitForWallpaperEditor()", "function authSessionKey");
+  const source = appSlice("async function waitForCoreModules()", "function authSessionKey");
   const createWaiter = new Function(
-    "window", "initializeWallpaperEditor", "renderWallpapers", "setTimeout",
-    `${source}\nreturn waitForWallpaperEditor;`,
+    "window", "initializeWallpaperEditor", "renderWallpapers",
+    `${source}\nreturn waitForCoreModules;`,
   );
   return {
-    wait: createWaiter({ FAMILY_MODULES_READY: modulesReady }, initializeWallpaperEditor, renderWallpapers, setTimeout),
+    wait: createWaiter({ FAMILY_MODULES_READY: modulesReady }, initializeWallpaperEditor, renderWallpapers),
     initializeWallpaperEditor,
     renderWallpapers,
-    releaseTimeout: () => releaseTimeout(),
   };
 }
 
@@ -370,7 +367,7 @@ describe("wallpaper editor surface", () => {
 
   test("initializes one app controller only after the module is ready", () => {
     expect(app.match(/FAMILY_WALLPAPER_EDITOR\.createController\(/g)).toHaveLength(1);
-    expect(app).toContain("const startupModulesReady = waitForWallpaperEditor();");
+    expect(app).toContain("const startupModulesReady = waitForCoreModules();");
   });
 
   test("keeps the app usable when the editor module fails to load", () => {
@@ -379,18 +376,20 @@ describe("wallpaper editor surface", () => {
     expect(app).toContain("if (!wallpaperEditorController) return;");
   });
 
-  test("bounds core bootstrap but initializes and rerenders after late module readiness", async () => {
+  test("waits for required core handlers before initializing the editor", async () => {
     let resolveModules;
     const modulesReady = new Promise((resolve) => { resolveModules = resolve; });
     const harness = createModuleWaitHarness(modulesReady);
 
     const waiting = harness.wait();
-    harness.releaseTimeout();
-    await waiting;
+    let ready = false;
+    waiting.then(() => { ready = true; });
+    await Promise.resolve();
+    expect(ready).toBe(false);
     expect(harness.initializeWallpaperEditor).not.toHaveBeenCalled();
 
     resolveModules();
-    await modulesReady;
+    await waiting;
     await Promise.resolve();
     expect(harness.initializeWallpaperEditor).toHaveBeenCalledTimes(1);
     expect(harness.renderWallpapers).toHaveBeenCalledTimes(1);

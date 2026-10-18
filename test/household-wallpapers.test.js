@@ -452,16 +452,16 @@ describe('family wallpaper', () => {
     expect(app).toContain('function applyWallpaperCrop(image, wallpaper)');
     expect(app).toContain('function openWallpaperEditor(surface, file)');
     expect(app).toContain('async function saveWallpaperDraft(draft)');
-    expect(app).toContain('const startupModulesReady = waitForWallpaperEditor();');
-    expect(app).toMatch(/modulesReady\.then\(\(\) => \{\s+if \(initializeWallpaperEditor\(\)\) renderWallpapers\(\);/s);
+    expect(app).toContain('const startupModulesReady = waitForCoreModules();');
+    expect(app).toMatch(/await window\.FAMILY_MODULES_READY;\s+if \(initializeWallpaperEditor\(\)\) renderWallpapers\(\);/s);
     expect(app).toContain('state.wallpapers[draft.surface] = { path: existing?.path || "", url, ...crop };');
     expect(app).toMatch(/if \(!persistLocalWallpapers\(\)\) \{\s+state\.wallpapers\[draft\.surface\] = existing;\s+return false;/s);
   });
 
   test('delivers the wallpaper editor assets past mobile and PWA caches', () => {
     expect(html).toContain('theme-critical.css?v=20261017-growth-combined-v1');
-    expect(html).toContain('config.js?v=20261018-review-performance-v1');
-    expect(html).toContain('app.js?v=20261018-review-performance-v1');
+    expect(html).toContain('config.js?v=20261018-startup-review-v1');
+    expect(html).toContain('app.js?v=20261018-startup-review-v1');
     expect(config).toContain('{ name: "family-wallpapers", version: "20260914-original-photo-v2", script: false }');
     expect(config).toContain('{ name: "wallpaper-editor", version: "20260815-v1" }');
     expect(serviceWorker).toContain('url.pathname.endsWith("/family-wallpapers.css")');

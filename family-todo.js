@@ -243,19 +243,7 @@
   }
 
   function localKey(context = familyContext()) {
-    return context ? `${LOCAL_KEY}:${context.household.id}` : LOCAL_KEY;
-  }
-
-  function claimLegacyLocalTodos(context) {
-    if (!context) return;
-    const scopedKey = localKey(context);
-    try {
-      if (localStorage.getItem(scopedKey) !== null) return;
-      const legacy = localStorage.getItem(LOCAL_KEY);
-      if (legacy === null) return;
-      localStorage.setItem(scopedKey, legacy);
-      localStorage.removeItem(LOCAL_KEY);
-    } catch { /* 기존 데이터는 원래 위치에 보존 */ }
+    return context ? `${LOCAL_KEY}:${context.session.user.id}:${context.household.id}` : LOCAL_KEY;
   }
 
   async function waitForFamilyContext() {
@@ -352,6 +340,13 @@
     }
   }
 
+  function assertTodoWritable() {
+    if (!moduleState.loading) return;
+    const message = '할 일을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.';
+    announce(message);
+    throw Object.assign(new Error(message), { code: 'FAMILY_TODOS_LOADING' });
+  }
+
   async function loadTodos({ silent = false } = {}) {
     if (moduleState.loading) return;
     const loadId = ++moduleState.loadId;
@@ -372,7 +367,6 @@
       return;
     }
 
-    claimLegacyLocalTodos(context);
     const expectedContext = contextKey(context);
     moduleState.contextKey = expectedContext;
 
@@ -406,23 +400,26 @@
     let remoteData = data || [];
     const localTodos = readLocalTodos(context);
     if (localTodos.length) {
-      const { error: migrateError } = await withAuthRecovery(() => context.supabase
-        .from('family_todos')
-        .upsert(localTodos.map((todo) => toRemote(todo, context)), { onConflict: 'id' }), context);
-      if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
-      if (!migrateError) {
-        try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
-        const { data: refreshedData, error: refreshedError } = await withAuthRecovery(() => window.FAMILY_DATA.readAll(() => context.supabase
+      let migrateError;
+      try {
+        ({ error: migrateError } = await withAuthRecovery(() => context.supabase
           .from('family_todos')
-          .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
-          .eq('household_id', context.household.id)
-          .order('completed', { ascending: true })
-          .order('due_date', { ascending: true, nullsFirst: false })
-          .order('created_at', { ascending: false })
-          ), context);
-        if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
-        if (!refreshedError) remoteData = refreshedData || [];
+          .upsert(localTodos.map((todo) => toRemote(todo, context)), { onConflict: 'id' }), context));
+      } catch (error) { migrateError = error; }
+      if (loadId !== moduleState.loadId || expectedContext !== contextKey()) return;
+      if (migrateError) {
+        moduleState.storage = 'local';
+        moduleState.todos = localTodos;
+        moduleState.loaded = true;
+        moduleState.loading = false;
+        renderTodos();
+        decorateCalendar();
+        announce('임시 저장한 할 일을 동기화하지 못했어요. 이 기기에 보관하고 있어요.');
+        return;
       }
+      remoteData = [...new Map([...remoteData, ...localTodos.map((todo) => toRemote(todo, context))]
+        .map((todo) => [todo.id, todo])).values()];
+      try { localStorage.removeItem(localKey(context)); } catch { /* 원격 저장은 완료됨 */ }
     }
 
     moduleState.storage = 'remote';
@@ -434,6 +431,7 @@
   }
 
   async function createTodo(input, { quiet = false } = {}) {
+    assertTodoWritable();
     const now = new Date().toISOString();
     const todo = normalizeTodo({
       id: uid(),
@@ -495,6 +493,7 @@
   }
 
   async function updateTodo(id, patch, { quiet = false } = {}) {
+    assertTodoWritable();
     const index = moduleState.todos.findIndex((todo) => todo.id === id);
     if (index < 0) return null;
 
@@ -535,6 +534,7 @@
   }
 
   async function deleteTodo(id) {
+    assertTodoWritable();
     const index = moduleState.todos.findIndex((todo) => todo.id === id);
     if (index < 0) return;
 
@@ -692,7 +692,9 @@
   }
 
   window.FAMILY_TODO_API = {
+    assertWritable: assertTodoWritable,
     restoreFamilyBackup: (rows) => {
+      assertTodoWritable();
       const mapping = new Map(rows.map(row=>[row.id,uid()]));
       const restored = rows.filter(row=>row.visibility === 'family').map(row=>normalizeTodo({...row,id:mapping.get(row.id),parentId:mapping.get(row.recurrence_parent_id || row.parentId) || null,createdBy:familyContext()?.session?.user?.id || null}));
       const next = [...moduleState.todos, ...restored];
@@ -805,10 +807,11 @@
 
   async function toggleTodo(todo) {
     if (!todo || moduleState.busyIds.has(todo.id)) return;
-    moduleState.busyIds.add(todo.id);
-    renderTodos();
     let completedSaved = false;
     try {
+      assertTodoWritable();
+      moduleState.busyIds.add(todo.id);
+      renderTodos();
       const completed = !todo.completed;
       const completedAt = completed ? new Date().toISOString() : null;
       await updateTodo(todo.id, { completed, completedAt }, { quiet: true });
@@ -832,11 +835,11 @@
           announce(`완료했어요. 다음 ${recurrenceLabel(todo.recurrence)} 할 일도 만들었어요.`);
         }
       } else announce(completed ? '완료했어요 🎉' : '다시 할 일로 돌렸어요.');
-    } catch {
+    } catch (error) {
       if (completedSaved && !todo.completed) {
         try { await updateTodo(todo.id, { completed: false, completedAt: null }, { quiet: true }); } catch { /* 서버 재조회로 복구 */ }
       }
-      announce('완료 상태를 변경하지 못했어요.');
+      if (error.code !== 'FAMILY_TODOS_LOADING') announce('완료 상태를 변경하지 못했어요.');
     } finally {
       moduleState.busyIds.delete(todo.id);
       renderTodos();
@@ -868,7 +871,7 @@
       await createTodo({ title, dueDate: dateKey(), assignee: moduleState.scope === 'private' ? '나' : '가족', recurrence: 'none', note: '', visibility: moduleState.scope });
       quickTitle.value = '';
       setFilter('today');
-    } catch { announce('할 일을 추가하지 못했어요.'); }
+    } catch (error) { if (error.code !== 'FAMILY_TODOS_LOADING') announce('할 일을 추가하지 못했어요.'); }
     finally { button.disabled = false; }
   });
 
@@ -922,7 +925,7 @@
       if (todoIdInput.value) await updateTodo(todoIdInput.value, values);
       else await createTodo(values);
       dialog.close();
-    } catch { announce('할 일을 저장하지 못했어요.'); }
+    } catch (error) { if (error.code !== 'FAMILY_TODOS_LOADING') announce('할 일을 저장하지 못했어요.'); }
     finally {
       saveButton.disabled = false;
       saveButton.textContent = todoIdInput.value ? '수정 저장' : '할 일 추가';
@@ -936,7 +939,7 @@
     try {
       await deleteTodo(id);
       dialog.close();
-    } catch { announce('할 일을 삭제하지 못했어요.'); }
+    } catch (error) { if (error.code !== 'FAMILY_TODOS_LOADING') announce('할 일을 삭제하지 못했어요.'); }
     finally { deleteButton.disabled = false; }
   });
 

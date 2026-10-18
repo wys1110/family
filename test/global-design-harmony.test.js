@@ -77,10 +77,10 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20261014-growth-empty-v1');
-    expect(index).toContain('<script src="app.js?v=20261018-review-performance-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20261018-startup-review-v1"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20261013-view-storage-v1" }');
-    expect(config).toContain('{ name: "settings", version: "20261017-design-harmony-v1" }');
+    expect(config).toContain('{ name: "settings", version: "20261018-startup-review-v1" }');
     expect(config).toContain('{ name: "page-header-spacing", version: "20260722-verse-unified-v1", script: false }');
     expect(config).toContain('{ name: "night-theme-polish", version: "20260722-growth-restraint-v1" }');
     expect(config).toContain('{ name: "typography-system", version: "20261017-design-harmony-v1", script: false }');

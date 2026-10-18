@@ -238,6 +238,9 @@ async function getInitialSession(supabase) {
 }
 
 async function init() {
+  const shell = $("#appShell");
+  shell.inert = true;
+  shell.ariaBusy = "true";
   lockMobileZoom();
   bindUi();
   document.body.classList.toggle("demo-mode", DEMO_MODE);
@@ -275,24 +278,18 @@ async function init() {
   state.authReady = true;
   window.__familyCoreReady = true;
   window.dispatchEvent(new CustomEvent("family:core-ready"));
-  const startupModulesReady = waitForWallpaperEditor();
+  const startupModulesReady = waitForCoreModules();
   await bootstrapData(0, startupModulesReady);
+  await startupModulesReady;
+  shell.inert = false;
+  shell.ariaBusy = "false";
   window.FAMILY_MOTION_API?.activate();
 }
 
-async function waitForWallpaperEditor() {
-  const modulesReady = window.FAMILY_MODULES_READY;
-  if (!modulesReady) {
-    initializeWallpaperEditor();
-    return;
-  }
-  modulesReady.then(() => {
-    if (initializeWallpaperEditor()) renderWallpapers();
-  });
-  await Promise.race([
-    modulesReady,
-    new Promise((resolve) => setTimeout(resolve, 5000)),
-  ]);
+async function waitForCoreModules() {
+  // Core modules install the rendering and mutation handlers before interaction.
+  await window.FAMILY_MODULES_READY;
+  if (initializeWallpaperEditor()) renderWallpapers();
 }
 
 function authSessionKey(session) {
@@ -361,7 +358,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
       state.growthEntries = [];
       state.familyMembers = [...DEFAULT_FAMILY_MEMBERS];
       state.activeBabyId = null;
-      if (!displayReady) render();
+      if (!displayReady && document.documentElement.dataset.familyModulesReady === "true") render();
       updateAuthGate();
       const { data: memberships, error } = await withAuthRecovery(() => state.supabase.from("household_members").select("household_id, role, households(id,name,invite_code)").eq("user_id", state.session.user.id).order("created_at", { ascending: true }).limit(1), state.supabase, sessionKey);
       if (!isCurrentBootstrap(requestId, sessionKey)) return false;
@@ -390,7 +387,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
     console.error(`가족 기록 불러오기 실패: ${describeRemoteError(error)}`, error);
     if (!window.FAMILY_AUTH_API.isAuthError(error)) toast("기록을 불러오지 못했어요. 네트워크를 확인해 주세요");
   }
-  if (displayReady) await displayReady;
+  await (displayReady || window.FAMILY_MODULES_READY);
   if (!isCurrentBootstrap(requestId, sessionKey)) return false;
   selectInitialBaby();
   validateCareTimerContext();

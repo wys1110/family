@@ -22,12 +22,12 @@ test('private data, foreign origins and mutations are never handled by the asset
 });
 test('initialization starts data loading while modules are still pending',async()=>{
  const app=readFileSync('app.js','utf8');
- const source=app.slice(app.indexOf('async function init()'),app.indexOf('async function waitForWallpaperEditor()'));
+ const source=app.slice(app.indexOf('async function init()'),app.indexOf('async function waitForCoreModules()'));
  let resolveModules,resolveData;
  const modules=new Promise(r=>resolveModules=r),data=new Promise(r=>resolveData=r);
  const activate=vi.fn(),bootstrapData=vi.fn(async(_attempt,ready)=>{await data;await ready;});
  const state={};const window={dispatchEvent(){},FAMILY_MOTION_API:{activate}};
- const context={state,window,config:{},DEMO_MODE:false,document:{body:{classList:{toggle(){}}}},$:()=>({}),lockMobileZoom(){},bindUi(){},renderDailyVerse(){},updateCareTimerClock(){},setInterval(){},waitForWallpaperEditor:()=>modules,bootstrapData,CustomEvent:class{},console};
+ const context={state,window,config:{},DEMO_MODE:false,document:{body:{classList:{toggle(){}}}},$:()=>({}),lockMobileZoom(){},bindUi(){},renderDailyVerse(){},updateCareTimerClock(){},setInterval(){},waitForCoreModules:()=>modules,bootstrapData,CustomEvent:class{},console};
  vm.createContext(context);vm.runInContext(source,context);const pending=context.init();
  expect(bootstrapData).toHaveBeenCalledWith(0,modules);expect(activate).not.toHaveBeenCalled();
  resolveData();await Promise.resolve();expect(activate).not.toHaveBeenCalled();resolveModules();await pending;expect(activate).toHaveBeenCalledOnce();

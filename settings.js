@@ -273,16 +273,6 @@
     return true;
   };
 
-  const restoreSettingsView = (attempt = 0) => {
-    if (!installSettingsView()) {
-      if (attempt < 40) setTimeout(() => restoreSettingsView(attempt + 1), 100);
-      return;
-    }
-    let savedView = null;
-    try { savedView = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY); } catch { /* 기본 탭 유지 */ }
-    if (savedView === VIEW_NAME) switchView(VIEW_NAME);
-  };
-
   view.addEventListener('click', (event) => {
     const option = event.target.closest('[data-theme-option]');
     if (!option) return;
@@ -294,5 +284,5 @@
   });
 
   applyTheme(storedTheme(), { persist: false });
-  restoreSettingsView();
+  installSettingsView();
 })();

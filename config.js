@@ -118,11 +118,11 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260722-bottom-refresh-v6" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "family-permissions", version: "20260805-family-permissions-v1", style: false },
-    { name: "settings", version: "20261017-design-harmony-v1" },
-    { name: "family-backup-media", version: "20261018-review-performance-v1", style: false },
+    { name: "settings", version: "20261018-startup-review-v1" },
+    { name: "family-backup-media", version: "20261018-startup-review-v1", style: false },
     { name: "family-journal", version: "20260915-growth-performance-v1" },
     { name: "settings-backup", version: "20260913-records-v1", style: false },
-    { name: "settings-family-management", version: "20261006-layout-harmony-v2" },
+    { name: "settings-family-management", version: "20261018-startup-review-v1" },
     { name: "settings-data-export", version: "20260913-records-v1", style: false },
     { name: "family-profile", version: "20260722-photo-upload-v3" },
     { name: "settings-refresh", version: "20260722-persistent-v2" },
@@ -134,7 +134,7 @@ window.FAMILY_CONFIG = {
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20261013-view-storage-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
-    { name: "family-todo", version: "20260913-records-v1" },
+    { name: "family-todo", version: "20261018-startup-review-v1" },
     { name: "notification-center", version: "20260830-auth-recovery-v2" },
     { name: "family-onboarding", version: "20260830-auth-recovery-v2" },
     { name: "family-search", version: "20260805-family-search-v1" },
@@ -186,8 +186,8 @@ window.FAMILY_CONFIG = {
     { name: "family-wallpapers", version: "20260914-original-photo-v2", script: false },
     { name: "wallpaper-editor", version: "20260815-v1" },
     { name: "motion-system", version: "20260915-tab-position-v1" },
-    { name: "family-admin", version: "20261018-deferred-loading-v1", style: false },
-    { name: "deferred-tabs", version: "20261018-deferred-loading-v1", style: false },
+    { name: "family-admin", version: "20261018-startup-review-v1", style: false },
+    { name: "deferred-tabs", version: "20261018-startup-review-v1", style: false },
     { name: "compact-family", version: "20261017-design-harmony-v1" },
     { name: "nova-family", version: "20261017-design-harmony-v1" },
     { name: "travel-sharing", version: "20261018-review-performance-v1", style: false },
@@ -316,6 +316,10 @@ window.FAMILY_CONFIG = {
     },
   };
 
+  document.addEventListener('click', event => {
+    if (event.target.closest?.('.view-tab[data-view]')) window.FAMILY_DEFERRED_MODULES.initialView = null;
+  }, true);
+
   let startModules;
   window.FAMILY_MODULES_READY = new Promise((resolve) => {
     startModules = async () => {
@@ -330,10 +334,10 @@ window.FAMILY_CONFIG = {
             label: "다시 시도",
             run: startModules,
           });
+          clearTimeout(toast.timer);
         }
         return;
       }
-      await window.FAMILY_DEFERRED_TABS?.restoreInitial();
       document.documentElement.dataset.familyModulesReady = "true";
       resolve();
     };

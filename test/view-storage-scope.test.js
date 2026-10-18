@@ -3,19 +3,6 @@ import vm from 'node:vm';
 import { expect, test, vi } from 'vitest';
 
 const liveKey = 'family-active-view-v1', demoKey = 'family-demo-active-view-v1';
-test.each([demoKey, liveKey])('settings startup restores only the core view key %s', key => {
-  const source = readFileSync('settings.js', 'utf8');
-  const store = new Map([[liveKey, 'settings'], [demoKey, 'growth']]);
-  const switchView = vi.fn();
-  const start = source.indexOf('  const restoreSettingsView =');
-  const end = source.indexOf('\n  };', start) + 5;
-  const declaration = source.match(/  const ACTIVE_VIEW_STORAGE_KEY = [^;]+;/)[0];
-  const context = { ACTIVE_VIEW_KEY: key, VIEW_NAME: 'settings', localStorage: { getItem: k => store.get(k) }, switchView, installSettingsView: () => true };
-  vm.runInNewContext(`${declaration}\n${source.slice(start, end)}\nrestoreSettingsView();`, context);
-  if (key === demoKey) expect(switchView).not.toHaveBeenCalled();
-  else expect(switchView).toHaveBeenCalledExactlyOnceWith('settings');
-});
-
 test.each([demoKey, liveKey])('deferred navigation persists only the core view key %s', key => {
   const store = new Map([[liveKey, 'settings'], [demoKey, 'growth']]);
   const element = () => ({ hidden: false, dataset: {}, appendChild() {}, replaceChildren() {}, setAttribute() {}, querySelectorAll: () => [] });

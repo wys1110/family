@@ -1,5 +1,7 @@
 import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {webcrypto} from 'node:crypto';
 import {test,expect,beforeAll,afterAll} from 'vitest';
 let db;const home='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',actor='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 beforeAll(async()=>{
@@ -38,4 +40,19 @@ test('bad photos and private todos roll back every inserted record',async()=>{
 test('other households and anonymous execution remain blocked',async()=>{
  await expect(call(fixture(),'bk-4444444444444444',actor)).rejects.toThrow('household owner required');
  expect((await db.query("select has_function_privilege('anon','restore_household_backup_v3(uuid,text,jsonb)','execute') as allowed")).rows[0].allowed).toBe(false);
+});
+
+test('photo paths produced by the browser restore helper pass the database validation', async () => {
+ const window = {};
+ vm.runInNewContext(readFileSync('family-backup-media.js', 'utf8'), {window, crypto:webcrypto, TextEncoder, Uint8Array, atob, btoa, Blob});
+ const bytes = new Uint8Array([1,2,3]);
+ const hash = Buffer.from(await webcrypto.subtle.digest('SHA-256', bytes)).toString('hex');
+ const photo = {id:'photo-0',mime:'image/jpeg',sha256:hash,data:Buffer.from(bytes).toString('base64')};
+ const tables = fixture();
+ tables.growth_entries[0].photo_refs = [{id:photo.id,sha256:hash}];
+ const storage = {upload:async (path) => {await db.query('insert into storage.objects values ($1,$2)', ['growth-photos',path]);return {error:null};}};
+ const restored = await window.FAMILY_BACKUP_MEDIA.restore({backupId:'bk-5555555555555555',photos:[photo],tables}, {householdId:home,supabase:{storage:{from:()=>storage}}}, op=>op(), ()=>{}, ()=>true);
+ tables.growth_entries = restored;
+ expect((await call(tables,'bk-5555555555555555')).rows[0].result.row_counts.growth_entries).toBe(1);
+ expect((await db.query('select photo_paths from growth_entries where photo_paths = $1::text[]', [restored[0].photo_paths])).rows).toHaveLength(1);
 });
