@@ -29,5 +29,5 @@ test("닫은 배너는 같은 수유 주기 동안 다시 나타나지 않는다
 });
 
 test("새 알림 로직을 즉시 불러오도록 캐시 버전을 갱신한다", () => {
-  expect(config).toContain('{ name: "feeding-reminder", version: "20260719-single-alert-v1" }');
+  expect(config).toContain('{ name: "feeding-reminder", version: "20261023-family-review-fixes-v1" }');
 });

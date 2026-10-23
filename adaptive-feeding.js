@@ -11,7 +11,7 @@
   const BOTTLE_STEP_ML = 10;
   const BOTTLE_MIN_ML = 10;
   const BOTTLE_MAX_ML = 300;
-  const DIRECT_DEFAULT_MINUTES = { 왼쪽: 20, 오른쪽: 20, 양쪽: 40 };
+  const DIRECT_DEFAULT_MINUTES = { 왼쪽: 10, 오른쪽: 10, 양쪽: 10 };
   const DIRECT_STEP_MINUTES = 5;
   const DIRECT_MIN_MINUTES = 5;
   const DIRECT_MAX_MINUTES = 120;

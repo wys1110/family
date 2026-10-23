@@ -14,6 +14,9 @@ create index if not exists feature_requests_household_created_idx
 
 alter table public.feature_requests enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update on table public.feature_requests to authenticated;
+
 create or replace function public.is_household_owner(target_household uuid)
 returns boolean language sql stable security definer set search_path = public
 as $$

@@ -52,8 +52,20 @@ create index baby_ai_refresh_queue_due_idx
   on public.baby_ai_refresh_queue(status, due_at) where status in ('pending', 'failed');
 
 alter table public.baby_ai_profiles enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.baby_ai_profiles to authenticated;
+grant select on table public.baby_ai_profiles to service_role;
 alter table public.baby_ai_strategy_drafts enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.baby_ai_strategy_drafts to authenticated;
+grant select, insert on table public.baby_ai_strategy_drafts to service_role;
 alter table public.baby_ai_refresh_queue enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.baby_ai_refresh_queue to authenticated;
+grant select, insert, update, delete on table public.baby_ai_refresh_queue to service_role;
 
 create policy "members can view baby AI profiles" on public.baby_ai_profiles
   for select to authenticated using (public.is_household_member(household_id));

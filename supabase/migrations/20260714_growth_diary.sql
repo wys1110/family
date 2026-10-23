@@ -15,6 +15,10 @@ create table public.growth_entries (
 create index growth_entries_household_date_idx on public.growth_entries(household_id, entry_date desc);
 alter table public.growth_entries enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.growth_entries to authenticated;
+grant select on table public.growth_entries to service_role;
+
 create policy "members can view growth entries" on public.growth_entries for select to authenticated using (public.is_household_member(household_id));
 create policy "members can create growth entries" on public.growth_entries for insert to authenticated with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "members can update growth entries" on public.growth_entries for update to authenticated using (public.is_household_member(household_id)) with check (public.is_household_member(household_id));

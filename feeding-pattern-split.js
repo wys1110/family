@@ -121,6 +121,24 @@ function careCurrentTimeMarker(now) {
       const large = span > 720 ? 1 : 0;
       return `M${a.x} ${a.y} A137 137 0 ${large} 1 ${b.x} ${b.y} L${c.x} ${c.y} A87 87 0 ${large} 0 ${d.x} ${d.y} Z`;
     };
+    // Reserve the moon, sun and hour labels before placing record emojis.
+    const markerPoints = [{ x: 180, y: 108 }, { x: 180, y: 252 }, { x: 180, y: 32 }, { x: 327, y: 180 }, { x: 180, y: 325 }, { x: 33, y: 180 }];
+    const overflowMarkers = [];
+    const markerPoint = (angle) => {
+      const available = (point) => markerPoints.every((other) => Math.abs(point.x - other.x) >= 28 || Math.abs(point.y - other.y) >= 32);
+      const preferred = clockPoint(angle, 112);
+      if (available(preferred)) { markerPoints.push(preferred); return preferred; }
+      // Keep crowded emojis inside the band; the tooltip retains the exact time.
+      for (let offset = 0; offset <= 180; offset += 6) {
+        for (const direction of [1, -1]) {
+          for (const radius of [98, 126]) {
+            const point = clockPoint(angle + offset * direction, radius);
+            if (available(point)) { markerPoints.push(point); return point; }
+          }
+        }
+      }
+      return null;
+    };
     const records = clockItems.map((entry) => {
       const [hour, minute] = entry.time.split(":").map(Number);
       const start = hour * 60 + minute;
@@ -135,10 +153,21 @@ function careCurrentTimeMarker(now) {
       const title = `<title>${escapeHtml(`${entry.time} ${label} ${detail || ""}`)}</title>`;
       const span = Math.min(1440, duration);
       const range = duration ? `<path class="care-band-range ${type}" data-start="${start}" data-duration="${span}" d="${sector(start, duration)}" fill-rule="evenodd">${title}</path>` : "";
-      if (type === "sleep" && duration) return { range, marker: "" };
-      const point = clockPoint((start + span / 2) / 4, 112);
+      if (type === "sleep" && duration) return { range };
+      const angle = (start + span / 2) / 4;
       const emoji = careRecordEmoji(entry, type);
-      return { range, marker: `<g class="care-band-marker ${type}" data-start="${start}" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">${title}<circle class="care-band-record-background" cx="0" cy="0" r="10"></circle><text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${emoji}</text></g>` };
+      return { range, type, start, angle, emoji, title, label, detail, entry };
+    });
+    const markerRecords = records.filter((record) => record.emoji);
+    const markers = markerRecords.map(({ type, start, angle, emoji, title, label, detail, entry }) => {
+      const anchor = clockPoint(angle, 112);
+      const point = markerPoint(angle);
+      if (!point) {
+        overflowMarkers.push(`<li>${emoji} ${escapeHtml(`${entry.time} ${label} ${detail || ""}`)}</li>`);
+        return "";
+      }
+      const guide = Math.hypot(anchor.x - point.x, anchor.y - point.y) > 15 ? `<line class="care-band-tick" x1="${(anchor.x - point.x).toFixed(1)}" y1="${(anchor.y - point.y).toFixed(1)}" x2="0" y2="0"></line>` : "";
+      return `<g class="care-band-marker ${type}" data-start="${start}" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">${title}${guide}<circle class="care-band-record-background" cx="0" cy="0" r="10"></circle><text class="care-band-record-symbol" x="0" y="0" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${emoji}</text></g>`;
     });
     const ticks = Array.from({ length: 24 }, (_, hour) => {
       const inner = clockPoint(hour * 15, 90), outer = clockPoint(hour * 15, hour % 6 === 0 ? 96 : 93);
@@ -156,13 +185,14 @@ function careCurrentTimeMarker(now) {
           <svg class="care-clock care-band-dial" viewBox="20 20 320 320" role="img" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일 24시간 돌봄 패턴, 총 수유량 ${total}밀리리터, 분유 ${ml(formulaMl)}밀리리터, 유축 ${ml(pumpedMl)}밀리리터, 직수 ${breastMinutes}분, 수면 ${sleepTotal}분, 이유식 ${count("solid")}회, 기저귀 ${count("diaper")}회, 건강 ${count("health")}회. 00시는 위, 06시는 오른쪽, 12시는 아래, 18시는 왼쪽. 이모지는 기록 종류, 채운 구간은 시간 범위.">
             <defs><linearGradient id="careClockDayNight" x1="0" y1="0" x2="0" y2="1"><stop class="care-band-night-color"></stop><stop class="care-band-transition-color" offset=".5"></stop><stop class="care-band-day-color" offset="1"></stop></linearGradient></defs>
             <circle class="care-band-track" cx="180" cy="180" r="112"></circle>
-            ${records.map((record) => record.range).join("")}${ticks}${currentTimeMarker}${records.map((record) => record.marker).join("")}
+            ${records.map((record) => record.range).join("")}${ticks}${currentTimeMarker}${markers.join("")}
             <svg class="care-band-period" x="169" y="97" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle class="care-band-period-background" cx="12" cy="12" r="12"></circle><path class="care-band-period-fill" d="M20 15A9 9 0 0 1 9 4 9 9 0 1 0 20 15Z"></path></svg>
             <svg class="care-band-period" x="169" y="241" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle class="care-band-period-background" cx="12" cy="12" r="12"></circle><circle class="care-band-period-fill" cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"></path></svg>
             <text class="care-band-hour" x="180" y="37" text-anchor="middle">00</text><text class="care-band-hour" x="327" y="185" text-anchor="middle">06</text><text class="care-band-hour" x="180" y="330" text-anchor="middle">12</text><text class="care-band-hour" x="33" y="185" text-anchor="middle">18</text>
             <text class="care-band-caption" x="180" y="154" text-anchor="middle">분유 + 유축</text><text class="care-band-total" x="180" y="201" text-anchor="middle" style="font-size:${totalSize}px">${total}<tspan class="care-band-unit" dx="4">mL</tspan></text>
           </svg>
         </div>
+        ${overflowMarkers.length ? `<ul class="care-band-guide" aria-label="시계에 다 담지 못한 기록">${overflowMarkers.join("")}</ul>` : ""}
         <div class="care-band-feeding">${feedingMetric("formula", "분유", ml(formulaMl), "mL")}${feedingMetric("pumped", "유축", ml(pumpedMl), "mL")}${feedingMetric("breast", "직수", Math.round(breastMinutes).toLocaleString("ko-KR"), "분")}</div>
         <div class="care-band-other">${otherMetric("sleep", "수면", formatDuration(sleepTotal))}${otherMetric("diaper", "기저귀", `${count("diaper")}회`)}${otherMetric("solid", "이유식", `${count("solid")}회`)}${count("health") ? otherMetric("health", "건강", `${count("health")}회`) : ""}</div>
         <p class="care-band-guide">${clockItems.length ? "이모지는 기록 종류 · 채운 구간은 시간 범위" : "이 날짜에는 시간 기록이 없어요."}</p>

@@ -6,7 +6,7 @@ const source = readFileSync('english-stories.js', 'utf8');
 const storyId = 'doyun-tiny-star';
 const settingsKey = user => `family-english-story-settings-v1:${user}`;
 
-function setup({ user = 'a', store = new Map(), demo = false } = {}) {
+function setup({ user = 'a', store = new Map(), demo = false, today = '2026-10-23T12:00:00' } = {}) {
   const nodes = new Map(), events = {}, spoken = [], notices = [];
   const makeNode = () => {
     const children = new Map(), listeners = {}, classes = new Set();
@@ -31,7 +31,11 @@ function setup({ user = 'a', store = new Map(), demo = false } = {}) {
   const speech = { speak: utterance => spoken.push(utterance), cancel() {}, pause() {}, resume() {}, getVoices: () => [] };
   const storage = { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
   const window = { speechSynthesis: speech, addEventListener: (name, callback) => { events[name] = callback; }, location: { href: `https://example.test/${demo ? '?demo=1' : ''}` } };
-  const context = { window, state, localStorage: storage, sessionStorage: { getItem: () => null, setItem() {} }, URL,
+  const context = { window, state,
+    Date: class extends Date {
+      constructor(...args) { super(...(args.length ? args : [today])); }
+      static now() { return new Date(today).getTime(); }
+    }, localStorage: storage, sessionStorage: { getItem: () => null, setItem() {} }, URL,
     document: { querySelector: selector => nodes.get(selector) ?? null, querySelectorAll: () => [], createElement: makeNode },
     SpeechSynthesisUtterance: class { constructor(text) { this.text = text; } },
     toast: notice => notices.push(notice), setTimeout() {}, switchView: view => { state.activeView = view; },
@@ -49,10 +53,10 @@ function setup({ user = 'a', store = new Map(), demo = false } = {}) {
   };
 }
 
-test('today action returns to the daily story after choosing a library story', () => {
-  const h = setup();
+test.each(Array.from({ length: 7 }, (_, i) => `2026-10-${23+i}T12:00:00`))('today action returns to the daily story on %s', today => {
+  const h = setup({ today });
   const todayTitle = h.node('englishStoryTitle').textContent;
-  h.choose('moon-soft-blanket');
+  h.choose(todayTitle === 'The Moon’s Soft Blanket' ? storyId : 'moon-soft-blanket');
   expect(h.node('englishStoryTitle').textContent).not.toBe(todayTitle);
   h.today();
   expect(h.node('englishStoryTitle').textContent).toBe(todayTitle);

@@ -17,7 +17,7 @@ describe("health records in the compact care timeline", () => {
 
   test("uses a dedicated health accent and cache version", () => {
     expect(palette).toContain(".care-split-entry.health");
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20261013-code-reliability-v1" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20261023-family-review-fixes-v1" }');
   });
 
   test("makes diaper and health cards editable in the shared right lane", () => {

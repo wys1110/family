@@ -26,7 +26,10 @@ https://wys1110.github.io/family/?demo=1
 ## Supabase 연결
 
 1. Supabase 프로젝트를 생성합니다.
-2. SQL Editor에서 [`supabase/schema.sql`](supabase/schema.sql)을 실행합니다.
+2. **빈 새 프로젝트에서만**, SQL Editor로 다음 두 파일을 순서대로 실행합니다. 두 단계가 모두 끝난 뒤 앱을 연결하세요.
+   1. 기본 스냅샷 [`supabase/schema.sql`](supabase/schema.sql)
+   2. 필수 초대 보안 [`20260912032358_family_invite_security_parity.sql`](supabase/migrations/20260912032358_family_invite_security_parity.sql) — 32자리 코드, 7일 만료, 사용자별 15분당 5회 가입 시도 제한을 설치합니다. 스냅샷만 실행하면 이 보호가 빠집니다.
+   이는 기본 설치와 초대 보안의 순서이며 모든 기능의 전체 설치 목록은 아닙니다. 이미 설치된 DB에 이 절차를 재실행하지 마세요.
 3. [`config.example.js`](config.example.js)를 복사해 `config.js`를 만들고 Project URL과 anon key를 입력합니다.
 4. Supabase Authentication의 URL Configuration에 로컬 주소와 GitHub Pages 주소를 Redirect URL로 추가합니다.
 
@@ -39,6 +42,31 @@ window.FAMILY_CONFIG = {
 ```
 
 anon key는 브라우저용 공개 키이며, 실제 데이터 보호는 `schema.sql`의 Row Level Security 정책이 담당합니다. `service_role` 키는 절대 넣지 마세요.
+
+### 새 테이블의 명시적 Data API 권한
+
+Supabase는 2026-10-30부터 기존 프로젝트에서도 새 `public` 테이블의 자동 Data API 권한 부여를 중단합니다. 기존 테이블의 현재 권한은 유지되지만, 새 프로젝트·미리보기 브랜치·스키마 재생성에서는 명시적 `GRANT`가 필요합니다. [공식 변경 공지](https://github.com/orgs/supabase/discussions/45329)와 [API 보안 안내](https://supabase.com/docs/guides/api/securing-your-api)를 참고하세요.
+
+`schema.sql`과 테이블 생성 마이그레이션은 필요한 권한을 RLS와 함께 선언합니다. 테이블 `GRANT`는 접근 가능한 작업을, 기존 RLS는 가족·작성자·관리자별 행 범위를 결정합니다. 브라우저의 로그인 전 `anon` 역할에는 테이블 권한을 부여하지 않습니다.
+
+| 대상 | 로그인 사용자 (`authenticated`) | 서버 (`service_role`) |
+| --- | --- | --- |
+| `households` | 조회; 생성·가입·관리는 기존 RPC 사용 | 직접 접근 없음 |
+| `household_members` | 조회; 변경은 기존 RPC 사용 | 푸시 대상 확인용 조회 |
+| `events`, `babies`, `growth_entries` | 기존 RLS가 허용하는 조회·추가·수정·삭제 | 브리핑·AI용 조회만 |
+| `calendar_members`, `household_wallpapers`, `family_todos` | 기존 RLS가 허용하는 조회·추가·수정·삭제 | 직접 접근 없음 |
+| `feature_requests` | 제출, 가족 관리자 조회·상태 수정; 삭제 없음 | 직접 접근 없음 |
+| `notifications` | 본인 알림 조회·수정·삭제; 직접 생성 없음 | 알림 조회·생성·수정 |
+| `baby_ai_profiles` | 기존 가족 RLS가 허용하는 조회·추가·수정·삭제 | AI 문맥 조회만 |
+| `baby_ai_strategy_drafts` | 조회; 확정은 기존 RPC 사용 | 초안 조회·추가만 |
+| `baby_ai_refresh_queue` | 상태 조회; 예약은 기존 RPC 사용 | 처리용 조회·추가·수정·삭제 |
+| `push_subscriptions` | 직접 접근 없음; 검증된 서버/RPC 사용 | 구독 조회·추가·수정·삭제 |
+
+그 밖의 생성 마이그레이션은 기존의 제한된 권한을 유지합니다. `private_entries`는 본인 전용, `household_backup_imports`는 조회·등록·삭제, `family_trips`는 조회·추가·수정, `parenting_questions`는 조회만 허용합니다. 플랫폼 관리자·감사·활동·초대 시도 테이블과 `family_internal` 테이블은 기존의 검증된 RPC 경로를 유지합니다. 모든 테이블이나 시퀀스에 일괄 권한을 부여하거나 기본 권한 설정을 복원하지 마세요.
+
+이 파일들은 새 설치와 해당 기능의 테이블 생성 경로용입니다. 이미 설치된 DB에 `schema.sql`이나 과거 생성 마이그레이션을 재실행하지 마세요. `schema.sql`은 위 필수 초대 보안 단계를 함께 실행해야 하는 기본 스키마 스냅샷이므로 모든 과거 마이그레이션을 그 위에 순서대로 실행하는 초기화 절차도 아닙니다. 운영 DB의 권한 보정·설정 변경·초기화는 별도 검토가 필요합니다.
+
+회귀 검사는 `npm test -- test/fresh-table-privileges.test.js`로 실행합니다. 설치된 PGlite의 메모리 전용 합성 DB에서 자동 테이블 권한이 없는 새 스키마, 할 일 생성 마이그레이션, 역할별 권한과 RLS 거부를 검증합니다. Supabase Auth/Storage와 `pgcrypto`의 최소 대역을 사용하므로 실제 PostgREST·GraphQL·운영 연결 검증을 대신하지 않습니다. `test/fresh-install-invites.test.js`는 위 신규 설치 순서에서 초대 만료·회전·시도 제한과 역할별 거부를 별도로 검증합니다.
 
 ## 카카오 지도 설정
 

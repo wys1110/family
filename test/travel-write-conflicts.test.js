@@ -6,18 +6,21 @@ const id = '11111111-1111-4111-8111-111111111111';
 const otherId = '22222222-2222-4222-8222-222222222222';
 const trip = { id, household_id: 'home', title: 'original', destination_label: '제주', start_date: '2026-01-01', end_date: '2026-01-02', revision: 0, document: { schemaVersion: 2, items: [], legacy: {} } };
 function harness() {
-  let realtime;
+  let realtime, serial = 0;
+  let savedRow = structuredClone(trip);
+  const insert = vi.fn(patch => ({ select: () => ({ single: async () => { savedRow = structuredClone(patch); return { data: { id: patch.id, revision: 0 }, error: null }; } }) }));
   const update = vi.fn(patch => {
+    savedRow = { ...savedRow, ...structuredClone(patch) };
     const filters = {};
     const query = { eq: (key, value) => { filters[key] = value; return query; }, select: () => ({ maybeSingle: async () => ({ data: { id, revision: patch.revision }, error: null }) }) };
     return query;
   });
-  const client = { from: () => ({ select: () => ({ eq: async () => ({ data: [trip, { ...trip, id: otherId }], error: null }) }), update }), channel: () => ({ on: (_type, _filter, callback) => { realtime = callback; return { subscribe: () => ({}) }; } }), removeChannel: () => {} };
+  const client = { from: () => ({ select: () => ({ eq: async () => ({ data: [savedRow, { ...trip, id: otherId }], error: null }) }), update, insert }), channel: () => ({ on: (_type, _filter, callback) => { realtime = callback; return { subscribe: () => ({}) }; } }), removeChannel: () => {} };
   const window = { FAMILY_APP_STATE: { session: { user: { id: 'user' } }, household: { id: 'home' }, supabase: client }, addEventListener: () => {}, dispatchEvent: () => {} };
-  const context = { window, localStorage: { getItem: () => null }, crypto: { randomUUID: () => id }, CustomEvent: class {} };
+  const context = { window, localStorage: { getItem: () => null }, crypto: { randomUUID: () => `${(++serial).toString(16).padStart(8, '0')}-3333-4333-8333-333333333333` }, CustomEvent: class {} };
   vm.runInNewContext(readFileSync('travel-sharing.js', 'utf8'), context);
   vm.runInNewContext(readFileSync('travel-data.js', 'utf8'), context);
-  return { data: window.FAMILY_TRAVEL_DATA, sharing: window.FAMILY_TRAVEL_SHARING, update, remote: row => realtime({ eventType: 'UPDATE', new: row }) };
+  return { data: window.FAMILY_TRAVEL_DATA, sharing: window.FAMILY_TRAVEL_SHARING, update, insert, remote: row => realtime({ eventType: 'UPDATE', new: row }) };
 }
 
 test('a realtime revision cannot authorize overwriting a stale itinerary draft', async () => {
@@ -79,4 +82,21 @@ test.each(['create', 'import'])('%s persists exactly its new trip after local ID
   expect(save.mock.calls[0][0]).toHaveLength(1);
   expect(save.mock.calls[0][0][0].id).toBe(id);
   expect(result.id).toBe(id);
+});
+
+
+test('shared intro edits, clears and new trips survive a full server round trip', async () => {
+  const h = harness();
+  await h.data.refresh();
+  expect(h.data.getTrip(id).intro).toBe('');
+  await h.data.updateTrip(id, { intro: '합성 가족 여행 소개' });
+  expect(h.update).toHaveBeenCalledTimes(1);
+  expect(h.update.mock.calls[0][0].document.intro).toBe('합성 가족 여행 소개');
+  await h.data.refresh();
+  expect(h.data.getTrip(id).intro).toBe('합성 가족 여행 소개');
+  await h.data.updateTrip(id, { intro: '' }); await h.data.refresh();
+  expect(h.data.getTrip(id).intro).toBe('');
+  const created = await h.data.createTrip({ title: '새 여행', destinationLabel: '제주', intro: '새 소개', startDate: '2026-01-01', endDate: '2026-01-02' });
+  expect(h.insert.mock.calls[0][0].document.intro).toBe('새 소개');
+  await h.data.refresh(); expect(h.data.getTrip(created.id).intro).toBe('새 소개');
 });

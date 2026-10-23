@@ -47,11 +47,9 @@
   };
 
   const feedingTypeOf = (entry) => {
-    if (entry.category !== "수유·이유식") return "";
-    const feedingType = String(entry.feedingType || "").trim();
-    const title = String(entry.title || "");
-    if (feedingType === "모유" || title.includes("모유")) return "breast";
-    return "formula";
+    const type = growthCareType(entry);
+    if (type === "pumped") return "breast";
+    return ["breast", "formula"].includes(type) ? type : "";
   };
 
   const matchesTarget = (entry) => {

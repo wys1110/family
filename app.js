@@ -269,7 +269,12 @@ async function init() {
         lastAuthSessionKey = nextKey;
         state.session = session;
         if (!session) state.onboardingPrompted = false;
-        if (userChanged) window.setTimeout(() => bootstrapData(), 0);
+        if (userChanged) {
+          state.wallpapers = { calendar: null, growth: null };
+          resetPhotoViewer();
+          renderWallpapers();
+          window.setTimeout(() => bootstrapData(), 0);
+        }
       });
     }
   } catch (error) {
@@ -345,6 +350,11 @@ async function bootstrapData(attempt = 0, displayReady = null) {
   bootstrapRetryTimer = null;
   const requestId = ++bootstrapRequestId;
   const sessionKey = authSessionKey(state.session);
+  resetPhotoViewer();
+  if (state.supabase) {
+    state.wallpapers = { calendar: null, growth: null };
+    renderWallpapers();
+  }
   let loaded = true;
   try {
     if (state.supabase && state.session) {
@@ -2143,27 +2153,49 @@ function openRecentPhoto(index, items = recentPhotoItems) {
   $("#photoViewerDialog").showModal();
 }
 
+function resetPhotoViewer() {
+  activePhotoViewerItems = [];
+  activeRecentPhotoIndex = 0;
+  $("#photoViewerDialog")?.close();
+  const image = $("#photoViewerImage");
+  image?.removeAttribute("src");
+  if (image) image.alt = "";
+  for (const selector of ["#photoViewerTitle", "#photoViewerMeta"]) {
+    const node = $(selector);
+    if (node) node.textContent = "";
+  }
+}
+
 async function shareRecentPhoto() {
-  const photo = activePhotoViewerItems[activeRecentPhotoIndex];
+  const items = activePhotoViewerItems;
+  const photo = items[activeRecentPhotoIndex];
   if (!photo) return;
   const button = $("#photoShareButton");
   button.disabled = true;
   button.innerHTML = '<span aria-hidden="true">↗</span> 준비 중…';
-  const title = `${activeBaby()?.name || "아기"} 성장일기`;
+  const babyName = activeBaby()?.name || "아기";
+  const title = `${babyName} 성장일기`;
+  const userId = state.session?.user?.id, householdId = state.household?.id;
+  const babyId = state.activeBabyId, client = state.supabase;
+  const isCurrent = () => activePhotoViewerItems === items && state.supabase === client
+    && state.session?.user?.id === userId && state.household?.id === householdId
+    && state.activeBabyId === babyId;
   try {
     if (navigator.share && navigator.canShare) {
       const blob = await photo.filePromise;
+      if (!isCurrent()) return;
       if (blob) {
         const extension = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
-        const file = new File([blob], `${activeBaby()?.name || "baby"}-${photo.entry.date}.${extension}`, { type: blob.type || "image/jpeg" });
+        const file = new File([blob], `${babyName}-${photo.entry.date}.${extension}`, { type: blob.type || "image/jpeg" });
         if (navigator.canShare({ files: [file] })) { await navigator.share({ title, text: photo.entry.title, files: [file] }); return; }
       }
     }
+    if (!isCurrent()) return;
     if (navigator.share) { await navigator.share({ title, text: photo.entry.title, url: photo.url }); return; }
     await navigator.clipboard.writeText(photo.url);
     toast("사진 링크를 복사했어요");
   } catch (error) {
-    if (error?.name !== "AbortError") toast("사진을 공유하지 못했어요. 다시 시도해 주세요");
+    if (isCurrent() && error?.name !== "AbortError") toast("사진을 공유하지 못했어요. 다시 시도해 주세요");
   } finally {
     button.disabled = false;
     button.innerHTML = '<span aria-hidden="true">↗</span> 공유하기';
@@ -2225,9 +2257,9 @@ function formatDuration(minutes) {
 
 function quickPresets(category) {
   if (category === "수유·이유식") return [
-    { label: "왼쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 20 },
-    { label: "오른쪽 20분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 20 },
-    { label: "양쪽 40분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 40 },
+    { label: "왼쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "왼쪽", feedingMinutes: 10 },
+    { label: "오른쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "오른쪽", feedingMinutes: 10 },
+    { label: "양쪽 10분", note: "모유", title: "모유 수유", feedingType: "모유", feedingSide: "양쪽", feedingMinutes: 10 },
     { label: "80 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 80 },
     { label: "100 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 100 },
     { label: "120 ml", note: "젖병", title: "젖병 수유", feedingType: "젖병", feedingMl: 120 },
@@ -2332,6 +2364,7 @@ function openGrowthDialog(entry = null, category = "첫 순간") {
 
 function syncGrowthFields() {
   const category = $("#growthCategory").value;
+  if (!$("#growthId").value && category === "수유·이유식" && $("#growthFeedingMinutes").value === "") $("#growthFeedingMinutes").value = 10;
   document.querySelectorAll("[data-growth-fields]").forEach((group) => { group.hidden = group.dataset.growthFields !== category; });
   const placeholders = { "수유·이유식": "예: 분유를 맛있게 먹었어요", "수면": "예: 낮잠을 푹 잤어요", "기저귀": "예: 기저귀 갈았어요", "건강·병원": "예: 예방접종 다녀왔어요", "성장": "예: 한 달 성장 측정", "첫 순간": "예: 처음으로 뒤집었어요" };
   $("#growthEntryTitle").placeholder = placeholders[category] || `오늘의 ${activeBaby()?.name || "아기"}를 적어주세요`;

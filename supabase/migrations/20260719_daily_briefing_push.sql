@@ -23,6 +23,9 @@ create index if not exists push_subscriptions_user_household_idx
 
 alter table public.push_subscriptions enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.push_subscriptions to service_role;
+
 comment on table public.push_subscriptions is
   'Service-role-only Web Push subscriptions for family schedule changes and daily briefings.';
 comment on column public.push_subscriptions.briefing_time is

@@ -10,6 +10,9 @@ create table public.household_wallpapers (
 
 alter table public.household_wallpapers enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.household_wallpapers to authenticated;
+
 create policy "members can view household wallpapers" on public.household_wallpapers
   for select to authenticated using ((select public.is_household_member(household_id)));
 create policy "owners can create household wallpapers" on public.household_wallpapers

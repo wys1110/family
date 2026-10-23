@@ -30,6 +30,9 @@ create index if not exists notifications_source_idx
 
 alter table public.notifications enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update on table public.notifications to service_role;
+
 drop policy if exists "notifications_select_own" on public.notifications;
 create policy "notifications_select_own"
   on public.notifications

@@ -15,8 +15,9 @@
     const selected = entries.filter(e=>byDate.has(e.date)).sort((a,b)=>`${a.date}T${a.time||'00:00'}`.localeCompare(`${b.date}T${b.time||'00:00'}`));
     for(const entry of selected) {
       const day = byDate.get(entry.date); day.recordCount++;
-      if(number(entry.feedingMl)!==null) {day.feedingMl=(day.feedingMl??0)+Number(entry.feedingMl);day.feedingCount++;}
-      if(number(entry.feedingMinutes)!==null) day.breastMinutes=(day.breastMinutes??0)+Number(entry.feedingMinutes);
+      const feedingType = growthCareType(entry);
+      if(['formula','pumped'].includes(feedingType) && number(entry.feedingMl)!==null) {day.feedingMl=(day.feedingMl??0)+Number(entry.feedingMl);day.feedingCount++;}
+      if(feedingType==='breast' && number(entry.feedingMinutes)!==null) day.breastMinutes=(day.breastMinutes??0)+Number(entry.feedingMinutes);
       if(number(entry.temperature)!==null) day.temperature=Math.max(day.temperature??-Infinity,Number(entry.temperature));
       if(entry.category==='기저귀') day.diaperCount++;
     }

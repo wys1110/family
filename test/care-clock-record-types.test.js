@@ -187,3 +187,51 @@ test("breast and sleep without positive durations render centered instant marker
   expect(html).not.toContain('class="care-band-range breast"');
   expect(html).not.toContain('class="care-band-range sleep"');
 });
+
+test.each([
+  ["same kind", [entries[0], entries[0]]],
+  ["same diaper kind", [entries[5], entries[5]]],
+  ["different kinds", [entries[0], entries[5]]],
+  ["duration and instant", [entries[2], entries[0]]],
+  ["several kinds", [entries[0], entries[1], entries[3], entries[5], entries[6]]],
+])("coincident clock markers remain separate: %s", (_, records) => {
+  for (const time of ["00:00", "06:00", "12:00", "18:00", "23:59"]) {
+    const categories = ["formula", "pumped", "breast", "solid", "sleep", "diaper", "health"];
+    const clock = clockContext(categories);
+    const synthetic = records.map((entry, index) => ({ ...entry, id: `synthetic-${index}`, time }));
+    clock.context.renderDailyCareClock(synthetic);
+    const html = clock.content.innerHTML;
+    const markers = [...html.matchAll(/<g class="care-band-marker (\w+)" data-start="(\d+)" transform="translate\(([-\d.]+) ([-\d.]+)\)">/g)];
+    expect(markers).toHaveLength(synthetic.length);
+    const [hour, minute] = time.split(":").map(Number);
+    for (let i = 0; i < markers.length; i++) {
+      expect(Number(markers[i][2])).toBe(hour * 60 + minute);
+      const x = Number(markers[i][3]), y = Number(markers[i][4]);
+      expect(x).toBeGreaterThanOrEqual(30);
+      expect(x).toBeLessThanOrEqual(330);
+      expect(y).toBeGreaterThanOrEqual(30);
+      expect(y).toBeLessThanOrEqual(330);
+      for (const other of markers.slice(0, i)) {
+        expect(Math.abs(x - Number(other[3])) >= 27.9 || Math.abs(y - Number(other[4])) >= 31.9).toBe(true);
+      }
+    }
+    const list = timeList(categories, synthetic);
+    for (const entry of synthetic) expect(rowFor(list, entry.id)).toContain(time);
+    expect(html).toContain(`총 수유량 ${synthetic.filter((entry) => ["분유", "유축모유"].includes(entry.feedingType)).reduce((sum, entry) => sum + entry.feedingMl, 0)}밀리리터`);
+  }
+});
+
+test("dense clocks retain every record through an escaped overflow list and respect filters", () => {
+  const clock = clockContext(["health"]);
+  const records = Array.from({ length: 80 }, (_, index) => ({ id: `dense-${index}`, date: "2000-01-01", time: "12:00", category: "건강·병원", title: `합성 <기록-${index}>` }));
+  clock.context.renderDailyCareClock(records);
+  const html = clock.content.innerHTML;
+  expect(html).toContain('aria-label="시계에 다 담지 못한 기록"');
+  expect((html.match(/class="care-band-marker health"/g) || []).length + (html.match(/<li>/g) || []).length).toBe(80);
+  for (let index = 0; index < 80; index++) expect(html).toContain(`합성 &lt;기록-${index}&gt;`);
+  expect(html).not.toContain("합성 <기록-");
+  clock.context.carePatternCategories.clear();
+  clock.context.renderDailyCareClock(records);
+  expect(clock.content.innerHTML).not.toContain('class="care-band-marker health"');
+  expect(clock.content.innerHTML).not.toContain("시계에 다 담지 못한 기록");
+});

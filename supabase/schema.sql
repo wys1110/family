@@ -1,3 +1,6 @@
+-- Fresh-install step 1 of 2 (empty projects only). Before connecting the app,
+-- run migrations/20260912032358_family_invite_security_parity.sql as required by README.
+-- Do not rerun this snapshot on an existing database.
 create extension if not exists pgcrypto;
 
 create table public.households (
@@ -166,15 +169,49 @@ create index notifications_unread_idx on public.notifications(user_id, household
   where read_at is null and dismissed_at is null;
 create index notifications_source_idx on public.notifications(household_id, source_type, source_id);
 alter table public.households enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.households to authenticated;
 alter table public.household_members enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.household_members to authenticated;
+grant select on table public.household_members to service_role;
 alter table public.events enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.events to authenticated;
+grant select on table public.events to service_role;
 alter table public.babies enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.babies to authenticated;
+grant select on table public.babies to service_role;
 alter table public.calendar_members enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.calendar_members to authenticated;
 alter table public.growth_entries enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.growth_entries to authenticated;
+grant select on table public.growth_entries to service_role;
 alter table public.household_wallpapers enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.household_wallpapers to authenticated;
 alter table public.feature_requests enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update on table public.feature_requests to authenticated;
 alter table public.family_todos enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.family_todos to authenticated;
 alter table public.notifications enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update on table public.notifications to service_role;
 
 create or replace function public.is_household_member(target_household uuid)
 returns boolean language sql stable security definer set search_path = public
@@ -354,8 +391,20 @@ create unique index baby_ai_strategy_one_confirmed_idx on public.baby_ai_strateg
 create index baby_ai_refresh_queue_due_idx on public.baby_ai_refresh_queue(status, due_at) where status in ('pending', 'failed');
 
 alter table public.baby_ai_profiles enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.baby_ai_profiles to authenticated;
+grant select on table public.baby_ai_profiles to service_role;
 alter table public.baby_ai_strategy_drafts enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.baby_ai_strategy_drafts to authenticated;
+grant select, insert on table public.baby_ai_strategy_drafts to service_role;
 alter table public.baby_ai_refresh_queue enable row level security;
+
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select on table public.baby_ai_refresh_queue to authenticated;
+grant select, insert, update, delete on table public.baby_ai_refresh_queue to service_role;
 
 create policy "members can view baby AI profiles" on public.baby_ai_profiles for select to authenticated using (public.is_household_member(household_id));
 create policy "members can create baby AI profiles" on public.baby_ai_profiles for insert to authenticated with check (public.is_household_member(household_id) and updated_by = auth.uid());

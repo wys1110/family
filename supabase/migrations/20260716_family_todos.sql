@@ -24,6 +24,9 @@ create unique index if not exists family_todos_recurrence_parent_unique_idx
 
 alter table public.family_todos enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.family_todos to authenticated;
+
 drop policy if exists "members can view family todos" on public.family_todos;
 create policy "members can view family todos"
 on public.family_todos for select to authenticated

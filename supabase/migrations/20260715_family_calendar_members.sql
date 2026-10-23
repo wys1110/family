@@ -21,6 +21,9 @@ create index if not exists calendar_members_household_sort_idx
 
 alter table public.calendar_members enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.calendar_members to authenticated;
+
 drop policy if exists "members can view calendar members" on public.calendar_members;
 drop policy if exists "members can create calendar members" on public.calendar_members;
 drop policy if exists "members can update calendar members" on public.calendar_members;

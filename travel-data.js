@@ -99,14 +99,14 @@
       id: String(source.id || makeId('trip')), title: String(source.title || `${source.destinationLabel || source.destination || '우리 가족'} 여행`).slice(0, 60),
       destinationLabel: String(source.destinationLabel || source.destination || '').slice(0, 120), destination: String(source.destinationLabel || source.destination || '').slice(0, 120),
       centerLat: validCoordinate(source.centerLat, source.centerLng) ? Number(source.centerLat) : null, centerLng: validCoordinate(source.centerLat, source.centerLng) ? Number(source.centerLng) : null,
-      timezone: String(source.timezone || 'Asia/Seoul'), startDate, endDate, intro: String(source.intro || '').slice(0, 240), archivedAt: source.archivedAt || source.archived_at || null,
+      timezone: String(source.timezone || 'Asia/Seoul'), startDate, endDate, intro: String(source.intro ?? source.document?.intro ?? '').slice(0, 240), archivedAt: source.archivedAt || source.archived_at || null,
       revision: Number.isFinite(Number(source.revision)) ? Number(source.revision) : 0, updatedAt: source.updatedAt || source.updated_at || new Date().toISOString(), createdAt: source.createdAt || source.created_at || new Date().toISOString(),
       updatedBy: source.updatedBy || null, householdId: source.householdId || source.household_id || null, legacy: preservedLegacy, memories: Array.isArray(source.memories) ? clone(source.memories) : [],
       travelers: Array.isArray(source.travelers) ? clone(source.travelers) : [], tasks: Array.isArray(source.tasks) ? clone(source.tasks) : [], expenses: Array.isArray(source.expenses) ? clone(source.expenses) : [], candidates: Array.isArray(source.candidates) ? clone(source.candidates) : [], bookings: Array.isArray(source.bookings) ? clone(source.bookings) : [],
     };
     const rawItems = Array.isArray(source.items) ? source.items : Array.isArray(source.document?.items) ? source.document.items : [];
     trip.items = rawItems.slice(0, MAX_ITEMS).map((item, index) => normalizeItem(item, trip, index));
-    trip.document = { schemaVersion: VERSION, items: trip.items.map(item => ({ id: item.id, type: item.type, dayIndex: item.dayIndex, order: item.order, title: item.title, time: item.time, note: item.note, visited: item.visited, place: item.place ? { ...item.place } : null })), legacy: clone(trip.legacy) };
+    trip.document = { schemaVersion: VERSION, ...(trip.intro ? { intro: trip.intro } : {}), items: trip.items.map(item => ({ id: item.id, type: item.type, dayIndex: item.dayIndex, order: item.order, title: item.title, time: item.time, note: item.note, visited: item.visited, place: item.place ? { ...item.place } : null })), legacy: clone(trip.legacy) };
     return normalizeOrder(trip);
   };
   const validateDates = (start, end) => {

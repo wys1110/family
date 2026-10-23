@@ -15,6 +15,10 @@ create table if not exists public.babies (
 create index if not exists babies_household_birth_idx on public.babies(household_id, birth_date);
 alter table public.babies enable row level security;
 
+-- Explicit Data API access; existing RLS policies still control rows.
+grant select, insert, update, delete on table public.babies to authenticated;
+grant select on table public.babies to service_role;
+
 drop policy if exists "members can view babies" on public.babies;
 drop policy if exists "members can create babies" on public.babies;
 drop policy if exists "members can update babies" on public.babies;

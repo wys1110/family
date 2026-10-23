@@ -66,9 +66,9 @@ describe("growth quick record harmony", () => {
     expect(app).toContain('$("#quickPresetGrid").addEventListener("click", saveGrowthPresetFromEvent)');
   });
 
-  test("uses 20, 20, and 40 minute defaults with five-minute adjustment", () => {
+  test("uses ten-minute defaults with five-minute adjustment", () => {
     expect(unified).not.toContain("data-direct-preset");
-    expect(adaptive).toContain("const DIRECT_DEFAULT_MINUTES = { 왼쪽: 20, 오른쪽: 20, 양쪽: 40 }");
+    expect(adaptive).toContain("const DIRECT_DEFAULT_MINUTES = { 왼쪽: 10, 오른쪽: 10, 양쪽: 10 }");
     expect(adaptive).toContain("const DIRECT_STEP_MINUTES = 5");
     expect(adaptive).toContain('data-direct-adjust="-${DIRECT_STEP_MINUTES}"');
     expect(adaptive).toContain('data-direct-adjust="${DIRECT_STEP_MINUTES}"');
@@ -92,7 +92,7 @@ describe("growth quick record harmony", () => {
   });
 
   test("bumps both feeding module cache versions", () => {
-    expect(config).toContain('{ name: "adaptive-feeding", version: "20261013-code-reliability-v1" }');
+    expect(config).toContain('{ name: "adaptive-feeding", version: "20261023-family-review-fixes-v1" }');
     expect(config).toContain('{ name: "feeding-quick-unified", version: "20260727-direct-stepper-v1" }');
   });
 });

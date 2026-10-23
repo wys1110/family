@@ -18,7 +18,7 @@
   };
   const assertCurrent = ctx => { if (ctx.key !== scope()) throw new Error('가족 계정이 변경되었어요. 여행 탭을 다시 열어 주세요.'); };
   const resultData = result => { if (result.error) throw new Error(result.error.message || '가족 여행을 불러오거나 저장하지 못했어요.'); return result.data; };
-  const toDocument = trip => ({ schemaVersion: 2, items: (trip.items || []).map(item => ({ id: item.id, type: item.type, dayIndex: item.dayIndex, order: item.order, title: item.title, time: item.time, note: item.note, visited: Boolean(item.visited), place: item.place ? { ...item.place } : null })), legacy: trip.legacy || {} });
+  const toDocument = trip => ({ schemaVersion: 2, ...(trip.intro ? { intro: trip.intro } : {}), items: (trip.items || []).map(item => ({ id: item.id, type: item.type, dayIndex: item.dayIndex, order: item.order, title: item.title, time: item.time, note: item.note, visited: Boolean(item.visited), place: item.place ? { ...item.place } : null })), legacy: trip.legacy || {} });
   const toRow = (trip, ctx, mutationId = null) => ({
     id: trip.id, household_id: ctx.household, title: trip.title, destination_label: trip.destinationLabel || trip.destination, center_lat: trip.centerLat, center_lng: trip.centerLng,
     timezone: trip.timezone || 'Asia/Seoul', start_date: trip.startDate, end_date: trip.endDate, document: toDocument(trip), archived_at: trip.archivedAt || null,
