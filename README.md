@@ -26,9 +26,10 @@ https://wys1110.github.io/family/?demo=1
 ## Supabase 연결
 
 1. Supabase 프로젝트를 생성합니다.
-2. **빈 새 프로젝트에서만**, SQL Editor로 다음 두 파일을 순서대로 실행합니다. 두 단계가 모두 끝난 뒤 앱을 연결하세요.
+2. **빈 새 프로젝트에서만**, SQL Editor로 다음 세 파일을 순서대로 실행합니다. 세 단계가 모두 끝난 뒤 앱을 연결하세요.
    1. 기본 스냅샷 [`supabase/schema.sql`](supabase/schema.sql)
    2. 필수 초대 보안 [`20260912032358_family_invite_security_parity.sql`](supabase/migrations/20260912032358_family_invite_security_parity.sql) — 32자리 코드, 7일 만료, 사용자별 15분당 5회 가입 시도 제한을 설치합니다. 스냅샷만 실행하면 이 보호가 빠집니다.
+   3. 구성원 제거 시 기존 초대 폐기 [`20261025094000_revoke_removed_member_invites.sql`](supabase/migrations/20261025094000_revoke_removed_member_invites.sql) — 제거된 구성원이 이전 링크로 재가입하는 것을 방지합니다. 이후 초대하려면 새 링크를 공유하세요.
    이는 기본 설치와 초대 보안의 순서이며 모든 기능의 전체 설치 목록은 아닙니다. 이미 설치된 DB에 이 절차를 재실행하지 마세요.
 3. [`config.example.js`](config.example.js)를 복사해 `config.js`를 만들고 Project URL과 anon key를 입력합니다.
 4. Supabase Authentication의 URL Configuration에 로컬 주소와 GitHub Pages 주소를 Redirect URL로 추가합니다.

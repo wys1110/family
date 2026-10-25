@@ -1,5 +1,5 @@
--- Fresh-install step 1 of 2 (empty projects only). Before connecting the app,
--- run migrations/20260912032358_family_invite_security_parity.sql as required by README.
+-- Fresh-install step 1 of 3 (empty projects only). Before connecting the app,
+-- run both invite migrations in the order required by README.
 -- Do not rerun this snapshot on an existing database.
 create extension if not exists pgcrypto;
 
