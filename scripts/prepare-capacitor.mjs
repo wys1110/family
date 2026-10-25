@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
-const excluded = new Set(['.git', 'android', 'dist', 'node_modules', 'docs', 'test', 'scripts']);
+const excluded = new Set(['.git', 'android', 'dist', 'node_modules', 'docs', 'test', 'scripts', 'vitest.config.js']);
 const publicExtensions = new Set(['.html', '.js', '.css', '.webmanifest', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.webp', '.mp3', '.m4a', '.woff', '.woff2']);
 
 await rm(dist, { recursive: true, force: true });
