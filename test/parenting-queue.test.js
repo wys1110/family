@@ -24,6 +24,7 @@ beforeAll(async()=>{
  create table public.babies(id uuid primary key,household_id uuid,archived_at timestamptz); insert into public.babies values('${baby}','${home}',null);
  create function public.is_household_member(h uuid) returns boolean language sql security definer as $$select exists(select 1 from public.household_members where household_id=h and user_id=auth.uid())$$;`);
  await db.exec(readFileSync('supabase/migrations/20261018100448_parenting_chat_queue.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261025071621_parenting_queue_recovery.sql','utf8'));
  await db.exec(`insert into family_internal.parenting_workers(user_id,secret_hash) values('${owner}',encode(sha256(convert_to('${secret}','UTF8')),'hex'))`);
 },30000);
 afterAll(async()=>{await db?.close();});
@@ -60,6 +61,40 @@ test('idempotency, one pending question, lease checks and stale cleanup prevent 
  expect(row).toEqual({status:'failed',context:'',messages:[]});
  expect((await worker(`select public.finish_parenting_question('${secret}','${id}','${claimed.lease}','late',null) as ok`)).rows[0].ok).toBe(false);
 });
+test('offline status and enqueue expire jobs without a worker, exposing account-wide pending metadata',async()=>{
+ const enqueue=`select public.enqueue_parenting_question(gen_random_uuid(),'${home}','${baby}','offline','records','[]') as id`;
+ const first=(await user(owner,enqueue)).rows[0].id;
+ await db.exec(`update family_internal.parenting_workers set last_seen_at=now()-interval '1 hour'; update public.parenting_questions set created_at=now()-interval '11 minutes' where id='${first}'`);
+ let status=(await user(owner,'select public.parenting_worker_status() as status')).rows[0].status;
+ expect(status.online).toBe(false); expect(status.registered).toBe(true); expect(status.pending).toBeNull(); expect(status.last_seen_at).toBeTruthy();
+ expect((await user(owner,`select status,context,messages from public.parenting_questions where id='${first}'`)).rows[0]).toEqual({status:'failed',context:'',messages:[]});
+ const second=(await user(owner,enqueue)).rows[0].id;
+ status=(await user(owner,'select public.parenting_worker_status() as status')).rows[0].status;
+ expect(status.pending).toMatchObject({id:second,baby_id:baby,household_id:home,status:'queued'});
+ expect(status.pending.question).toBeUndefined();
+ expect((await user(other,'select public.parenting_worker_status() as status')).rows[0].status.pending).toBeNull();
+ await db.exec(`update public.parenting_questions set created_at=now()-interval '11 minutes' where id='${second}'`);
+ const third=(await user(owner,enqueue)).rows[0].id;
+ expect((await user(owner,`select status from public.parenting_questions where id='${second}'`)).rows[0].status).toBe('failed');
+ await user(owner,`select public.cancel_parenting_question('${third}')`);
+});
+test('cancel wins before claim; claim wins before cancel; other users cannot cancel',async()=>{
+ const enqueue=`select public.enqueue_parenting_question(gen_random_uuid(),'${home}','${baby}','cancel','records','[]') as id`;
+ const id=(await user(owner,enqueue)).rows[0].id;
+ await expect(user(other,`select public.cancel_parenting_question('${id}')`)).rejects.toThrow('질문을 찾을 수');
+ await expect(worker(`select public.cancel_parenting_question('${id}')`)).rejects.toThrow('permission denied');
+ expect((await user(owner,`select public.cancel_parenting_question('${id}') as status`)).rows[0].status).toBe('cancelled');
+ expect((await worker(`select public.claim_parenting_question('${secret}') as job`)).rows[0].job).toBeNull();
+ expect((await user(owner,`select status,context,messages from public.parenting_questions where id='${id}'`)).rows[0]).toEqual({status:'cancelled',context:'',messages:[]});
+ expect((await user(owner,`select public.enqueue_parenting_question('${id}','${home}','${baby}','cancel','records','[]') as id`)).rows[0].id).toBe(id);
+ const next=(await user(owner,enqueue)).rows[0].id;
+ const claimed=(await worker(`select public.claim_parenting_question('${secret}') as job`)).rows[0].job;
+ expect((await user(owner,`select public.cancel_parenting_question('${next}') as status`)).rows[0].status).toBe('processing');
+ await db.exec(`update public.parenting_questions set started_at=now()-interval '4 minutes' where id='${next}'`);
+ // Completion itself rejects an expired lease, even without a status poll or another claim.
+ expect((await worker(`select public.finish_parenting_question('${secret}','${next}','${claimed.lease}','late',null) as ok`)).rows[0].ok).toBe(false);
+ expect((await user(owner,`select status from public.parenting_questions where id='${next}'`)).rows[0].status).toBe('failed');
+});
 test('family membership, child ownership and bounded conversation are checked before enqueue',async()=>{
  await expect(user(owner,`select public.enqueue_parenting_question(gen_random_uuid(),gen_random_uuid(),'${baby}','q','','[]')`)).rejects.toThrow('가족 로그인');
  await expect(user(owner,`select public.enqueue_parenting_question(gen_random_uuid(),'${home}',gen_random_uuid(),'q','','[]')`)).rejects.toThrow('아이 기록');
@@ -68,5 +103,6 @@ test('family membership, child ownership and bounded conversation are checked be
  await user(owner,`select public.enqueue_parenting_question('${id}','${home}','${baby}','q','','[]')`);
  await db.exec(`delete from public.household_members where user_id='${owner}'`);
  expect((await user(owner,'select * from public.parenting_questions')).rows).toHaveLength(0);
+ await expect(user(owner,`select public.cancel_parenting_question('${id}')`)).rejects.toThrow('질문을 찾을 수');
  expect((await worker(`select public.claim_parenting_question('${secret}') as job`)).rows[0].job).toBeNull();
 });

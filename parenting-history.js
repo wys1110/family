@@ -15,8 +15,12 @@
   window.FAMILY_PARENTING_HISTORY = {
     context,
     status: ctx => run(ctx, () => ctx.client.rpc('parenting_worker_status')),
+    cancel: (ctx, id) => run(ctx, () => ctx.client.rpc('cancel_parenting_question', { p_id:id })),
+    find: (ctx, id) => run(ctx, () => ctx.client.from('parenting_questions')
+      .select('id,baby_id,question,answer,status,error,created_at,started_at,completed_at')
+      .eq('household_id',ctx.householdId).eq('created_by',ctx.userId).eq('id',id).maybeSingle()),
     list: (ctx, babyId) => run(ctx, () => {
-      let query = ctx.client.from('parenting_questions').select('id,baby_id,question,answer,status,error,created_at')
+      let query = ctx.client.from('parenting_questions').select('id,baby_id,question,answer,status,error,created_at,started_at,completed_at')
         .eq('household_id',ctx.householdId).eq('created_by',ctx.userId);
       query = babyId ? query.eq('baby_id',babyId) : query.is('baby_id',null);
       return query.order('created_at',{ascending:false}).limit(20);

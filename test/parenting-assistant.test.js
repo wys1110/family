@@ -18,7 +18,8 @@ function load({ origin, fetch, store } = {}) {
   const prompts=['수유 간격은 어떻게 잡으면 좋을까요?','밤에 자주 깨는데 무엇을 살펴볼까요?'].map(text=>Object.assign(new Element(),{textContent:text}));
   const status=new Element(),privacy=new Element(),babySelect=new Element(),useRecords=new Element(),contextPreview=new Element(); useRecords.checked=true;
   const savedList=new Element(),savedStatus=new Element(),savedCount=new Element(),savedSection=new Element();
-  const controls={'#assistantSavedList':savedList,'#assistantSavedStatus':savedStatus,'#assistantSavedCount':savedCount,'.assistant-saved':savedSection,'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
+  const queueStatus=new Element(),cancel=new Element(),retry=new Element(),resolve=new Element(),actionStatus=new Element();
+  const controls={'#assistantQueueStatus':queueStatus,'#assistantCancel':cancel,'#assistantRetry':retry,'#assistantResolve':resolve,'#assistantActionStatus':actionStatus,'#assistantSavedList':savedList,'#assistantSavedStatus':savedStatus,'#assistantSavedCount':savedCount,'.assistant-saved':savedSection,'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
   const views=[new Element(),new Element()];
   const tabs=['calendar','growth','assistant','travel'].map(view=>Object.assign(new Element(),{dataset:{view}}));
   const main=new Element(); main.appendChild=child=>{views.push(child);}; main.querySelectorAll=()=>views;
@@ -33,7 +34,7 @@ function load({ origin, fetch, store } = {}) {
   let poll;
   vm.runInNewContext(source,{window,document,fetch,AbortController,crypto:{randomUUID:()=> 'new-id'},setInterval:fn=>{poll=fn;},localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
   const submit=value=>{input.value=value;return form.events.submit({preventDefault(){}});};
-  return {poll:()=>poll(),savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
+  return {queueStatus,cancel,retry,resolve,actionStatus,poll:()=>poll(),savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
 }
 
 test('the chat is deferred and remains explicitly disconnected without sending data',()=>{
@@ -170,7 +171,7 @@ test('signed-in public app queues questions and restores the saved answer withou
 test('late saved history is discarded after switching family',async()=>{
  let finish;
  const store={context:()=>({}),status:async()=>({online:true}),list:()=>new Promise(resolve=>{finish=resolve;})};
- const app=load({store}); app.events.familycontextchange();
+ const app=load({store}); await vi.waitFor(()=>expect(finish).toBeTypeOf('function')); app.events.familycontextchange();
  finish([{id:'old',question:'private previous family',status:'completed',answer:'old answer'}]);
  await Promise.resolve(); await Promise.resolve();
  expect(app.savedList.children).toHaveLength(0);expect(app.log.children).toHaveLength(0);
@@ -184,4 +185,51 @@ test('reload restores a pending question and idle polls preserve list focus',asy
  const button=app.savedList.children[0];button.focus();app.poll();
  await Promise.resolve();await Promise.resolve();
  expect(app.savedList.children[0]).toBe(button);expect(button.focused).toBe(true);
+});
+
+test('account-wide pending survives changing child and database failures are not shown as Mac offline',async()=>{
+ let offline=false;
+ const pending={id:'other-job',baby_id:'a',household_id:'home',status:'queued',created_at:new Date().toISOString()};
+ const store={context:()=>({householdId:'home'}),list:async()=>[],status:async()=>{if(offline)throw Error('network');return {registered:true,online:false,pending};}};
+ const app=load({store});app.window.FAMILY_APP_STATE.babies=[{id:'a',name:'A'},{id:'b',name:'B'}];app.window.switchView('assistant');
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Mac 연결 대기'));
+ app.babySelect.value='b';app.babySelect.events.change();
+ await vi.waitFor(()=>expect(app.queueStatus.textContent).toContain('다른 아이'));
+ app.input.value='new';app.input.events.input();expect(app.send.disabled).toBe(true);
+ offline=true;app.poll();
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('저장소 연결 확인 필요'));
+ expect(app.queueStatus.textContent).toContain('Mac 연결 상태는 아직 알 수 없어요');
+});
+
+test('retry only restores question, keeps current child/settings and excludes prior conversation',async()=>{
+ let rows=[{id:'failed',baby_id:'a',question:'다시 물어볼 질문',status:'failed',created_at:'2026-10-25'}];
+ const store={context:()=>({}),list:async()=>rows,status:async()=>({registered:true,online:true,pending:null}),enqueue:vi.fn(async()=>{rows=[];})};
+ const app=load({store});app.window.FAMILY_APP_STATE.babies=[{id:'a',name:'A'},{id:'b',name:'B'}];app.window.switchView('assistant');
+ await vi.waitFor(()=>expect(app.savedList.children).toHaveLength(1));
+ app.savedList.children[0].events.click();app.retry.events.click();
+ expect(app.input.value).toBe('다시 물어볼 질문');expect(store.enqueue).not.toHaveBeenCalled();
+ app.babySelect.value='b';app.babySelect.events.change();app.useRecords.checked=false;app.useRecords.events.change();
+ await app.submit(app.input.value);
+ expect(store.enqueue.mock.calls[0][1]).toMatchObject({babyId:'b',question:'다시 물어볼 질문',records:'',messages:[]});
+});
+
+test('uncertain submission reuses its ID and payload; confirmed receipt is not enqueued twice',async()=>{
+ let rows=[],received=null;
+ const store={context:()=>({}),list:async()=>rows,status:async()=>({registered:true,online:true,pending:null}),find:vi.fn(async()=>received),enqueue:vi.fn().mockRejectedValueOnce(Error('network')).mockImplementation(async(_,q)=>{received={...q,status:'queued',created_at:new Date().toISOString()};rows=[received];})};
+ const app=load({store});await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 연결됨'));
+ await app.submit('uncertain');expect(app.resolve.hidden).toBe(false);expect(app.send.disabled).toBe(true);
+ app.input.value='changed draft';await app.resolve.events.click();
+ expect(store.enqueue.mock.calls[1][1]).toEqual(store.enqueue.mock.calls[0][1]);
+ expect(app.resolve.hidden).toBe(true);
+ const stored={context:()=>({}),list:async()=>[received],status:async()=>({registered:true,online:true,pending:null}),find:async()=>received,enqueue:vi.fn()};
+ const restored=load({store:stored});await vi.waitFor(()=>expect(restored.savedList.children).toHaveLength(1));
+ expect(stored.enqueue).not.toHaveBeenCalled();
+});
+
+test('cancel reports processing when the worker wins and never presents a false cancellation',async()=>{
+ let row={id:'job',question:'q',status:'queued',created_at:new Date().toISOString()};
+ const store={context:()=>({}),list:async()=>[row],status:async()=>({registered:true,online:true,pending:row}),cancel:async()=>{row={...row,status:'processing',started_at:new Date().toISOString()};return 'processing';}};
+ const app=load({store});await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 연결됨'));await app.cancel.events.click();
+ expect(app.actionStatus.textContent).toContain('이미 답변을 시작');expect(app.cancel.hidden).toBe(true);
+ expect(app.log.children[1].children[1].textContent).toContain('답변을 작성');
 });
