@@ -1,45 +1,55 @@
 #assistantView { width: 100%; min-width: 0; color: var(--nova-text); }
 #assistantView[hidden], #assistantView [hidden] { display: none !important; }
-.assistant-heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.assistant-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; max-width: 760px; margin: 24px auto; }
 .assistant-heading h2 { margin: 0; font-size: clamp(22px, 4vw, 28px); letter-spacing: -.04em; }
-.assistant-heading p { margin: 8px 0 0; color: var(--nova-muted); font-size: 14px; }
-.assistant-connection { padding: 7px 10px; border: 1px solid var(--nova-line); border-radius: 999px; color: var(--nova-muted); background: var(--nova-card); font-size: 12px; white-space: nowrap; }
-.assistant-chat { max-width: 760px; margin-inline: auto; padding: clamp(16px, 4vw, 32px); border: 1px solid var(--nova-line); border-radius: 24px; background: var(--nova-card); }
-.assistant-welcome { padding: 0 0 8px; }
-.assistant-welcome h3 { margin: 0 0 12px; font-size: 19px; letter-spacing: -.035em; line-height: 1.4; word-break: keep-all; }
-.assistant-welcome p { margin: 0; color: var(--nova-muted); font-size: 15px; line-height: 1.7; }
-.assistant-prompts { display: grid; gap: 8px; margin-top: 16px; }
+.assistant-heading p { margin: 6px 0 0; color: var(--nova-muted); font-size: 13px; }
+.assistant-connection { color: var(--nova-muted); font-size: 12px; }
+.assistant-chat { max-width: 760px; margin-inline: auto; padding: clamp(18px, 4vw, 28px); border: 1px solid var(--nova-line); border-radius: 24px; background: var(--nova-card); }
 #assistantView button { min-height: 44px; font: inherit; cursor: pointer; touch-action: manipulation; box-shadow: none; }
-#assistantView .assistant-prompts button { padding: 12px 14px; border: 1px solid var(--nova-line); border-radius: 12px; color: var(--nova-text); background: var(--nova-card); text-align: left; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
 #assistantView button:hover { border-color: var(--nova-accent); }
-#assistantView button:focus-visible, #assistantView textarea:focus-visible { outline: 3px solid var(--nova-accent); outline-offset: 3px; }
-.assistant-messages { display: grid; gap: 20px; }
-.assistant-message { max-width: 88%; min-width: 0; }
-.assistant-message-user { justify-self: end; }
-.assistant-author { display: block; color: var(--nova-muted); font-size: 12px; margin-bottom: 6px; }
-.assistant-message-user .assistant-author { text-align: right; }
-.assistant-message p { margin: 0; padding: 14px 16px; border-radius: 16px 16px 16px 4px; background: var(--nova-soft); color: var(--nova-text); font-size: 16px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-.assistant-message-user p { border-radius: 16px 16px 4px 16px; background: var(--nova-lilac); }
-.assistant-composer { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--nova-line); }
-.assistant-composer label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 650; }
-#assistantView textarea { display: block; box-sizing: border-box; width: 100%; min-height: 96px; max-height: 240px; resize: vertical; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; color: var(--nova-text); background: var(--nova-card); font: inherit; font-size: 16px; line-height: 1.5; }
-#assistantView textarea::placeholder { color: var(--nova-muted); opacity: 1; }
-.assistant-compose-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
-#assistantView [data-assistant-clear] { margin-right: auto; border: 0; padding: 8px 0; background: transparent; color: var(--nova-muted); font-size: 13px; }
-#assistantView .assistant-send { padding: 10px 16px; border: 0; border-radius: 12px; background: var(--nova-accent); color: var(--nova-on-accent); font-size: 14px; font-weight: 650; }
-.assistant-send span { margin-left: 8px; }
-#assistantView .assistant-send:disabled { opacity: .45; cursor: default; }
-.assistant-privacy { margin: 16px 0 0; color: var(--nova-muted); font-size: 12px; line-height: 1.65; word-break: keep-all; overflow-wrap: anywhere; }
-.assistant-child { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--nova-line); }
-.assistant-child > label { display: block; margin-bottom: 8px; font-size: 14px; }
-.assistant-child select { width: 100%; min-height: 44px; border: 1px solid var(--nova-line); border-radius: 12px; padding: 8px 12px; font: inherit; color: var(--nova-text); background: var(--nova-card); }
-.assistant-child .assistant-context-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 8px 0; }
+#assistantView button:focus-visible, #assistantView textarea:focus-visible, #assistantView select:focus-visible, #assistantView summary:focus-visible { outline: 3px solid var(--nova-accent); outline-offset: 3px; }
+.assistant-child { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px; padding-bottom: 16px; border-bottom: 1px solid var(--nova-line); }
+.assistant-child-picker { min-width: 0; }
+.assistant-child-picker label { display: block; color: var(--nova-muted); font-size: 11px; }
+.assistant-child select { width: 100%; min-height: 44px; padding: 4px 8px 4px 0; border: 0; border-radius: 8px; font: inherit; font-weight: 650; color: var(--nova-text); background: var(--nova-card); }
+.assistant-context-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--nova-muted); }
 .assistant-child input { width: 18px; height: 18px; accent-color: var(--nova-accent); }
-.assistant-child summary { cursor: pointer; min-height: 32px; font-size: 13px; color: var(--nova-muted); }
+.assistant-records { grid-column: 1/-1; }
+.assistant-child summary { cursor: pointer; min-height: 32px; font-size: 12px; color: var(--nova-muted); }
 .assistant-child pre { font: inherit; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .assistant-child p { font-size: 12px; line-height: 1.6; color: var(--nova-muted); margin: 4px 0 0; }
-.assistant-saved { margin-bottom: 20px; border-bottom: 1px solid var(--nova-line); padding-bottom: 16px; }
-.assistant-saved summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 650; }
-#assistantSavedStatus { color: var(--nova-muted); font-size: 13px; line-height: 1.6; }
+.assistant-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 8px 0 16px; }
+.assistant-saved { min-width: 0; flex: 1; }
+.assistant-saved summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nova-muted); }
+#assistantView [data-assistant-clear] { flex-shrink: 0; border: 0; padding: 8px 0; background: transparent; color: var(--nova-muted); font-size: 13px; }
+#assistantSavedStatus, #assistantQueueStatus, #assistantActionStatus { color: var(--nova-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+#assistantQueueStatus { padding: 10px 12px; border-radius: 10px; background: var(--nova-soft); margin: 0 0 20px; }
 #assistantSavedList { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
-#assistantSavedList button { width: 100%; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-soft); color: var(--nova-text); text-align: left; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+#assistantSavedList button { width: 100%; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-soft); color: var(--nova-text); text-align: left; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.assistant-welcome { padding: 16px 0 24px; }
+.assistant-welcome h3 { margin: 0 0 10px; font-size: 19px; letter-spacing: -.035em; line-height: 1.4; word-break: keep-all; }
+.assistant-welcome p { margin: 0; color: var(--nova-muted); font-size: 14px; line-height: 1.7; }
+.assistant-prompts { display: grid; gap: 8px; margin-top: 16px; }
+#assistantView .assistant-prompts button { padding: 12px 14px; border: 1px solid var(--nova-line); border-radius: 12px; color: var(--nova-text); background: var(--nova-card); text-align: left; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.assistant-messages { display: grid; gap: 26px; }
+.assistant-message { min-width: 0; }
+.assistant-message-user { max-width: 88%; justify-self: end; }
+.assistant-author { display: block; color: var(--nova-muted); font-size: 12px; margin-bottom: 10px; }
+.assistant-message-user .assistant-author { text-align: right; }
+.assistant-message p { margin: 0; font-size: 15px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-message-user p { padding: 14px 16px; border-radius: 18px 18px 5px 18px; background: var(--nova-lilac); }
+.assistant-message-assistant .assistant-author::before, .assistant-message-notice .assistant-author::before { content: '✧'; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 9px; color: var(--nova-accent); background: var(--nova-soft); }
+.assistant-message-assistant p, .assistant-message-notice p { margin-left: 32px; }
+.assistant-recovery { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0 32px; }
+#assistantView .assistant-recovery button { padding: 8px 13px; border: 1px solid var(--nova-line); border-radius: 10px; background: var(--nova-card); color: var(--nova-accent); font-size: 13px; }
+#assistantActionStatus { flex-basis: 100%; margin: 0; }
+.assistant-composer { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--nova-line); }
+.assistant-composer label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--nova-muted); }
+#assistantView textarea { display: block; box-sizing: border-box; width: 100%; min-height: 86px; max-height: 240px; resize: vertical; padding: 13px; border: 1px solid var(--nova-line); border-radius: 16px; color: var(--nova-text); background: var(--nova-card); font: inherit; font-size: 16px; line-height: 1.6; }
+#assistantView textarea::placeholder { color: var(--nova-muted); opacity: 1; }
+.assistant-compose-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+#assistantComposeHint { font-size: 11px; color: var(--nova-muted); }
+#assistantView .assistant-send { margin-left: auto; padding: 10px 14px; border: 0; border-radius: 12px; background: var(--nova-accent); color: var(--nova-on-accent); font-size: 13px; font-weight: 650; }
+#assistantView button:disabled { opacity: .5; cursor: default; }
+.assistant-privacy { margin: 16px 0 0; color: var(--nova-muted); font-size: 11px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width: 360px) { .assistant-child { gap: 8px; } .assistant-context-toggle { font-size: 12px; } .assistant-recovery { margin-left: 0; } }
