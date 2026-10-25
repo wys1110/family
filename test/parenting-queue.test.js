@@ -95,6 +95,35 @@ test('cancel wins before claim; claim wins before cancel; other users cannot can
  expect((await worker(`select public.finish_parenting_question('${secret}','${next}','${claimed.lease}','late',null) as ok`)).rows[0].ok).toBe(false);
  expect((await user(owner,`select status from public.parenting_questions where id='${next}'`)).rows[0].status).toBe('failed');
 });
+test('two valid worker capabilities cannot claim or complete each other\'s questions',async()=>{
+ const otherSecret='other-test-worker-secret';
+ await db.exec(`insert into family_internal.parenting_workers(user_id,secret_hash) values('${other}',encode(sha256(convert_to('${otherSecret}','UTF8')),'hex'))`);
+ const enqueue=question=>`select public.enqueue_parenting_question(gen_random_uuid(),'${home}','${baby}','${question}','private context','[]') as id`;
+ const first=(await user(owner,enqueue('first private question'))).rows[0].id;
+ const second=(await user(other,enqueue('second private question'))).rows[0].id;
+ const mine=(await worker(`select public.claim_parenting_question('${secret}') as job`)).rows[0].job;
+ const theirs=(await worker(`select public.claim_parenting_question('${otherSecret}') as job`)).rows[0].job;
+ expect(mine.id).toBe(first); expect(mine.question).toBe('first private question');
+ expect(theirs.id).toBe(second); expect(theirs.question).toBe('second private question');
+ // Even knowledge of the other job's actual lease must not cross the author boundary.
+ expect((await worker(`select public.finish_parenting_question('${secret}','${second}','${theirs.lease}','forged',null) as ok`)).rows[0].ok).toBe(false);
+ expect((await worker(`select public.finish_parenting_question('${otherSecret}','${first}','${mine.lease}','forged',null) as ok`)).rows[0].ok).toBe(false);
+ expect((await user(owner,`select id from public.parenting_questions where id='${second}'`)).rows).toHaveLength(0);
+ expect((await user(other,`select id from public.parenting_questions where id='${first}'`)).rows).toHaveLength(0);
+ expect((await worker(`select public.finish_parenting_question('${secret}','${first}','${mine.lease}','first answer',null) as ok`)).rows[0].ok).toBe(true);
+ expect((await worker(`select public.finish_parenting_question('${otherSecret}','${second}','${theirs.lease}','second answer',null) as ok`)).rows[0].ok).toBe(true);
+});
+test('a claimed lease cannot finish after its author leaves the family',async()=>{
+ const id=(await user(owner,`select public.enqueue_parenting_question(gen_random_uuid(),'${home}','${baby}','leaving','private records','[]') as id`)).rows[0].id;
+ const claimed=(await worker(`select public.claim_parenting_question('${secret}') as job`)).rows[0].job;
+ await db.exec(`delete from public.household_members where user_id='${owner}'`);
+ expect((await worker(`select public.finish_parenting_question('${secret}','${id}','${claimed.lease}','late',null) as ok`)).rows[0].ok).toBe(false);
+ expect((await user(owner,`select id from public.parenting_questions where id='${id}'`)).rows).toHaveLength(0);
+ await db.exec(`update public.parenting_questions set started_at=now()-interval '4 minutes' where id='${id}'`);
+ await worker(`select public.claim_parenting_question('${secret}')`);
+ expect((await db.query(`select status,context,messages,lease from public.parenting_questions where id='${id}'`)).rows[0]).toEqual({status:'failed',context:'',messages:[],lease:null});
+ await db.exec(`insert into public.household_members values('${home}','${owner}')`);
+});
 test('family membership, child ownership and bounded conversation are checked before enqueue',async()=>{
  await expect(user(owner,`select public.enqueue_parenting_question(gen_random_uuid(),gen_random_uuid(),'${baby}','q','','[]')`)).rejects.toThrow('가족 로그인');
  await expect(user(owner,`select public.enqueue_parenting_question(gen_random_uuid(),'${home}',gen_random_uuid(),'q','','[]')`)).rejects.toThrow('아이 기록');
