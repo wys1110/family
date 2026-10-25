@@ -38,10 +38,10 @@ beforeAll(async () => {
 afterAll(async () => { await db?.close(); });
 
 test('README requires the snapshot then existing invite hardening before connecting the app', () => {
-  expect(files).toEqual(['supabase/schema.sql', 'supabase/migrations/20260912032358_family_invite_security_parity.sql']);
-  expect(read('supabase/schema.sql')).toContain('Fresh-install step 1 of 2');
+  expect(files).toEqual(['supabase/schema.sql', 'supabase/migrations/20260912032358_family_invite_security_parity.sql', 'supabase/migrations/20261025094000_revoke_removed_member_invites.sql']);
+  expect(read('supabase/schema.sql')).toContain('Fresh-install step 1 of 3');
 });
-test('fresh invites are long and expire; only the owner can read or rotate them', async () => {
+test('fresh invites are long and expire; only the owner can use invite management RPCs', async () => {
   const result = await asUser(owner, 'select * from get_household_invite()');
   expect(result.rows[0].invite_code).toMatch(/^[0-9A-F]{32}$/);
   const lifetime = await db.query(`select invite_code_expires_at > now() and invite_code_expires_at <= now()+interval '7 days' as valid from households where id='${home}'`);
@@ -69,4 +69,35 @@ test('expired invites are rejected and owner rotation invalidates the previous c
   expect(fresh).toMatch(/^[0-9A-F]{32}$/); expect(fresh).not.toBe(old);
   expect((await asUser(expired, `select join_household('${old}') as id`)).rows[0].id).toBeNull();
   expect((await asUser(expired, `select join_household('${fresh}') as id`)).rows[0].id).toBe(home);
+});
+
+test('removed members cannot rejoin with a previously issued invitation', async () => {
+  const old = (await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code;
+  expect((await asUser(expired, 'select name from babies')).rows).toHaveLength(1);
+  expect((await asUser(owner, `select remove_household_member('${expired}') as removed`)).rows[0].removed).toBe(true);
+  expect((await asUser(expired, 'select name from babies')).rows).toEqual([]);
+  expect((await asUser(expired, `select join_household('${old}') as id`)).rows[0].id).toBeNull();
+  const fresh = (await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code;
+  expect(fresh).not.toBe(old);
+  expect((await asUser(expired, `select join_household('${fresh}') as id`)).rows[0].id).toBe(home);
+});
+
+test('nonowners and no-op removals cannot revoke invitations or remove the owner', async () => {
+  const old = (await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code;
+  for (const [actor, target] of [[expired, owner], [owner, owner], [owner, '44444444-4444-4444-8444-444444444444']]) {
+    expect((await asUser(actor, `select remove_household_member('${target}') as removed`)).rows[0].removed).toBe(false);
+  }
+  expect((await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code).toBe(old);
+  expect((await db.query("select has_function_privilege('anon','remove_household_member(uuid)','execute') as allowed")).rows[0].allowed).toBe(false);
+});
+
+test('membership removal and invitation revocation roll back together', async () => {
+  const old = (await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code;
+  await db.exec('begin');
+  try {
+    expect((await asUser(owner, `select remove_household_member('${expired}') as removed`)).rows[0].removed).toBe(true);
+    expect((await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code).not.toBe(old);
+  } finally { await db.exec('rollback'); }
+  expect((await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code).toBe(old);
+  expect((await asUser(expired, 'select name from babies')).rows).toHaveLength(1);
 });

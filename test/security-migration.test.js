@@ -38,7 +38,7 @@ beforeAll(async () => {
     insert into public.households(id,owner_id,invite_code) values ('${home}','${owner}','ABCDEF');
     insert into public.household_members(household_id,user_id,role) values ('${home}','${owner}','owner'),('${home}','${member}','member');
   `);
-  for (const path of ['20260912032052_family_security_hardening.sql','20260912032358_family_invite_security_parity.sql']) {
+  for (const path of ['20260912032052_family_security_hardening.sql','20260912032358_family_invite_security_parity.sql','20261025094000_revoke_removed_member_invites.sql']) {
     await db.exec(readFileSync(`supabase/migrations/${path}`, 'utf8'));
   }
 }, 30000);
