@@ -289,12 +289,16 @@ on conflict (id) do update set public = false, file_size_limit = excluded.file_s
 create policy "family can view growth photos" on storage.objects for select to authenticated
 using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
 create policy "family can upload growth photos" on storage.objects for insert to authenticated
-with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid)
+  and ((storage.foldername(name))[2] is distinct from 'wallpapers' or public.is_household_owner(((storage.foldername(name))[1])::uuid)));
 create policy "family can update growth photos" on storage.objects for update to authenticated
-using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid))
-with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid)
+  and ((storage.foldername(name))[2] is distinct from 'wallpapers' or public.is_household_owner(((storage.foldername(name))[1])::uuid)))
+with check (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid)
+  and ((storage.foldername(name))[2] is distinct from 'wallpapers' or public.is_household_owner(((storage.foldername(name))[1])::uuid)));
 create policy "family can delete growth photos" on storage.objects for delete to authenticated
-using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid));
+using (bucket_id = 'growth-photos' and public.is_household_member(((storage.foldername(name))[1])::uuid)
+  and ((storage.foldername(name))[2] is distinct from 'wallpapers' or public.is_household_owner(((storage.foldername(name))[1])::uuid)));
 
 create or replace function public.create_household(household_name text)
 returns uuid language plpgsql security definer set search_path = public
