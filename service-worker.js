@@ -1,5 +1,17 @@
 const DEFAULT_URL = "./";
 
+function notificationAppUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const scope = new URL(self.registration.scope);
+    const target = new URL(value, scope);
+    // Notification routes use the app entry page plus query parameters, never another site or app.
+    if (target.origin === scope.origin && !target.username && !target.password &&
+      [scope.pathname, `${scope.pathname}index.html`].includes(target.pathname)) return target;
+  } catch { /* Invalid notification URLs fall back to the app home. */ }
+  return null;
+}
+
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 self.addEventListener("message", (event) => {
@@ -90,7 +102,7 @@ self.addEventListener("push", (event) => {
     icon: "assets/family-logo-20260914.png",
     badge: "assets/family-logo-20260914.png",
     data: {
-      url: payload.url || DEFAULT_URL,
+      url: notificationAppUrl(payload.url)?.href || DEFAULT_URL,
       date: payload.date || "",
       eventId: payload.eventId || "",
     },
@@ -100,13 +112,13 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = new URL(event.notification.data?.url || DEFAULT_URL, self.registration.scope).href;
+  const targetUrl = (notificationAppUrl(event.notification.data?.url) || new URL(DEFAULT_URL, self.registration.scope)).href;
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    const sameOrigin = windows.find((client) => new URL(client.url).origin === new URL(targetUrl).origin);
-    if (sameOrigin) {
-      if ("navigate" in sameOrigin) await sameOrigin.navigate(targetUrl);
-      return sameOrigin.focus();
+    const appWindow = windows.find((client) => notificationAppUrl(client.url));
+    if (appWindow) {
+      if ("navigate" in appWindow) await appWindow.navigate(targetUrl);
+      return appWindow.focus();
     }
     return self.clients.openWindow(targetUrl);
   })());
