@@ -1,8 +1,15 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { request } from 'node:http';
+import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createChatServer, validateMessages, codexArgs } from '../scripts/parenting-codex-server.mjs';
 const servers = [];
-afterEach(async () => { for (const server of servers.splice(0)) await new Promise(resolve => server.close(resolve)); });
+const directories = [];
+afterEach(async () => {
+  for (const server of servers.splice(0)) await new Promise(resolve => server.close(resolve));
+  for (const directory of directories.splice(0)) await rm(directory, { recursive: true, force: true });
+});
 async function setup(reply = vi.fn(async () => '테스트 답변'), config = {}) {
   const server = createChatServer({ root: '/tmp', reply, ...config }); servers.push(server);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -13,7 +20,7 @@ async function setup(reply = vi.fn(async () => '테스트 답변'), config = {})
   });
   const { data } = await call('/api/parenting/status');
   const headers = { origin: 'http://127.0.0.1:8775', 'content-type': 'application/json', 'x-chat-token': data.token };
-  return { call, reply, headers };
+  return { call, reply, headers, server };
 }
 test('only bounded alternating question history is accepted', () => {
   expect(validateMessages([{ role: 'user', content: '질문' }])).toBe(true);
@@ -87,4 +94,43 @@ test('partial or unsafe private configuration fails closed', () => {
     { remoteOrigin: 'https://mac.tail.ts.net' },
     { remoteOrigin: 'https://mac.tail.ts.net', ownerLogin: ' owner@example.test' }
   ]) expect(() => createChatServer({ root: '/tmp', ...config })).toThrow('함께 설정');
+});
+
+test('static serving cannot read parent files, encoded traversal or escaping symlinks', async () => {
+  const directory = await realpath(await mkdtemp(join(tmpdir(), 'family-http-security-')));
+  directories.push(directory);
+  const root = join(directory, 'public');
+  await mkdir(root); await mkdir(join(directory, 'public-other'));
+  await writeFile(join(root, 'safe.json'), '{"public":true}');
+  await writeFile(join(directory, 'secret.json'), '{"syntheticSecret":true}');
+  await writeFile(join(directory, 'public-other', 'secret.json'), '{"syntheticSecret":true}');
+  await symlink(join(directory, 'secret.json'), join(root, 'escape.json'));
+  await symlink(join(directory, 'public-other'), join(root, 'assets'));
+  const { call, reply } = await setup(undefined, { root });
+  expect((await call('/safe.json')).data).toEqual({ public: true });
+  for (const path of ['/../secret.json', '/%2e%2e/secret.json', '/..%2fsecret.json', '/%2e%2e%2fpublic-other%2fsecret.json', '/escape.json', '/assets/secret.json']) {
+    const result = await call(path);
+    expect(result.status, path).toBe(404);
+    expect(JSON.stringify(result.data)).not.toContain('syntheticSecret');
+    expect(JSON.stringify(result.data)).not.toContain(directory);
+  }
+  expect(reply).not.toHaveBeenCalled();
+});
+
+test('disconnect aborts inference and releases the next request', async () => {
+  let cancelled = false;
+  const reply = vi.fn()
+    .mockImplementationOnce((_messages, signal) => new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => { cancelled = true; reject(new Error('disconnected')); }, { once: true });
+    }))
+    .mockResolvedValueOnce('다음 답변');
+  const { call, headers, server } = await setup(reply);
+  const body = JSON.stringify({ messages: [{ role: 'user', content: '질문' }] });
+  const req = request({ hostname: '127.0.0.1', port: server.address().port, path: '/api/parenting/chat', method: 'POST', headers: { host: '127.0.0.1:8775', ...headers } });
+  req.on('error', () => {});
+  req.end(body);
+  await vi.waitFor(() => expect(reply).toHaveBeenCalledOnce());
+  req.destroy();
+  await vi.waitFor(() => expect(cancelled).toBe(true));
+  expect((await call('/api/parenting/chat', { method: 'POST', headers, body })).data.answer).toBe('다음 답변');
 });
