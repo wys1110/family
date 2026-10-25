@@ -47,14 +47,9 @@ async function resolveChunk(chunk: GroundingChunk, fetchImpl: typeof fetch): Pro
 
   if (matchesHost(url.hostname, GOOGLE_REDIRECT_HOSTS)) {
     try {
-      const response = await fetchImpl(url.toString(), {
-        method: "HEAD",
-        redirect: "follow",
-        signal: AbortSignal.timeout(3000),
-      });
-      if (!response.ok) return null;
-      url = parseHttpsUrl(response.url);
-      if (!url || isPrivateHost(url.hostname)) return null;
+      const result = await fetchAllowed(url, [...GOOGLE_REDIRECT_HOSTS, ...TRUSTED_HOSTS, ...YOUTUBE_HOSTS], fetchImpl, "HEAD");
+      if (!result.response.ok) return null;
+      url = result.url;
     } catch {
       return null;
     }
@@ -78,16 +73,12 @@ async function isTrustedYoutubeUrl(url: URL, fetchImpl: typeof fetch): Promise<b
     const oembed = new URL("https://www.youtube.com/oembed");
     oembed.searchParams.set("url", url.toString());
     oembed.searchParams.set("format", "json");
-    const metadataResponse = await fetchImpl(oembed.toString(), {
-      signal: AbortSignal.timeout(3000),
-    });
+    const { response: metadataResponse } = await fetchAllowed(oembed, YOUTUBE_HOSTS, fetchImpl);
     if (!metadataResponse.ok) return false;
     const metadata = await metadataResponse.json() as { author_url?: string };
     const authorUrl = parseHttpsUrl(metadata.author_url);
     if (!authorUrl || !YOUTUBE_HOSTS.includes(authorUrl.hostname.toLowerCase())) return false;
-    const channelResponse = await fetchImpl(authorUrl.toString(), {
-      signal: AbortSignal.timeout(3000),
-    });
+    const { response: channelResponse } = await fetchAllowed(authorUrl, YOUTUBE_HOSTS, fetchImpl);
     if (!channelResponse.ok) return false;
     const channelPage = await channelResponse.text();
     return channelPage.includes(`"channelId":"${HA_CHANNEL_ID}"`) ||
@@ -97,10 +88,25 @@ async function isTrustedYoutubeUrl(url: URL, fetchImpl: typeof fetch): Promise<b
   }
 }
 
+async function fetchAllowed(url: URL, hosts: string[], fetchImpl: typeof fetch, method = "GET"): Promise<{ response: Response; url: URL }> {
+  const signal = AbortSignal.timeout(3000);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (!parseHttpsUrl(url.href) || !matchesHost(url.hostname, hosts)) throw new Error("UNTRUSTED_SOURCE_URL");
+    // Validate each destination before sending; a final-URL check happens too late for SSRF.
+    const response = await fetchImpl(url.href, { method, redirect: "manual", signal });
+    if (![301, 302, 303, 307, 308].includes(response.status)) return { response, url };
+    const location = response.headers.get("location");
+    await response.body?.cancel();
+    if (!location) throw new Error("MISSING_SOURCE_LOCATION");
+    url = new URL(location, url);
+  }
+  throw new Error("TOO_MANY_SOURCE_REDIRECTS");
+}
+
 function parseHttpsUrl(value: unknown): URL | null {
   try {
     const url = new URL(String(value || ""));
-    return url.protocol === "https:" ? url : null;
+    return url.protocol === "https:" && !url.username && !url.password && !url.port ? url : null;
   } catch {
     return null;
   }
