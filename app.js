@@ -2734,6 +2734,11 @@ async function signOutCurrentUser(button = null) {
     }
   }
 }
+function privateCashflowEntry(session) {
+  // This only controls the shortcut. Google and the dashboard enforce owner-only access.
+  if (String(session?.user?.email || "").trim().toLowerCase() !== "wys1110@gmail.com") return "";
+  return `<div class="account-card"><strong>내 자산 · 나만 보기</strong><p>현금흐름과 자산·부채를 본인 Google 계정으로 확인해요.</p><a class="account-private-finance-link" href="https://script.google.com/macros/s/AKfycbwzuKLH43ew5uGrbj751otSF_6OsmijFIejyTmdaB90MZIUSZau_7PrY0_3ijOadNEAyw/exec" target="_blank" rel="noopener noreferrer">내 자산 열기 ↗</a></div>`;
+}
 function renderAccount() {
   const root = $("#accountContent");
   if (DEMO_MODE) {
@@ -2748,11 +2753,11 @@ function renderAccount() {
     $("#accountGoogleSignIn").addEventListener("click", signInWithGoogle); $("#loginForm").addEventListener("submit", sendMagicLink); return;
   }
   if (!state.household) {
-    root.innerHTML = `<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="초대 코드" maxlength="32" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+    root.innerHTML = `${privateCashflowEntry(state.session)}<div class="account-card"><strong>새 가족 공간 만들기</strong><form class="account-form" id="createHouseholdForm"><input id="householdName" placeholder="예: 도윤이네" required /><button>만들기</button></form></div><div class="account-card"><strong>초대 코드로 참여하기</strong><form class="account-form" id="joinHouseholdForm"><input id="inviteCode" placeholder="초대 코드" maxlength="32" required /><button>참여하기</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
     $("#createHouseholdForm").addEventListener("submit", createHousehold); $("#joinHouseholdForm").addEventListener("submit", joinHousehold); $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget)); return;
   }
   const role = currentNotificationRole();
-  root.innerHTML = `<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><div class="account-card"><strong>알림에 표시할 호칭</strong><p>기록 알림에 누가 기록했는지 표시해요.</p><form class="account-form" id="notificationRoleForm"><label>내 호칭<select aria-label="알림에 표시할 호칭"><option value="">선택해 주세요</option><option value="엄마"${role === "엄마" ? " selected" : ""}>엄마</option><option value="아빠"${role === "아빠" ? " selected" : ""}>아빠</option></select></label><button type="submit">저장</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
+  root.innerHTML = `${privateCashflowEntry(state.session)}<div class="account-card"><strong>${escapeHtml(state.household.name)}</strong><p>가족에게 아래 초대 코드를 알려주세요.</p><div class="invite-code">${state.household.invite_code}</div></div><div class="account-card"><strong>알림에 표시할 호칭</strong><p>기록 알림에 누가 기록했는지 표시해요.</p><form class="account-form" id="notificationRoleForm"><label>내 호칭<select aria-label="알림에 표시할 호칭"><option value="">선택해 주세요</option><option value="엄마"${role === "엄마" ? " selected" : ""}>엄마</option><option value="아빠"${role === "아빠" ? " selected" : ""}>아빠</option></select></label><button type="submit">저장</button></form></div><button class="secondary-button" id="logoutButton">로그아웃</button>`;
   $("#notificationRoleForm").addEventListener("submit", saveNotificationRole);
   $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
 }

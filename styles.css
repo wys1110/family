@@ -497,3 +497,5 @@ body::after { right:-190px; bottom:8vh; background:radial-gradient(circle,rgba(1
   .care-rhythm-bars { gap:2px; padding-right:3px; padding-left:3px; }
 }
 @media (max-width:350px) { .care-timer-starts { grid-template-columns:1fr; }.care-timer-starts button { display:grid; grid-template-columns:40px 1fr; grid-template-rows:auto auto; min-height:68px; text-align:left; }.timer-start-icon { grid-row:1/3; margin:0; }.care-timer-starts strong { margin-top:2px; }.care-timer-starts small { margin-top:0; } }
+
+.account-private-finance-link { display:inline-flex; align-items:center; min-height:44px; padding:10px 14px; border-radius:13px; background:var(--surface-2); color:var(--label); font-size:14px; font-weight:650; text-decoration:none; }
