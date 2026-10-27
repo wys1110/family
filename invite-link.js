@@ -245,11 +245,14 @@
   const renderInviteAccount = () => {
     const root = document.querySelector("#accountContent");
     if (!root || !state.supabase || !state.session) return false;
+    if (typeof DEMO_MODE !== "undefined" && DEMO_MODE) return false;
 
     const inviteCode = pendingInvite();
+    const cashflowEntry = typeof privateCashflowEntry === "function" ? privateCashflowEntry(state.session) : "";
 
     if (!state.household) {
       root.innerHTML = `
+        ${cashflowEntry}
         ${inviteCode ? `
           <div class="account-card invite-link-card received">
             <span class="invite-link-icon" aria-hidden="true">🔗</span>
@@ -274,6 +277,7 @@
     }
 
     root.innerHTML = `
+      ${cashflowEntry}
       <div class="account-card invite-link-card shared">
         <span class="invite-link-icon" aria-hidden="true">👨‍👩‍👧‍👦</span>
         <strong>${escapeHtml(state.household.name)}</strong>
