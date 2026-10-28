@@ -2735,9 +2735,9 @@ async function signOutCurrentUser(button = null) {
   }
 }
 function privateCashflowEntry(session) {
-  // This only controls the shortcut. Google and the dashboard enforce owner-only access.
+  // This only controls the shortcut. The private-assets API verifies the owner user ID.
   if (String(session?.user?.email || "").trim().toLowerCase() !== "wys1110@gmail.com") return "";
-  return `<div class="account-card"><strong>내 자산 · 나만 보기</strong><p>현금흐름과 자산·부채를 본인 Google 계정으로 확인해요.</p><a class="account-private-finance-link" href="https://script.google.com/macros/s/AKfycbwzuKLH43ew5uGrbj751otSF_6OsmijFIejyTmdaB90MZIUSZau_7PrY0_3ijOadNEAyw/exec" target="_blank" rel="noopener noreferrer">내 자산 열기 ↗</a></div>`;
+  return `<div class="account-card"><strong>내 자산 · 나만 보기</strong><p>등록된 자산과 거래를 이 앱에서 확인하고 기록해요.</p><a class="account-private-finance-link" href="assets.html">내 자산 열기</a></div>`;
 }
 function renderAccount() {
   const root = $("#accountContent");

@@ -1,0 +1,29 @@
+{
+  "timeZone": "Asia/Seoul",
+  "runtimeVersion": "V8",
+  "exceptionLogging": "NONE",
+  "dependencies": {
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Docs",
+        "serviceId": "docs",
+        "version": "v1"
+      },
+      {
+        "userSymbol": "Drive",
+        "serviceId": "drive",
+        "version": "v3"
+      }
+    ]
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents.readonly",
+    "https://www.googleapis.com/auth/drive.metadata.readonly",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/drive.file"
+  ],
+  "webapp": {
+    "access": "MYSELF",
+    "executeAs": "USER_DEPLOYING"
+  }
+}

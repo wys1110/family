@@ -77,7 +77,7 @@ describe("global design harmony", () => {
 
   test("updates every affected stylesheet cache version", () => {
     expect(index).toContain('styles.css?v=20261027-private-cashflow-v1');
-    expect(index).toContain('<script src="app.js?v=20261027-private-cashflow-v1"></script>');
+    expect(index).toContain('<script src="app.js?v=20261029-private-assets-v1"></script>');
     expect(config).toContain('{ name: "refresh-button", version: "20260722-bottom-refresh-v6" }');
     expect(config).toContain('{ name: "feature-request", version: "20261013-view-storage-v1" }');
     expect(config).toContain('{ name: "settings", version: "20261018-startup-review-v1" }');

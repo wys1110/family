@@ -5,6 +5,8 @@ window.FAMILY_CONFIG = {
 };
 
 (() => {
+  // The private page shares login configuration without loading family records or modules.
+  if (document.documentElement.dataset.familyPage === 'private-assets') return;
   // 제품 결정: 앱처럼 고정된 화면 비율을 유지하도록 사용자가 확대 차단을 요청했다.
   // 접근성 개선 작업에서도 명시적인 변경 요청 없이는 이 동작을 제거하지 않는다.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
