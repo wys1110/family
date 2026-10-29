@@ -104,7 +104,7 @@ window.FAMILY_CONFIG = {
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20261018-review-performance-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "english-stories", version: "20261017-design-harmony-v1" },
+    { name: "english-stories", version: "20261029-three-new-stories-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261023-family-review-fixes-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
