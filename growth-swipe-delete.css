@@ -1,0 +1,8 @@
+#growthList .growth-swipe-row { position:relative; overflow:hidden; min-width:0; border-radius:20px; background:var(--theme-destructive); }
+#growthList .growth-swipe-row > .growth-entry { position:relative; z-index:1; width:100%; margin:0; background:var(--theme-surface); transform:translateX(var(--swipe-offset, 0px)) !important; transition:transform .18s ease; animation:none; touch-action:pan-y pinch-zoom; }
+#growthList .growth-swipe-row.is-dragging > .growth-entry { transition:none; user-select:none; }
+#growthList .growth-swipe-delete { display:block; position:absolute; inset:0 0 0 auto; width:76px; min-height:44px; border:0; border-radius:0; background:var(--theme-destructive); color:var(--theme-destructive-contrast); font:inherit; font-weight:700; cursor:pointer; visibility:hidden; }
+#growthList .growth-swipe-row:is(.is-open, .is-dragging) .growth-swipe-delete { visibility:visible; }
+#growthList .growth-swipe-delete:focus-visible { outline:3px solid var(--theme-destructive-contrast); outline-offset:-5px; }
+.growth-swipe-hint { color:var(--theme-text-muted); font-size:12px; margin:0 0 12px; }
+@media (prefers-reduced-motion:reduce) { #growthList .growth-swipe-row > .growth-entry { transition:none; } }

@@ -26,6 +26,7 @@ const access = {
   household_backup_imports: { authenticated: ["select", "insert", "delete"] },
   family_trips: { authenticated: ["select", "insert", "update"] },
   parenting_questions: { authenticated: ["select"] },
+  family_sleep_sessions: { authenticated: ["select"] },
   // These tables are intentionally reached through checked SECURITY DEFINER RPCs.
   platform_admins: {}, app_activity_logs: {}, platform_admin_audit_logs: {}, household_join_attempts: {},
 };

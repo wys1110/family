@@ -5,11 +5,7 @@
   button.dataset.growthDeleteSyncBound = "true";
   let deleting = false;
 
-  button.addEventListener("click", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    const id = document.querySelector("#growthId")?.value;
+  const deleteEntry = async (id, position) => {
     if (!id || deleting || !window.confirm("이 성장 기록을 삭제할까요?")) return;
 
     const target = state.growthEntries.find((entry) => String(entry.id) === String(id));
@@ -22,7 +18,7 @@
     const withAuthRecovery = (operation) => window.FAMILY_AUTH_API.withRecovery(operation, {
       supabase, userId, isCurrent,
     });
-    const returnPosition = typeof growthDialogReturnPosition === "undefined" ? null : growthDialogReturnPosition;
+    const returnPosition = position || (typeof growthDialogReturnPosition === "undefined" ? null : growthDialogReturnPosition);
     let committed = false;
     deleting = true;
     button.disabled = true;
@@ -89,5 +85,11 @@
       button.removeAttribute("aria-busy");
       button.textContent = "삭제";
     }
+  };
+  window.FAMILY_DELETE_GROWTH_ENTRY = deleteEntry;
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return deleteEntry(document.querySelector("#growthId")?.value);
   }, true);
 })();

@@ -1,4 +1,5 @@
 /* Render-blocking theme contract. Full component palettes load afterward. */
+:root { --theme-destructive: #c93643; --theme-destructive-contrast: #fff; }
 html[data-family-theme-choice="white"] {
   --bg: #f7f7f5;
   --surface: #ffffff;
