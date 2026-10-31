@@ -30,9 +30,21 @@
   const quickGrid = timer.querySelector('.growth-quick-grid');
   const sleep = document.createElement('button');
   sleep.type = 'button'; sleep.dataset.compactSleep = '';
-  sleep.innerHTML = '<span class="quick-symbol sleep" aria-hidden="true">☾</span>수면';
-  sleep.addEventListener('click', () => openGrowthQuick('수면'));
+  sleep.dataset.careTimer = 'sleep';
+  const renderSleepAction = () => {
+    const sleeping = careTimer?.type === 'sleep';
+    sleep.innerHTML = `<span class="quick-symbol sleep" aria-hidden="true">☾</span>${sleeping ? '수면 끝' : '수면 시작'}`;
+    sleep.disabled = careTimerSaveInProgress || Boolean(careTimer && !sleeping);
+  };
+  sleep.addEventListener('click', event => {
+    if (careTimer?.type === 'sleep') stopCareTimer();
+    else startCareTimerFromEvent(event);
+  });
   quickGrid.appendChild(sleep);
+  const previousTimerRender = renderCareTimer;
+  const renderTimer = function(...args) { const result = previousTimerRender.apply(this, args); renderSleepAction(); return result; };
+  Object.assign(renderTimer, previousTimerRender); renderCareTimer = renderTimer;
+  renderSleepAction();
 
   const summary = document.createElement('section');
   summary.className = 'compact-today'; summary.setAttribute('aria-labelledby', 'compactTodayTitle');

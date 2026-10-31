@@ -188,7 +188,7 @@ window.FAMILY_CONFIG = {
     { name: "motion-system", version: "20260915-tab-position-v1" },
     { name: "family-admin", version: "20261018-startup-review-v1", style: false },
     { name: "deferred-tabs", version: "20261018-parenting-chat-v1", style: false },
-    { name: "compact-family", version: "20261017-design-harmony-v1" },
+    { name: "compact-family", version: "20261031-visible-sleep-controls-v1" },
     { name: "nova-family", version: "20261017-design-harmony-v1" },
     { name: "travel-sharing", version: "20261023-family-review-fixes-v1", style: false },
     { name: "travel-data", version: "20261023-family-review-fixes-v1", style: false },

@@ -61,3 +61,24 @@ test('feeding retains its existing label and stop action', () => {
   expect(h.elements.get('#careTimerLabel').textContent).toBe('왼쪽 모유 수유');
   expect(h.elements.get('#careTimerStop').innerHTML).toContain('멈추고 저장');
 });
+
+test('the surviving compact sleep button starts and ends the timer after layout removes the original controls', () => {
+  const h = harness();
+  const listeners = new Map();
+  const button = { dataset: {}, addEventListener: (name, handler) => listeners.set(name, handler), closest: () => button };
+  h.context.document = { createElement: () => button };
+  h.context.quickGrid = { appendChild() {} };
+  h.context.renderGrowth = () => h.context.renderCareTimer();
+  const compact = readFileSync('compact-family.js', 'utf8');
+  vm.runInContext(compact.slice(compact.indexOf('  const sleep ='), compact.indexOf('  const summary =')), h.context);
+  expect(button.innerHTML).toContain('수면 시작');
+  listeners.get('click')({ target: button });
+  expect(h.context.careTimer.type).toBe('sleep');
+  expect(button.innerHTML).toContain('수면 끝');
+  h.advance(45);
+  listeners.get('click')({ target: button });
+  expect(h.context.state.growthEntries[0].sleepMinutes).toBe(45);
+  expect(button.innerHTML).toContain('수면 시작');
+  h.start('feeding-left');
+  expect(button.disabled).toBe(true);
+});
