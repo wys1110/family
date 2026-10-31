@@ -66,6 +66,8 @@ function lineNumberAt(source, index) {
 function scanFile(absolute) {
   const file = relative(root, absolute).replaceAll("\\", "/");
   if (file.startsWith("assets/vendor/")) return [];
+  // Preserved legacy Apps Script screen; never included in the Pages bundle.
+  if (file === "integrations/private-assets-appscript/Index.html") return [];
   if (paletteFiles.has(file)) return [];
 
   const extension = absolute.slice(absolute.lastIndexOf("."));

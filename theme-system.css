@@ -408,3 +408,25 @@ html[data-family-theme-choice="black"] #eventDialog .primary-button {
   background-image: linear-gradient(145deg, #383838, #191919) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
 }
+
+/* Owner asset page: scoped palette, no change to the family themes. */
+html[data-family-page="private-assets"] {
+  --pa-shadow-color: #00000026;
+  --pa-backdrop: #17233870;
+  --pa-bg: #f4f6fa;
+  --pa-ink: #172338;
+  --pa-muted: #59677d;
+  --pa-line: #e2e7ef;
+  --pa-blue: #2458d3;
+  --pa-soft: #edf2ff;
+  --pa-selection: #cfdcff;
+  --pa-tabs: #e7ebf2;
+  --pa-chart-muted: #8695ad;
+  --pa-chart-line: #cdd5e2;
+  --pa-blue-hover: #1948b8;
+  --pa-button-line: #ccd5e3;
+  --pa-input-line: #c9d2df;
+  --pa-notice-ink: #254a9b;
+  --pa-error: #8c322c;
+  --pa-surface: #fff;
+}

@@ -11,7 +11,7 @@ describe("demo theme boundary", () => {
     expect(config).toContain('family-demo-theme-v1');
     expect(config).toContain('family-demo-theme-choice-v1');
     expect(config).toContain('{ name: "settings", version: "20261018-startup-review-v1" }');
-    expect(read("index.html")).toContain('config.js?v=20261025-parenting-recovery-v1');
+    expect(read("index.html")).toContain('config.js?v=20261029-private-assets-v1');
     expect(settings).toContain("const AVAILABLE_THEMES = THEMES;");
     expect(settings).toContain("family-demo-theme-v1");
     expect(settings).toContain("family-demo-theme-choice-v1");

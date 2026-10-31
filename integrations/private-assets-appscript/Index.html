@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light">
+  <title>내 자산 · 나만 보기</title>
+  <style>
+
+    :root{color-scheme:light;--bg:#f4f6fa;--paper:#fff;--soft:#edf2fa;--ink:#172338;--muted:#59677d;--line:#dce3ee;--green:#2458d3;--light:#eaf0ff;--orange:#9a520f;--orange-light:#fff3e5;--red:#b8323b;--font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;--r:14px}
+    *{box-sizing:border-box} [hidden]{display:none!important}
+    html{background:var(--bg);scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--bg);font:15px/1.65 var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+    ::selection{background:#d6e3ff;color:#172338}button,input,a{font:inherit}button,a,input,summary{-webkit-tap-highlight-color:transparent}button,a,summary{touch-action:manipulation}button{cursor:pointer;min-height:44px;border:0}button:disabled{opacity:.55;cursor:wait}a{color:var(--green);text-underline-offset:4px}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--green);outline-offset:4px}input{caret-color:var(--green)}svg{display:block;width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    header{background:var(--paper);border-bottom:1px solid var(--line)}.header-inner,main,footer{max-width:1100px;margin:auto}.header-inner{padding:20px 32px 0}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.family{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}.family svg{width:16px;height:16px}.secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600}.secondary:hover{background:var(--soft);color:var(--ink)}.brand{display:flex;align-items:center;gap:10px;margin-top:16px}h1,h2,h3,p{margin:0}h1{font-size:29px;line-height:1.3;font-weight:750;letter-spacing:-.03em}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:var(--light);color:var(--green);font-size:12px;line-height:1.6;font-weight:650;white-space:nowrap}.badge svg{width:12px;height:12px}.context{margin-top:8px;color:var(--muted);font-size:12px}.tabs{display:flex;gap:28px;margin-top:22px}.tabs button{position:relative;min-width:0;padding:12px 1px 15px;background:transparent;color:var(--muted);font-size:15px;font-weight:650;white-space:nowrap}.tabs button[aria-selected="true"]{color:var(--green)}.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:2px 2px 0 0;background:var(--green)}.tabs button:hover{color:var(--green)}
+    main{padding:28px 32px 0}.grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:24px;align-items:start}.column{display:grid;gap:20px;min-width:0}.card{min-width:0;background:var(--paper);border-radius:var(--r);padding:26px}.card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}h2{font-size:18px;line-height:1.5;letter-spacing:-.025em;font-weight:700}h3{font-size:15px}.caption,p.caption{font-size:12px;color:var(--muted);line-height:1.75}.tiny-label{font-size:12px;color:var(--muted)}.amount{font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.02em}.large-amount{margin-top:16px;font-size:32px;line-height:1.35;letter-spacing:-.035em;font-weight:750}.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row strong{font-size:16px;font-weight:650}.row .label{min-width:0}.row .value{flex-shrink:0;text-align:right}.row .caption{font-size:12px}.list{display:grid}.hint{margin-top:16px;padding:12px 0 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}.notice{margin-bottom:20px;padding:12px 16px;border-radius:10px;background:var(--orange-light);color:var(--orange);font-size:12px}.detail-note{margin-top:18px;border-top:1px solid var(--line);padding-top:8px;color:var(--muted);font-size:12px}.detail-note summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;cursor:pointer;list-style:none}.detail-note summary::-webkit-details-marker{display:none}.detail-note summary::after{content:"+";font-size:18px;font-weight:400;color:var(--muted)}.detail-note[open] summary::after{content:"−"}.detail-note p{margin:5px 0 4px;line-height:1.8}
+    .salary-card .caption{max-width:48ch}.salary-card .row{padding:16px 0}.salary-card #salary{font-size:25px;font-weight:720;color:var(--ink)}.salary-card #repayment{color:var(--orange)}.flow{margin:20px 0 0}.flow-track{display:flex;height:12px;overflow:hidden;border-radius:3px;background:#dce6fc}.flow-repayment{height:100%;background:#b96b27;border-right:2px solid var(--paper)}.flow-legend{display:flex;justify-content:space-between;gap:8px;margin-top:9px;color:var(--muted);font-size:12px}.flow-legend i{display:inline-block;width:7px;height:7px;margin-right:5px;background:#b96b27;border-radius:1px}.flow-legend span:last-child i{background:#dce6fc;border:1px solid #9aafd7}.balance-line{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.balance-line .tiny-label{color:var(--ink);font-size:13px;font-weight:600}.balance-line strong{display:block;margin:5px 0 4px;color:var(--green);font-size:36px;line-height:1.4;letter-spacing:-.035em;font-weight:750}.comparison{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
+    .hero{background:#eaf0ff;border-radius:var(--r);padding:22px 24px}.hero h2{font-size:16px}.hero .caption{margin-top:12px;color:#40577d}.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.hero-grid>div+div{border-left:1px solid #cbd9f2;padding-left:18px}.hero-grid small{color:#40577d;font-size:12px}.hero-grid strong{display:block;margin-top:3px;font-size:25px;font-weight:720;letter-spacing:-.03em}.status-line{display:inline-flex;align-items:center;gap:6px;color:#40577d;font-size:12px}.status-line::before{content:"";width:5px;height:5px;border-radius:50%;background:#6a82aa}.hero .detail-note{border-color:#cbd9f2;color:#40577d}.hero .detail-note summary::after{color:#40577d}
+    .due-icon{display:grid;place-items:center;min-width:48px;height:40px;border-radius:7px;background:var(--soft);color:var(--ink);font-size:12px;font-weight:650}.due-label{display:flex;align-items:center;gap:12px;min-width:0}.due-label strong{font-size:14px}.sum{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.sum strong{color:var(--ink);font-size:24px;font-weight:720}.notes-card{padding:22px 26px}.notes-card+.notes-card{margin-top:0}.notes-card .large-amount{font-size:26px;margin:8px 0}.notes-card h2{font-size:16px}.notes-card .row strong{font-size:15px}.notes-card .row{padding:12px 0}
+    .stackbar{display:flex;gap:2px;height:20px;margin:26px 0 12px;overflow:hidden;border-radius:3px}.stackbar span{min-width:2px}.legend-dot{display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:1px}.asset-list .row{padding:14px 0}.asset-list .row strong{font-size:15px}.debt-table{width:100%;border-collapse:collapse;margin-top:24px;font-size:13px}.debt-table th{text-align:right;padding:9px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:500;white-space:nowrap}.debt-table td{text-align:right;padding:14px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}.debt-table td:first-child,.debt-table th:first-child{text-align:left}.debt-table td:first-child{font-weight:600;white-space:normal;padding-right:8px}.todo{margin:16px 0 0;padding-left:18px;color:var(--muted);font-size:13px}.todo li{padding-bottom:10px}.todo li::marker{color:#8596b2}
+    .scenario label{display:block;margin-top:20px;font-size:13px;font-weight:600}.input-wrap{display:flex;align-items:center;gap:10px;margin-top:7px}.input-wrap input{min-width:0;width:100%;padding:12px 14px;border:1px solid #b9c7dc;border-radius:8px;color:var(--ink);background:var(--paper);font-size:19px;line-height:1.4;min-height:50px;transition:border-color .15s}.input-wrap input:hover{border-color:#7895c5}.input-wrap input:focus{border-color:var(--green)}.input-wrap input::placeholder{color:var(--muted);font-size:15px}.input-wrap span{white-space:nowrap;font-size:12px;color:var(--muted)}.text-button{min-height:44px;padding:5px 0;background:transparent;color:var(--green);font-size:12px;text-decoration:underline;text-underline-offset:3px}.scenario-result{margin-top:26px;padding:20px;border-radius:10px;background:var(--light)}.scenario-result strong{display:block;margin:6px 0;color:var(--green);font-size:30px;letter-spacing:-.03em;line-height:1.4}.scenario-result.negative{background:var(--orange-light)}.scenario-result.negative strong{color:var(--red)}.privacy-caption{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.scenario-guide{margin-top:0}.scenario-guide a{display:inline-flex;align-items:center;gap:5px;min-height:44px;font-size:13px;font-weight:600}
+    footer{padding:24px 32px 40px;font-size:12px;color:var(--muted)}.footer-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.footer-actions a{display:inline-flex;align-items:center;gap:4px;min-height:44px;font-size:12px;font-weight:600}footer>p{margin-top:14px;line-height:1.8}footer details{margin-top:12px}footer summary{min-height:44px;padding-top:9px;cursor:pointer}footer details p{margin-top:8px;max-width:70ch;line-height:1.8}.empty{max-width:500px;margin:70px auto;padding:24px;text-align:center}.empty h2{font-size:20px}.empty p{margin:12px 0 24px}.empty .mark{width:36px;height:36px;margin:0 auto 18px;color:var(--muted)}.empty .secondary{background:var(--ink);border-color:var(--ink);color:white;padding:11px 20px}.loader{width:25px;height:25px;margin:0 auto 20px;border:2px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}.screen-curtain{position:fixed;inset:0;z-index:5;display:grid;place-content:center;padding:24px;background:var(--bg);text-align:center}.screen-curtain p{margin:12px 0 24px;color:var(--muted)}.screen-curtain button{border-radius:10px;background:var(--ink);color:white;padding:12px 22px}.screen-curtain button:hover{background:var(--green)}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(min-width:701px){.grid>.card,.grid>.column{min-width:0}.header-inner{padding-top:24px}.brand{margin-top:20px}}
+    @media(max-width:700px){.header-inner{padding:12px 20px 0}.brand{margin-top:14px}h1{font-size:27px}.context{font-size:12px;line-height:1.8}.tabs{gap:25px;margin-top:16px}.tabs button{font-size:14px;padding-bottom:13px}main{padding:20px 16px 0}.grid{grid-template-columns:minmax(0,1fr);gap:18px}.column{gap:18px}.card{padding:22px 20px}.card-heading{gap:8px}h2{font-size:17px}.salary-card #salary{font-size:24px}.balance-line strong{font-size:34px}.hero{padding:20px}.hero-grid strong{font-size:24px}.notes-card{padding:20px}.large-amount{font-size:30px}.debt-table{font-size:12px}.debt-table td{padding:14px 0}.debt-table td:first-child{max-width:100px}.sum strong{font-size:23px}.row{gap:10px}.row strong{font-size:15px}footer{padding:20px 20px calc(24px + env(safe-area-inset-bottom))}.footer-actions{justify-content:space-between;gap:10px}.empty{margin-top:40px}.scenario-guide{margin-top:0}}
+    @media(max-width:360px){.header-inner{padding-left:16px;padding-right:16px}.tabs{gap:20px}.tabs button{font-size:13px}.card{padding:20px 16px}.debt-table{font-size:12px}.balance-line strong{font-size:31px}.hero-grid strong{font-size:22px}.asset-list .row strong{font-size:13px}.due-label{gap:8px}.due-icon{min-width:42px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.loader{animation:none}.input-wrap input{transition:none}}
+
+    .trend-card{margin-bottom:24px}.trend-heading{align-items:flex-start}.trend-caption{margin-top:4px}.trend-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:20px;color:var(--muted);font-size:12px}.trend-legend span{display:inline-flex;align-items:center;gap:7px}.trend-key{width:18px;height:3px;background:var(--green);border-radius:2px}.trend-key.outflow{background:#b96b27}.trend-chart{margin-top:14px;min-height:180px}.trend-chart svg{display:block;width:100%;height:auto;overflow:visible;stroke:none;fill:none}.trend-chart text{font:12px var(--font);fill:var(--muted);stroke:none}.trend-chart .trend-label{font-size:13px;font-weight:650;fill:var(--ink)}.trend-change-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:14px;padding-top:18px;border-top:1px solid var(--line)}.trend-change-grid>div+div{padding-left:20px;border-left:1px solid var(--line)}.trend-change-grid strong{display:block;margin:4px 0;color:var(--green);font-size:23px;line-height:1.5;font-weight:720;letter-spacing:-.025em}.trend-change-grid .unavailable{font-size:17px;color:var(--muted)}.trend-change-grid .caption{max-width:46ch}.trend-caution{display:block;margin-top:18px;padding:12px 14px;border-radius:8px;background:var(--soft);color:var(--muted);font-size:12px;line-height:1.8}.trend-status{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:6px;background:var(--orange-light);color:var(--orange);font-size:12px;white-space:nowrap}.trend-table{width:100%;margin-top:8px;border-collapse:collapse;font-size:13px}.trend-table th,.trend-table td{padding:11px 0;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.trend-table th{font-size:12px;font-weight:500;color:var(--muted)}.trend-table th:first-child,.trend-table td:first-child{text-align:left}.trend-summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;cursor:pointer;font-size:12px;color:var(--muted)}.trend-table-wrap{margin-top:16px}.trend-subtotal{color:var(--muted);font-size:12px}.trend-empty{padding:40px 0;text-align:center;color:var(--muted);font-size:13px}
+    @media(max-width:700px){.trend-card{margin-bottom:18px}.trend-chart{margin-top:16px;min-height:150px}.trend-chart text{font-size:12px}.trend-chart .trend-label{font-size:13px}.trend-change-grid{gap:12px}.trend-change-grid>div+div{padding-left:12px}.trend-change-grid strong{font-size:22px}.trend-change-grid .unavailable{font-size:16px}.trend-status{font-size:12px}.trend-legend{gap:8px 16px;margin-top:16px}.trend-heading{gap:8px}.trend-heading h2{font-size:17px}.trend-table{font-size:12px}.trend-table th{font-size:12px}}
+    .tabs{overflow-x:auto;gap:24px}.tabs button{flex-shrink:0}.program-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}.primary{min-height:44px;padding:10px 16px;background:var(--green);color:white;border-radius:8px;font-size:14px;font-weight:650}.primary:hover{background:#1643aa}.primary:disabled{background:#657796;cursor:not-allowed}.record-filters,.record-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}.record-filters label,.record-fields label{display:grid;align-content:start;gap:7px;min-width:0;font-size:13px;font-weight:600}.record-filters input,.record-fields input,.record-filters select,.record-fields select{width:100%;min-width:0;min-height:46px;padding:10px 12px;border:1px solid #b9c7dc;border-radius:8px;background:white;color:var(--ink);font:16px var(--font)}select:focus-visible{outline:3px solid var(--green);outline-offset:3px}.field-wide{grid-column:1/-1}.record-list{margin-top:20px;border-top:1px solid var(--line)}.record-item{display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;gap:4px 16px;padding:16px 0;text-align:left;background:transparent;border-bottom:1px solid var(--line);color:var(--ink)}.record-item:hover{background:var(--soft)}.record-item strong{overflow-wrap:anywhere;font-size:14px;font-weight:650}.record-item .record-money{font-size:16px;text-align:right;white-space:nowrap}.record-item .caption{grid-column:1/-1}.record-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}.record-editor{margin-bottom:24px;border:1px solid #b9c7dc}.record-fields{margin-top:22px}.record-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:22px}.record-review{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.record-review dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 20px;margin:16px 0}.record-review dt{font-size:12px;color:var(--muted)}.record-review dd{margin:0;font-size:14px;overflow-wrap:anywhere}.record-error{margin-top:16px;color:var(--red);font-size:13px}.record-history{margin-top:20px}.history-entry{padding:18px 0;border-bottom:1px solid var(--line)}.history-entry p{margin-top:6px}.history-entry strong{overflow-wrap:anywhere}.empty-records{padding:28px 0;color:var(--muted);font-size:14px}.record-checkbox{display:flex!important;align-items:center;gap:8px;min-height:44px;font-weight:400!important}.record-checkbox input{width:18px;min-height:18px;height:18px}.record-context{margin-top:10px;font-size:13px;color:var(--muted)}
+    .record-checkbox[hidden]{display:none!important}.tabs{overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#aabbd5 transparent}.analysis-facts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin:12px 0}.analysis-facts>div{padding:18px 0;border-bottom:1px solid var(--line);min-width:0}.analysis-facts dt{font-size:12px;color:var(--muted)}.analysis-facts dd{margin:5px 0 0;font-size:24px;font-weight:700;letter-spacing:-.025em;overflow-wrap:anywhere}.analysis-panel{margin-bottom:24px}.analysis-rank{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;width:100%;padding:15px 0;border-bottom:1px solid var(--line);background:transparent;text-align:left;color:var(--ink)}.analysis-rank:hover{background:var(--soft)}.analysis-rank strong{font-size:14px;overflow-wrap:anywhere}.analysis-rank span{font-size:12px;color:var(--muted)}.analysis-track{grid-column:1/-1;height:5px;background:var(--soft);border-radius:2px;overflow:hidden}.analysis-track i{display:block;height:100%;background:var(--green)}.analysis-message{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+    @media(min-width:701px){.record-filters{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    @media(max-width:700px){.analysis-facts dd{font-size:20px}.tabs{gap:22px}.tabs button{font-size:13px}.record-filters,.record-fields{gap:14px 12px}.record-editor{padding:20px 16px}.record-toolbar h2{font-size:18px}.record-review dl{gap:10px 12px}.record-pagination{font-size:12px}.record-filters .field-wide{grid-column:1/-1}}
+
+    .overview-summary{margin-bottom:24px}.overview-summary .card-heading{margin-bottom:0}.overview-equation{display:grid;grid-template-columns:1fr auto 1fr auto 1.3fr;gap:16px;align-items:center;margin:24px 0 18px}.overview-equation dt{font-size:13px;color:var(--muted)}.overview-equation dd{margin:6px 0 0;font-size:26px;font-weight:750;line-height:1.4;letter-spacing:-.025em;white-space:nowrap}.overview-equation>span{color:var(--muted);font-size:20px}.overview-net{border-left:1px solid var(--line);padding-left:24px}.overview-net dt{color:var(--ink);font-weight:650}.overview-net dd{color:var(--green);font-size:30px}.overview-scope{font-size:13px;color:var(--muted);max-width:70ch}.overview-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}.overview-insights{margin-top:10px}.overview-insight{padding:20px 0;border-bottom:1px solid var(--line)}.overview-insight:last-child{padding-bottom:0;border-bottom:0}.overview-insight h3{font-size:16px;font-weight:700;line-height:1.6}.overview-insight p{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.8;max-width:65ch}.overview-insight .overview-action{color:var(--ink);font-weight:550}.overview-allocation-row{padding:14px 0;border-bottom:1px solid var(--line)}.overview-allocation-row:last-child{border-bottom:0}.overview-allocation-label{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:14px}.overview-allocation-label strong{font-weight:650;white-space:nowrap}.overview-allocation-row p{font-size:12px;color:var(--muted);margin-top:5px}.overview-allocation-track{height:6px;background:var(--soft);margin-top:10px}.overview-allocation-track i{display:block;height:100%;background:#697f9e}.overview-monthly{margin-top:24px}.overview-month-insight{font-size:16px;font-weight:700;margin:20px 0 8px;line-height:1.7}.overview-monthly>.secondary{margin-top:20px}.overview-summary .row{font-size:13px}.overview-summary .row strong{font-size:14px}
+    @media(max-width:700px){.overview-summary{margin-bottom:18px}.overview-equation{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;margin:18px 0}.overview-equation dd{font-size:21px}.overview-equation>span:nth-of-type(2){display:none}.overview-net{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:16px 0 0;margin-top:4px}.overview-net dd{font-size:34px}.overview-columns{grid-template-columns:minmax(0,1fr);gap:18px}.overview-monthly{margin-top:18px}.overview-insight{padding:18px 0}.overview-insight h3{font-size:15px}.overview-summary .card-heading h2{font-size:19px}.overview-summary .detail-note{margin-top:12px}.overview-allocation-label{font-size:13px}}
+  </style>
+</head>
+<body>
+<header><div class="header-inner">
+  <div class="top"><a class="family" href="https://wys1110.github.io/family/" target="_top" rel="noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>우리 가족</a><button class="secondary" id="hideButton" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.5 5.4A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.7M6.1 6.1A18 18 0 0 0 2.5 12S6 19 12 19a10 10 0 0 0 4.2-.9"/></svg><span>가리기</span></button></div>
+  <div class="brand"><h1>내 자산</h1><span class="badge" id="privacyBadge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>나만 보기</span></div>
+  <p class="context" id="context">본인 전용 Drive 기록을 확인하고 있습니다.</p>
+  <nav class="tabs" aria-label="자산 화면" role="tablist">
+    <button id="tab-overview" role="tab" aria-selected="true" aria-controls="overview" data-tab="overview" tabindex="0">한눈에</button>
+    <button id="tab-analysis" role="tab" aria-selected="false" aria-controls="analysis" data-tab="analysis" tabindex="-1">거래 분석</button>
+    <button id="tab-flow" role="tab" aria-selected="false" aria-controls="flow" data-tab="flow" tabindex="-1">월별 흐름</button>
+    <button id="tab-assets" role="tab" aria-selected="false" aria-controls="assets" data-tab="assets" tabindex="-1">자산·부채</button>
+    <button id="tab-records" role="tab" aria-selected="false" aria-controls="records" data-tab="records" tabindex="-1">거래 원장</button>
+    <button id="tab-history" role="tab" aria-selected="false" aria-controls="history" data-tab="history" tabindex="-1">수정 이력</button>
+    <button id="tab-scenario" role="tab" aria-selected="false" aria-controls="scenario" data-tab="scenario" tabindex="-1">성과급 예시</button>
+  </nav>
+</div></header>
+<main>
+  <div id="status" class="empty" role="status"><div class="loader"></div><h2>원본 기록을 읽는 중</h2><p class="caption">금액과 기준일을 함께 확인합니다.</p></div>
+  <div id="content" hidden>
+    <p id="demoNotice" class="notice" hidden>디자인 미리보기 · 아래 금액은 모두 가상 데이터입니다.</p>
+    <p id="issues" class="notice" hidden></p>
+    <article class="card record-editor" id="recordEditor" aria-labelledby="recordEditorTitle" hidden>
+      <div class="program-toolbar"><div><h2 id="recordEditorTitle">기록 추가</h2><p class="record-context">저장하기 전에 변경 내용을 검토합니다.</p></div><button class="secondary" type="button" id="closeRecord">닫기</button></div>
+      <form id="recordForm" autocomplete="off">
+        <div class="record-fields">
+          <label>기록 종류<select id="recordType"><option value="transaction">거래</option><option value="asset">자산 잔액</option><option value="liability">부채 잔액</option></select></label>
+          <label>기준일<input id="recordDate" type="date" required></label>
+          <label class="field-wide">항목·거래처<input id="recordLabel" maxlength="120" required placeholder="예: 식료품 구매 또는 예금 별칭"></label>
+          <label>금액<input id="recordAmount" type="text" inputmode="decimal" pattern="(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,2})?" required placeholder="쉼표 없이 입력"></label>
+          <label>통화<select id="recordCurrency"><option value="KRW">KRW · 원</option><option value="USD">USD · 달러</option><option value="EUR">EUR · 유로</option></select></label>
+          <label id="missingAmountWrap" class="record-checkbox field-wide" hidden><input id="missingAmount" type="checkbox">잔액 미확인 · 0원으로 입력하지 않음</label>
+          <label class="record-transaction">거래 구분<select id="recordFlow"><option value="expense">지출</option><option value="salary">급여</option><option value="bonus">성과급</option><option value="income">기타 수입</option><option value="reimbursement">회사·팀 정산입금</option><option value="transfer">내부 이체</option><option value="loan_principal">대출 원금 상환</option><option value="loan_interest">대출 이자</option><option value="loan_payment">대출 상환 · 원금/이자 미분리</option><option value="gift">증여·자산 이전</option><option value="refund">환급</option><option value="unclassified_income">미분류 입금</option><option value="unclassified_outflow">미분류 출금</option></select></label>
+          <label class="record-transaction">비용 귀속<select id="recordAttribution"><option value="unknown">미확인</option><option value="personal">본인</option><option value="company">회사·팀</option><option value="household">가족 관련</option></select></label>
+          <label class="record-transaction">거래 수단<select id="recordChannel"><option value="card">카드 사용</option><option value="bank">은행 입출금</option><option value="manual">기타 직접 기록</option></select></label>
+          <label class="record-transaction">집계 상태<select id="recordStatus"><option value="active">유효 내역</option><option value="cancelled">취소</option><option value="excluded">집계 제외</option><option value="cashback">캐시백</option></select></label>
+          <label class="record-transaction field-wide">분류<input id="recordCategory" maxlength="50" value="미분류" required></label>
+          <label class="field-wide">평가 기준·근거<input id="recordBasis" maxlength="160" required placeholder="예: 사용일 기준 카드 결제 / 은행 표시잔액"></label>
+        </div>
+        <p class="hint">본인 기록만 입력합니다. 내부 이체·회사 정산·대출 원금은 개인 소비와 구분합니다. 외화는 환산하지 않습니다. 화면을 가리거나 벗어나면 저장 전 입력이 사라집니다.</p>
+        <div class="record-actions"><button class="primary" type="submit" id="reviewRecord">변경 내용 검토</button><button class="secondary" type="button" id="cancelRecord">취소</button></div>
+      </form>
+      <section class="record-review" id="recordReview" hidden><h3>이 내용으로 기록할까요?</h3><dl id="recordReviewDetails"></dl><div id="recordImpact"></div><p id="recordWriteNote" class="caption"></p><div class="record-actions"><button class="primary" type="button" id="commitRecord">Drive에 저장</button><button class="secondary" type="button" id="backToRecord">입력 내용 수정</button></div></section>
+      <p id="recordError" class="record-error" role="alert" hidden></p>
+    </article>
+    <p id="programMessage" class="notice" role="status" hidden></p>
+    <section id="records" role="tabpanel" aria-labelledby="tab-records" hidden>
+      <article class="card"><div class="program-toolbar"><div><h2>거래 원장</h2><p class="record-context" id="ledgerCoverage"></p></div><button class="primary" type="button" id="addTransaction">거래 추가</button></div>
+        <p class="caption" id="ledgerAvailability"></p>
+        <button class="text-button" id="clearLedgerDrilldown" type="button" hidden>분석에서 선택한 조건 해제</button>
+        <div class="record-filters"><label class="field-wide">거래처·분류 검색<input id="ledgerSearch" type="search" placeholder="거래처, 분류, 원본 위치" autocomplete="off"></label><label>조회 월<select id="ledgerMonth"><option value="all">전체 월</option></select></label><label>비용 귀속<select id="ledgerAttribution"><option value="all">전체</option><option value="unknown">미확인</option><option value="personal">본인</option><option value="company">회사·팀</option><option value="household">가족 관련</option></select></label><label>거래 구분<select id="ledgerFlow"><option value="all">전체</option><option value="expense">지출</option><option value="salary">급여</option><option value="bonus">성과급</option><option value="reimbursement">회사·팀 정산입금</option><option value="transfer">내부 이체</option><option value="loan_payment">대출 상환 · 미분리</option><option value="loan_principal">대출 원금</option><option value="loan_interest">대출 이자</option><option value="gift">증여</option><option value="refund">환급</option><option value="income">기타 수입</option><option value="unclassified_income">미분류 입금</option><option value="unclassified_outflow">미분류 출금</option></select></label><label>집계 상태<select id="ledgerStatus"><option value="all">전체 상태</option><option value="active">유효 내역</option><option value="cancelled">취소</option><option value="excluded">집계 제외</option><option value="cashback">캐시백</option></select></label></div>
+        <p class="hint">회사비 포함 내역입니다. 정산입금을 지출에서 일괄 차감하지 않습니다. 거래를 누르면 원본 위치와 수정 내용을 확인할 수 있습니다.</p>
+        <div id="ledgerRows" class="record-list"></div><div class="record-pagination"><button class="secondary" type="button" id="previousRecords">이전</button><span id="ledgerPage" aria-live="polite"></span><button class="secondary" type="button" id="nextRecords">다음</button></div>
+      </article>
+    </section>
+    <section id="history" role="tabpanel" aria-labelledby="tab-history" hidden><article class="card"><div class="program-toolbar"><div><h2>수정 이력</h2><p class="record-context" id="historyCoverage">이전 값을 보존합니다.</p></div></div><div id="historyRows" class="record-history"></div></article></section>
+    <section id="overview" role="tabpanel" aria-labelledby="tab-overview">
+      <article class="card overview-summary">
+        <div class="card-heading"><h2>내 자산, 한눈에</h2><button type="button" class="text-button" id="overviewViewAssets">항목별 보기</button></div>
+        <p class="caption" id="overviewAsOf"></p>
+        <dl class="overview-equation"><div><dt>등록 자산</dt><dd id="overviewGross">미확인</dd></div><span aria-hidden="true">−</span><div><dt>확인 대출</dt><dd id="overviewDebt">미확인</dd></div><span aria-hidden="true">=</span><div class="overview-net"><dt>등록 순자산 · 차량 제외</dt><dd id="overviewNet">미확인</dd></div></dl>
+        <p class="overview-month-insight" id="overviewBrief"></p><p class="overview-scope" id="overviewScope"></p><p class="caption">상단은 만 원 단위 반올림 · 정확한 금액은 아래에서 확인</p>
+        <details class="detail-note"><summary>정확한 금액과 포함 범위</summary><div id="overviewExact"></div><p>부동산은 시가가 검증되지 않은 등록액, 포인트는 현금화 여부 미확인입니다. 연금은 직전 화면 값 이월, 외화의 적용 환율은 미확인입니다. 차량 평가액과 자동차 할부 원금은 함께 제외한 부분 범위입니다.</p></details>
+      </article>
+      <div class="overview-columns">
+        <article class="card"><h2>지금 눈여겨볼 점</h2><p class="record-context">숫자가 의미하는 것과 다음 확인할 일</p><div id="overviewInsights" class="overview-insights"></div></article>
+        <article class="card"><h2>자산은 어디에 있나</h2><p class="record-context" id="overviewAllocationBasis"></p><div id="overviewAllocation"></div><p class="hint" id="overviewAssetChange"></p></article>
+      </div>
+      <article class="card overview-monthly"><div class="card-heading"><div><h2>월별 수입과 카드 사용</h2><p class="caption" id="overviewTrendPeriod"></p></div><button type="button" class="text-button" id="overviewViewFlow">자세히</button></div><div class="trend-legend"><span><i class="trend-key" aria-hidden="true"></i>확인 소득</span><span><i class="trend-key outflow" aria-hidden="true"></i>카드 사용 · 회사비 포함</span></div><div id="overviewTrend" class="trend-chart"></div><p class="overview-month-insight" id="overviewMonthInsight"></p><p class="caption" id="overviewMonthScope"></p><button type="button" class="secondary" id="overviewViewAnalysis">소비 분류와 큰 거래 분석</button></article>
+    </section>
+    <section id="analysis" role="tabpanel" aria-labelledby="tab-analysis" hidden>
+      <article class="card analysis-panel"><div class="program-toolbar"><div><h2>수집한 거래 분석</h2><p class="record-context" id="analysisPeriod"></p></div><button class="secondary" type="button" id="viewMonthlyFlow">월별 흐름 보기</button></div><p class="caption" id="analysisAvailability"></p><dl class="analysis-facts"><div><dt>확인 소득 · 급여·성과급 등</dt><dd id="analysisIncome">미확인</dd></div><div><dt>카드 사용 · 회사비 포함</dt><dd id="analysisCardUse">미확인</dd></div><div><dt>회사·팀 정산입금 · 소득 제외</dt><dd id="analysisReimbursement">미확인</dd></div><div><dt>본인 카드 소비 · 확정 분류</dt><dd id="analysisPersonal">미확정</dd></div></dl><p class="analysis-message" id="analysisInterpretation"></p></article>
+      <div class="grid"><article class="card"><h2>어떤 분야에 결제했나</h2><p class="record-context">판매처 기준 분류 · 회사·개인 귀속과 구분</p><div id="analysisCategories"></div><p class="hint">참고 분류는 판매처 이름에 근거합니다. 분류를 누르면 해당 거래를 확인할 수 있습니다.</p></article><article class="card"><h2>많이 결제한 거래처</h2><p class="record-context">카드 유효 사용 · 상위 12개</p><div id="analysisMerchants"></div></article></div>
+      <article class="card" style="margin-top:24px"><h2>귀속부터 확인할 큰 거래</h2><p class="record-context" id="analysisReviewCoverage"></p><div id="analysisReview"></div><p class="hint">금액이 정산과 같다는 이유만으로 회사 비용으로 확정하지 않습니다. 거래를 열어 근거를 확인하고 분류합니다.</p></article>
+      <article class="card" style="margin-top:24px"><h2>카드 밖 자금 흐름도 함께</h2><p class="record-context">외화 지출·대출 상환·내부 이체는 카드 사용과 분리합니다.</p><div id="analysisForeign"></div><p class="hint">외화는 당시 원화 환전액을 확인하기 전까지 원화 소비에 더하지 않습니다. 증여 등 기존 메모에만 있고 날짜·거래 대조가 미확인인 항목도 월별 거래에 임의 배분하지 않습니다.</p></article>
+    </section>
+    <section id="flow" role="tabpanel" aria-labelledby="tab-flow" hidden>
+      <article class="card trend-card" aria-labelledby="trendTitle">
+        <div class="card-heading trend-heading"><div><h2 id="trendTitle">월별 수입·지출 흐름</h2><p class="caption trend-caption" id="trendPeriod">등록된 월별 기록</p></div><span class="trend-status">확인된 항목만</span></div>
+        <div class="trend-legend"><span><i class="trend-key" aria-hidden="true"></i><span id="trendIncomeLabel">급여 실입금</span></span><span><i class="trend-key outflow" aria-hidden="true"></i><span id="trendExpenseLabel">상환 유출 · 지출 일부</span></span></div>
+        <div class="trend-chart" id="trendChart"></div>
+        <div class="trend-change-grid"><div><p class="tiny-label" id="trendIncomeChangeLabel">급여 기울기 · 전월 대비</p><strong id="incomeTrendChange">비교 자료 필요</strong><p class="caption" id="incomeTrendDetail"></p></div><div><p class="tiny-label" id="trendExpenseChangeLabel">지출 기울기 · 전월 대비</p><strong class="unavailable" id="expenseTrendChange">월별 집계 필요</strong><p class="caption" id="expenseTrendDetail"></p></div></div>
+        <p class="trend-caution" id="trendCoverage">전체 수입·지출과 구분해 확인된 급여 및 상환만 표시합니다.</p>
+        <details class="trend-table-wrap"><summary class="trend-summary">월별 금액과 집계 범위 보기</summary><div style="overflow-x:auto"><table class="trend-table"><thead id="trendTableHead"></thead><tbody id="trendRows"></tbody></table></div><p class="caption" id="trendTableNote" style="margin-top:10px">각 수치는 개인 · KRW · 원본의 월별 확인 항목입니다. 미확인은 0원이 아닙니다.</p></details>
+      </article>
+
+      <div class="grid">
+        <div class="column">
+          <article class="card salary-card">
+            <div class="card-heading"><h2>급여가 남기는 여유</h2><span class="badge" id="salaryMonth">비교</span></div>
+            <p class="caption">최근 급여에서 관측 상환액을 뺀 비교입니다.</p>
+            <div class="row"><span>급여 실입금</span><strong class="amount" id="salary">—</strong></div>
+            <div class="row"><span id="repaymentLabel">관측 상환</span><strong class="amount" id="repayment">—</strong></div>
+            <div class="flow" id="flowChart" hidden><div class="flow-track" role="img" id="flowTrack"><div class="flow-repayment" id="paymentBar"></div></div><div class="flow-legend"><span><i></i>상환</span><span><i></i>생활비·저축 전</span></div></div>
+            <div class="balance-line"><p class="tiny-label">생활비·저축 전 비교 잔액</p><strong class="amount" id="remainder">미확인</strong><p class="caption" id="comparison"></p></div>
+            <details class="detail-note"><summary>이 금액을 해석하는 방법</summary><p>생활비·저축을 빼기 전 비교 금액입니다. 상환액은 관측 기간의 현금 유출이며, 매달 같은 납입액을 보장하지 않습니다. 원금·이자 구분은 미확인입니다.</p></details>
+          </article>
+          <article class="hero">
+            <div class="card-heading"><h2>예정 결제와 현금</h2><span class="status-line">등록 기록</span></div>
+            <div class="hero-grid"><div><small>입출금 표시잔액</small><strong class="amount" id="cash">—</strong></div><div><small>확인된 예정 결제</small><strong class="amount" id="billsHero">—</strong></div></div>
+            <details class="detail-note"><summary>다음 급여까지의 잔액은?</summary><p>전체 출금과 향후 입금이 확인되지 않아 예상 잔액은 아직 계산할 수 없습니다. RP 인출 가능액도 확인이 필요합니다.</p></details>
+          </article>
+        </div>
+        <div class="column">
+          <article class="card"><div class="card-heading"><h2>확인된 예정 결제</h2><span class="tiny-label">원본에 등록된 청구</span></div><div class="list" id="bills"></div><div class="sum"><span>등록 청구 합계</span><strong class="amount" id="billsSum">—</strong></div><details class="detail-note"><summary>청구 범위 확인</summary><p>관찰일에 표시된 청구입니다. 이후 결제 완료 여부와 추가 청구·생활비는 포함하지 않았습니다.</p></details></article>
+          <article class="card notes-card"><h2>현금으로 보기 전 확인</h2><div class="row"><div class="label"><strong>RP 평가액</strong><p class="caption">증권계좌에 이미 포함</p></div><strong class="amount" id="rp">—</strong></div><p class="caption">인출 가능액과 시점은 미확인입니다. 입출금 잔액에 더해 가용 현금으로 표시하지 않습니다.</p></article>
+          <article class="card notes-card"><h2>회사·팀 비용 정산</h2><p class="tiny-label" id="reimbursementPeriod"></p><p class="large-amount amount" id="reimbursement" style="margin:10px 0">—</p><p class="caption">확인된 정산 입금입니다. 급여에 더하지 않고, 원거래 연결이 확인되기 전에는 카드 사용액에서 일괄 차감하지 않습니다.</p></article>
+
+        </div>
+      </div>
+
+    </section>
+    <section id="assets" role="tabpanel" aria-labelledby="tab-assets" hidden>
+      <article class="card" id="balanceManager" hidden><div class="program-toolbar"><div><h2>자산·부채 기록 관리</h2><p class="record-context">항목별 기준일과 평가 기준을 확인합니다.</p></div><button class="primary" type="button" id="addBalance">잔액 기록 추가</button></div><p class="caption">같은 항목은 새로 추가하기보다 기존 기록을 수정하세요. 통합 계좌와 세부 계좌를 중복 합산하지 않습니다. 기준일이 다른 기록은 현재 총자산으로 합치지 않습니다.</p><div id="balanceRows" class="record-list"></div></article>
+      <div class="grid"><article class="card"><div class="card-heading"><h2>등록된 금융자산</h2><span class="badge">표시 평가액</span></div><p class="large-amount amount" id="assetsTotal">—</p><p class="caption">현금·주식·연금 등을 합친 등록 범위입니다.</p><div class="stackbar" id="assetBar" aria-hidden="true"></div><div id="assetRows" class="asset-list"></div><p class="hint">증권·연금은 가용 현금과 다릅니다. 외화 원화 평가액의 환율과 기관별 갱신 시각은 원본에서 확인이 필요합니다.</p></article><div class="column"><article class="card"><div class="card-heading"><h2>확인된 부채 잔액</h2><span class="badge">등록 범위</span></div><p class="large-amount amount" id="debtTotal">—</p><p class="caption" id="debtCaveat"></p><table class="debt-table"><thead><tr><th>항목</th><th>잔액</th><th>관측 납입</th></tr></thead><tbody id="debtRows"></tbody></table><p class="hint">자동차의 남은 회차 × 납입액을 잔여 원금으로 계산하지 않습니다. 부동산·차량을 포함한 전체 순자산은 확정하지 않았습니다.</p></article><article class="card"><h2>다음 확인할 것</h2><ul class="todo"><li>증권·RP의 실제 인출 가능액</li><li>개인 생활비와 회사 비용의 구분</li><li>자동차 할부 잔여 원금</li><li>학자금 목록·상세 잔액 차이</li></ul></article></div></div>
+    </section>
+    <section id="scenario" role="tabpanel" aria-labelledby="tab-scenario" hidden>
+      <div class="grid"><article class="card scenario"><div class="card-heading"><h2>연봉 9천만 원 예시</h2><span class="badge">가정</span></div><p class="caption">실제 계약연봉이나 확정 보상이 아닙니다. 세후 급여·성과급을 직접 넣어 현금흐름을 비교합니다.</p><div class="hint">연봉 9,000만 원 ÷ 12 = 월 세전 750만 원<br>세금·공제·보너스 지급 조건은 별도입니다.</div>
+        <form id="scenarioForm">
+          <label for="monthlyIncome">월 세후 급여</label><div class="input-wrap"><input id="monthlyIncome" type="number" min="0" max="100000" step="any" inputmode="decimal" placeholder="예: 500"><span>만 원</span></div>
+          <button class="text-button" id="useSalary" type="button">최근 급여를 가정값으로 적용</button>
+          <label for="monthlyPayment">월 상환액 가정</label><div class="input-wrap"><input id="monthlyPayment" type="number" min="0" max="100000" step="any" inputmode="decimal" placeholder="예: 200"><span>만 원</span></div>
+          <button class="text-button" id="useRepayment" type="button">관측 상환액을 가정값으로 적용</button>
+          <label for="monthlyLiving">월 생활비 가정</label><div class="input-wrap"><input id="monthlyLiving" type="number" min="0" max="100000" step="any" inputmode="decimal" placeholder="예: 300"><span>만 원</span></div>
+          <label for="annualBonus">연간 현금 성과급 가정 · 세후</label><div class="input-wrap"><input id="annualBonus" type="number" min="0" max="1000000" step="any" inputmode="decimal" placeholder="없으면 0 입력"><span>만 원</span></div>
+          <div class="scenario-result" id="scenarioResult" aria-live="polite"><p class="tiny-label">12개월 현금 증감 가정</p><strong id="scenarioAmount">값을 입력해 주세요</strong><p class="caption" id="scenarioDetail">누락된 값을 0원으로 계산하지 않습니다.</p></div>
+        </form>
+      </article><article class="card scenario-guide"><h2>성과급은 입금 시점에 나눠서</h2><ul class="todo"><li>일반 성과급은 세후 현금액으로 입력합니다.</li><li>주식 보상은 매도 가능 시점과 실제 매도액이 확인되기 전까지 현금에 더하지 않습니다.</li><li>연간 잉여가 있어도 지급 전 월에는 현금이 부족할 수 있습니다.</li><li>저축·비정기 지출·추가 대출은 위 계산에 포함하지 않았습니다.</li></ul><a href="https://bonuschip.app/" target="_blank" rel="noopener noreferrer">보너스칩에서 가정 확인<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a><p class="privacy-caption caption">입력값은 이 화면에서만 계산합니다. 새로 열면 사라집니다.</p></article></div>
+    </section>
+  </div>
+</main>
+<footer id="footer" hidden><div class="footer-actions"><button id="refreshButton" class="secondary" type="button">Drive 기록 새로 읽기</button> <a id="programSourceLink" target="_blank" rel="noopener noreferrer" hidden>수정 원장 보기</a> <a id="sourceLink" target="_blank" rel="noopener noreferrer">원본 보기<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div><p id="sourceInfo"></p><details><summary>집계 범위와 보관 방식</summary><p>개인 기준 · KRW · 실제 조회 화면의 요약 기록입니다. 미확인은 0원이 아닙니다. 현재 은행 잔액과 동일하다고 보장하지 않습니다.</p><p id="storageNote">원본은 본인 전용 Google Drive에 있습니다. 이 앱은 원본을 읽기만 하며, 금융 자료를 가족 공동 DB·브라우저 저장소에 저장하지 않습니다. 자동 동기화나 계좌 연결은 하지 않습니다.</p><p>화면 가리기는 화면 노출을 줄이는 기능입니다. 접근 권한은 Google 로그인과 서버의 소유자 검사로 제한합니다.</p></details></footer>
+<div id="curtain" class="screen-curtain" hidden><h2>내 자산 화면을 가렸어요</h2><p>다시 열면 원본에서 기록을 읽습니다.</p><button id="revealButton" type="button">다시 열기</button></div>
+<script>
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const fmt = value => value === null || value === undefined ? '미확인' : new Intl.NumberFormat('ko-KR').format(value) + '원';
+  const short = value => value === null || value === undefined ? '미확인' : (value / 10000).toLocaleString('ko-KR', {maximumFractionDigits:1}) + '만 원';
+  let data = null, generation = 0, obscured = false;
+  const put = (id, value) => { $(id).textContent = value; };
+  function element(tag, className, text) { const el = document.createElement(tag); el.className = className || ''; if (text !== undefined) el.textContent = text; return el; }
+  function row(label, amount, detail) { const el = element('div','row'); const l = element('div','label'); l.append(element('strong','',label)); if(detail) l.append(element('p','caption',detail)); el.append(l,element('strong','amount',fmt(amount))); return el; }
+
+  // Restore omitted optional RPC properties as unknown, never as a numerical zero.
+  function normalizeDashboard(d) {
+    const record=r=>r?(r.type==='balance'?{...r,amount:r.amount??null}:r):null;
+    const normalized={...d,assets:(d.assets||[]).map(r=>({...r,amount:r.amount??null})),debts:(d.debts||[]).map(r=>({...r,amount:r.amount??null}))};
+    if(d.monthly)normalized.monthly={...d.monthly,rows:(d.monthly.rows||[]).map(r=>{const out={...r};for(const k of ['salary','bonus','otherIncome','card','reimbursement'])out[k]=r[k]??null;return out;})};
+    if(d.program)normalized.program={...d.program,records:(d.program.records||[]).map(record),history:(d.program.history||[]).map(e=>({...e,before:record(e.before),after:record(e.after)}))};
+    if(d.analysis){normalized.analysis={...d.analysis};for(const k of ['confirmedIncome','cardUse','reimbursements','personalCard','companyCard','unresolvedCard','netPersonalSpending'])normalized.analysis[k]=d.analysis[k]??null;}
+    return normalized;
+  }
+  // Overview model: comparable source snapshots only; never infer a complete net worth.
+  function overviewModel(d) {
+    const valid=n=>Number.isSafeInteger(n)&&n>=0;
+    const expected=[...(d.assets||[]),...(d.debts||[])],balances=(d.program?.records||[]).filter(r=>r.type==='balance');
+    const matched=!d.program?.initialized||(balances.length===expected.length&&expected.every(a=>{const matches=balances.filter(r=>r.id===a.id);return matches.length===1&&matches[0].date===d.asOf&&matches[0].currency==='KRW'&&(a.amount===null?matches[0].amount===null:matches[0].amount!==null&&Number(matches[0].amount)===a.amount);}));
+    const financial=matched&&d.assetReconciled&&valid(d.financialAssets)?d.financialAssets:null;
+    const debt=matched&&valid(d.knownDebt)?d.knownDebt:null;
+    const valuation=d.valuation,net=matched&&financial!==null&&debt!==null&&valuation?.reconciled===true&&valid(valuation.gross)&&Number.isSafeInteger(valuation.net)&&valuation.gross-debt===valuation.net?valuation.net:null;
+    const cash=matched&&valid(d.assets?.[0]?.amount)?d.assets[0].amount:null;
+    const salaries=(d.salaries||[]).filter(r=>r.month===Number(d.repaymentPeriod)&&(r.year||Number(d.asOf?.slice(0,4)))===Number(d.asOf?.slice(0,4))&&valid(r.amount));
+    const salary=salaries.length===1?salaries[0].amount:null,repayment=d.repaymentReconciled&&valid(d.repayment)?d.repayment:null;
+    const pension=matched&&valid(d.assets?.[5]?.amount)?d.assets[5].amount:null,securities=matched&&valid(d.assets?.[4]?.amount)?d.assets[4].amount:null;
+    const allocation=matched?(d.assets||[]).map(a=>({label:a.label,amount:a.amount,basis:a.basis})):[];
+    if(matched&&valuation?.property!==null&&valid(valuation?.property))allocation.push({label:'부동산',amount:valuation.property,basis:'등록액 · 시가 미검증'});
+    if(matched&&valuation?.points!==null&&valid(valuation?.points))allocation.push({label:'포인트',amount:valuation.points,basis:'현금화 가능 여부 미확인'});
+    allocation.sort((a,b)=>(b.amount??-1)-(a.amount??-1));
+    const monthly=monthlyTrendModel(d),change=monthly.restored?monthly.expenseChange:null;
+    const changedMonth=change?monthly.rows.find(r=>r.month===change.to):null;
+    return {matched,financial,debt,net,gross:net===null?null:valuation.gross,cash,salary,repayment,
+      cashGap:cash!==null&&d.billsReconciled&&valid(d.billsTotal)?Math.max(0,d.billsTotal-cash):null,
+      repaymentRatio:salary>0&&repayment!==null?repayment/salary*100:null,
+      beforeLiving:salary!==null&&repayment!==null?salary-repayment:null,
+      investedRatio:financial>0&&pension!==null&&securities!==null?(pension+securities)/financial*100:null,
+      allocation,change,changedMonth,monthly};
+  }
+  // Overview rendering.
+  function renderOverview(d) {
+    const m=overviewModel(d),pct=n=>n.toLocaleString('ko-KR',{maximumFractionDigits:1})+'%';
+    const money=n=>{if(n===null)return '미확인';const units=Math.round(Math.abs(n)/10000),eok=Math.floor(units/10000),rest=units%10000;return (n<0?'−':'')+(eok?eok+'억 ':'')+(rest||!eok?rest.toLocaleString('ko-KR')+'만 ':'')+'원';};
+    put('overviewAsOf',d.asOf+' 관찰 · '+d.owner+' · KRW · 실시간 잔액 아님');
+    put('overviewGross',money(m.gross));put('overviewDebt',money(m.debt));put('overviewNet',money(m.net));
+    put('overviewBrief',m.cash!==null?'입출금은 '+short(m.cash)+(m.investedRatio!==null?'. 금융자산의 '+pct(m.investedRatio)+'는 증권·연금입니다.':'.'):'쓸 수 있는 현금과 자산 요약을 먼저 확인해야 합니다.');
+    put('overviewScope',!m.matched?'자산 기록이 요약과 달라 원본 재대조가 필요합니다. 이전 합계를 현재 합계로 표시하지 않습니다.':m.net!==null?'부동산·금융자산·포인트에서 확인 대출을 뺀 등록 범위입니다. 전체 순자산 확정액은 아닙니다.':'부동산 등 포함 범위의 원본 합계 대조가 필요합니다. 확인된 금융자산은 '+fmt(m.financial)+'입니다.');
+    $('overviewExact').replaceChildren(row('등록 자산',m.gross,'금융자산 + 부동산 등록액 + 포인트'),row('확인 대출',m.debt,'미확인 자동차 할부 제외'),row('등록 순자산',m.net,'원본 표시액과 대조 · 차량 제외'));
+    $('overviewInsights').replaceChildren();
+    function insight(title,body,action){const item=element('div','overview-insight');item.append(element('h3','',title),element('p','',body));if(action)item.append(element('p','overview-action',action));$('overviewInsights').append(item);}
+    if(m.cash!==null&&m.cashGap!==null)insight(m.cashGap>0?'입출금 잔액은 등록 청구보다 적습니다':'입출금 잔액이 등록 청구 이상입니다',d.asOf+' 입출금 '+short(m.cash)+' ↔ '+(d.billsMonth?d.billsMonth+'월 ':'')+'등록 카드 청구 '+short(d.billsTotal)+(m.cashGap>0?' · 차이 '+short(m.cashGap):'')+'. 이후 입금·생활비·상환은 미반영입니다.','먼저 확인: 청구일 전 입금과 RP 실제 인출 가능액. RP는 이미 증권자산에 포함돼 있습니다.');
+    else insight('쓸 수 있는 현금부터 확인이 필요합니다','입출금 잔액 또는 등록 청구의 합계 대조가 미확인입니다.','먼저 확인: 같은 기준일의 은행 잔액과 예정 청구.');
+    if(m.investedRatio!==null)insight('금융자산의 '+pct(m.investedRatio)+'는 증권·연금입니다','자산 평가액이 커도 그 전액이 당장 쓸 수 있는 현금은 아닙니다. 원화 입출금은 '+short(m.cash)+'입니다.','다음 확인: 증권·RP의 인출 가능액과 시점. 연금은 직전 화면 값 이월입니다.');
+    if(m.repaymentRatio!==null)insight(d.repaymentPeriod+'월 관측 상환은 급여의 '+pct(m.repaymentRatio),short(m.salary)+' 급여에서 '+short(m.repayment)+' 관측 상환을 빼면 '+short(m.beforeLiving)+'입니다. 생활비·저축 전 비교액이며 전체 현금수지는 아닙니다.','다음 확인: 실제 본인 생활비와 대출 원금·이자 구분. 매달 같은 상환액이라고 가정하지 않습니다.');
+    $('overviewAllocation').replaceChildren();
+    const more=element('details','detail-note');more.append(element('summary','','나머지 '+Math.max(0,m.allocation.length-3)+'개 자산 보기'));
+    m.allocation.forEach((a,i)=>{const item=element('div','overview-allocation-row'),label=element('div','overview-allocation-label');label.append(element('span','',a.label),element('strong','amount',fmt(a.amount)));item.append(label,element('p','',a.basis));if(m.gross>0&&a.amount!==null){const track=element('div','overview-allocation-track'),fill=element('i');fill.style.width=(a.amount/m.gross*100)+'%';track.setAttribute('aria-hidden','true');track.append(fill);item.append(track);} (i<3?$('overviewAllocation'):more).append(item);});
+    if(m.allocation.length>3)$('overviewAllocation').append(more);
+    put('overviewAllocationBasis','관찰일 '+d.asOf+' · 등록 평가액·잔액 · 규모순');
+    put('overviewAssetChange','자산 증감: 같은 범위의 이전 잔액이 없어 증가·감소를 확정할 수 없습니다. 투자 평가액 변화와 소비를 구분하려면 이전 잔액과 입출금 대조가 필요합니다.');
+    put('overviewTrendPeriod',m.monthly.rows.length?m.monthly.rows[0].month+' ~ '+m.monthly.rows.at(-1).month+(m.monthly.rows.at(-1).partial?' · 마지막 달 '+m.monthly.cutoff.slice(8)+'일까지':''):'월별 자료 미확인');
+    drawMonthlyChart(d,m.monthly,$('overviewTrend'));
+    const c=m.change;
+    put('overviewMonthInsight',c?Number(c.to.slice(5))+'월 카드 사용은 '+Number(c.from.slice(5))+'월보다 '+(c.percent===null?short(Math.abs(c.amount)):(pct(Math.abs(c.percent))))+' '+(c.amount>0?'늘었습니다':c.amount<0?'줄었습니다':'동일합니다')+' · 회사비 포함':'완료된 연속 두 달의 카드 사용이 확인되면 변화 폭을 분석합니다.');
+    put('overviewMonthScope',c?'해당 월 카드 '+short(m.changedMonth.card)+', 회사·팀 정산입금 '+short(m.changedMonth.reimbursement)+'. 개별 거래와 정산이 매칭되지 않아 이 변화를 개인 소비 증가나 감소로 단정할 수 없습니다. 부분월은 완료월과 직접 비교하지 않습니다.':'카드 사용일 기준이며 실제 출금일과 다릅니다. 회사 정산은 소득에 더하거나 사용액에서 일괄 차감하지 않습니다.');
+  }
+
+  // Monthly trend model: source-backed observations only. Missing is never zero.
+  function monthlyTrendModel(d) {
+    if (d.monthly) {
+      const cutoff=d.monthly.end||d.asOf, day=Number(cutoff?.slice(8,10)), year=Number(cutoff?.slice(0,4)), month=Number(cutoff?.slice(5,7));
+      const partial=day!==new Date(Date.UTC(year,month,0)).getUTCDate();
+      const rows=d.monthly.reconciled===true?d.monthly.rows.map(r=>({...r,income:r.salary===null&&r.bonus===null&&r.otherIncome==null?null:(r.salary??0)+(r.bonus??0)+(r.otherIncome??0),partial:partial&&r.month===cutoff.slice(0,7)})):[];
+      const change=(items,key)=>{const a=items.at(-2),b=items.at(-1),serial=m=>Number(m.slice(0,4))*12+Number(m.slice(5,7));return a&&b&&serial(b.month)-serial(a.month)===1?{from:a.month,to:b.month,amount:b[key]-a[key],percent:a[key]===0?null:(b[key]-a[key])/a[key]*100}:null;};
+      return {rows,restored:true,cutoff,incomeChange:change(rows.filter(r=>r.income!==null),'income'),expenseChange:change(rows.filter(r=>!r.partial&&r.card!==null),'card'),repaymentMonths:0};
+    }
+    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.asOf || '');
+    if (!parts) return { rows: [], incomeChange: null, repaymentMonths: 0 };
+    const year=Number(parts[1]), observedMonth=Number(parts[2]);
+    const groups = new Map();
+    const addMonth = month => {
+      const y=year;
+      const key=y+'-'+String(month).padStart(2,'0');
+      if(!groups.has(key))groups.set(key,{month:key,income:null,repayment:null,incomes:[]});
+      return groups.get(key);
+    };
+    const valid = n => Number.isSafeInteger(n) && n >= 0;
+    (d.salaries || []).forEach(item=>{if(Number.isInteger(item.month)&&item.month>=1&&item.month<=observedMonth)addMonth(item.month).incomes.push(item.amount);});
+    const repaymentMonth=Number(d.repaymentPeriod);
+    if(Number.isInteger(repaymentMonth)&&repaymentMonth>=1&&repaymentMonth<=observedMonth&&d.repaymentReconciled===true&&valid(d.repayment))addMonth(repaymentMonth).repayment=d.repayment;
+    groups.forEach(row=>{if(row.incomes.length===1&&valid(row.incomes[0]))row.income=row.incomes[0];delete row.incomes;});
+    const observed=[...groups.values()].sort((a,b)=>a.month.localeCompare(b.month));
+    const serial=key=>Number(key.slice(0,4))*12+Number(key.slice(5,7))-1;
+    const rows=[];
+    if(observed.length){for(let i=serial(observed[0].month);i<=serial(observed.at(-1).month);i++){const key=Math.floor(i/12)+'-'+String(i%12+1).padStart(2,'0');rows.push(groups.get(key)||{month:key,income:null,repayment:null});}}
+    const known=rows.filter(r=>r.income!==null),last=known.at(-1),previous=known.at(-2);
+    const adjacent=last&&previous&&serial(last.month)-serial(previous.month)===1;
+    const incomeChange=adjacent?{from:previous.month,to:last.month,amount:last.income-previous.income,percent:previous.income===0?null:(last.income-previous.income)/previous.income*100}:null;
+    return { rows, incomeChange, repaymentMonths:rows.filter(r=>r.repayment!==null).length };
+  }
+  // Trend rendering: common zero baseline, straight segments, no interpolation across gaps.
+  function renderMonthlyTrend(d) {
+    const model=monthlyTrendModel(d),rows=model.rows,chart=$('trendChart');
+    chart.replaceChildren();$('trendRows').replaceChildren();
+    const restored=model.restored, outflow=restored?'card':'repayment';
+    put('trendTitle',restored?'월별 수입·카드사용 흐름':'월별 수입·지출 흐름');
+    put('trendIncomeLabel',restored?(d.monthly.fromLedger?'확인 소득 · 급여·성과급 등':'급여 + 성과급 실입금'):'급여 실입금');put('trendExpenseLabel',restored?'카드 사용 · 회사비 포함':'상환 유출 · 지출 일부');
+    put('trendIncomeChangeLabel',restored?'소득 · 전월 대비':'급여 기울기 · 전월 대비');put('trendExpenseChangeLabel',restored?'카드 사용 · 완료월 비교':'지출 기울기 · 전월 대비');
+    put('trendPeriod',rows.length?rows[0].month+' ~ '+rows.at(-1).month+' · KRW'+(rows.at(-1).partial?' · '+Number(model.cutoff.slice(5,7))+'월 '+Number(model.cutoff.slice(8))+'일까지':''):'월별 자료 미확인');
+    const change=model.incomeChange;
+    if(change){const sign=change.amount>0?'+':change.amount<0?'−':'';put('incomeTrendChange',sign+short(Math.abs(change.amount)));put('incomeTrendDetail',change.from+' → '+change.to+(change.percent===null?' · 전월 0원으로 증감률 미표시':' · '+(change.percent>0?'+':'')+change.percent.toFixed(1)+'%')+(rows.filter(r=>r.income!==null).length===2?' · 2개월 비교':''));}
+    else{put('incomeTrendChange','비교 자료 필요');put('incomeTrendDetail','연속된 두 달의 급여가 확인되면 증감을 표시합니다.');}
+    put('expenseTrendChange','월별 집계 필요');$('expenseTrendChange').classList.add('unavailable');
+    put('expenseTrendDetail',model.repaymentMonths?'관측 상환 '+model.repaymentMonths+'개월만 확인됐습니다. 전체 지출 기울기는 계산하지 않습니다.':'월별 개인 지출이 확인되지 않았습니다.');
+    put('trendCoverage','급여는 확인된 실입금이며 성과급·다른 수입 전체를 포함하지 않습니다. 상환은 지출 일부입니다. 카드 누적액·월평균·예정 청구를 월별 실제 지출로 바꾸지 않으며, 빠진 달은 선으로 잇지 않습니다.');
+    if(restored){
+      const expense=model.expenseChange;
+      if(expense){put('expenseTrendChange',(expense.amount>0?'+':expense.amount<0?'−':'')+short(Math.abs(expense.amount)));$('expenseTrendChange').classList.remove('unavailable');put('expenseTrendDetail',expense.from+' → '+expense.to+(expense.percent===null?' · 전월 0원으로 증감률 미표시':' · '+(expense.percent>0?'+':'')+expense.percent.toFixed(1)+'%')+' · 회사비 포함');}
+      put('trendCoverage','수집한 월별 원장 기준입니다. 카드 사용에는 회사·팀 비용이 포함되며 개인 순소비가 아닙니다. 정산입금은 소득에 더하거나 카드액에서 일괄 차감하지 않습니다. 카드대금 출금·대출 상환·카드 밖 지출과도 구분합니다.'+(rows.at(-1)?.partial?' 마지막 달은 부분월로 표시하며 카드 증감은 마지막 두 완료월을 비교합니다.':''));
+    }
+    $('trendTableHead').replaceChildren();const hr=document.createElement('tr');
+    (restored?(d.monthly.fromLedger?['월','급여','성과급','기타 수입','카드 사용','회사·팀 정산']:['월','급여','성과급','카드 사용','회사·팀 정산']):['월','급여 실입금','상환 유출']).forEach(label=>{const th=element('th','',label);th.scope='col';hr.append(th);});$('trendTableHead').append(hr);
+    rows.forEach(row=>{const tr=document.createElement('tr');tr.append(element('td','',row.month+(row.partial?'*':'')));(restored?(d.monthly.fromLedger?[row.salary,row.bonus,row.otherIncome,row.card,row.reimbursement]:[row.salary,row.bonus,row.card,row.reimbursement]):[row.income,row.repayment]).forEach(value=>tr.append(element('td','amount',fmt(value))));$('trendRows').append(tr);});
+    put('trendTableNote',restored?'개인 · KRW · 원 단위. *는 부분월입니다. 0은 수집 범위 내 확인 항목이 없다는 뜻입니다. 의료환급·용도 미분류 입금은 소득에서 제외했습니다. 표는 가로로 밀어 볼 수 있습니다.':'각 수치는 개인 · KRW · 원본의 월별 확인 항목입니다. 미확인은 0원이 아닙니다. 상환액의 원금·이자 구분은 미확인입니다.');
+    drawMonthlyChart(d,model,chart);
+  }
+  function drawMonthlyChart(d,model,chart) {
+    chart.replaceChildren();
+    const rows=model.rows,restored=model.restored,outflow=restored?'card':'repayment';
+    const values=rows.flatMap(r=>[r.income,r[outflow]]).filter(v=>v!==null);
+    if(!values.length){chart.append(element('p','trend-empty','월별로 확인된 자료가 없습니다.'));return;}
+    const W=Math.max(260,chart.clientWidth||640),H=230,L=48,R=22,T=24,B=36,max=Math.max(10000,...values),power=Math.pow(10,Math.floor(Math.log10(max/3))),step=[1,2,2.5,5,10].map(v=>v*power).find(v=>v>=max/3),top=Math.ceil(max/step)*step,ticks=Math.round(top/step);
+    const x=i=>rows.length===1?(W+L-R)/2:L+i*(W-L-R)/(rows.length-1),y=v=>H-B-v/top*(H-T-B);
+    const ns='http://www.w3.org/2000/svg';
+    const svgNode=(name,attrs,text)=>{const n=document.createElementNS(ns,name);Object.entries(attrs||{}).forEach(([k,v])=>n.setAttribute(k,String(v)));if(text!==undefined)n.textContent=text;return n;};
+    const svg=svgNode('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':(restored?'월별 급여·성과급 실입금과 카드 유효사용액. 카드에는 회사·팀 비용이 포함됩니다. ':'월별 급여 실입금과 관측 상환. ')+'세로축은 0원부터 시작합니다. 미확인 월은 연결하지 않습니다.'});
+    for(let i=0;i<=ticks;i++){const v=step*i,cy=y(v);svg.append(svgNode('line',{x1:L,y1:cy,x2:W-R,y2:cy,stroke:'#dce3ee','stroke-width':1}),svgNode('text',{x:L-10,y:cy+4,'text-anchor':'end'},(v/10000).toLocaleString('ko-KR',{maximumFractionDigits:1})));}
+    svg.append(svgNode('text',{x:L-10,y:12,'text-anchor':'end'},'만 원'));
+    if(rows.at(-1)?.partial){const i=rows.length-1;svg.append(svgNode('line',{x1:x(i),y1:T,x2:x(i),y2:H-B,stroke:'#a7b2c5','stroke-dasharray':'3 4'}),svgNode('text',{x:x(i),y:12,'text-anchor':'end'},'부분월'));}
+    rows.forEach((r,i)=>{if(rows.length<=7||i===0||i===rows.length-1||i%2===0)svg.append(svgNode('text',{x:x(i),y:H-15,'text-anchor':'middle'},Number(r.month.slice(5))+'월'+(r.partial?'*':'')));});
+    [['income','#2458d3'],[outflow,'#b96b27']].forEach(([key,color])=>{
+      let previous=null;
+      rows.forEach((row,i)=>{const value=row[key];if(value===null){previous=null;return;}const point={x:x(i),y:y(value)};if(previous)svg.append(svgNode('line',{x1:previous.x,y1:previous.y,x2:point.x,y2:point.y,stroke:color,'stroke-width':3,'stroke-linecap':'round',...(row.partial?{'stroke-dasharray':'4 4'}:{})}));const dot=svgNode('circle',{cx:point.x,cy:point.y,r:5,fill:color,stroke:'#fff','stroke-width':2});dot.append(svgNode('title',{},row.month+(row.partial?' 부분월 ':' ')+(key==='income'?(restored?'급여+성과급 ':'급여 실입금 '):(restored?'카드 사용 ':'관측 상환 '))+fmt(value)));svg.append(dot);previous=point;});
+    });
+    chart.append(svg);
+  }
+
+  function render(d) {
+    data = d;
+    put('context', d.owner + ' · 개인 · KRW · 수치 관찰 ' + d.asOf);
+    put('cash',short(d.assets[0]?.amount)); put('billsHero',short(d.billsTotal));
+    const latest = d.salaries[d.salaries.length - 1];
+    put('salaryMonth',latest ? (latest.year?latest.year+'년 ':'')+latest.month + '월 급여 기준' : '급여 미확인');
+    put('salary',fmt(latest?.amount)); put('repayment',fmt(d.repayment));
+    put('repaymentLabel',(d.repaymentPeriod || '') + '월 관측 상환');
+    const remainder = latest?.amount != null && d.repayment != null ? latest.amount - d.repayment : null;
+    put('remainder',fmt(remainder));
+    const prev = d.salaries[d.salaries.length - 2];
+    put('comparison',prev && d.repayment !== null ? prev.month + '월 급여에 같은 상환액 적용 시 ' + fmt(prev.amount - d.repayment) : '생활비와 저축을 빼기 전의 비교값입니다.');
+    $('flowChart').hidden = remainder === null || latest.amount <= 0;
+    if (!$('flowChart').hidden) { const percent = Math.min(100,d.repayment/latest.amount*100); $('paymentBar').style.width = percent + '%'; $('flowTrack').setAttribute('aria-label','급여 대비 관측 상환 비중 ' + (d.repayment/latest.amount*100).toFixed(1) + '%'); }
+    $('bills').replaceChildren();
+    d.bills.forEach(b => { const el = element('div','row'); const label = element('div','due-label'); label.append(element('span','due-icon',b.date),element('strong','',b.label)); el.append(label,element('strong','amount',fmt(b.amount))); $('bills').append(el); });
+    if (!d.bills.length) $('bills').append(element('p','caption','확인된 청구를 원본에서 읽지 못했습니다.'));
+    put('billsSum',fmt(d.billsTotal)); put('rp',fmt(d.rp));
+    put('reimbursementPeriod',d.period + ' · 누적 확인 입금'); put('reimbursement',fmt(d.reimbursements));
+    put('assetsTotal',fmt(d.financialAssets)); $('assetRows').replaceChildren(); $('assetBar').replaceChildren();
+    const colors = ['#2458d3','#697bc8','#8c63a8','#a06e37','#5296ad','#adc2dc'];
+    d.assets.forEach((a,i) => { const r = row(a.label,a.amount,a.basis); const dot = element('i','legend-dot'); dot.style.background = colors[i]; r.querySelector('strong').prepend(dot); $('assetRows').append(r); if(d.financialAssets > 0 && a.amount !== null) {const bar = element('span');bar.style.flex = String(a.amount);bar.style.background = colors[i];$('assetBar').append(bar);} });
+    put('debtTotal',fmt(d.knownDebt));put('debtCaveat',d.debtIncomplete ? '확인된 항목의 부분합 · 미확인 잔여 원금 제외' : '등록 항목 합계 · 전체 부채 포함 여부 확인 필요');
+    $('debtRows').replaceChildren();d.debts.forEach(d => {const tr = document.createElement('tr'); tr.append(element('td','',d.label),element('td','',fmt(d.amount)),element('td','',fmt(d.payment)));$('debtRows').append(tr);});
+    $('issues').hidden = !d.issues.length; put('issues',d.issues.length ? '원본에서 확인 필요: ' + d.issues.join(' · ') : '');
+    put('sourceInfo','수치 관찰일 ' + d.asOf + ' · 문서 기록일 ' + d.recordedAt + (d.sourceModifiedAt ? ' · 문서 수정 ' + new Date(d.sourceModifiedAt).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}) : ''));
+    if (d.sourceUrl && /^https:\/\/docs\.google\.com\/document\/d\/[A-Za-z0-9_-]+\/edit$/.test(d.sourceUrl)) { $('sourceLink').href=d.sourceUrl; $('sourceLink').hidden=false; } else $('sourceLink').hidden=true;
+    $('useSalary').disabled=latest?.amount==null; $('useRepayment').disabled=d.repayment===null;
+    const programUrl=d.program?.sourceUrl;
+    $('programSourceLink').hidden=!programUrl||!/^https:\/\/docs\.google\.com\/document\/d\/[A-Za-z0-9_-]+\/edit$/.test(programUrl);
+    if(!$('programSourceLink').hidden)$('programSourceLink').href=programUrl;
+    put('storageNote',!$('demoNotice').hidden?'가상 자료는 이 미리보기 화면에서만 유지되며 실제 Drive에 저장하지 않습니다.':d.program?.writable?'원본 요약은 보존하고 수정 내역은 같은 본인 전용 Drive의 프로그램 원장에 기록합니다. 가족 공동 DB·브라우저 저장소에 금융 자료를 보관하지 않습니다.':'원본은 본인 전용 Google Drive에 있습니다. 현재 조회 모드이며 가족 공동 DB·브라우저 저장소에 금융 자료를 보관하지 않습니다.');
+    $('status').hidden=true;$('content').hidden=false;$('footer').hidden=false;renderMonthlyTrend(d);renderProgram(d);renderAnalysis(d);renderOverview(d);
+  }
+  function renderAnalysis(d) {
+    const analysis=d.analysis;
+    put('analysisPeriod',analysis?analysis.period.start+' ~ '+analysis.period.end+' · 본인 기록 · KRW':'원장 연결 전');
+    put('analysisAvailability',analysis?'확인된 수입과 카드 사용을 각각 집계했습니다. 전체 계좌의 현금수지나 개인 순소비 확정값은 아닙니다.':'거래 원장 연결 전입니다. 월별 흐름에서는 기존 확인 집계를 볼 수 있습니다.');
+    put('analysisIncome',analysis?fmt(analysis.confirmedIncome):'미확인');put('analysisCardUse',analysis?fmt(analysis.cardUse):'미확인');put('analysisReimbursement',analysis?fmt(analysis.reimbursements):'미확인');put('analysisPersonal',analysis?.personalCard===null||!analysis?'귀속 확인 필요':fmt(analysis.personalCard));
+    put('analysisInterpretation',analysis?'회사·팀 정산은 소득에 더하거나 카드 사용에서 일괄 차감하지 않았습니다. 귀속 미확인 카드 '+analysis.unresolvedCount.toLocaleString('ko-KR')+'건은 '+fmt(analysis.unresolvedCard)+'이며, 확정 본인 분류는 그와 별도입니다. 카드 사용일과 실제 출금일도 다릅니다.':'원장이 연결되면 판매처 기준 분류와 귀속 확인 대상을 구분해 보여줍니다.');
+    ['analysisCategories','analysisMerchants','analysisReview','analysisForeign'].forEach(id=>$(id).replaceChildren());
+    const ranks=(target,items,queryFor)=>{
+      const max=Math.max(1,...items.map(r=>r.amount));
+      items.forEach(item=>{const b=element('button','analysis-rank');b.type='button';b.append(element('strong','',item.label),element('strong','amount',fmt(item.amount)),element('span','',item.count+'건'+(item.provisional?' · 참고 분류':'')));const track=element('div','analysis-track'),fill=element('i');fill.style.width=(item.amount/max*100)+'%';track.setAttribute('aria-hidden','true');track.append(fill);b.append(track);b.addEventListener('click',()=>{$('ledgerSearch').value=queryFor(item);ledgerDrilldown=target==='analysisCategories'?{categoryExact:item.label}:{merchantExact:item.label};$('ledgerMonth').value='all';$('ledgerAttribution').value='all';$('ledgerFlow').value='expense';$('ledgerStatus').value='active';ledgerPage=0;activateTab('records',true);renderRecordRows();});$(target).append(b);});
+    };
+    ranks('analysisCategories',analysis?.categories||[],r=>r.label);ranks('analysisMerchants',analysis?.merchants||[],r=>r.label);
+    put('analysisReviewCoverage',analysis?'귀속 미확인 '+analysis.unresolvedCount+'건 중 금액이 큰 12건 · 회사비로 자동 확정하지 않음':'원장 연결 후 확인할 수 있습니다.');
+    (analysis?.review||[]).forEach(id=>{const record=d.program.records.find(r=>r.id===id);if(record)$('analysisReview').append(recordButton(record));});
+    if(analysis&&!analysis.review.length)$('analysisReview').append(element('p','empty-records','현재 귀속 미확인 카드 거래가 없습니다.'));
+    (analysis?.foreign||[]).forEach(record=>$('analysisForeign').append(recordButton(record)));
+    const loan=element('p','analysis-message','원본 '+(d.repaymentPeriod||'미확인')+'월 관측 상환: '+fmt(d.repayment)+' · 원금·이자 미분리 · 자동차 할부는 청구 관측과 은행 출금을 구분해 확인합니다.');$('analysisForeign').append(loan);
+  }
+  // Program selectors are pure: preserve the source records and excluded states.
+  function ledgerFiltered(records,filters) {
+    const query=(filters.query||'').normalize('NFC').trim().toLocaleLowerCase('ko-KR');
+    return records.filter(r=>r.type==='transaction' && (!filters.month||filters.month==='all'||r.date.startsWith(filters.month)) && (!filters.attribution||filters.attribution==='all'||r.attribution===filters.attribution) && (!filters.flow||filters.flow==='all'||r.flow===filters.flow) && (!filters.status||filters.status==='all'||r.status===filters.status) && (!filters.currency||r.currency===filters.currency) && (!filters.channel||r.channel===filters.channel) && (!filters.categoryExact||r.category.replace(/^참고·/,'')===filters.categoryExact) && (!filters.merchantExact||r.label===filters.merchantExact) && (!query||[r.label,r.category,r.sourceLocation].join(' ').normalize('NFC').toLocaleLowerCase('ko-KR').includes(query))).sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
+  }
+  function recordChanges(before,after) {
+    return Object.keys(after).filter(k=>k!=='id'&&k!=='type'&&(!before||before[k]!==after[k])).map(k=>({key:k,before:before?before[k]:null,after:after[k]}));
+  }
+  function recordImpact(records,next) {
+    if(next.type!=='transaction')return [];
+    const changed=records.some(r=>r.id===next.id)?records.map(r=>r.id===next.id?next:r):[...records,next];
+    const card=r=>r.channel==='card'&&r.flow==='expense';
+    const buckets=[['확인 소득',r=>['salary','bonus','income'].includes(r.flow)],['카드 사용 · 회사비 포함',card],['본인 카드 소비 · 확정 부분합',r=>card(r)&&r.attribution==='personal'],['귀속 미확인 카드',r=>card(r)&&r.attribution==='unknown'],['회사·팀 정산입금',r=>r.flow==='reimbursement'],['대출 원금 상환',r=>r.flow==='loan_principal'],['대출 이자',r=>r.flow==='loan_interest'],['대출 상환 · 미분리',r=>r.flow==='loan_payment']];
+    const sum=(rows,select)=>{const selected=rows.filter(r=>r.type==='transaction'&&r.status==='active'&&r.currency==='KRW'&&select(r));if(!selected.length)return null;const n=selected.reduce((s,r)=>s+Number(r.amount),0);return Number.isSafeInteger(n)?n:null;};
+    return buckets.map(([label,select])=>({label,before:sum(records,select),after:sum(changed,select)})).filter(r=>r.before!==r.after);
+  }
+  // Program view: no persistent browser storage, no source identity in form fields.
+  const recordLabels={date:'기준일',label:'항목·거래처',amount:'금액',currency:'통화',basis:'평가 기준·근거',sourceLocation:'원본 위치',flow:'거래 구분',status:'집계 상태',channel:'거래 수단',attribution:'비용 귀속',category:'분류',balanceKind:'자산·부채'};
+  const recordTerms={salary:'급여',bonus:'성과급',income:'기타 수입',expense:'지출',reimbursement:'회사·팀 정산',transfer:'내부 이체',loan_principal:'대출 원금',loan_interest:'대출 이자',loan_payment:'대출 상환 · 미분리',gift:'증여',refund:'환급',unclassified_income:'미분류 입금',unclassified_outflow:'미분류 출금',active:'유효',excluded:'집계 제외',cancelled:'취소',cashback:'캐시백',card:'카드',bank:'은행',manual:'직접 기록',personal:'본인',company:'회사·팀',household:'가족 관련',unknown:'귀속 미확인',asset:'자산',liability:'부채'};
+  let ledgerPage=0,ledgerDrilldown=null,editingRecord=null,pendingRecord=null,recordSaving=false;
+  const recordMoney=r=>r.amount===null?'미확인':new Intl.NumberFormat('ko-KR',{style:'currency',currency:r.currency,maximumFractionDigits:r.currency==='KRW'?0:2}).format(Number(r.amount));
+  function renderProgram(d) {
+    const p=d.program,initialized=p?.initialized===true;
+    put('ledgerCoverage',p?.coverage?p.coverage.start+' ~ '+p.coverage.end+' · 기존 수집 범위':'원장 연결 전');
+    put('ledgerAvailability',initialized?'거래별 원본과 집계 상태를 보존합니다.'+(p.writable?'':' 현재 조회 모드입니다. 직접 저장은 활성화 후 사용할 수 있습니다.'):'기존 수집 원장이 아직 이 화면에 연결되지 않았습니다. 현금흐름 탭의 월별 집계와 원본 문서는 계속 볼 수 있습니다.');
+    $('addTransaction').disabled=!initialized;$('balanceManager').hidden=!initialized;
+    $('assets').querySelector('.grid').hidden=initialized;
+    const selected=$('ledgerMonth').value; $('ledgerMonth').replaceChildren();
+    const option=(value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;return o;};
+    $('ledgerMonth').append(option('all','전체 월'));
+    [...new Set((p?.records||[]).filter(r=>r.type==='transaction').map(r=>r.date.slice(0,7)))].sort().reverse().forEach(month=>$('ledgerMonth').append(option(month,month)));
+    if([...$('ledgerMonth').options].some(o=>o.value===selected))$('ledgerMonth').value=selected;
+    ledgerPage=0;renderRecordRows();$('balanceRows').replaceChildren();
+    (p?.records||[]).filter(r=>r.type==='balance').sort((a,b)=>a.balanceKind.localeCompare(b.balanceKind)||a.label.localeCompare(b.label,'ko')).forEach(r=>$('balanceRows').append(recordButton(r)));
+    put('historyCoverage',initialized?'총 '+p.historyCount+'회 변경 · 최근 100회까지 표시 · '+($('demoNotice').hidden?'전체 이력은 Drive 원본에 보존':'가상 이력은 이 화면에서만 유지'):'원장 연결 후 수정 이력을 확인할 수 있습니다.');
+    $('historyRows').replaceChildren();
+    (p?.history||[]).forEach(event=>{const entry=element('article','history-entry');entry.append(element('strong','',event.after.label+' · '+(event.before?'수정':'추가')),element('p','caption',new Date(event.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})));recordChanges(event.before,event.after).forEach(change=>entry.append(element('p','caption',(recordLabels[change.key]||change.key)+': '+(change.before===null?'미확인':recordTerms[change.before]||String(change.before))+' → '+(change.after===null?'미확인':recordTerms[change.after]||String(change.after)))));$('historyRows').append(entry);});
+    if(!p?.history?.length)$('historyRows').append(element('p','empty-records',initialized?'아직 앱에서 수정한 기록이 없습니다. 원본 수집 내역은 그대로 보존돼 있습니다.':'거래 원장을 연결하면 추가·수정 전후 값을 확인할 수 있습니다.'));
+  }
+  function recordButton(r) {
+    const b=element('button','record-item');b.type='button';
+    b.append(element('strong','',r.label),element('strong','record-money',recordMoney(r)),element('span','caption',[r.date,recordTerms[r.flow||r.balanceKind],recordTerms[r.channel],recordTerms[r.attribution],r.status&&recordTerms[r.status],r.category,data?.program?.userEditedIds?.includes(r.id)?'본인 수정 기록':null].filter(Boolean).join(' · ')));
+    b.addEventListener('click',()=>openRecord(r));return b;
+  }
+  function renderRecordRows() {
+    const records=ledgerFiltered(data?.program?.records||[],{query:$('ledgerSearch').value,month:$('ledgerMonth').value,attribution:$('ledgerAttribution').value,flow:$('ledgerFlow').value,status:$('ledgerStatus').value,...(ledgerDrilldown?{...ledgerDrilldown,currency:'KRW',channel:'card'}:{})});
+    $('clearLedgerDrilldown').hidden=!ledgerDrilldown;
+    const pageSize=30;ledgerPage=Math.max(0,Math.min(ledgerPage,Math.max(0,Math.ceil(records.length/pageSize)-1)));
+    $('ledgerRows').replaceChildren();records.slice(ledgerPage*pageSize,(ledgerPage+1)*pageSize).forEach(r=>$('ledgerRows').append(recordButton(r)));
+    if(!records.length)$('ledgerRows').append(element('p','empty-records',data?.program?.initialized?'현재 조건에 맞는 거래가 없습니다. 검색어나 조회 월을 바꿔 보세요.':'수집 원장 연결을 준비하고 있습니다. 자료가 없다는 뜻은 아닙니다.'));
+    put('ledgerPage',records.length?(ledgerPage*pageSize+1)+'–'+Math.min((ledgerPage+1)*pageSize,records.length)+' / '+records.length+'건':'표시할 거래 없음');
+    $('previousRecords').disabled=ledgerPage===0;$('nextRecords').disabled=(ledgerPage+1)*pageSize>=records.length;
+  }
+  function recordTypeFields() {
+    const transaction=$('recordType').value==='transaction';
+    document.querySelectorAll('.record-transaction').forEach(el=>{el.hidden=!transaction;el.querySelectorAll('input,select').forEach(input=>input.disabled=!transaction);});
+    $('missingAmountWrap').hidden=transaction;if(transaction)$('missingAmount').checked=false;
+    $('recordAmount').disabled=$('missingAmount').checked;$('recordAmount').required=!$('missingAmount').checked;
+    $('recordType').disabled=!!editingRecord;
+  }
+  function openRecord(r,kind='transaction') {
+    if(recordSaving)return;
+    editingRecord=r||null;pendingRecord=null;$('recordForm').reset();$('recordType').value=r?(r.type==='balance'?r.balanceKind:'transaction'):kind;
+    $('recordDate').value=r?.date||new Date(Date.now()+9*3600000).toISOString().slice(0,10);$('recordDate').max=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    for(const [field,key] of [['recordLabel','label'],['recordAmount','amount'],['recordCurrency','currency'],['recordFlow','flow'],['recordAttribution','attribution'],['recordChannel','channel'],['recordStatus','status'],['recordCategory','category'],['recordBasis','basis']])if(r?.[key]!==undefined)$(field).value=r[key]??'';
+    $('missingAmount').checked=r?.amount===null;recordTypeFields();
+    put('recordEditorTitle',r?'기록 수정':kind==='transaction'?'거래 추가':'자산·부채 기록 추가');
+    $('recordForm').hidden=false;$('recordReview').hidden=true;$('recordError').hidden=true;$('recordEditor').hidden=false;$('recordLabel').focus();
+  }
+  function closeRecordEditor() {if(recordSaving)return;$('recordEditor').hidden=true;$('recordForm').reset();$('recordReviewDetails').replaceChildren();$('recordImpact').replaceChildren();editingRecord=null;pendingRecord=null;}
+  function reviewRecord(e) {
+    e.preventDefault();if(!data?.program?.initialized||recordSaving)return;
+    const type=$('recordType').value==='transaction'?'transaction':'balance', record={id:editingRecord?.id||'manual:'+crypto.randomUUID(),type,date:$('recordDate').value,label:$('recordLabel').value.trim(),amount:$('missingAmount').checked?null:$('recordAmount').value.trim(),currency:$('recordCurrency').value,basis:$('recordBasis').value.trim(),sourceLocation:editingRecord?.sourceLocation||'사용자 직접 입력'};
+    if(record.currency==='KRW'&&record.amount!==null&&!/^(0|[1-9]\d{0,11})$/.test(record.amount)){put('recordError','원화 금액은 쉼표와 소수점 없이 원 단위로 입력해 주세요.');$('recordError').hidden=false;return;}
+    if(type==='balance')record.balanceKind=$('recordType').value;
+    else Object.assign(record,{flow:$('recordFlow').value,status:$('recordStatus').value,channel:$('recordChannel').value,attribution:$('recordAttribution').value,category:$('recordCategory').value.trim()});
+    pendingRecord={requestId:crypto.randomUUID(),expectedRevision:data.program.revision,record};
+    $('recordReviewDetails').replaceChildren();recordChanges(editingRecord,record).filter(change=>change.key!=='sourceLocation').forEach(change=>{const value=(v,previous)=>v===null?'미확인':change.key==='amount'?recordMoney({amount:v,currency:previous?editingRecord.currency:record.currency}):recordTerms[v]||String(v);$('recordReviewDetails').append(element('dt','',recordLabels[change.key]||change.key),element('dd','',editingRecord?value(change.before,true)+' → '+value(change.after,false):value(change.after,false)));});
+    $('recordReviewDetails').append(element('dt','','원본 위치'),element('dd','',record.sourceLocation));
+    $('recordImpact').replaceChildren(element('h3','','저장 후 집계 변화'),element('p','caption','등록 거래 전체 기간 · KRW · 확인 항목의 부분합'));
+    const impacts=recordImpact(data.program.records,record);
+    impacts.forEach(change=>{const item=element('p','record-context'),value=n=>n===null?'확인 항목 없음':fmt(n);item.textContent=change.label+': '+value(change.before)+' → '+value(change.after);$('recordImpact').append(item);});
+    if(!impacts.length)$('recordImpact').append(element('p','record-context',record.type==='balance'?'자산·부채 잔액 기록을 변경합니다. 기준일·통화·범위가 기존 요약과 달라지면 합계를 다시 대조해야 합니다.':record.currency!=='KRW'?'외화 기록을 원래 통화로 보존합니다. 원화 소비에 환산해 더하지 않습니다.':'원화 집계 금액은 같습니다. 판매처 분류·거래처·근거 등의 변경을 이력에 남깁니다.'));
+
+    put('recordWriteNote',!$('demoNotice').hidden?'가상 자료 미리보기입니다. 입력·수정은 이 화면에서만 유지되며 실제 Drive에는 저장하지 않습니다.':data.program.writable?'이전 값과 수정 이력을 본인 전용 Drive 원본에 보존합니다.':'현재 조회 모드라 직접 저장은 활성화 후 가능합니다.');put('commitRecord',$('demoNotice').hidden?'Drive에 저장':'가상 기록에 적용');
+    $('commitRecord').disabled=!data.program.writable;$('recordError').hidden=true;$('recordForm').hidden=true;$('recordReview').hidden=false;$('commitRecord').focus();
+  }
+  function commitRecord() {
+    if(!pendingRecord||recordSaving||!data?.program?.writable)return;
+    recordSaving=true;$('commitRecord').disabled=true;$('backToRecord').disabled=true;$('closeRecord').disabled=true;put('commitRecord','저장 중');
+    const current=generation;
+    const finish=()=>{recordSaving=false;$('backToRecord').disabled=false;$('closeRecord').disabled=false;put('commitRecord',$('demoNotice').hidden?'Drive에 저장':'가상 기록에 적용');};
+    const failure=result=>{finish();if(current!==generation||obscured)return;const messages={SOURCE_CHANGED:'다른 기기나 원본에 변경이 있습니다. 현재 내용을 확인한 뒤 닫고, 최신 기록을 다시 읽어 수정해 주세요.',WRITE_NOT_ENABLED:'직접 저장이 아직 활성화되지 않았습니다.',PRIVATE_SOURCE_REQUIRED:'원본의 본인 전용 공유 설정을 확인해 주세요.',INVALID_RECORD:'날짜·금액·필수 항목을 확인해 주세요.',REQUEST_CONFLICT:'이 저장 요청과 다른 내용이 이미 처리됐습니다. 최신 기록을 다시 읽어 주세요.',WRITE_BUSY:'다른 저장이 진행 중입니다. 잠시 후 같은 내용으로 다시 시도해 주세요.',LEDGER_LIMIT:'원장이 보관 한도에 가까워 저장을 멈췄습니다. 기존 기록은 유지됩니다. 원장 보관 단계를 먼저 확인해 주세요.'};put('recordError',messages[result?.error]||'저장 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도하면 중복 저장을 방지합니다.');$('recordError').hidden=false;$('commitRecord').disabled=false;};
+    google.script.run.withSuccessHandler(result=>{if(result.error){failure(result);return;}finish();if(current!==generation||obscured)return;closeRecordEditor();put('programMessage',result.unchanged?'변경 사항이 없어 새 수정 이력을 만들지 않았습니다.':$('demoNotice').hidden?'기록을 저장했습니다. 원본을 다시 읽습니다.':'가상 기록에 반영했습니다. 실제 Drive에는 저장하지 않았습니다.');$('programMessage').hidden=false;load();}).withFailureHandler(()=>failure({error:'SAVE_FAILED'})).saveRecord(pendingRecord);
+  }
+  ['ledgerSearch','ledgerMonth','ledgerAttribution','ledgerFlow','ledgerStatus'].forEach(id=>$(id).addEventListener(id==='ledgerSearch'?'input':'change',()=>{if(id==='ledgerSearch')ledgerDrilldown=null;ledgerPage=0;renderRecordRows();}));
+  $('clearLedgerDrilldown').addEventListener('click',()=>{ledgerDrilldown=null;$('ledgerSearch').value='';ledgerPage=0;renderRecordRows();});
+  $('previousRecords').addEventListener('click',()=>{ledgerPage--;renderRecordRows();});$('nextRecords').addEventListener('click',()=>{ledgerPage++;renderRecordRows();});
+  $('addTransaction').addEventListener('click',()=>openRecord(null));$('addBalance').addEventListener('click',()=>openRecord(null,'asset'));
+  $('viewMonthlyFlow').addEventListener('click',()=>activateTab('flow',true));
+  ['closeRecord','cancelRecord'].forEach(id=>$(id).addEventListener('click',closeRecordEditor));
+  $('recordType').addEventListener('change',recordTypeFields);$('missingAmount').addEventListener('change',recordTypeFields);
+  $('recordForm').addEventListener('submit',reviewRecord);$('commitRecord').addEventListener('click',commitRecord);$('backToRecord').addEventListener('click',()=>{$('recordReview').hidden=true;$('recordForm').hidden=false;pendingRecord=null;$('recordLabel').focus();});
+  function showError(code) {
+    data=null;$('content').hidden=true;$('footer').hidden=true;$('status').hidden=false;
+    const messages={ACCESS_DENIED:'소유자 Google 계정으로 다시 열어 주세요.',PRIVATE_SOURCE_REQUIRED:'원본이 본인 단독 소유·비공개 상태인지 확인해 주세요.',SOURCE_NOT_CONFIGURED:'원본 문서 연결을 설정한 뒤 다시 열어 주세요.',SOURCE_CHANGED:'원본이 수정 중입니다. 잠시 후 다시 읽어 주세요.',UNSUPPORTED_DOCUMENT:'원본의 기록 형식이 달라졌습니다. 항목과 기준일을 확인해 주세요.',LOAD_FAILED:'Google 권한과 연결 상태를 확인한 뒤 다시 읽어 주세요.'};
+    messages.INVALID_LEDGER='거래 원장의 형식·중복·이력을 확인해야 합니다. 원본을 확인한 뒤 다시 읽어 주세요.';
+    $('status').replaceChildren(element('div','mark',''),element('h2','','기록을 열지 못했어요'),element('p','caption',messages[code] || messages.LOAD_FAILED));
+    const retry=element('button','secondary','다시 읽기');retry.type='button';retry.addEventListener('click',load);$('status').append(retry);
+    put('context','금융 자료를 표시하지 않았습니다.');
+  }
+  function load() {
+    const current=++generation;data=null;$('content').hidden=true;$('footer').hidden=true;
+    $('status').hidden=false;$('status').replaceChildren(element('div','loader'),element('h2','','원본 기록을 읽는 중'));
+    if (typeof google === 'undefined' || !google.script?.run) { showError('SOURCE_NOT_CONFIGURED'); return; }
+    google.script.run.withSuccessHandler(result=>{if(current!==generation||obscured)return;if(result.error)showError(result.error);else render(normalizeDashboard(result));}).withFailureHandler(()=>{if(current===generation&&!obscured)showError('LOAD_FAILED');}).getDashboard();
+  }
+  $('overviewViewAssets').addEventListener('click',()=>activateTab('assets',true));
+  $('overviewViewFlow').addEventListener('click',()=>activateTab('flow',true));
+  $('overviewViewAnalysis').addEventListener('click',()=>activateTab('analysis',true));
+  function activateTab(id,focus) { document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===id;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;$(b.dataset.tab).hidden=!active;if(active&&focus)b.focus();}); if(data&&(id==='overview'||id==='flow')){renderMonthlyTrend(data);drawMonthlyChart(data,monthlyTrendModel(data),$('overviewTrend'));} }
+  document.querySelectorAll('[data-tab]').forEach((b,i,buttons)=>{b.addEventListener('click',()=>activateTab(b.dataset.tab,false));b.addEventListener('keydown',e=>{let index=i;if(e.key==='ArrowRight')index=(i+1)%buttons.length;else if(e.key==='ArrowLeft')index=(i+buttons.length-1)%buttons.length;else if(e.key==='Home')index=0;else if(e.key==='End')index=buttons.length-1;else return;e.preventDefault();activateTab(buttons[index].dataset.tab,true);});});
+  function scenario() {
+    const ids=['monthlyIncome','monthlyPayment','monthlyLiving','annualBonus'];
+    const values=ids.map(id=>$(id).value.trim()===''||!$(id).checkValidity()?null:Math.round(Number($(id).value)*10000));
+    if(values.some(v=>v===null||!Number.isSafeInteger(v)||v<0)){put('scenarioAmount','값을 입력해 주세요');put('scenarioDetail','네 항목 모두 필요합니다. 없는 금액은 0을 입력해 주세요.');$('scenarioResult').classList.remove('negative');return;}
+    const [income,payment,living,bonus]=values;const monthly=income-payment-living,annual=monthly*12+bonus;
+    put('scenarioAmount',(annual>0?'+':'')+fmt(annual));put('scenarioDetail','성과급 제외 월 '+fmt(monthly)+' × 12개월 + 세후 현금 성과급 '+fmt(bonus));$('scenarioResult').classList.toggle('negative',annual<0);
+  }
+  $('scenarioForm').addEventListener('submit',e=>e.preventDefault());$('scenarioForm').addEventListener('input',scenario);
+  $('useSalary').addEventListener('click',()=>{if(data?.salaries.at(-1)?.amount!=null){$('monthlyIncome').value=data.salaries.at(-1).amount/10000;scenario();}});
+  $('useRepayment').addEventListener('click',()=>{if(data?.repayment!=null){$('monthlyPayment').value=data.repayment/10000;scenario();}});
+  function hide() {if(!data)return;obscured=true;generation++;data=null;editingRecord=null;pendingRecord=null;$('recordForm').reset();$('recordEditor').hidden=true;$('recordReviewDetails').replaceChildren();$('recordImpact').replaceChildren();$('ledgerSearch').value='';$('ledgerRows').replaceChildren();$('historyRows').replaceChildren();$('balanceRows').replaceChildren();$('content').hidden=true;$('footer').hidden=true;$('curtain').hidden=false;$('scenarioForm').reset();scenario();put('context','화면이 가려져 있습니다.');$('revealButton').focus();}
+  $('hideButton').addEventListener('click',hide);$('revealButton').addEventListener('click',()=>{obscured=false;$('curtain').hidden=true;load();$('hideButton').focus();});
+  $('refreshButton').addEventListener('click',load);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')hide();});
+  window.addEventListener('pagehide',hide);
+  window.addEventListener('resize',()=>{if(data&&!obscured){renderMonthlyTrend(data);drawMonthlyChart(data,monthlyTrendModel(data),$('overviewTrend'));}});
+  // Preview builder replaces only this marker with a synthetic RPC. Production has no demo data.
+  /* DEMO_ADAPTER */
+  load();
+</script>
+</body>
+</html>
