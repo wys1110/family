@@ -1787,11 +1787,11 @@ function renderCareTimer() {
   $("#careTimerCard").classList.add("is-running");
   $("#careTimerIcon").textContent = careTimer.icon || "◷";
   $("#careTimerBaby").textContent = `${timerBaby?.name || "아기"} · ${careTimer.type === "sleep" ? "수면 중" : "진행 중"}`;
-  $("#careTimerLabel").textContent = careTimer.type === "sleep" ? "자는 중" : careTimer.label;
+  $("#careTimerLabel").textContent = careTimer.endedAt ? `${careTimer.label} 저장 대기` : careTimer.type === "sleep" ? "자는 중" : careTimer.label;
   $("#careTimerStarted").textContent = `${new Date(careTimer.startedAt).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" })} 시작`;
   $("#careTimerSwitchSide").hidden = careTimer.type !== "feeding";
   $("#careTimerStop").disabled = careTimerSaveInProgress;
-  $("#careTimerSwitchSide").disabled = careTimerSaveInProgress;
+  $("#careTimerSwitchSide").disabled = careTimerSaveInProgress || Boolean(careTimer.endedAt);
   $("#careTimerCancel").disabled = careTimerSaveInProgress;
   $("#careTimerStop").innerHTML = careTimerSaveInProgress ? "저장 중…" : `<span aria-hidden="true">■</span> ${careTimer.type === "sleep" ? "수면 끝" : "멈추고 저장"}`;
   updateCareTimerClock();
@@ -1799,7 +1799,7 @@ function renderCareTimer() {
 
 function updateCareTimerClock() {
   if (!careTimer || !$("#careTimerClock")) return;
-  const seconds = Math.max(0, Math.floor((Date.now() - careTimer.startedAt) / 1000));
+  const seconds = Math.max(0, Math.floor(((careTimer.endedAt ?? Date.now()) - careTimer.startedAt) / 1000));
   const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
   const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
   const rest = String(seconds % 60).padStart(2, "0");
@@ -1807,7 +1807,7 @@ function updateCareTimerClock() {
 }
 
 function switchCareTimerSide() {
-  if (!careTimer || careTimer.type !== "feeding" || careTimerSaveInProgress) return;
+  if (!careTimer || careTimer.type !== "feeding" || careTimerSaveInProgress || careTimer.endedAt) return;
   const nextSide = careTimer.side === "왼쪽" ? "오른쪽" : "왼쪽";
   careTimer.side = nextSide;
   careTimer.label = `${nextSide} 모유 수유`;
@@ -1830,14 +1830,17 @@ function cancelCareTimer() {
 
 async function stopCareTimer() {
   if (!careTimer || careTimerSaveInProgress) return;
+  careTimer.endedAt ??= Date.now();
+  careTimer.entryId ||= uid();
+  persistCareTimer();
   careTimerSaveInProgress = true;
   renderCareTimer();
   const finishedTimer = { ...careTimer };
   const started = new Date(finishedTimer.startedAt);
-  const minutes = Math.max(1, Math.round((Date.now() - finishedTimer.startedAt) / 60000));
+  const minutes = Math.max(1, Math.round((finishedTimer.endedAt - finishedTimer.startedAt) / 60000));
   const isFeeding = finishedTimer.type === "feeding";
   const entry = {
-    id: uid(), babyId: finishedTimer.babyId, title: isFeeding ? "모유 수유" : "수면 기록", date: dateKey(started), time: started.toTimeString().slice(0, 5), category: isFeeding ? "수유·이유식" : "수면",
+    id: finishedTimer.entryId, babyId: finishedTimer.babyId, title: isFeeding ? "모유 수유" : "수면 기록", date: dateKey(started), time: started.toTimeString().slice(0, 5), category: isFeeding ? "수유·이유식" : "수면",
     height: null, weight: null, head: null, feedingMl: null, feedingType: isFeeding ? "모유" : "", feedingSide: isFeeding ? (finishedTimer.switched ? "양쪽" : finishedTimer.side) : "", feedingMinutes: isFeeding ? minutes : null,
     sleepMinutes: isFeeding ? null : minutes, temperature: null, diaperKind: "", note: finishedTimer.switched ? `타이머로 자동 기록 · ${finishedTimer.side}에서 마침` : "타이머로 자동 기록", photoPaths: [], photoUrls: [],
   };
@@ -1847,7 +1850,9 @@ async function stopCareTimer() {
       const { error } = await withAuthRecovery(() => state.supabase.from("growth_entries").upsert(toGrowthRemote(entry)));
       if (error) throw error;
     }
-    state.growthEntries.push(entry);
+    const existingIndex = state.growthEntries.findIndex(item => item.id === entry.id);
+    if (existingIndex < 0) state.growthEntries.push(entry);
+    else state.growthEntries[existingIndex] = entry;
     if (!state.supabase) localStorage.setItem(GROWTH_STORAGE_KEY, JSON.stringify(state.growthEntries));
     dispatchGrowthEntrySaved(entry);
     careTimer = null;
@@ -1856,10 +1861,10 @@ async function stopCareTimer() {
     showGrowthComplete(`${finishedTimer.label} ${formatDuration(minutes)} 기록을 저장했어요.`);
   } catch (error) {
     console.error("돌봄 타이머 저장 실패", error);
-    toast("저장하지 못했어요. 타이머는 그대로 유지했어요");
+    toast("저장을 확인하지 못했어요. 종료 시각은 유지되니 다시 저장해 주세요");
   } finally {
     careTimerSaveInProgress = false;
-    if (careTimer) renderCareTimer();
+    renderCareTimer();
   }
 }
 
