@@ -1769,7 +1769,7 @@ function startCareTimerFromEvent(event) {
   persistCareTimer();
   renderCareTimer();
   renderTodayCareSummary(activeBabyEntries());
-  toast(`${definition.label} 타이머를 시작했어요`);
+  toast(definition.type === "sleep" ? "수면을 시작했어요. 깨면 수면 끝을 눌러주세요" : `${definition.label} 타이머를 시작했어요`);
 }
 
 function renderCareTimer() {
@@ -1786,14 +1786,14 @@ function renderCareTimer() {
   running.hidden = false;
   $("#careTimerCard").classList.add("is-running");
   $("#careTimerIcon").textContent = careTimer.icon || "◷";
-  $("#careTimerBaby").textContent = `${timerBaby?.name || "아기"} · 진행 중`;
-  $("#careTimerLabel").textContent = careTimer.label;
+  $("#careTimerBaby").textContent = `${timerBaby?.name || "아기"} · ${careTimer.type === "sleep" ? "수면 중" : "진행 중"}`;
+  $("#careTimerLabel").textContent = careTimer.type === "sleep" ? "자는 중" : careTimer.label;
   $("#careTimerStarted").textContent = `${new Date(careTimer.startedAt).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" })} 시작`;
   $("#careTimerSwitchSide").hidden = careTimer.type !== "feeding";
   $("#careTimerStop").disabled = careTimerSaveInProgress;
   $("#careTimerSwitchSide").disabled = careTimerSaveInProgress;
   $("#careTimerCancel").disabled = careTimerSaveInProgress;
-  $("#careTimerStop").innerHTML = careTimerSaveInProgress ? "저장 중…" : '<span aria-hidden="true">■</span> 멈추고 저장';
+  $("#careTimerStop").innerHTML = careTimerSaveInProgress ? "저장 중…" : `<span aria-hidden="true">■</span> ${careTimer.type === "sleep" ? "수면 끝" : "멈추고 저장"}`;
   updateCareTimerClock();
 }
 
