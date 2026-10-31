@@ -79,6 +79,43 @@ test('the surviving compact sleep button starts and ends the timer after layout 
   listeners.get('click')({ target: button });
   expect(h.context.state.growthEntries[0].sleepMinutes).toBe(45);
   expect(button.innerHTML).toContain('수면 시작');
+  expect(button.disabled).toBe(false);
   h.start('feeding-left');
   expect(button.disabled).toBe(true);
+});
+
+test.each([false, true])('retry preserves the first end time and ID across reload (server committed: %s)', async committed => {
+  const h = harness(), rows = new Map(), attempts = [];
+  let sequence = 0;
+  h.context.uid = () => `entry-${++sequence}`;
+  h.context.state.session = { user: { id: 'user' } };
+  h.context.state.household = { id: 'home' };
+  h.context.state.supabase = { from: () => ({ upsert: async entry => {
+    attempts.push(entry);
+    if (committed || attempts.length > 1) rows.set(entry.id, entry);
+    return { error: attempts.length === 1 ? new Error('network failure') : null };
+  } }) };
+  h.start(); h.advance(30);
+  await h.context.stopCareTimer();
+  h.context.careTimer = h.context.storedCareTimer();
+  h.advance(10); h.context.renderCareTimer();
+  expect(h.elements.get('#careTimerClock').textContent).toBe('00:30:00');
+  await h.context.stopCareTimer();
+  expect(attempts[1]).toEqual(attempts[0]);
+  expect(rows.size).toBe(1);
+  expect([...rows.values()][0].sleepMinutes).toBe(30);
+  expect(h.context.state.growthEntries).toHaveLength(1);
+});
+
+test('concurrent end clicks issue only one write', async () => {
+  const h = harness(); let finish, writes = 0;
+  h.context.state.session = { user: { id: 'user' } };
+  h.context.state.supabase = { from: () => ({ upsert: () => {
+    writes++; return new Promise(resolve => { finish = resolve; });
+  } }) };
+  h.start(); const first = h.context.stopCareTimer();
+  await h.context.stopCareTimer();
+  expect(writes).toBe(1);
+  finish({ error: null }); await first;
+  expect(h.context.state.growthEntries).toHaveLength(1);
 });
