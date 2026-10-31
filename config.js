@@ -102,7 +102,7 @@ window.FAMILY_CONFIG = {
 
   const modules = [
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
-    { name: "growth-delete-sync", version: "20261018-review-performance-v1" },
+    { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "english-stories", version: "20261029-three-new-stories-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
@@ -189,6 +189,8 @@ window.FAMILY_CONFIG = {
     { name: "family-admin", version: "20261018-startup-review-v1", style: false },
     { name: "deferred-tabs", version: "20261018-parenting-chat-v1", style: false },
     { name: "compact-family", version: "20261031-visible-sleep-controls-v1" },
+    { name: "family-sleep", version: "20261031-shared-sleep-v1", style: false },
+    { name: "growth-swipe-delete", version: "20261031-swipe-delete-v1" },
     { name: "nova-family", version: "20261017-design-harmony-v1" },
     { name: "travel-sharing", version: "20261023-family-review-fixes-v1", style: false },
     { name: "travel-data", version: "20261023-family-review-fixes-v1", style: false },

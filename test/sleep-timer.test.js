@@ -13,7 +13,7 @@ function harness() {
   const storage = new Map(), elements = new Map(), messages = [];
   let now = new Date(2026, 9, 31, 23, 30).getTime();
   const context = {
-    careTimer: null, careTimerSaveInProgress: false,
+    careTimer: null, careTimerSaveInProgress: false, window: {},
     CARE_TIMER_KEY: 'timer', GROWTH_STORAGE_KEY: 'growth',
     state: { babies: [{ id: 'baby', name: '아기' }], activeBabyId: 'baby', growthEntries: [], supabase: null },
     Date: class extends Date { static now() { return now; } },

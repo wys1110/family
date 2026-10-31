@@ -1762,6 +1762,7 @@ function startCareTimerFromEvent(event) {
   const button = event.target.closest("[data-care-timer]");
   if (!button) return;
   if (!activeBaby()) { openBabyDialog(); toast("아기 프로필을 먼저 만들어주세요"); return; }
+  if (button.dataset.careTimer === "sleep" && window.FAMILY_SLEEP?.enabled()) return window.FAMILY_SLEEP.start();
   if (careTimer) { toast("진행 중인 기록을 먼저 멈춰주세요"); return; }
   const definition = careTimerDefinition(button.dataset.careTimer);
   if (!definition) return;
@@ -1819,6 +1820,7 @@ function switchCareTimerSide() {
 }
 
 function cancelCareTimer() {
+  if (careTimer?.sharedId && window.FAMILY_SLEEP?.enabled()) return window.FAMILY_SLEEP.cancel();
   if (!careTimer || careTimerSaveInProgress) return;
   if (!window.confirm("진행 중인 타이머를 저장하지 않고 취소할까요?")) return;
   careTimer = null;
@@ -1829,6 +1831,7 @@ function cancelCareTimer() {
 }
 
 async function stopCareTimer() {
+  if (window.FAMILY_SLEEP?.enabled() && (careTimer?.sharedId || window.FAMILY_SLEEP.hasPending())) return window.FAMILY_SLEEP.stop();
   if (!careTimer || careTimerSaveInProgress) return;
   careTimer.endedAt ??= Date.now();
   careTimer.entryId ||= uid();
