@@ -9,5 +9,5 @@ test('keeps care patterns expanded before the recent-record timeline', () => {
   expect(script).not.toContain('성장 분석 보기');
   expect(script).toContain("for (const selector of ['.care-pattern-section', '.integrated-care-summary', '#growthInsightRow'])");
   expect(script).toContain('beforeHistory.after(history);');
-  expect(config).toContain('{ name: "compact-family", version: "20261017-design-harmony-v1" }');
+  expect(config).toContain('{ name: "compact-family", version: "20261031-visible-sleep-controls-v1" }');
 });
