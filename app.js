@@ -58,7 +58,7 @@ const FAMILY_VERSES = [
   { text: "형제가 연합하여 동거함이 어찌 그리 선하고 아름다운고.", reference: "시편 133:1" },
   { text: "평안의 매는 줄로 성령이 하나 되게 하신 것을 힘써 지키라.", reference: "에베소서 4:3" },
 ];
-const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], calendarLayout: "month", calendarMember: "", growthFilter: "all", growthFilterBabyId: null, growthCategory: "", growthFrom: "", growthTo: "", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
+const state = { viewDate: startOfMonth(new Date()), selectedDate: dateKey(new Date()), activeView: storedActiveView(), quickMember: "가족", familyMembers: [...DEFAULT_FAMILY_MEMBERS], calendarLayout: "list", calendarMember: "", growthFilter: "all", growthFilterBabyId: null, growthCategory: "", growthFrom: "", growthTo: "", growthSummaryPeriod: storedGrowthSummaryPeriod(), activeBabyId: null, babies: [], archivedBabies: [], events: [], growthEntries: [], wallpapers: readLocalWallpapers(), supabase: null, session: null, household: null, householdRole: null, authReady: false, onboardingPrompted: false };
 // Feature modules loaded after the core need a read-only way to identify the
 // current family context without reaching into app internals.
 window.FAMILY_APP_STATE = state;
