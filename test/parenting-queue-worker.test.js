@@ -23,3 +23,12 @@ test('a failed database delivery retries the same answer without a second Codex 
  await runWorker(rpc,{signal:controller.signal,reply,pause:async()=>{}});
  expect(reply).toHaveBeenCalledOnce(); expect(finishCalls).toBe(2);
 });
+
+test.each([false,true])('queue checks quickly when healthy and backs off after connection failure (%s)',async failed=>{
+ const controller=new AbortController();
+ const rpc=vi.fn(async()=>{if(failed)throw Error('offline');return null;});
+ const pause=vi.fn(async()=>{controller.abort();});
+ await runWorker(rpc,{signal:controller.signal,pause});
+ expect(pause.mock.calls[0][0]).toBe(failed ? 10000 : 2000);
+ expect(rpc).toHaveBeenCalledOnce();
+});
