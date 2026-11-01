@@ -19,13 +19,9 @@
 .assistant-child pre { font: inherit; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .assistant-child p { font-size: 12px; line-height: 1.6; color: var(--nova-muted); margin: 4px 0 0; }
 .assistant-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 8px 0 16px; }
-.assistant-saved { min-width: 0; flex: 1; }
-.assistant-saved summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nova-muted); }
 #assistantView [data-assistant-clear] { flex-shrink: 0; border: 0; padding: 8px 0; background: transparent; color: var(--nova-muted); font-size: 13px; }
 #assistantSavedStatus, #assistantQueueStatus, #assistantActionStatus { color: var(--nova-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 #assistantQueueStatus { padding: 10px 12px; border-radius: 10px; background: var(--nova-soft); margin: 0 0 20px; }
-#assistantSavedList { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
-#assistantSavedList button { width: 100%; padding: 12px; border: 1px solid var(--nova-line); border-radius: 12px; background: var(--nova-soft); color: var(--nova-text); text-align: left; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .assistant-welcome { padding: 16px 0 24px; }
 .assistant-welcome h3 { margin: 0 0 10px; font-size: 19px; letter-spacing: -.035em; line-height: 1.4; word-break: keep-all; }
 .assistant-welcome p { margin: 0; color: var(--nova-muted); font-size: 14px; line-height: 1.7; }
@@ -39,7 +35,7 @@
 .assistant-message p { margin: 0; font-size: 15px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
 .assistant-message-user p { padding: 14px 16px; border-radius: 18px 18px 5px 18px; background: var(--nova-lilac); }
 .assistant-message-assistant .assistant-author::before, .assistant-message-notice .assistant-author::before { content: '✧'; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 9px; color: var(--nova-accent); background: var(--nova-soft); }
-.assistant-message-assistant p, .assistant-message-notice p { margin-left: 32px; }
+.assistant-message-assistant p, .assistant-message-notice p { margin-left: 32px; padding: 14px 16px; border-radius: 18px 18px 18px 5px; background: var(--nova-soft); }
 .assistant-recovery { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0 32px; }
 #assistantView .assistant-recovery button { padding: 8px 13px; border: 1px solid var(--nova-line); border-radius: 10px; background: var(--nova-card); color: var(--nova-accent); font-size: 13px; }
 #assistantActionStatus { flex-basis: 100%; margin: 0; }
