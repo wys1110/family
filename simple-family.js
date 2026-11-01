@@ -65,7 +65,7 @@
     const analysis = document.createElement('details'); analysis.className = 'simple-analysis';
     const analysisTitle = document.createElement('summary'); analysisTitle.textContent = '돌봄 분석과 성장 그래프'; analysis.append(analysisTitle);
     for (const selector of ['.integrated-care-summary', '#growthInsightRow']) { const node = $(selector); if (node) analysis.append(node); }
-    if (history) history.after(analysis); else journal?.append(analysis);
+    if (history) history.before(analysis); else journal?.append(analysis);
     const profileTools = document.createElement('details'); profileTools.className = 'simple-profile-tools';
     const profileCaption = document.createElement('summary'); profileCaption.textContent = '아이 관리'; profileTools.append(profileCaption);
     for (const selector of ['#growthView .baby-header-actions']) { const node = $(selector); if (node) profileTools.append(node); }

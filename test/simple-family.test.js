@@ -72,7 +72,8 @@ test('care circle stays visible before records while other analysis stays collap
   const summary=f.document.querySelector('.compact-today');
   expect(pattern.parentElement).toBe(f.journal);
   expect(f.journal.children.indexOf(pattern)).toBe(f.journal.children.indexOf(summary)+1);
-  expect(f.journal.children.indexOf(history)).toBe(f.journal.children.indexOf(pattern)+1);
+  expect(f.journal.children.indexOf(analysis)).toBe(f.journal.children.indexOf(pattern)+1);
+  expect(f.journal.children.indexOf(history)).toBe(f.journal.children.indexOf(analysis)+1);
   expect(analysis.open).toBe(false);
   expect(f.document.querySelector('.integrated-care-summary').parentElement).toBe(analysis);
   expect(f.document.querySelector('#growthInsightRow').parentElement).toBe(analysis);
