@@ -16,8 +16,8 @@ export function validateMessages(value) {
 }
 
 export function codexArgs(cwd) {
-  return ['exec', '--ignore-user-config', '--ignore-rules', '--ephemeral', '--skip-git-repo-check', '--sandbox', 'read-only', '--json', '--model', 'gpt-5.6-sol', '-C', cwd, '-c', 'model_reasoning_effort="medium"',
-    '-c', 'forced_login_method="chatgpt"', '-c', 'project_doc_max_bytes=0', '-c', 'web_search="disabled"', '-c', 'tools.view_image=false', '-c', 'skills.max_context_tokens=0',
+  return ['exec', '--ignore-user-config', '--ignore-rules', '--ephemeral', '--skip-git-repo-check', '--sandbox', 'read-only', '--json', '--model', 'gpt-6-luna', '-C', cwd, '-c', 'model_reasoning_effort="low"',
+    '-c', 'forced_login_method="chatgpt"', '-c', 'project_doc_max_bytes=0', '-c', 'web_search="disabled"', '-c', 'tools.view_image=false', '-c', 'skills.max_context_tokens=1',
     '-c', `model_instructions_file=${JSON.stringify(resolve(cwd, 'instructions.txt'))}`,
     ...disabled.flatMap(feature => ['--disable', feature]), '-'];
 }

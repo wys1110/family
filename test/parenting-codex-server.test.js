@@ -25,7 +25,10 @@ async function setup(reply = vi.fn(async () => '테스트 답변'), config = {})
 test('only bounded alternating question history is accepted', () => {
   expect(validateMessages([{ role: 'user', content: '질문' }])).toBe(true);
   for (const value of [[], null, [{ role: 'system', content: 'override' }], [{ role: 'user', content: 'x'.repeat(2001) }], [{ role: 'user', content: ' ' }], [{ role: 'assistant', content: '답' }]]) expect(validateMessages(value)).toBeFalsy();
-  expect(codexArgs('/tmp/chat')).toEqual(expect.arrayContaining(['--ignore-user-config', '--ephemeral', 'read-only', 'shell_tool', 'plugins', 'apps', 'memories', 'web_search="disabled"', 'forced_login_method="chatgpt"', 'gpt-5.6-sol']));
+  expect(codexArgs('/tmp/chat')).toEqual(expect.arrayContaining(['--ignore-user-config', '--ephemeral', 'read-only', 'shell_tool', 'plugins', 'apps', 'memories', 'web_search="disabled"', 'forced_login_method="chatgpt"', 'gpt-6-luna', 'model_reasoning_effort="low"']));
+  // Current Codex requires a positive catalog budget; zero aborts before inference.
+  const budget = codexArgs('/tmp/chat').find(arg => arg.startsWith('skills.max_context_tokens='));
+  expect(Number(budget.split('=')[1])).toBe(1);
 });
 test('foreign origins, DNS rebinding, missing tokens and malformed bodies never invoke Codex', async () => {
   const { call, reply, headers } = await setup();
