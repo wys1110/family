@@ -91,36 +91,46 @@ html[data-family-theme-choice="black"] body {
 
 /* Nova: the canonical palette for the complete family UI. */
 html[data-family-design="nova"][data-family-theme-choice="white"] {
-  --nova-bg: #f6f5f9;
+  --nova-bg: #f8f4ff;
   --nova-card: #ffffff;
-  --nova-soft: #efedf5;
-  --nova-text: #262337;
-  --nova-muted: #726d84;
-  --nova-accent: #7053ca;
-  --nova-accent-deep: #5337ab;
+  --nova-soft: #f0eaf8;
+  --nova-text: #25212a;
+  --nova-muted: #706779;
+  --nova-accent: #7e57c2;
+  --nova-accent-deep: #63449c;
   --nova-on-accent: #ffffff;
-  --nova-lilac: #e8defa;
-  --nova-peach: #f8e5d7;
+  --nova-lilac: #eee5fa;
+  --nova-peach: #ffeadf;
   --nova-mint: #dceee7;
-  --nova-line: #e7e3ef;
+  --nova-line: #e9e2ee;
   --nova-shadow: 0 8px 30px rgba(44, 29, 78, .045);
   --nova-danger: #aa3f56;
+  --simple-sleep: #5260af;
+  --simple-feed: #af5035;
+  --simple-diaper: #916008;
+  --simple-feed-soft: #ffeadf;
+  --simple-diaper-soft: #fff2dc;
 }
 html[data-family-design="nova"][data-family-theme-choice="black"] {
-  --nova-bg: #10111c;
-  --nova-card: #1b1c2c;
-  --nova-soft: #25263a;
-  --nova-text: #f0edf9;
-  --nova-muted: #aaa7bd;
-  --nova-accent: #b9a3ff;
+  --nova-bg: #17161d;
+  --nova-card: #24232c;
+  --nova-soft: #302c3a;
+  --nova-text: #f4f1f6;
+  --nova-muted: #bdb7c6;
+  --nova-accent: #c7a9ed;
   --nova-accent-deep: #9674f1;
   --nova-on-accent: #1b1038;
   --nova-lilac: #39314f;
   --nova-peach: #493630;
   --nova-mint: #263f3b;
-  --nova-line: #343449;
+  --nova-line: #423d4b;
   --nova-shadow: 0 10px 35px rgba(0, 0, 0, .14);
   --nova-danger: #ff9caf;
+  --simple-sleep: #b6bde9;
+  --simple-feed: #ffb398;
+  --simple-diaper: #ffcd83;
+  --simple-feed-soft: #493630;
+  --simple-diaper-soft: #403626;
 }
 html[data-family-design="nova"][data-family-theme-choice] {
   --bg: var(--nova-bg) !important;
@@ -154,18 +164,18 @@ html[data-family-design="nova"][data-family-theme-choice] body {
 }
 /* Theme thumbnails represent both choices regardless of the active theme. */
 html[data-family-design="nova"] [data-theme-option="white"] .theme-preview {
-  --preview-bg: #f6f5f9 !important;
+  --preview-bg: #f8f4ff !important;
   --preview-surface: #ffffff !important;
-  --preview-accent: #7053ca !important;
-  --preview-highlight: #e8defa !important;
-  --preview-text: #262337 !important;
+  --preview-accent: #7e57c2 !important;
+  --preview-highlight: #eee5fa !important;
+  --preview-text: #25212a !important;
 }
 html[data-family-design="nova"] [data-theme-option="black"] .theme-preview {
-  --preview-bg: #10111c !important;
-  --preview-surface: #1b1c2c !important;
-  --preview-accent: #b9a3ff !important;
+  --preview-bg: #17161d !important;
+  --preview-surface: #24232c !important;
+  --preview-accent: #c7a9ed !important;
   --preview-highlight: #39314f !important;
-  --preview-text: #f0edf9 !important;
+  --preview-text: #f4f1f6 !important;
 }
 
 /* Care clock palette: the same semantic categories on light and dark bands. */
@@ -207,4 +217,14 @@ html[data-family-theme-choice="black"] {
   --theme-growth-height: #ed96b1;
   --theme-growth-weight: #91b6e6;
   --theme-growth-head: #a1ce91;
+}
+
+/* Keep light/dark settings swatches stable regardless of the active theme. */
+html[data-family-design="nova"] [data-theme-option="white"] {
+  --preview-bg: #f8f4ff !important; --preview-surface: #fff !important;
+  --preview-accent: #7e57c2 !important; --preview-highlight: #ffeadf !important; --preview-text: #25212a !important;
+}
+html[data-family-design="nova"] [data-theme-option="black"] {
+  --preview-bg: #17161d !important; --preview-surface: #24232c !important;
+  --preview-accent: #c7a9ed !important; --preview-highlight: #493630 !important; --preview-text: #f4f1f6 !important;
 }

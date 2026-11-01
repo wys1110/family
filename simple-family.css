@@ -1,0 +1,150 @@
+/* C: lavender and peach. Colors live in theme-critical.css. */
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] { scroll-padding: 24px 0 170px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; background-image: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell { width: min(100%, 780px); padding: 0 16px calc(95px + env(safe-area-inset-bottom)); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family][data-simple-quick="true"] .app-shell { padding-bottom: calc(170px + env(safe-area-inset-bottom)); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell main { padding-bottom: 24px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell .topbar { position: static; min-height: 100px; padding: 22px 4px 18px; background: transparent !important; border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar > div:first-child { display: block; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar :is(.eyebrow,.nova-brand-mark) { display: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar h1 { display: grid; gap: 4px; margin: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar h1 span { font-size: 13px; font-weight: 400; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar h1 strong { font-size: 34px; font-weight: 750; line-height: 1.2; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar-account-actions { gap: 2px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar-account-actions #desktopLogoutButton { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell .view-tabs[hidden] { display: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,input,select,textarea) { font-family: inherit; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,input,select) { touch-action: manipulation; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,a,input,select,textarea,summary):focus-visible { outline: 3px solid var(--nova-accent); outline-offset: 3px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-bottom { position: fixed; inset: auto 0 0; z-index: 70; max-width: 780px; margin: auto; padding: 0 12px env(safe-area-inset-bottom); background: var(--nova-card); border-top: 1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; padding: 6px 0 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-height: 54px; border: 0; border-radius: 12px; background: transparent; color: var(--nova-muted); font-size: 11px; font-weight: 550; padding: 5px 2px; box-shadow: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation button[aria-current="page"] { color: var(--nova-accent); background: var(--nova-lilac); font-weight: 700; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-icon { display: inline-block; width: 23px; height: 23px; flex: 0 0 23px; background: currentColor; mask: var(--simple-icon) center / contain no-repeat; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="calendar"] { --simple-icon: url('assets/icons/calendar.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="growth"] { --simple-icon: url('assets/icons/growth.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="book"] { --simple-icon: url('assets/icons/book.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="settings"] { --simple-icon: url('assets/icons/settings.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="crown"] { --simple-icon: url('assets/icons/crown.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="chat"] { --simple-icon: url('assets/icons/chat.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="map"] { --simple-icon: url('assets/icons/travel.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="sleep"] { --simple-icon: url('assets/icons/moon.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="feed"] { --simple-icon: url('assets/icons/bottle.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="diaper"] { --simple-icon: url('assets/icons/diaper.svg'); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"] { background: none; mask: none; position: relative; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"]::after { content: '•••'; position: absolute; inset: -6px 0 0; font-size: 22px; letter-spacing: 1px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 10px 2px 4px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick[hidden] { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button { display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 11px; min-height: 50px; padding: 8px 3px; font-size: 14px; font-weight: 600; box-shadow: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick .simple-icon { width: 20px; height: 20px; flex-basis: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="sleep"] { color: var(--simple-sleep); background: var(--nova-lilac); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="feed"] { color: var(--simple-feed); background: var(--simple-feed-soft); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="diaper"] { color: var(--simple-diaper); background: var(--simple-diaper-soft); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button:disabled { opacity: .45; cursor: default; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more { width: min(440px,calc(100% - 32px)); border: 1px solid var(--nova-line); border-radius: 20px; padding: 20px; background: var(--nova-card); color: var(--nova-text); max-height: 80dvh; overflow: auto; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more::backdrop { background: color-mix(in srgb,var(--nova-text) 35%,transparent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more h2 { margin: 0; font-size: 24px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more button { min-height: 48px; color: var(--nova-accent); background: transparent; border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more-items button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 4px; text-align: left; color: var(--nova-text); border-bottom: 1px solid var(--nova-line); font-size: 17px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more-items .simple-icon { color: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-care-status { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; padding: 13px 16px; border: 0; border-radius: 14px; margin: 0 0 16px; background: var(--nova-lilac); color: var(--simple-sleep); font-size: 14px; line-height: 1.55; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-care-status[hidden] { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .hero-card:not(.has-wallpaper) { display: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .compact-primary-actions { margin: 0 0 12px; justify-content: flex-end; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .compact-primary-actions h2 { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .compact-primary-actions #addEventButton.fab { width: auto; min-height: 44px; background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border-radius: 12px; padding: 10px 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView #addEventButton.fab { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .calendar-card { padding: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .daily-verse-card { margin: 24px 0 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .calendar-month-list { border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(#calendarView,#growthView,#englishView,#settingsView,#adminView) :is(.calendar-card,.agenda-card,.growth-entry,.settings-card,.english-player-card,.english-story-card,.compact-today,.compact-analysis,.care-pattern-section,.growth-insight-row,.care-timer-card,.family-todo-card) { border-radius: 14px; border-color: transparent !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-page-header { min-height: 44px; margin-bottom: 12px; justify-content: flex-end; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-title-with-mascot { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card:not(.has-wallpaper) { padding: 12px 0; border: 0; background: transparent !important; grid-template-columns: minmax(0,1fr) auto; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card .baby-profile-copy h2 { font-size: 22px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card:not(.has-wallpaper) .baby-dday { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card:not(.has-wallpaper) .baby-edit-button { grid-column: 2; grid-row: 1; margin: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card:not(.has-wallpaper) .wallpaper-actions { position: static; grid-column: 1 / -1; justify-content: flex-end; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView :is(.care-snapshot-heading,.today-care-grid) { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard { padding: 14px; border: 0 !important; border-radius: 14px; background: var(--nova-lilac) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-heading { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-running { background: transparent !important; border: 0 !important; padding: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-status { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerStop { background: var(--simple-sleep) !important; color: var(--nova-on-accent) !important; min-height: 44px; border-radius: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .compact-primary-actions { margin: 8px 0 0; justify-content: flex-end; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-quick-block .growth-quick-grid button { min-height: 60px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-record-tools > summary { min-height: 44px; padding: 12px 0; color: var(--simple-sleep); cursor: pointer; font-size: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .compact-today { padding: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .compact-today-grid { text-align: center; gap: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .compact-today-grid > div + div { border-left: 1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .compact-today-grid strong { font-size: 21px; font-weight: 650; color: var(--simple-feed); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .compact-today-grid > div:last-child strong { color: var(--simple-sleep); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-analysis { border: 0; background: var(--nova-card); border-radius: 14px; padding: 0 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-analysis > summary { min-height: 54px; padding: 16px 0; cursor: pointer; font-size: 16px; font-weight: 600; color: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-analysis > :not(summary) { margin: 12px 0; padding-inline: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-entry { border-radius: 0; border-bottom: 1px solid var(--nova-line) !important; padding: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-list { gap: 0; background: var(--nova-card); border-radius: 14px; overflow: hidden; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-swipe-row { border-radius: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(#settingsView,#englishView,#assistantView,#travelView) { color: var(--nova-text); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #settingsView .settings-card { padding: 18px 16px; margin-bottom: 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #settingsView .settings-heading h2 { font-size: 19px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #settingsView .settings-search-tools > h2 { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #englishView .english-page-header { margin: 0 0 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #englishView .english-page-header :is(h2,.eyebrow) { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #englishView :is(.english-story-player,.english-today-card,.english-library-card) { background: var(--nova-card) !important; border: 1px solid var(--nova-line) !important; border-radius: 14px; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #englishView .english-library-card.active { background: var(--nova-lilac) !important; border-color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #englishView .english-today-card { background: var(--simple-feed-soft) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #travelView :is(.travel-card,.travel-overview,.travel-history-map,.travel-place-card,.travel-empty) { background: var(--nova-card) !important; border-color: var(--nova-line) !important; border-radius: 14px; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #travelView .travel-page-header h2 { font-size: 22px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .sheet-dialog { background: var(--nova-card) !important; color: var(--nova-text); border-radius: 20px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #toast { bottom: calc(175px + env(safe-area-inset-bottom)); }
+
+@media (min-width: 1000px) {
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell { margin-left: max(220px,calc((100vw - 780px + 210px) / 2)); margin-right: auto; padding-bottom: 40px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-bottom { inset: 0 auto 0 0; width: 210px; max-width: none; display: flex; flex-direction: column; padding: 70px 16px 20px; border-top: 0; border-right: 1px solid var(--nova-line); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation { order: -1; display: flex; flex-direction: column; gap: 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation button { flex-direction: row; justify-content: flex-start; gap: 14px; font-size: 16px; padding: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { margin-top: auto; grid-template-columns: 1fr; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family][data-simple-quick="true"] .app-shell { padding-bottom: 40px; }
+}
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-page-header { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .baby-profile-card:not(.has-wallpaper) { padding: 6px 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-profile-tools { margin-top: 12px; color: var(--nova-muted); font-size: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-profile-tools > summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-profile-tools .wallpaper-actions { position: static; margin-top: 12px; display: flex; justify-content: flex-start; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard:not(.is-running) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .simple-record-tools { flex: 1; min-width: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .simple-record-tools[open] { flex-basis: 100%; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .compact-primary-actions { margin: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .compact-primary-actions #addEventButton.fab { font-size: 13px; padding: 8px; background: transparent !important; color: var(--nova-accent) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerRunning { background: transparent !important; color: var(--nova-text) !important; box-shadow: none !important; border-radius: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard :is(#careTimerBaby,#careTimerLabel,#careTimerStarted,#careTimerClock) { color: var(--simple-sleep) !important; -webkit-text-fill-color: var(--simple-sleep) !important; text-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerClock { font-size: 27px; font-weight: 650; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard :is(#careTimerCancel,#careTimerSwitchSide) { min-height: 44px; background: transparent !important; color: var(--simple-sleep) !important; border-color: var(--nova-line) !important; box-shadow: none !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerStop { flex: 1; color: var(--nova-card) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family][data-family-theme-choice="black"] #growthView #careTimerCard #careTimerStop { color: var(--nova-bg) !important; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #assistantView .assistant-heading { margin: 0 0 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #assistantView .assistant-heading h2 { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #assistantView .assistant-chat { border: 0; border-radius: 14px; padding: 18px 16px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #assistantView .assistant-prompts button { background: var(--nova-lilac); color: var(--nova-accent); border: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .growth-section > .section-heading .eyebrow { display: none; }
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-record-filters { margin: 8px 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView .simple-record-filters > summary { min-height: 44px; padding: 12px 4px; cursor: pointer; color: var(--nova-muted); font-size: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerRunning { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; margin: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerRunning[hidden] { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-status { gap: 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerIcon { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerLabel { font-size: 17px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerClock { font-size: 24px; line-height: 1.2; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerStarted { font-size: 11px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard .care-timer-actions { display: flex; flex-direction: column; gap: 3px; margin: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerStop { padding: 10px 14px; white-space: nowrap; font-size: 14px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerCancel { font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard.is-running .simple-record-tools { margin-top: 6px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(#growthView,#calendarView,#settingsView,#englishView,#assistantView,#travelView) { background: transparent !important; }
