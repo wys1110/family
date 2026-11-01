@@ -1,5 +1,22 @@
 (() => {
   const $ = s => document.querySelector(s);
+  const paletteDescriptions = {
+    coral: 'A · 따뜻한 크림 바탕에 코랄, 차분한 보라와 앰버를 더했어요.',
+    ocean: 'B · 맑은 블루 바탕에 민트, 짙은 파랑과 앰버를 더했어요.',
+    lilac: 'C · 은은한 라벤더 바탕에 피치, 인디고와 앰버를 더했어요.',
+  };
+  const choosePalette = (name, updateUrl = true) => {
+    if (!Object.hasOwn(paletteDescriptions, name)) name = 'coral';
+    document.documentElement.dataset.palette = name;
+    document.querySelectorAll('[data-palette-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.paletteChoice === name)));
+    $('#paletteDescription').textContent = paletteDescriptions[name];
+    if (updateUrl) {
+      const url = new URL(location.href);
+      url.searchParams.set('palette', name);
+      history.replaceState(null, '', url);
+    }
+  };
+  choosePalette(new URLSearchParams(location.search).get('palette'), false);
   const labels = {today:'오늘',growth:'성장',care:'육아',stories:'동화',more:'더보기',travel:'여행',settings:'설정'};
   let sleeping = true, timer;
   const say = text => { $('#feedback').textContent=text; $('#feedback').hidden=false; clearTimeout(timer); timer=setTimeout(()=>$('#feedback').hidden=true,3500); };
@@ -24,6 +41,7 @@
   const dark = value => {document.documentElement.toggleAttribute('data-dark',value);$('#darkToggle').checked=value;$('#appearance').setAttribute('aria-label',value?'밝은 화면으로 보기':'어두운 화면으로 보기');};
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
+    if(button.dataset.paletteChoice)choosePalette(button.dataset.paletteChoice);
     if(button.dataset.open)open(button.dataset.open);
     if(button.hasAttribute('data-sleep')){
       sleeping=!sleeping;
