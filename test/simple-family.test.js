@@ -65,3 +65,21 @@ test('wallpaper render ownership and management access survive reorganization',(
   f.journal.hidden=true;expect(f.document.querySelector('.simple-profile-tools').parentElement.id).toBe('growthView');
   f.run();expect(f.document.querySelectorAll('#simpleNavigation')).toHaveLength(1);
 });
+
+test('care circle stays visible before records while other analysis stays collapsed',()=>{
+  const f=fixture(), pattern=f.document.querySelector('.care-pattern-section');
+  const analysis=f.document.querySelector('.simple-analysis'), history=f.document.querySelector('.growth-section');
+  const summary=f.document.querySelector('.compact-today');
+  expect(pattern.parentElement).toBe(f.journal);
+  expect(f.journal.children.indexOf(pattern)).toBe(f.journal.children.indexOf(summary)+1);
+  expect(f.journal.children.indexOf(analysis)).toBe(f.journal.children.indexOf(pattern)+1);
+  expect(f.journal.children.indexOf(history)).toBe(f.journal.children.indexOf(analysis)+1);
+  expect(analysis.open).toBe(false);
+  expect(f.document.querySelector('.integrated-care-summary').parentElement).toBe(analysis);
+  expect(f.document.querySelector('#growthInsightRow').parentElement).toBe(analysis);
+  f.events.familybabychange(); f.events.familycontextchange(); f.run();
+  expect(f.document.querySelector('.care-pattern-section')).toBe(pattern);
+  expect(pattern.parentElement).toBe(f.journal);
+  expect(f.document.querySelectorAll('.simple-analysis')).toHaveLength(1);
+  expect(analysis.open).toBe(false);
+});
