@@ -7,20 +7,26 @@ function load({ origin, fetch, store } = {}) {
     constructor() { this.children=[]; this.events={}; this.attrs={}; this.hidden=false; this.value=''; this.classList={toggle:vi.fn()}; }
     setAttribute(name,value){this.attrs[name]=value;}
     append(...children){this.children.push(...children);}
+    prepend(...children){this.children=this.children.filter(child=>!children.includes(child));this.children.unshift(...children);}
+    insertBefore(child,before){this.children=this.children.filter(item=>item!==child);const index=this.children.indexOf(before);this.children.splice(index<0?this.children.length:index,0,child);}
     appendChild(child){this.append(child);return child;}
     replaceChildren(){this.children=[];}
     addEventListener(name,fn){this.events[name]=fn;}
     focus(){this.focused=true;}
     scrollIntoView(){this.scrolled=true;}
+    get firstElementChild(){return this.children[0];}
     get lastElementChild(){return this.children.at(-1);}
   }
   const input=new Element(),form=new Element(),log=new Element(),welcome=new Element(),send=new Element(),clear=new Element();
+  form.requestSubmit=vi.fn(()=>form.events.submit({preventDefault(){}}));
   const prompts=['수유 간격은 어떻게 잡으면 좋을까요?','밤에 자주 깨는데 무엇을 살펴볼까요?'].map(text=>Object.assign(new Element(),{textContent:text}));
   const status=new Element(),privacy=new Element(),babySelect=new Element(),useRecords=new Element(),contextPreview=new Element(); useRecords.checked=true;
-  const savedList=new Element(),savedStatus=new Element(),savedCount=new Element(),savedSection=new Element();
+  const savedStatus=new Element();
+  const older=new Element();
   const queueStatus=new Element(),cancel=new Element(),retry=new Element(),resolve=new Element(),actionStatus=new Element();
-  const controls={'#assistantQueueStatus':queueStatus,'#assistantCancel':cancel,'#assistantRetry':retry,'#assistantResolve':resolve,'#assistantActionStatus':actionStatus,'#assistantSavedList':savedList,'#assistantSavedStatus':savedStatus,'#assistantSavedCount':savedCount,'.assistant-saved':savedSection,'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
+  const controls={'#assistantQueueStatus':queueStatus,'#assistantCancel':cancel,'#assistantRetry':retry,'#assistantResolve':resolve,'#assistantActionStatus':actionStatus,'#assistantSavedStatus':savedStatus,'#assistantBaby':babySelect,'#assistantUseRecords':useRecords,'#assistantContext':contextPreview,'.assistant-connection':status,'#assistantPrivacy':privacy,'textarea':input,'form':form,'[role="log"]':log,'.assistant-welcome':welcome,'[type="submit"]':send,'[data-assistant-clear]':clear};
   const views=[new Element(),new Element()];
+  controls['#assistantOlder']=older;
   const tabs=['calendar','growth','assistant','travel'].map(view=>Object.assign(new Element(),{dataset:{view}}));
   const main=new Element(); main.appendChild=child=>{views.push(child);}; main.querySelectorAll=()=>views;
   const nav=new Element(); nav.querySelectorAll=()=>tabs;
@@ -35,7 +41,7 @@ function load({ origin, fetch, store } = {}) {
   class Clock extends Date { static now(){return now;} }
   vm.runInNewContext(source,{window,document,fetch,AbortController,crypto:{randomUUID:()=> 'new-id'},Date:Clock,setInterval:(fn,ms)=>{poll=fn;pollInterval=ms;},localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
   const submit=value=>{input.value=value;return form.events.submit({preventDefault(){}});};
-  return {queueStatus,cancel,retry,resolve,actionStatus,poll:(ms=5000)=>{now+=ms;if(now-lastTick>=pollInterval){lastTick=now;poll();}},savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
+  return {older,queueStatus,cancel,retry,resolve,actionStatus,poll:(ms=5000)=>{now+=ms;if(now-lastTick>=pollInterval){lastTick=now;poll();}},savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
 }
 
 test('the chat is deferred and remains explicitly disconnected without sending data',()=>{
@@ -69,6 +75,20 @@ test('questions remain text, cannot exceed the input limit, and never fabricate 
  expect(app.input.value).toBe('');expect(app.send.disabled).toBe(true);
 });
 
+test('Enter sends while Shift+Enter and Korean composition leave the draft intact',async()=>{
+ const app=load();
+ app.input.value='엔터로 보낼 질문';app.input.events.input();
+ for (const extra of [{shiftKey:true},{isComposing:true},{keyCode:229}]) {
+   const event={key:'Enter',preventDefault:vi.fn(),...extra};
+   app.input.events.keydown?.(event);
+   expect(event.preventDefault).not.toHaveBeenCalled();expect(app.log.children).toHaveLength(0);
+ }
+ const enter={key:'Enter',preventDefault:vi.fn()};
+ app.input.events.keydown?.(enter);
+ expect(enter.preventDefault).toHaveBeenCalledOnce();expect(app.log.children[0].children[1].textContent).toBe('엔터로 보낼 질문');
+ app.input.events.keydown?.(enter);expect(app.log.children).toHaveLength(2);
+});
+
 test('suggestions prepare editable questions, drafts survive navigation, and family changes clear private text',()=>{
  const app=load();
  app.prompts[0].events.click();
@@ -83,11 +103,24 @@ test('suggestions prepare editable questions, drafts survive navigation, and fam
  expect(app.welcome.hidden).toBe(false);expect(app.clear.hidden).toBe(true);
 });
 
-test('new conversation resets the screen without deleting saved questions',()=>{
+test('new topic keeps earlier bubbles visible without sending them as context',()=>{
  const app=load();app.submit('질문');
- app.clear.events.click();expect(app.log.children).toHaveLength(0);
+ app.clear.events.click();expect(app.log.children).toHaveLength(2);
  app.nav.events.click({target:{closest:()=>({dataset:{view:'assistant'}})}});
  expect(app.window.FAMILY_APP_STATE.activeView).toBe('assistant');
+});
+
+test('new topic and record opt-out preserve saved bubbles but exclude their context',async()=>{
+ const rows=[{id:'first',question:'기존 질문',answer:'기존 답변',status:'completed',created_at:'2026-11-01'}];
+ const store={context:()=>({}),status:async()=>({online:true}),list:async()=>rows,enqueue:vi.fn(async()=>{})};
+ for(const action of ['clear','useRecords']) {
+   const app=load({store});await vi.waitFor(()=>expect(app.log.children).toHaveLength(2));
+   if(action==='clear')app.clear.events.click();else {app.useRecords.checked=false;app.useRecords.events.change();}
+   expect(app.log.children).toHaveLength(2);
+   app.window.switchView('assistant');app.poll();await Promise.resolve();await Promise.resolve();
+   await app.submit('새 주제');expect(store.enqueue.mock.calls.at(-1)[1].messages).toEqual([]);
+   expect(app.log.children[0].children[1].textContent).toBe('기존 질문');
+ }
 });
 
 test('local chat sends only typed conversation and blocks double submit',async()=>{
@@ -164,8 +197,7 @@ test('signed-in public app queues questions and restores the saved answer withou
  rows=[{...rows[0],status:'completed',answer:'DB 답변'}]; app.poll();
  await vi.waitFor(()=>expect(app.log.children[1].children[1].textContent).toBe('DB 답변'));
  const reloaded=load({origin:'https://wys1110.github.io',store});
- await vi.waitFor(()=>expect(reloaded.savedList.children).toHaveLength(1));
- reloaded.savedList.children[0].events.click();
+ await vi.waitFor(()=>expect(reloaded.log.children).toHaveLength(2));
  expect(reloaded.log.children[1].children[1].textContent).toBe('DB 답변');
 });
 
@@ -175,17 +207,17 @@ test('late saved history is discarded after switching family',async()=>{
  const app=load({store}); await vi.waitFor(()=>expect(finish).toBeTypeOf('function')); app.events.familycontextchange();
  finish([{id:'old',question:'private previous family',status:'completed',answer:'old answer'}]);
  await Promise.resolve(); await Promise.resolve();
- expect(app.savedList.children).toHaveLength(0);expect(app.log.children).toHaveLength(0);
+ expect(app.log.children).toHaveLength(0);
 });
 
-test('reload restores a pending question and idle polls preserve list focus',async()=>{
+test('reload restores a pending question and idle polls preserve message nodes and draft focus',async()=>{
  const rows=[{id:'pending',question:'waiting question',status:'queued',created_at:'2026-10-18'}];
  const store={context:()=>({}),list:async()=>rows,status:async()=>({registered:true,online:true})};
  const app=load({store});app.window.switchView('assistant');
  await vi.waitFor(()=>expect(app.log.children[0]?.children[1].textContent).toBe('waiting question'));
- const button=app.savedList.children[0];button.focus();app.poll();
+ const bubble=app.log.children[0];app.input.focus();app.poll();
  await Promise.resolve();await Promise.resolve();
- expect(app.savedList.children[0]).toBe(button);expect(button.focused).toBe(true);
+ expect(app.log.children[0]).toBe(bubble);expect(app.input.focused).toBe(true);
 });
 
 test('account-wide pending survives changing child and database failures are not shown as Mac offline',async()=>{
@@ -206,8 +238,8 @@ test('retry only restores question, keeps current child/settings and excludes pr
  let rows=[{id:'failed',baby_id:'a',question:'다시 물어볼 질문',status:'failed',created_at:'2026-10-25'}];
  const store={context:()=>({}),list:async()=>rows,status:async()=>({registered:true,online:true,pending:null}),enqueue:vi.fn(async()=>{rows=[];})};
  const app=load({store});app.window.FAMILY_APP_STATE.babies=[{id:'a',name:'A'},{id:'b',name:'B'}];app.window.switchView('assistant');
- await vi.waitFor(()=>expect(app.savedList.children).toHaveLength(1));
- app.savedList.children[0].events.click();app.retry.events.click();
+ await vi.waitFor(()=>expect(app.log.children).toHaveLength(2));
+ app.retry.events.click();
  expect(app.input.value).toBe('다시 물어볼 질문');expect(store.enqueue).not.toHaveBeenCalled();
  app.babySelect.value='b';app.babySelect.events.change();app.useRecords.checked=false;app.useRecords.events.change();
  await app.submit(app.input.value);
@@ -223,7 +255,7 @@ test('uncertain submission reuses its ID and payload; confirmed receipt is not e
  expect(store.enqueue.mock.calls[1][1]).toEqual(store.enqueue.mock.calls[0][1]);
  expect(app.resolve.hidden).toBe(true);
  const stored={context:()=>({}),list:async()=>[received],status:async()=>({registered:true,online:true,pending:null}),find:async()=>received,enqueue:vi.fn()};
- const restored=load({store:stored});await vi.waitFor(()=>expect(restored.savedList.children).toHaveLength(1));
+ const restored=load({store:stored});await vi.waitFor(()=>expect(restored.log.children).toHaveLength(2));
  expect(stored.enqueue).not.toHaveBeenCalled();
 });
 
@@ -239,8 +271,8 @@ test('a follow-up keeps earlier question and answer above it while queued and af
  let rows=[{id:'first',question:'첫 질문',answer:'첫 답변',status:'completed',created_at:'2026-11-01'}];
  const store={context:()=>({}),status:async()=>({registered:true,online:true}),list:async()=>rows,enqueue:vi.fn(async(_,q)=>{rows=[{id:q.id,question:q.question,status:'queued',created_at:'2026-11-01'},...rows];})};
  const app=load({store});app.window.switchView('assistant');
- await vi.waitFor(()=>expect(app.savedList.children).toHaveLength(1));
- app.savedList.children[0].events.click();
+ await vi.waitFor(()=>expect(app.log.children).toHaveLength(2));
+
  await app.submit('이어지는 질문');
  expect(store.enqueue.mock.calls[0][1].messages).toEqual([{role:'user',content:'첫 질문'},{role:'assistant',content:'첫 답변'}]);
  expect(app.log.children.map(row=>row.children[1].textContent).slice(0,3)).toEqual(['첫 질문','첫 답변','이어지는 질문']);
@@ -249,6 +281,63 @@ test('a follow-up keeps earlier question and answer above it while queued and af
  app.poll();await Promise.resolve();await Promise.resolve();
  expect(app.log.children).toHaveLength(4);
  app.events.familycontextchange();expect(app.log.children).toHaveLength(0);
+});
+
+test('opening and reopening chat restores saved bubbles chronologically without selecting a history item',async()=>{
+ const rows=[{id:'second',question:'두 번째 질문',answer:'두 번째 답변',status:'completed',created_at:'2026-11-01T11:00:00Z'},{id:'first',question:'첫 질문',answer:'첫 답변',status:'completed',created_at:'2026-11-01T10:00:00Z'}];
+ const store={context:()=>({}),status:async()=>({online:true}),list:async()=>rows};
+ for (let attempt=0;attempt<2;attempt++) {
+   const app=load({store});app.window.switchView('assistant');
+   await vi.waitFor(()=>expect(app.log.children.map(row=>row.children[1].textContent)).toEqual(['첫 질문','첫 답변','두 번째 질문','두 번째 답변']));
+   app.window.switchView('calendar');app.window.switchView('assistant');app.poll();
+   await Promise.resolve();await Promise.resolve();expect(app.log.children).toHaveLength(4);
+ }
+});
+
+test('older messages prepend as bubbles without replacing recent turns or the draft',async()=>{
+ const recent=Array.from({length:20},(_,i)=>({id:`recent-${20-i}`,question:`질문 ${20-i}`,answer:`답변 ${20-i}`,status:'completed',created_at:`2026-11-01T10:00:${String(20-i).padStart(2,'0')}Z`}));
+ const older={id:'oldest',question:'오래된 질문',answer:'오래된 답변',status:'completed',created_at:'2026-10-31T10:00:00Z'};
+ const store={context:()=>({}),status:async()=>({online:true}),list:vi.fn(async(_,baby,before)=>before ? [older] : recent)};
+ const app=load({store});app.window.switchView('assistant');await vi.waitFor(()=>expect(app.log.children).toHaveLength(40));
+ app.input.value='작성 중';const recentNode=app.log.children[0];
+ await app.older.events.click?.();
+ expect(app.log.children).toHaveLength(42);expect(app.log.children[0].children[1].textContent).toBe('오래된 질문');
+ expect(app.log.children[2]).toBe(recentNode);expect(app.input.value).toBe('작성 중');
+ expect(store.list.mock.calls.at(-1)[2]).toMatchObject({id:'recent-1'});expect(app.older.hidden).toBe(true);
+ app.poll();await Promise.resolve();await Promise.resolve();expect(app.log.children).toHaveLength(42);
+});
+
+test('late older messages cannot appear after changing families',async()=>{
+ let finish;
+ const recent=Array.from({length:20},(_,i)=>({id:`q-${i}`,question:'현재 가족 질문',answer:'답변',status:'completed',created_at:'2026-11-01'}));
+ const store={context:()=>({}),status:async()=>({online:true}),list:vi.fn(async(_,baby,before)=>before ? new Promise(resolve=>{finish=resolve;}) : recent)};
+ const app=load({store});await vi.waitFor(()=>expect(app.log.children).toHaveLength(40));
+ const pending=app.older.events.click();
+ store.list.mockImplementation(async()=>[]);app.events.familycontextchange();
+ finish([{id:'old',question:'이전 가족 비공개 질문',answer:'이전 답변',status:'completed'}]);await pending;
+ expect(app.log.children).toHaveLength(0);
+});
+
+test('Enter cannot send a second question while the first is being accepted',async()=>{
+ let finish;
+ const store={context:()=>({}),status:async()=>({online:true}),list:async()=>[],enqueue:vi.fn(()=>new Promise(resolve=>{finish=resolve;}))};
+ const app=load({store});await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 연결됨'));
+ app.input.value='첫 질문';app.input.events.input();app.input.events.keydown({key:'Enter',preventDefault(){}});
+ app.input.value='둘째 질문';app.input.events.input();app.input.events.keydown({key:'Enter',preventDefault(){}});
+ expect(store.enqueue).toHaveBeenCalledOnce();finish();await Promise.resolve();
+});
+
+test('slow history restoration inserts old bubbles above a question being submitted without duplicates',async()=>{
+ let restore,accept;
+ const old={id:'old',question:'이전 질문',answer:'이전 답변',status:'completed',created_at:'2026-10-01T00:00:00Z'};
+ let rows=[old];
+ const store={context:()=>({}),status:async()=>({online:true}),list:vi.fn().mockImplementationOnce(()=>new Promise(resolve=>{restore=resolve;})).mockImplementation(async()=>rows),enqueue:vi.fn((_,q)=>new Promise(resolve=>{accept=()=>{rows=[{id:q.id,question:q.question,status:'queued',created_at:new Date().toISOString()},old];resolve();};}))};
+ const app=load({store});await vi.waitFor(()=>expect(restore).toBeTypeOf('function'));
+ const sending=app.submit('지금 질문');restore([old]);
+ await vi.waitFor(()=>expect(app.log.children[0]?.children[1].textContent).toBe('이전 질문'));
+ accept();await sending;
+ expect(app.log.children).toHaveLength(4);
+ expect(app.log.children.map(row=>row.children[1].textContent).slice(0,3)).toEqual(['이전 질문','이전 답변','지금 질문']);
 });
 
 
