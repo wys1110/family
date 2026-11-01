@@ -198,7 +198,7 @@ window.FAMILY_CONFIG = {
     { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
     { name: "parenting-context", version: "20261018-parenting-codex-v1", style: false },
     { name: "parenting-history", version: "20261025-parenting-recovery-v1", style: false },
-    { name: "parenting-assistant", version: "20261025-parenting-recovery-v1" },
+    { name: "parenting-assistant", version: "20261101-parenting-history-v1" },
     { name: "travel", version: "20261018-travel-summary-v1" },
     { name: "simple-family", version: "20261101-lilac-v1" },
   ];

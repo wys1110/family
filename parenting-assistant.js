@@ -10,12 +10,12 @@
   view.innerHTML = `
     <header class="assistant-heading"><div><h2 id="assistantTitle" tabindex="-1">육아 어시스턴트</h2><p>함께 살펴보는 우리 아이의 하루</p></div><span class="assistant-connection">AI 연결 전</span></header>
     <section class="assistant-chat" aria-label="육아 질문 대화">
+      <div class="assistant-toolbar"><details class="assistant-saved" open><summary>대화 히스토리 <span id="assistantSavedCount"></span></summary><p id="assistantSavedStatus" role="status">로그인하면 질문과 답변을 저장해요.</p><div id="assistantSavedList"></div></details><button type="button" data-assistant-clear hidden>새 대화 ＋</button></div><p id="assistantQueueStatus" role="status" hidden></p>
       <section class="assistant-child" aria-label="답변에 참고할 아이 기록">
         <div class="assistant-child-picker"><label for="assistantBaby">답변받을 아이</label><select id="assistantBaby"></select></div>
         <label class="assistant-context-toggle"><input id="assistantUseRecords" type="checkbox" checked> 아이 기록 참고</label>
         <details class="assistant-records"><summary>함께 보낼 기록 확인</summary><pre id="assistantContext"></pre><p>선택한 아이의 생후 일수·성장·최근 7일 수유·대변·수면 요약을 질문과 함께 OpenAI로 보내요.</p></details>
       </section>
-      <div class="assistant-toolbar"><details class="assistant-saved"><summary>지난 질문 <span id="assistantSavedCount"></span></summary><p id="assistantSavedStatus" role="status">로그인하면 질문과 답변을 저장해요.</p><div id="assistantSavedList"></div></details><button type="button" data-assistant-clear hidden>새 대화 ＋</button></div><p id="assistantQueueStatus" role="status" hidden></p>
       <div class="assistant-welcome"><h3>오늘은 무엇이 궁금하세요?</h3><p>수유 · 수면 · 성장, 궁금한 점을 적어 주세요.</p>
         <div class="assistant-prompts" aria-label="질문 예시">
           <button type="button" data-assistant-prompt>수유 간격은 어떻게 잡으면 좋을까요?</button>
@@ -49,12 +49,13 @@
   const actionStatus = view.querySelector('#assistantActionStatus');
   const store = window.FAMILY_PARENTING_HISTORY;
   let selectedBabyId = null;
-  let saved = [], activeQuestion = null, loadingSaved = false, cloudBusy = false;
+  let saved = [], activeQuestion = null, loadingSaved = false, cloudBusy = false, lastSavedCheck = 0;
   const cloudContext = () => store?.context() || null;
   let connection = null, pending = null, generation = 0;
+  const visibleTurns = new Map();
   let history = [], workerStatus = null, uncertain = null, actionBusy = false, activeNotice = null;
   const updateSend = () => { send.disabled = !!pending || cloudBusy || !!uncertain || actionBusy || !input.value.trim() || input.value.length > 2000; };
-  const reset = () => { generation++; pending?.abort(); pending = null; history = []; activeQuestion = null; activeNotice = null; retry.hidden=true; actionStatus.hidden=true; log.setAttribute('aria-busy', 'false'); if (connection) send.textContent = '질문 보내기 ↑'; log.replaceChildren(); input.value = ''; welcome.hidden = false; clear.hidden = true; updateSend(); };
+  const reset = () => { generation++; pending?.abort(); pending = null; history = []; visibleTurns.clear(); activeQuestion = null; activeNotice = null; retry.hidden=true; actionStatus.hidden=true; log.setAttribute('aria-busy', 'false'); if (connection) send.textContent = '질문 보내기 ↑'; log.replaceChildren(); input.value = ''; welcome.hidden = false; clear.hidden = true; updateSend(); };
   const setConnectionText = (status, note) => {
     view.querySelector('.assistant-connection').textContent = status;
     view.querySelector('#assistantPrivacy').textContent = note;
@@ -78,7 +79,7 @@
     fetch('/api/parenting/status', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(status => {
       if (status?.provider !== 'codex-local' || !status.token) throw new Error('offline');
       connection = status.token;
-      setConnectionText('Codex · 5.6 Sol', '연결된 Mac의 Codex 구독으로 답변받아요. 선택한 기록 요약·질문·최근 대화를 OpenAI로 보내요. 새로고침하면 대화가 사라져요. AI 답변은 틀릴 수 있어요.');
+      setConnectionText('Codex · Luna', '연결된 Mac의 Codex 구독으로 답변받아요. 선택한 기록 요약·질문·최근 대화를 OpenAI로 보내요. 새로고침하면 대화가 사라져요. AI 답변은 틀릴 수 있어요.');
       send.textContent = '질문 보내기 ↑';
     }).catch(() => setConnectionText('연결 끊김', 'Mac의 채팅 서버와 Tailscale 연결을 확인한 뒤 새로고침해 주세요.'));
   }
@@ -88,6 +89,7 @@
     const author = document.createElement('span'); author.className = 'assistant-author'; author.textContent = label;
     const body = document.createElement('p'); body.textContent = text;
     message.append(author, body); log.appendChild(message);
+    return message;
   };
   const elapsed = date => {
     const seconds=Math.max(0,Math.floor((Date.now()-Date.parse(date))/1000));
@@ -104,12 +106,20 @@
     return row.error || '답변을 받지 못했어요. 질문을 다시 확인하고 보내 주세요.';
   };
   const showSaved = row => {
-    activeQuestion=row.id; log.replaceChildren(); welcome.hidden=true; clear.hidden=false;
-    appendMessage('user','내 질문',row.question);
-    appendMessage(row.answer ? 'assistant' : 'notice','육아 어시스턴트 · Codex',row.answer || describe(row));
-    activeNotice=row.answer ? null : log.lastElementChild.children[1];
+    activeQuestion=row.id; welcome.hidden=true; clear.hidden=false;
+    let turn=visibleTurns.get(row.id);
+    if (!turn) {
+      appendMessage('user','내 질문',row.question);
+      turn={question:row.question, node:appendMessage('notice','육아 어시스턴트 · Codex','')};
+      visibleTurns.set(row.id,turn);
+    }
+    turn.answer=row.answer || null;
+    turn.node.className=`assistant-message assistant-message-${row.answer ? 'assistant' : 'notice'}`;
+    turn.node.children[0].textContent='육아 어시스턴트 · Codex';
+    turn.node.children[1].textContent=row.answer || describe(row);
+    activeNotice=row.answer ? null : turn.node.children[1];
     retry.hidden=!['failed','cancelled'].includes(row.status);
-    history = row.answer ? [{role:'user',content:row.question},{role:'assistant',content:row.answer}] : [];
+    history=[...visibleTurns.values()].filter(item=>item.answer).flatMap(item=>[{role:'user',content:item.question},{role:'assistant',content:item.answer}]);
   };
   const refreshQueue = () => {
     const job=workerStatus?.pending || saved.find(row=>['queued','processing'].includes(row.status));
@@ -129,7 +139,7 @@
     const ctx=cloudContext();
     if (!ctx || loadingSaved) return;
     const current=generation, baby=selectedBabyId;
-    loadingSaved=true;
+    loadingSaved=true; lastSavedCheck=Date.now();
     try {
       // Status expires stale work before history is read.
       const status=await store.status(ctx);
@@ -152,7 +162,7 @@
       for (const row of changed ? saved : []) {
         const button=document.createElement('button'); button.type='button';
         button.textContent=`${new Date(row.created_at).toLocaleDateString('ko-KR')} · ${labels[row.status]} — ${row.question}`;
-        button.addEventListener('click',()=>{ reset(); showSaved(row); savedSection.open=false; });
+        button.addEventListener('click',()=>{ reset(); showSaved(row); savedSection.open=true; });
         savedList.appendChild(button);
       }
       const pendingRow=saved.find(row=>['queued','processing'].includes(row.status));
@@ -224,10 +234,12 @@
         await store.enqueue(ctx, request);
         if (generation !== current) return;
         activeQuestion = id;
-        appendMessage('notice','접수 완료','질문을 저장했어요. Mac에서 답변을 준비하면 여기에 표시됩니다. 화면을 닫아도 지난 질문에서 확인할 수 있어요.');
+        const node=appendMessage('notice','접수 완료','질문을 저장했어요. Mac에서 답변을 준비하면 여기에 표시됩니다. 화면을 닫아도 지난 질문에서 확인할 수 있어요.');
+        visibleTurns.set(id,{question,node,answer:null});
       } catch (error) {
         if (generation !== current) return;
-        appendMessage('notice','저장 확인 필요', error.message || '질문 저장을 확인하지 못했어요. 지난 질문을 확인한 뒤 다시 보내 주세요.');
+        const node=appendMessage('notice','저장 확인 필요', error.message || '질문 저장을 확인하지 못했어요. 지난 질문을 확인한 뒤 다시 보내 주세요.');
+        visibleTurns.set(id,{question,node,answer:null});
         input.value = question;
         if (!['P0001','23514','23503','42501'].includes(error.code)) uncertain=request;
         refreshContext(); refreshQueue();
@@ -286,5 +298,8 @@
     uncertain=null; workerStatus=null; reset(); selectedBabyId = null; saved=[]; cloudBusy=false; queueStatus.hidden=true; cancel.hidden=true; resolve.hidden=true; savedList.replaceChildren(); savedCount.textContent=''; refreshContext(); loadSaved();
   });
   loadSaved();
-  setInterval(() => { if (!view.hidden && !document.hidden) loadSaved(); },5000);
+  setInterval(() => {
+    const interval=cloudBusy || uncertain ? 1000 : 5000;
+    if (!view.hidden && !document.hidden && Date.now()-lastSavedCheck>=interval) loadSaved();
+  },1000);
 })();

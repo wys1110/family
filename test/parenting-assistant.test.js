@@ -31,10 +31,11 @@ function load({ origin, fetch, store } = {}) {
   const events={},storage=new Map();
   const window={FAMILY_PARENTING_HISTORY:store,location:{origin},FAMILY_APP_STATE:{activeView:'calendar'},switchView:vi.fn(next=>{window.FAMILY_APP_STATE.activeView=next;}),addEventListener:(name,fn)=>{events[name]=fn;},confirm:vi.fn(()=>true)};
   window.switchView.existingMarker=true;
-  let poll;
-  vm.runInNewContext(source,{window,document,fetch,AbortController,crypto:{randomUUID:()=> 'new-id'},setInterval:fn=>{poll=fn;},localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
+  let poll, pollInterval, now=Date.now(), lastTick=now;
+  class Clock extends Date { static now(){return now;} }
+  vm.runInNewContext(source,{window,document,fetch,AbortController,crypto:{randomUUID:()=> 'new-id'},Date:Clock,setInterval:(fn,ms)=>{poll=fn;pollInterval=ms;},localStorage:{setItem:(k,v)=>storage.set(k,v)},ACTIVE_VIEW_KEY:'active'});
   const submit=value=>{input.value=value;return form.events.submit({preventDefault(){}});};
-  return {queueStatus,cancel,retry,resolve,actionStatus,poll:()=>poll(),savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
+  return {queueStatus,cancel,retry,resolve,actionStatus,poll:(ms=5000)=>{now+=ms;if(now-lastTick>=pollInterval){lastTick=now;poll();}},savedList,savedStatus,window,view:views.at(-1),views,input,log,welcome,send,clear,prompts,events,storage,submit,nav,tabs,status,privacy,babySelect,useRecords,contextPreview};
 }
 
 test('the chat is deferred and remains explicitly disconnected without sending data',()=>{
@@ -93,7 +94,7 @@ test('local chat sends only typed conversation and blocks double submit',async()
  let finish;
  const fetch=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({provider:'codex-local',token:'token'})}).mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
  const app=load({origin:'http://127.0.0.1:8775',fetch});
- await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 5.6 Sol'));
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · Luna'));
  const pending=app.submit('안녕하세요');
  await app.submit('중복');
  expect(fetch).toHaveBeenCalledTimes(2);
@@ -107,7 +108,7 @@ test('late replies cannot reappear after a family change',async()=>{
  let finish;
  const fetch=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({provider:'codex-local',token:'token'})}).mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
  const app=load({origin:'http://127.0.0.1:8775',fetch});
- await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 5.6 Sol'));
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · Luna'));
  const pending=app.submit('질문');app.events.familycontextchange();
  expect(fetch.mock.calls[1][1].signal.aborted).toBe(true);
  finish({ok:true,json:async()=>({answer:'이전 가족 답변'})});await pending;
@@ -118,7 +119,7 @@ test('late replies cannot reappear after a family change',async()=>{
 test('turning off records clears prior context and sends only the question',async()=>{
  const fetch=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({provider:'codex-local',token:'token'})}).mockResolvedValue({ok:true,json:async()=>({answer:'답변'})});
  const app=load({origin:'http://127.0.0.1:8775',fetch});
- await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 5.6 Sol'));
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · Luna'));
  await app.submit('첫 질문');
  app.useRecords.checked=false;app.useRecords.events.change();
  await app.submit('새 질문');
@@ -128,7 +129,7 @@ test('turning off records clears prior context and sends only the question',asyn
 test('private mobile chat discovers only its same-origin server and uses its token',async()=>{
  const fetch=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({provider:'codex-local',token:'private-token'})}).mockResolvedValue({ok:true,json:async()=>({answer:'휴대폰 답변'})});
  const app=load({origin:'https://family-mac.example-tail.ts.net',fetch});
- await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 5.6 Sol'));
+ await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · Luna'));
  expect(app.privacy.textContent).toContain('연결된 Mac');
  await app.submit('질문');
  expect(fetch.mock.calls.map(call=>call[0])).toEqual(['/api/parenting/status','/api/parenting/chat']);
@@ -232,4 +233,36 @@ test('cancel reports processing when the worker wins and never presents a false 
  const app=load({store});await vi.waitFor(()=>expect(app.status.textContent).toBe('Codex · 연결됨'));await app.cancel.events.click();
  expect(app.actionStatus.textContent).toContain('이미 답변을 시작');expect(app.cancel.hidden).toBe(true);
  expect(app.log.children[1].children[1].textContent).toContain('답변을 작성');
+});
+
+test('a follow-up keeps earlier question and answer above it while queued and after completion',async()=>{
+ let rows=[{id:'first',question:'첫 질문',answer:'첫 답변',status:'completed',created_at:'2026-11-01'}];
+ const store={context:()=>({}),status:async()=>({registered:true,online:true}),list:async()=>rows,enqueue:vi.fn(async(_,q)=>{rows=[{id:q.id,question:q.question,status:'queued',created_at:'2026-11-01'},...rows];})};
+ const app=load({store});app.window.switchView('assistant');
+ await vi.waitFor(()=>expect(app.savedList.children).toHaveLength(1));
+ app.savedList.children[0].events.click();
+ await app.submit('이어지는 질문');
+ expect(store.enqueue.mock.calls[0][1].messages).toEqual([{role:'user',content:'첫 질문'},{role:'assistant',content:'첫 답변'}]);
+ expect(app.log.children.map(row=>row.children[1].textContent).slice(0,3)).toEqual(['첫 질문','첫 답변','이어지는 질문']);
+ rows=[{...rows[0],status:'completed',answer:'두 번째 답변'},rows[1]];app.poll();
+ await vi.waitFor(()=>expect(app.log.children.map(row=>row.children[1].textContent)).toEqual(['첫 질문','첫 답변','이어지는 질문','두 번째 답변']));
+ app.poll();await Promise.resolve();await Promise.resolve();
+ expect(app.log.children).toHaveLength(4);
+ app.events.familycontextchange();expect(app.log.children).toHaveLength(0);
+});
+
+
+test('pending replies refresh within one second while idle history keeps a five-second cadence',async()=>{
+ const row={id:'pending',question:'q',status:'queued',created_at:new Date().toISOString()};
+ const busyStore={context:()=>({}),status:vi.fn(async()=>({registered:true,online:true,pending:row})),list:async()=>[row]};
+ const busy=load({store:busyStore});busy.window.switchView('assistant');
+ await vi.waitFor(()=>expect(busy.log.children).toHaveLength(2));
+ busyStore.status.mockClear();busy.poll(1000);
+ await vi.waitFor(()=>expect(busyStore.status).toHaveBeenCalledOnce());
+ const idleStore={context:()=>({}),status:vi.fn(async()=>({registered:true,online:true})),list:async()=>[]};
+ const idle=load({store:idleStore});idle.window.switchView('assistant');
+ await vi.waitFor(()=>expect(idle.status.textContent).toBe('Codex · 연결됨'));
+ idleStore.status.mockClear();idle.poll(1000);expect(idleStore.status).not.toHaveBeenCalled();
+ idle.poll(4000);await vi.waitFor(()=>expect(idleStore.status).toHaveBeenCalledOnce());
+ idle.window.switchView('calendar');idleStore.status.mockClear();idle.poll(5000);expect(idleStore.status).not.toHaveBeenCalled();
 });

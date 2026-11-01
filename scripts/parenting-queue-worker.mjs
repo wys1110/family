@@ -33,6 +33,7 @@ export async function answerJob(job, reply = askCodex) {
 export async function runWorker(rpc, { signal, reply = askCodex, pause = delay } = {}) {
   let completed = null;
   while (!signal?.aborted) {
+    let waitMs = 2000;
     try {
       // Retry delivery, never regenerate an answer when the network fails after inference.
       if (completed) { await rpc('finish_parenting_question', completed); completed = null; }
@@ -42,8 +43,8 @@ export async function runWorker(rpc, { signal, reply = askCodex, pause = delay }
         completed = await answerJob(job, reply);
         await rpc('finish_parenting_question', completed); completed = null;
       }
-    } catch { console.error('Queue connection unavailable; retrying.'); }
-    if (!signal?.aborted) await pause(10000, undefined, { signal }).catch(() => {});
+    } catch { waitMs = 10000; console.error('Queue connection unavailable; retrying.'); }
+    if (!signal?.aborted) await pause(waitMs, undefined, { signal }).catch(() => {});
   }
 }
 
