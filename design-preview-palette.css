@@ -1,0 +1,64 @@
+/* Review-only palette tokens. Not imported by the production application. */
+:root,
+[data-palette-choice="coral"] {
+  --palette-bg: #fff8f1;
+  --palette-ink: #2c2523;
+  --palette-muted: #73645d;
+  --palette-accent: #bd493e;
+  --palette-pop: #ff6b5c;
+  --palette-sleep: #6b5b95;
+  --palette-feed: #b64b3c;
+  --palette-feed-pop: #ff907c;
+  --palette-diaper: #93600b;
+  --palette-diaper-pop: #ffb84d;
+}
+:root[data-palette="ocean"],
+[data-palette-choice="ocean"] {
+  --palette-bg: #f0f8fa;
+  --palette-ink: #1a252c;
+  --palette-muted: #5e7180;
+  --palette-accent: #1969cd;
+  --palette-pop: #2b82f6;
+  --palette-sleep: #3b5998;
+  --palette-feed: #087e70;
+  --palette-feed-pop: #00bfa5;
+  --palette-diaper: #8c6000;
+  --palette-diaper-pop: #ffb300;
+}
+:root[data-palette="lilac"],
+[data-palette-choice="lilac"] {
+  --palette-bg: #f8f4ff;
+  --palette-ink: #25212a;
+  --palette-muted: #706779;
+  --palette-accent: #7e57c2;
+  --palette-pop: #a482d8;
+  --palette-sleep: #5c6bc0;
+  --palette-feed: #af5035;
+  --palette-feed-pop: #ff8a65;
+  --palette-diaper: #916008;
+  --palette-diaper-pop: #ffb74d;
+}
+:root {
+  --preview-surface: #fff;
+  --preview-on-accent: #fff;
+  --preview-canvas: var(--palette-bg);
+  --preview-ink: var(--palette-ink);
+  --preview-muted: var(--palette-muted);
+  --preview-tint: var(--palette-accent);
+  --preview-sleep: var(--palette-sleep);
+  --preview-feed: var(--palette-feed);
+  --preview-diaper: var(--palette-diaper);
+  --preview-line: color-mix(in srgb, var(--palette-ink) 12%, var(--preview-surface));
+}
+:root[data-dark] {
+  --preview-surface: #24232c;
+  --preview-canvas: #17161d;
+  --preview-ink: #f4f1f6;
+  --preview-muted: #bdb7c6;
+  --preview-tint: color-mix(in srgb, var(--palette-pop) 65%, #fff);
+  --preview-sleep: color-mix(in srgb, var(--palette-sleep) 45%, #fff);
+  --preview-feed: color-mix(in srgb, var(--palette-feed-pop) 65%, #fff);
+  --preview-diaper: var(--palette-diaper-pop);
+  --preview-on-accent: #17161d;
+  --preview-line: #423d4b;
+}

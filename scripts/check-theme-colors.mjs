@@ -19,6 +19,7 @@ const paletteFiles = new Set([
   "theme-calendar-exception.css",
   "theme-bootstrap.js",
   "theme-critical.css",
+  "design-preview-palette.css", // Isolated review-only color tokens.
 ]);
 
 const literalPattern = /#[0-9a-f]{3,8}(?![0-9a-z_-])|(?:rgb|rgba|hsl|hsla)\([^)]*\)/gi;
