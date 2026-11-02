@@ -200,7 +200,7 @@ window.FAMILY_CONFIG = {
     { name: "parenting-history", version: "20261101-parenting-bubbles-v1", style: false },
     { name: "parenting-assistant", version: "20261101-parenting-bubbles-v1" },
     { name: "travel", version: "20261018-travel-summary-v1" },
-    { name: "simple-family", version: "20261101-lilac-v1" },
+    { name: "simple-family", version: "20261102-calendar-add-menu-v1" },
   ];
 
   const deferredGroups = {

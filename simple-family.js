@@ -39,6 +39,9 @@
     const moreItems = document.createElement('div'); moreItems.className = 'simple-more-items'; moreDialog.append(moreHeader, moreItems); shell.append(moreDialog);
     const renderMore = () => {
       moreItems.replaceChildren();
+      const addEvent = button('일정 추가', 'calendar');
+      addEvent.addEventListener('click', () => { moreDialog.close(); navigate('calendar'); $('#addEventButton')?.click(); });
+      moreItems.append(addEvent);
       originalNav.querySelectorAll('.view-tab[data-view]').forEach(tab => {
         const view = tab.dataset.view;
         if (mainViews.includes(view) || tab.hidden || tab.disabled) return;
