@@ -1,0 +1,19 @@
+name: Validate iOS sleep activity
+on:
+  pull_request:
+    paths: ['ios/**', 'sleep-live-activity.js', 'native-bridge.js', 'package*.json', '.github/workflows/ios-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulator:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ios:sync
+      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/family-ios-build CODE_SIGNING_ALLOWED=NO build

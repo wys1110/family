@@ -8,7 +8,7 @@ const extensions = new Set([".css", ".html", ".js", ".ts"]);
 // Capacitor copies the web bundle into Android's generated assets directory.
 // Those files are build output, not source, so scanning them would duplicate
 // every existing color literal and make the guard fail after android:sync.
-const ignoredDirectories = new Set([".git", ".github", "android", "dist", "node_modules", "scripts", "supabase", "test"]);
+const ignoredDirectories = new Set([".git", ".github", "android", "ios", "dist", "node_modules", "scripts", "supabase", "test"]);
 
 // Raw palette values belong only in these files. The calendar exception is
 // deliberately isolated; every other component must consume semantic tokens.

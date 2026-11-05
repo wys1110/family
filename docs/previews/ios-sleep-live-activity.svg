@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="240" viewBox="0 0 390 240">
+<rect width="390" height="240" rx="24" fill="#212027"/>
+<rect x="110" y="16" width="170" height="36" rx="18" fill="black"/>
+<text x="126" y="40" fill="#d5b7ff" font-size="19">☾</text><text x="175" y="39" fill="white" font-family="sans-serif" font-size="15">1:20:05</text>
+<text x="195" y="92" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">실시간 현황 시안</text>
+<rect x="16" y="115" width="358" height="95" rx="22" fill="#f2ebfc"/>
+<text x="32" y="174" fill="#8156b5" font-size="36">☾</text>
+<text x="81" y="153" fill="#282230" font-family="sans-serif" font-size="17" font-weight="bold">아기 수면 중</text>
+<text x="81" y="180" fill="#746c80" font-family="sans-serif" font-size="12">우리 가족</text>
+<text x="269" y="171" fill="#282230" font-family="sans-serif" font-size="22">1:20:05</text>
+</svg>
