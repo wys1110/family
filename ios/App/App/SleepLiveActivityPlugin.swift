@@ -6,7 +6,7 @@ import UIKit
 public class SleepLiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "SleepLiveActivityPlugin"
     public let jsName = "SleepLiveActivity"
-    public let pluginMethods = [CAPPluginMethod(name: "sync", returnType: CAPPluginReturnPromise)]
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "sync", returnType: CAPPluginReturnPromise)]
 
     @objc func sync(_ call: CAPPluginCall) {
         let sessionId = call.getString("sessionId")
