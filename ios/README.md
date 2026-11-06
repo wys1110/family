@@ -15,6 +15,16 @@
 
 기기 서명과 설치는 아직 수행하지 않았습니다. 네이티브 OAuth 로그인 왕복도 기기에서 검증해야 합니다.
 
+## 네이티브 로그인 준비
+
+iOS는 `com.wys1110.family://login-callback/`으로 돌아오는 PKCE 로그인을 사용합니다. 기존 Supabase 프로젝트의 Auth → URL Configuration → Redirect URLs에 이 주소를 정확히 추가해야 합니다. 기존 웹 Site URL 및 Google 제공자 callback은 변경하지 않습니다. 이번 코드 변경은 실제 프로젝트의 인증 설정을 수정하지 않습니다.
+
+Google 로그인은 기존 Capacitor Browser로 열고 App 플러그인의 warm/cold-start 콜백에서 코드를 한 번 교환합니다. 이메일 링크도 앱에서 요청한 뒤 같은 iPhone 앱으로 돌아와야 합니다. 이메일 템플릿은 Supabase의 `ConfirmationURL` 또는 요청한 `RedirectTo`를 존중해야 하며, 운영 템플릿 상태는 미확인입니다. 웹 및 Android 로그인 경로는 기존대로 유지합니다.
+
+앱에서 직접 시작한 시도로 10분 안에 돌아온 정확한 콜백만 처리합니다. 명시적인 재시도는 이전 시도를 교체하고, 브라우저 취소·로그아웃은 대기를 해제합니다. 토큰 fragment를 받아 세션으로 저장하지 않으며 인증 코드·토큰·이메일을 대기 기록이나 로그에 남기지 않습니다. 설정 및 실제 계정으로 로그인·재실행·가족 연결은 기기에서 별도로 검증해야 합니다.
+
+참고: [Supabase 모바일 deep linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking), [PKCE](https://supabase.com/docs/guides/auth/sessions/pkce-flow), [Capacitor App](https://capacitorjs.com/docs/apis/app).
+
 ## CI 실기용 빌드 산출물
 
 `Validate iOS sleep activity` 워크플로는 기존 iOS Simulator 검증 후 `iphoneos` SDK로 실기용 App 및 SleepWidget을 서명 없이 빌드합니다. `family-ios-unsigned-device` artifact의 `family-ios-unsigned-device.zip`에는 실행 권한을 보존해 압축한 `App.app`과 내부 확장이 들어갑니다. 이 산출물은 Simulator 빌드와 구분됩니다.
