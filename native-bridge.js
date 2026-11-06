@@ -25,5 +25,5 @@
     app.exitApp?.();
   });
 
-  document.documentElement.dataset.familyNative = 'android';
+  document.documentElement.dataset.familyNative = capacitor.getPlatform();
 })();

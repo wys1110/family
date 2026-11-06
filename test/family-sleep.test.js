@@ -30,7 +30,7 @@ function server() {
   };
   return {client,rows,entries,loseNext:()=>{lose=true;},emit:async()=>{channels.forEach(ch=>ch.cb());await flush();}};
 }
-function harness(server,user='u1',storage=new Map(),local=null) {
+function harness(server,user='u1',storage=new Map(),local=null,nativeSync=null) {
   const listeners={}, elements=new Map();
   const element=s=>{if(!elements.has(s))elements.set(s,{disabled:false});return elements.get(s);};
   let seq=0;
@@ -44,11 +44,13 @@ function harness(server,user='u1',storage=new Map(),local=null) {
     withAuthRecovery:fn=>fn(),uid:()=>`${user}-${++seq}`,Date,
     localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     document:{hidden:false,querySelector:element,addEventListener:(type,fn)=>{listeners[type]=fn;}},
-    window:{addEventListener:(type,fn)=>{listeners[type]=fn;},confirm:()=>true},setInterval:fn=>{listeners.poll=fn;},
+    window:{Capacitor:nativeSync ? {getPlatform:()=> 'ios',registerPlugin:()=>({sync:nativeSync})} : undefined,addEventListener:(type,fn)=>{listeners[type]=fn;},confirm:()=>true},setInterval:fn=>{listeners.poll=fn;},
     renderCareTimer:()=>{element('[data-compact-sleep]').disabled=false;element('[data-compact-sleep]').textContent=ctx.careTimer?'수면 끝':'수면 시작';},
     renderGrowth:()=>ctx.renderCareTimer(),
   };
-  vm.createContext(ctx);vm.runInContext(source,ctx);
+  vm.createContext(ctx);
+  if(nativeSync) vm.runInContext(readFileSync('sleep-live-activity.js','utf8'),ctx);
+  vm.runInContext(source,ctx);
   return {ctx,api:ctx.window.FAMILY_SLEEP,storage,listeners,elements};
 }
 test('two clients see identical starts, another member ends it, both can immediately restart',async()=>{
@@ -69,6 +71,23 @@ test('lost end response resumes after reload with original ID/time and one recor
   const reloaded=harness(s,'u1',a.storage);await flush();
   expect(s.client.rpc.mock.calls.at(-1)[1]).toEqual(first);
   expect(reloaded.ctx.careTimer).toBeNull();expect(s.entries.size).toBe(1);expect(reloaded.api.hasPending()).toBe(false);
+});
+test('native progress freezes during a failed shared stop and clears after its retry succeeds',async()=>{
+  const sync=vi.fn(async()=>({applied:true}));
+  const s=server(),a=harness(s,'u1',new Map(),null,sync);await flush();await a.api.start();await flush();
+  const active=sync.mock.lastCall[0];
+  expect(active.sessionId).toBe(a.ctx.careTimer.sharedId);
+  expect(active.endedAt).toBeUndefined();
+  s.loseNext();await a.api.stop();await flush();
+  const frozen=sync.mock.lastCall[0],calls=sync.mock.calls.length;
+  expect(frozen).toMatchObject({sessionId:active.sessionId,startedAt:active.startedAt,endedAt:a.ctx.careTimer.endedAt});
+  expect(Number.isFinite(frozen.endedAt)).toBe(true);
+  a.ctx.renderCareTimer();await flush();
+  expect(sync).toHaveBeenCalledTimes(calls);
+  expect(sync).toHaveBeenLastCalledWith(frozen);
+  await a.api.stop();await flush();
+  expect(sync).toHaveBeenLastCalledWith({});
+  expect(a.ctx.careTimer).toBeNull();
 });
 test('start response loss retries the same ID; concurrent clicks do not submit twice',async()=>{
   const s=server(),a=harness(s);await flush();s.loseNext();

@@ -24,7 +24,7 @@ test('native bridge is loaded by the app shell and only intercepts external link
   const html = read('index.html');
   const bridge = read('native-bridge.js');
 
-  expect(html).toContain('<script src="native-bridge.js?v=20260921-android-v1"></script>');
+  expect(html).toContain('<script src="native-bridge.js?v=20261106-ios-live-activity-v1"></script>');
   expect(bridge).toContain("capacitor?.isNativePlatform?.()");
   expect(bridge).toContain("/^https?:$/i");
   expect(bridge).toContain("app.exitApp?.()");
