@@ -15,6 +15,12 @@
 
 기기 서명과 설치는 아직 수행하지 않았습니다. 네이티브 OAuth 로그인 왕복도 기기에서 검증해야 합니다.
 
+## CI 실기용 빌드 산출물
+
+`Validate iOS sleep activity` 워크플로는 기존 iOS Simulator 검증 후 `iphoneos` SDK로 실기용 App 및 SleepWidget을 서명 없이 빌드합니다. `family-ios-unsigned-device` artifact의 `family-ios-unsigned-device.zip`에는 실행 권한을 보존해 압축한 `App.app`과 내부 확장이 들어갑니다. 이 산출물은 Simulator 빌드와 구분됩니다.
+
+**서명과 기기 프로비저닝이 없으므로 현재 산출물 그대로는 iPhone에 설치하거나 실행할 수 없습니다.** 다운로드·압축 해제는 설치가 아닙니다. 실제 설치에는 기존 Apple Account와 Xcode로 App 및 SleepWidget의 서명·프로비저닝을 준비해야 합니다. 실기용 컴파일 성공도 서명·설치·잠금화면 알림 검증을 대신하지 않습니다.
+
 ## 동작 범위
 
 앱이 활성 상태일 때 수면을 시작하고 재진입 시 동기화합니다. iOS가 타이머를 그리므로 경과 시간을 위해 초마다 네트워크 요청을 보내지 않습니다. 앱이 중단된 동안 다른 가족이 종료한 상태까지 즉시 반영하려면 ActivityKit APNs 전송을 별도로 연결해야 합니다. 이번 구현에는 이 전송 경로가 없습니다. Apple의 실시간 현황 유지 시간 제한도 적용됩니다.
