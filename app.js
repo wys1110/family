@@ -260,10 +260,11 @@ async function init() {
       state.household = demoHousehold();
       lastAuthSessionKey = authSessionKey(state.session);
     } else if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
-      state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+      state.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, window.FAMILY_NATIVE_AUTH?.clientOptions);
       state.session = await getInitialSession(state.supabase);
       lastAuthSessionKey = authSessionKey(state.session);
       state.supabase.auth.onAuthStateChange((_event, session) => {
+        if (_event === 'SIGNED_OUT') void window.FAMILY_NATIVE_AUTH?.cancel();
         const nextKey = authSessionKey(session);
         const userChanged = nextKey !== lastAuthSessionKey;
         lastAuthSessionKey = nextKey;
@@ -2718,6 +2719,7 @@ async function saveNotificationRole(event) {
   }
 }
 async function signOutCurrentUser(button = null) {
+  await window.FAMILY_NATIVE_AUTH?.cancel();
   if (!state.supabase || !state.session) return false;
   const originalLabel = button?.textContent || "로그아웃";
   if (button) {
@@ -2769,12 +2771,25 @@ function renderAccount() {
   $("#notificationRoleForm").addEventListener("submit", saveNotificationRole);
   $("#logoutButton").addEventListener("click", (event) => signOutCurrentUser(event.currentTarget));
 }
-function authRedirectUrl() { return `${location.origin}${location.pathname}`; }
+function authRedirectUrl() { return window.FAMILY_NATIVE_AUTH?.redirectUrl || `${location.origin}${location.pathname}`; }
 async function signInWithGoogle() {
+  if (window.FAMILY_NATIVE_AUTH) {
+    const { error } = await window.FAMILY_NATIVE_AUTH.signInWithGoogle(state.supabase);
+    if (error) toast("Google 로그인을 시작하지 못했어요");
+    return;
+  }
   const { error } = await state.supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: authRedirectUrl() } });
   if (error) toast("Google 로그인을 시작하지 못했어요");
 }
-async function sendMagicLink(event) { event.preventDefault(); const email = event.currentTarget.querySelector('input[type="email"]').value; const { error } = await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirectUrl() } }); if (error) return toast("로그인 링크를 보내지 못했어요"); toast("이메일을 확인해 주세요"); event.currentTarget.reset(); }
+async function sendMagicLink(event) {
+  event.preventDefault();
+  const email = event.currentTarget.querySelector('input[type="email"]').value;
+  const { error } = window.FAMILY_NATIVE_AUTH
+    ? await window.FAMILY_NATIVE_AUTH.sendMagicLink(state.supabase, email)
+    : await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirectUrl() } });
+  if (error) return toast("로그인 링크를 보내지 못했어요");
+  toast("이메일을 확인해 주세요"); event.currentTarget.reset();
+}
 async function createHousehold(event) { event.preventDefault(); const { error } = await withAuthRecovery(() => state.supabase.rpc("create_household", { household_name: $("#householdName").value.trim() })); if (error) return toast("가족 공간을 만들지 못했어요"); await bootstrapData(); renderAccount(); toast("가족 공간을 만들었어요"); }
 async function joinHousehold(event) { event.preventDefault(); const { data, error } = await withAuthRecovery(() => state.supabase.rpc("join_household", { code: $("#inviteCode").value.trim().toUpperCase() })); if (error || !data) return toast("초대 코드가 만료됐거나 시도 횟수를 초과했어요"); await bootstrapData(); renderAccount(); toast("가족 공간에 참여했어요"); }
 
