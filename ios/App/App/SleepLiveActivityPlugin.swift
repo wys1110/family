@@ -12,12 +12,14 @@ public class SleepLiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let sessionId = call.getString("sessionId")
         let babyName = String((call.getString("babyName") ?? "아기").prefix(40))
         let milliseconds = call.getDouble("startedAt")
+        let endedMilliseconds = call.getDouble("endedAt")
         Task { @MainActor in
             do {
+                let now = Date().timeIntervalSince1970 * 1000
                 guard let sessionId, let milliseconds,
                       milliseconds.isFinite, milliseconds > 0,
-                      milliseconds <= Date().timeIntervalSince1970 * 1000,
-                      Date().timeIntervalSince1970 * 1000 - milliseconds < 86400000 else {
+                      milliseconds <= now, now - milliseconds < 86400000,
+                      endedMilliseconds.map({ $0.isFinite && $0 >= milliseconds && $0 <= now }) ?? true else {
                     for activity in Activity<SleepAttributes>.activities {
                         await activity.end(nil, dismissalPolicy: .immediate)
                     }
@@ -25,8 +27,9 @@ public class SleepLiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                     return
                 }
                 let startedAt = Date(timeIntervalSince1970: milliseconds / 1000)
+                let endedAt = endedMilliseconds.map { Date(timeIntervalSince1970: $0 / 1000) }
                 let content = ActivityContent(
-                    state: SleepAttributes.ContentState(startedAt: startedAt),
+                    state: SleepAttributes.ContentState(startedAt: startedAt, endedAt: endedAt),
                     staleDate: startedAt.addingTimeInterval(8 * 3600)
                 )
                 var matching: Activity<SleepAttributes>?
@@ -40,7 +43,7 @@ public class SleepLiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
                 if let matching {
                     await matching.update(content)
-                } else {
+                } else if endedAt == nil {
                     guard UIApplication.shared.applicationState == .active,
                           ActivityAuthorizationInfo().areActivitiesEnabled else {
                         call.resolve(["applied": false])

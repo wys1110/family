@@ -189,7 +189,7 @@ window.FAMILY_CONFIG = {
     { name: "family-admin", version: "20261018-startup-review-v1", style: false },
     { name: "deferred-tabs", version: "20261018-parenting-chat-v1", style: false },
     { name: "compact-family", version: "20261031-visible-sleep-controls-v1" },
-    { name: "sleep-live-activity", version: "20261106-ios-prototype-v1", style: false },
+    { name: "sleep-live-activity", version: "20261106-sleep-progress-v2", style: false },
     { name: "family-sleep", version: "20261031-shared-sleep-v1", style: false },
     { name: "growth-swipe-delete", version: "20261031-all-record-lists-v2" },
     { name: "nova-family", version: "20261017-design-harmony-v1" },

@@ -1,11 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="390" height="240" viewBox="0 0 390 240">
-<rect width="390" height="240" rx="24" fill="#212027"/>
-<rect x="110" y="16" width="170" height="36" rx="18" fill="black"/>
-<text x="126" y="40" fill="#d5b7ff" font-size="19">☾</text><text x="175" y="39" fill="white" font-family="sans-serif" font-size="15">1:20:05</text>
-<text x="195" y="92" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">실시간 현황 시안</text>
-<rect x="16" y="115" width="358" height="95" rx="22" fill="#f2ebfc"/>
-<text x="32" y="174" fill="#8156b5" font-size="36">☾</text>
-<text x="81" y="153" fill="#282230" font-family="sans-serif" font-size="17" font-weight="bold">아기 수면 중</text>
-<text x="81" y="180" fill="#746c80" font-family="sans-serif" font-size="12">우리 가족</text>
-<text x="269" y="171" fill="#282230" font-family="sans-serif" font-size="22">1:20:05</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="375" viewBox="0 0 390 375">
+<rect width="390" height="375" rx="24" fill="#212027"/>
+<g font-family="Apple SD Gothic Neo, sans-serif">
+<rect x="105" y="18" width="180" height="36" rx="18" fill="black"/>
+<text x="121" y="43" fill="#d5b7ff" font-size="22">☾</text><text x="185" y="42" fill="white" font-size="15">1:20:05</text>
+<text x="195" y="91" fill="#f6f2fc" text-anchor="middle" font-size="14">잠금화면 · 수면 실시간 현황 시안</text>
+<rect x="16" y="112" width="358" height="158" rx="23" fill="#f2ebfc"/>
+<text x="34" y="162" fill="#8156b5" font-size="36">☾</text>
+<text x="80" y="145" fill="#282230" font-size="17" font-weight="bold">아기 수면 중</text>
+<text x="80" y="166" fill="#65586f" font-size="12">우리 가족</text>
+<text x="264" y="157" fill="#282230" font-size="22" font-weight="600">1:20:05</text>
+<text x="34" y="199" fill="#65586f" font-size="12">수면 경과 · 1칸 = 1시간</text>
+<g fill="#d7c9e7"><rect x="34" y="214" width="35" height="5" rx="2.5"/><rect x="75" y="214" width="35" height="5" rx="2.5"/><rect x="116" y="214" width="35" height="5" rx="2.5"/><rect x="157" y="214" width="35" height="5" rx="2.5"/><rect x="198" y="214" width="35" height="5" rx="2.5"/><rect x="239" y="214" width="35" height="5" rx="2.5"/><rect x="280" y="214" width="35" height="5" rx="2.5"/><rect x="321" y="214" width="35" height="5" rx="2.5"/></g>
+<rect x="34" y="214" width="35" height="5" rx="2.5" fill="#8156b5"/>
+<rect x="75" y="214" width="11.7" height="5" rx="2.5" fill="#8156b5"/>
+<g fill="#65586f" font-size="11"><text x="34" y="243">0</text><text x="112" y="243">2시간</text><text x="194" y="243">4시간</text><text x="276" y="243">6시간</text><text x="356" y="243" text-anchor="end">8</text></g>
+<text x="195" y="306" fill="#e6dcec" font-size="13" text-anchor="middle">시간이 흐르면 보라색 막대가 차오릅니다</text>
+<text x="195" y="331" fill="#bfb4c9" font-size="12" text-anchor="middle">목표 수면량이 아닌 경과 시간 눈금입니다</text>
+<text x="195" y="356" fill="#bfb4c9" font-size="11" text-anchor="middle">실제 기기 캡처가 아닌 표시 시안</text>
+</g></svg>

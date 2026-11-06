@@ -19,13 +19,17 @@
     finally { running = false; }
   };
   const sync = () => {
+    const now = Date.now();
     const baby = state.babies.find(item => item.id === careTimer?.babyId);
-    const active = !window.FAMILY_DEMO_MODE && baby && careTimer?.type === 'sleep'
-      && !careTimer.endedAt && careTimer.contextKey === careTimerContextKey()
-      && Number.isFinite(careTimer.startedAt) && careTimer.startedAt <= Date.now();
-    desired = active ? {
+    const valid = !window.FAMILY_DEMO_MODE && baby && careTimer?.type === 'sleep'
+      && careTimer.contextKey === careTimerContextKey()
+      && Number.isFinite(careTimer.startedAt) && careTimer.startedAt > 0 && careTimer.startedAt <= now
+      && (careTimer.endedAt == null || (Number.isFinite(careTimer.endedAt)
+        && careTimer.endedAt >= careTimer.startedAt && careTimer.endedAt <= now));
+    desired = valid ? {
       sessionId: careTimer.sharedId || `${careTimer.babyId}:${careTimer.startedAt}`,
       babyName: baby.name || '아기', startedAt: careTimer.startedAt,
+      ...(careTimer.endedAt == null ? {} : { endedAt: careTimer.endedAt }),
     } : {};
     void flush();
   };
