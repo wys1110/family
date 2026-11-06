@@ -21,6 +21,16 @@ function careCurrentTimeMarker(now) {
   return `<g class="care-band-current-time" data-current-minute="${minutes}" role="img" aria-label="현재 시각 ${accessibleTime}"><title>현재 시각 ${time}</title><line class="care-band-now-guide" x1="${guideStart.x.toFixed(1)}" y1="${guideStart.y.toFixed(1)}" x2="${lineStart.x.toFixed(1)}" y2="${lineStart.y.toFixed(1)}"></line><circle class="care-band-now-dot" cx="${lineStart.x.toFixed(1)}" cy="${lineStart.y.toFixed(1)}" r="3"></circle><rect class="care-band-now-label" x="${(labelX - 23).toFixed(1)}" y="${(labelY - 10).toFixed(1)}" width="46" height="20" rx="10"></rect><text class="care-band-now-text" x="${labelX.toFixed(1)}" y="${(labelY + 3.5).toFixed(1)}" text-anchor="middle">${time}</text></g>`;
 }
 
+function careDurationSector(start, duration) {
+  const span = Math.min(1440, Number.isFinite(Number(duration)) ? Math.max(0, Number(duration)) : 0);
+  if (!span) return "";
+  if (span === 1440) return "M180 43 A137 137 0 1 1 180 317 A137 137 0 1 1 180 43 M180 93 A87 87 0 1 0 180 267 A87 87 0 1 0 180 93";
+  const angle = start / 4, end = (start + span) / 4;
+  const a = clockPoint(angle, 137), b = clockPoint(end, 137), c = clockPoint(end, 87), d = clockPoint(angle, 87);
+  const large = span > 720 ? 1 : 0;
+  return `M${a.x} ${a.y} A137 137 0 ${large} 1 ${b.x} ${b.y} L${c.x} ${c.y} A87 87 0 ${large} 0 ${d.x} ${d.y} Z`;
+}
+
 (() => {
   const CARE_TYPES = ["formula", "breast", "sleep", "diaper", "health"];
 
@@ -111,16 +121,7 @@ function careCurrentTimeMarker(now) {
     document.querySelector("#carePatternDateNav [data-pattern-day='1']").disabled = carePatternDate >= today;
 
     // Clock geometry uses the same start time and duration as the editable list.
-    const sector = (start, duration) => {
-      const span = Math.min(1440, positive(duration));
-      if (!span) return "";
-      if (span === 1440) return "M180 43 A137 137 0 1 1 180 317 A137 137 0 1 1 180 43 M180 93 A87 87 0 1 0 180 267 A87 87 0 1 0 180 93";
-      const angle = start / 4;
-      const end = (start + span) / 4;
-      const a = clockPoint(angle, 137), b = clockPoint(end, 137), c = clockPoint(end, 87), d = clockPoint(angle, 87);
-      const large = span > 720 ? 1 : 0;
-      return `M${a.x} ${a.y} A137 137 0 ${large} 1 ${b.x} ${b.y} L${c.x} ${c.y} A87 87 0 ${large} 0 ${d.x} ${d.y} Z`;
-    };
+    const sector = careDurationSector;
     // Reserve the moon, sun and hour labels before placing record emojis.
     const markerPoints = [{ x: 180, y: 108 }, { x: 180, y: 252 }, { x: 180, y: 32 }, { x: 327, y: 180 }, { x: 180, y: 325 }, { x: 33, y: 180 }];
     const overflowMarkers = [];
