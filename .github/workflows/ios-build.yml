@@ -17,3 +17,16 @@ jobs:
       - run: npm ci
       - run: npm run ios:sync
       - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/family-ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Build unsigned iPhone app
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath /tmp/family-ios-device-build CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned iPhone app with file permissions
+        run: |
+          test -x /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app/App
+          test -d /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app/PlugIns/SleepWidget.appex
+          ditto -c -k --sequesterRsrc --keepParent /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app "$RUNNER_TEMP/family-ios-unsigned-device.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: family-ios-unsigned-device
+          path: ${{ runner.temp }}/family-ios-unsigned-device.zip
+          if-no-files-found: error
+          compression-level: 0
