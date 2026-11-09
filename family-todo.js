@@ -825,6 +825,10 @@
 
   async function toggleTodo(todo) {
     if (!todo || moduleState.busyIds.has(todo.id)) return;
+    const operationContext = familyContext();
+    const operationKey = contextKey(operationContext);
+    const isCurrentContext = () => familyContext()?.supabase === operationContext?.supabase
+      && contextKey() === operationKey;
     let completedSaved = false;
     try {
       assertTodoWritable();
@@ -833,6 +837,7 @@
       const completed = !todo.completed;
       const completedAt = completed ? new Date().toISOString() : null;
       await updateTodo(todo.id, { completed, completedAt }, { quiet: true });
+      if (!isCurrentContext()) return;
       completedSaved = true;
 
       if (completed && todo.recurrence !== 'none' && todo.dueDate) {
@@ -850,14 +855,15 @@
               parentId: todo.id,
             }, { quiet: true });
           }
+          if (!isCurrentContext()) return;
           announce(`완료했어요. 다음 ${recurrenceLabel(todo.recurrence)} 할 일도 만들었어요.`);
         }
       } else announce(completed ? '완료했어요 🎉' : '다시 할 일로 돌렸어요.');
     } catch (error) {
-      if (completedSaved && !todo.completed) {
+      if (completedSaved && !todo.completed && isCurrentContext()) {
         try { await updateTodo(todo.id, { completed: false, completedAt: null }, { quiet: true }); } catch { /* 서버 재조회로 복구 */ }
       }
-      if (error.code !== 'FAMILY_TODOS_LOADING') announce('완료 상태를 변경하지 못했어요.');
+      if (error.code !== 'FAMILY_TODOS_LOADING' && isCurrentContext()) announce('완료 상태를 변경하지 못했어요.');
     } finally {
       moduleState.busyIds.delete(todo.id);
       renderTodos();

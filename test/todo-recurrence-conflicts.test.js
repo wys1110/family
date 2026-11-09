@@ -20,6 +20,7 @@ function harness(existing = null, lookupError = null) {
   const h = {
     moduleState: { storage: 'remote', todos: [{ ...parent }], busyIds: new Set() },
     assertTodoWritable() {}, familyContext: () => context,
+    contextKey: (current = context) => `${current.session.user.id}:${current.household.id}`,
     withAuthRecovery: operation => operation(),
     normalizeTodo: todo => ({ ...todo, parentId: todo.parentId ?? todo.recurrence_parent_id }),
     toRemote: todo => todo, uid: () => 'new', isMissingTable: () => false,
@@ -30,7 +31,7 @@ function harness(existing = null, lookupError = null) {
   vm.createContext(h);
   vm.runInContext(section('  async function createTodo(', '  function remotePatch('), h);
   vm.runInContext(section('  async function toggleTodo(', "  subnav.addEventListener('click'"), h);
-  return { h, filters, query };
+  return { h, filters, query, context };
 }
 
 test('a hidden conflicting row is not treated as a successfully created successor', async () => {
@@ -64,4 +65,28 @@ test('failed recurring completion rolls back and never announces a created succe
   expect(h.updateTodo).toHaveBeenLastCalledWith('parent', { completed: false, completedAt: null }, { quiet: true });
   expect(h.announce).toHaveBeenCalledExactlyOnceWith('완료 상태를 변경하지 못했어요.');
   expect(h.moduleState.busyIds.size).toBe(0);
+});
+
+test('switching users during duplicate lookup never compensates with the next account', async () => {
+  const { h, query, context } = harness();
+  query.maybeSingle = async () => {
+    context.session = { user: { id: 'next-user-in-same-household' } };
+    return { data: null, error: { code: 'FAMILY_CONTEXT_CHANGED' } };
+  };
+  await h.toggleTodo({ ...parent });
+  expect(h.updateTodo).toHaveBeenCalledTimes(1);
+  expect(h.announce).not.toHaveBeenCalled();
+  expect(h.moduleState.busyIds.size).toBe(0);
+});
+
+test('switching users during completion never creates a successor as the next user', async () => {
+  const { h, query, context } = harness();
+  h.updateTodo.mockImplementation(async () => {
+    context.session = { user: { id: 'next-user-in-same-household' } };
+    return { ...parent, completed: true };
+  });
+  await h.toggleTodo({ ...parent });
+  expect(query.insert).not.toHaveBeenCalled();
+  expect(h.updateTodo).toHaveBeenCalledTimes(1);
+  expect(h.announce).not.toHaveBeenCalled();
 });
