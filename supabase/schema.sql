@@ -476,3 +476,35 @@ create trigger records_preserve_identity before update on public.growth_entries
   for each row execute function public.preserve_family_record_identity();
 create trigger records_preserve_identity before update on public.family_todos
   for each row execute function public.preserve_family_record_identity();
+
+-- Foreign-key and unique checks bypass RLS. Authorize the parent before either
+-- can accept a hidden UUID or reserve that parent's only successor.
+create or replace function public.check_family_todo_recurrence_parent()
+returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if new.recurrence_parent_id is null then return new; end if;
+  if tg_op = 'UPDATE' then
+    -- A parent may later become private. Existing children remain editable;
+    -- only creating or changing a relationship requires parent access again.
+    if new.recurrence_parent_id is not distinct from old.recurrence_parent_id
+      and new.household_id is not distinct from old.household_id then
+      return new;
+    end if;
+  end if;
+  perform 1 from public.family_todos parent
+    where parent.id = new.recurrence_parent_id
+      and parent.id <> new.id
+      and parent.household_id = new.household_id
+      and public.is_household_member(parent.household_id)
+      and (parent.visibility = 'family' or parent.created_by = auth.uid());
+  if not found then
+    -- A missing parent and an inaccessible parent deliberately look identical.
+    raise exception 'accessible same-household todo parent required' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+revoke all on function public.check_family_todo_recurrence_parent() from public, anon, authenticated;
+
+create trigger family_todos_check_recurrence_parent
+  before insert or update of recurrence_parent_id, household_id on public.family_todos
+  for each row execute function public.check_family_todo_recurrence_parent();

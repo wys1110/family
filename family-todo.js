@@ -463,8 +463,26 @@
           if (!quiet) announce('할 일을 추가했어요.');
           return saved;
         }
-        if (!isMissingTable(error) && error.code !== '23505') throw error;
-        if (error.code === '23505') return null;
+        if (error.code === '23505' && todo.parentId) {
+          // A duplicate is success only when this account can read the actual
+          // successor in this household. A hidden conflicting row is not one.
+          const { data: existing, error: lookupError } = await withAuthRecovery(() => context.supabase
+            .from('family_todos')
+            .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
+            .eq('household_id', context.household.id)
+            .eq('recurrence_parent_id', todo.parentId)
+            .maybeSingle(), context);
+          if (lookupError) throw lookupError;
+          if (!existing) throw error;
+          const saved = normalizeTodo(existing);
+          const index = moduleState.todos.findIndex((item) => item.id === saved.id);
+          if (index >= 0) moduleState.todos[index] = saved;
+          else moduleState.todos.unshift(saved);
+          renderTodos();
+          decorateCalendar();
+          return saved;
+        }
+        if (!isMissingTable(error)) throw error;
         moduleState.storage = 'local';
       }
     }
@@ -807,6 +825,10 @@
 
   async function toggleTodo(todo) {
     if (!todo || moduleState.busyIds.has(todo.id)) return;
+    const operationContext = familyContext();
+    const operationKey = contextKey(operationContext);
+    const isCurrentContext = () => familyContext()?.supabase === operationContext?.supabase
+      && contextKey() === operationKey;
     let completedSaved = false;
     try {
       assertTodoWritable();
@@ -815,6 +837,7 @@
       const completed = !todo.completed;
       const completedAt = completed ? new Date().toISOString() : null;
       await updateTodo(todo.id, { completed, completedAt }, { quiet: true });
+      if (!isCurrentContext()) return;
       completedSaved = true;
 
       if (completed && todo.recurrence !== 'none' && todo.dueDate) {
@@ -832,17 +855,20 @@
               parentId: todo.id,
             }, { quiet: true });
           }
+          if (!isCurrentContext()) return;
           announce(`완료했어요. 다음 ${recurrenceLabel(todo.recurrence)} 할 일도 만들었어요.`);
         }
       } else announce(completed ? '완료했어요 🎉' : '다시 할 일로 돌렸어요.');
     } catch (error) {
-      if (completedSaved && !todo.completed) {
+      if (completedSaved && !todo.completed && isCurrentContext()) {
         try { await updateTodo(todo.id, { completed: false, completedAt: null }, { quiet: true }); } catch { /* 서버 재조회로 복구 */ }
       }
-      if (error.code !== 'FAMILY_TODOS_LOADING') announce('완료 상태를 변경하지 못했어요.');
+      if (error.code !== 'FAMILY_TODOS_LOADING' && isCurrentContext()) announce('완료 상태를 변경하지 못했어요.');
     } finally {
-      moduleState.busyIds.delete(todo.id);
-      renderTodos();
+      if (isCurrentContext()) {
+        moduleState.busyIds.delete(todo.id);
+        renderTodos();
+      }
     }
   }
 
