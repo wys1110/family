@@ -71,6 +71,7 @@ test('switching users during duplicate lookup never compensates with the next ac
   const { h, query, context } = harness();
   query.maybeSingle = async () => {
     context.session = { user: { id: 'next-user-in-same-household' } };
+    h.moduleState.busyIds.clear(); // familycontextchange clears the previous account's work.
     return { data: null, error: { code: 'FAMILY_CONTEXT_CHANGED' } };
   };
   await h.toggleTodo({ ...parent });
@@ -83,10 +84,25 @@ test('switching users during completion never creates a successor as the next us
   const { h, query, context } = harness();
   h.updateTodo.mockImplementation(async () => {
     context.session = { user: { id: 'next-user-in-same-household' } };
+    h.moduleState.busyIds.clear();
     return { ...parent, completed: true };
   });
   await h.toggleTodo({ ...parent });
   expect(query.insert).not.toHaveBeenCalled();
+  expect(h.updateTodo).toHaveBeenCalledTimes(1);
+  expect(h.announce).not.toHaveBeenCalled();
+});
+
+test('an old completion cannot release the next account busy marker for the same shared task', async () => {
+  const { h, query, context } = harness();
+  query.maybeSingle = async () => {
+    context.session = { user: { id: 'next-user-in-same-household' } };
+    h.moduleState.busyIds.clear();
+    h.moduleState.busyIds.add('parent'); // The next account has started its own operation.
+    return { data: null, error: { code: 'FAMILY_CONTEXT_CHANGED' } };
+  };
+  await h.toggleTodo({ ...parent });
+  expect(h.moduleState.busyIds.has('parent')).toBe(true);
   expect(h.updateTodo).toHaveBeenCalledTimes(1);
   expect(h.announce).not.toHaveBeenCalled();
 });

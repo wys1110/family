@@ -865,8 +865,10 @@
       }
       if (error.code !== 'FAMILY_TODOS_LOADING' && isCurrentContext()) announce('완료 상태를 변경하지 못했어요.');
     } finally {
-      moduleState.busyIds.delete(todo.id);
-      renderTodos();
+      if (isCurrentContext()) {
+        moduleState.busyIds.delete(todo.id);
+        renderTodos();
+      }
     }
   }
 
