@@ -1,4 +1,6 @@
 begin;
+set local lock_timeout = '5s';
+set local statement_timeout = '30s';
 
 -- Do not silently delete or rewrite existing records if an invalid link exists.
 lock table public.family_todos in share row exclusive mode;

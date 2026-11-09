@@ -69,7 +69,14 @@ Supabase는 2026-10-30부터 기존 프로젝트에서도 새 `public` 테이블
 
 회귀 검사는 `npm test -- test/fresh-table-privileges.test.js`로 실행합니다. 설치된 PGlite의 메모리 전용 합성 DB에서 자동 테이블 권한이 없는 새 스키마, 할 일 생성 마이그레이션, 역할별 권한과 RLS 거부를 검증합니다. Supabase Auth/Storage와 `pgcrypto`의 최소 대역을 사용하므로 실제 PostgREST·GraphQL·운영 연결 검증을 대신하지 않습니다. `test/fresh-install-invites.test.js`는 위 신규 설치 순서에서 초대 만료·회전·시도 제한과 역할별 거부를 별도로 검증합니다.
 
+### 기존 DB의 반복 할 일 연결 보호
+
+기존 DB에는 [`20261109032643_secure_todo_recurrence_parent.sql`](supabase/migrations/20261109032643_secure_todo_recurrence_parent.sql)을 한 번 적용합니다. 새 연결은 같은 가족의 접근 가능한 할 일만 참조할 수 있으며, 같은 가족 구성원의 비공개 할 일도 참조할 수 없습니다. 신규 설치용 `schema.sql`에도 같은 검사를 포함했습니다.
+
+이미 다른 가족끼리 연결된 할 일이 있으면 이 마이그레이션은 기록을 수정·삭제하지 않고 전체 적용을 중단합니다. 먼저 해당 연결을 검토해야 하며, 마이그레이션 오류를 무시하거나 안전 검사를 제거하지 마세요. 이 변경에는 기존 RLS 권한 확대가 없습니다. 웹 파일 배포만으로 DB 검사가 설치되지는 않습니다.
+
 ## 카카오 지도 설정
+
 
 여행 지도는 카카오맵 Web JavaScript SDK를 사용합니다. 카카오 개발자 앱 `우리 가족` (ID `1604339`)의 JavaScript 키를 `config.js`의 `FAMILY_CONFIG.kakaoMapsJavaScriptKey`에 넣고, 앱 설정의 Web 플랫폼에 다음 JavaScript 출처를 등록합니다.
 
