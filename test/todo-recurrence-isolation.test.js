@@ -62,3 +62,66 @@ test('an outsider cannot reserve another household parent or block its legitimat
   await expect(insert(outsider, 2, otherHome, id(1))).rejects.toMatchObject({ code: '42501' });
   await expect(insert(owner, 3, home, id(1))).resolves.toMatchObject({ rows: [{ id: id(3) }] });
 });
+
+test('private parents reject even household members, while their owner can repeat them', async () => {
+  await insert(owner, 1, home, null, 'private');
+  expect((await asUser(member, 'select id from public.family_todos')).rows).toEqual([]);
+  await expect(insert(member, 2, home, id(1))).rejects.toMatchObject({ code: '42501' });
+  await expect(insert(owner, 3, home, id(1), 'private')).resolves.toMatchObject({ rows: [{ id: id(3) }] });
+});
+
+test('updates and upserts cannot attach an existing task to a hidden parent', async () => {
+  await insert(owner, 1, home);
+  await insert(outsider, 2, otherHome);
+  await expect(asUser(outsider, 'update public.family_todos set recurrence_parent_id = $1 where id = $2', [id(1), id(2)]))
+    .rejects.toMatchObject({ code: '42501' });
+  await expect(asUser(outsider, `
+    insert into public.family_todos(id, household_id, title, created_by) values ($1, $2, 'Synthetic', $3)
+    on conflict(id) do update set recurrence_parent_id = $4
+  `, [id(2), otherHome, outsider, id(1)])).rejects.toMatchObject({ code: '42501' });
+  expect((await asUser(outsider, 'select recurrence_parent_id from public.family_todos')).rows)
+    .toEqual([{ recurrence_parent_id: null }]);
+});
+
+test('missing, self and inaccessible parents produce the same permission error', async () => {
+  await insert(owner, 1, home);
+  for (const parent of [id(1), id(2), id(99)]) {
+    await expect(insert(outsider, 2, otherHome, parent)).rejects.toMatchObject({
+      code: '42501', message: 'accessible same-household todo parent required',
+    });
+  }
+});
+
+test('family members can repeat shared tasks once, edit children and delete the parent', async () => {
+  await insert(owner, 1, home);
+  await insert(member, 2, home, id(1));
+  await expect(insert(owner, 3, home, id(1))).rejects.toMatchObject({ code: '23505' });
+  await asUser(owner, "update public.family_todos set visibility = 'private' where id = $1", [id(1)]);
+  await asUser(member, "update public.family_todos set title = 'Updated', recurrence_parent_id = $1 where id = $2", [id(1), id(2)]);
+  await asUser(owner, 'delete from public.family_todos where id = $1', [id(1)]);
+  expect((await asUser(member, 'select title, recurrence_parent_id from public.family_todos')).rows)
+    .toEqual([{ title: 'Updated', recurrence_parent_id: null }]);
+});
+
+test('membership in both households still does not permit cross-household relationships', async () => {
+  await insert(owner, 1, home);
+  await db.query('insert into public.household_members values ($1, $2)', [home, outsider]);
+  try {
+    expect((await asUser(outsider, 'select id from public.family_todos')).rows).toHaveLength(1);
+    await expect(insert(outsider, 2, otherHome, id(1))).rejects.toMatchObject({ code: '42501' });
+  } finally {
+    await db.query('delete from public.household_members where household_id = $1 and user_id = $2', [home, outsider]);
+  }
+});
+
+test('migration stops without rewriting old cross-household links', async () => {
+  await insert(owner, 1, home);
+  await db.exec('alter table public.family_todos disable trigger family_todos_check_recurrence_parent');
+  try { await insert(outsider, 2, otherHome, id(1)); }
+  finally { await db.exec('alter table public.family_todos enable trigger family_todos_check_recurrence_parent'); }
+  const file = readdirSync('supabase/migrations').find(file => file.endsWith('_secure_todo_recurrence_parent.sql'));
+  await expect(db.exec(readFileSync(`supabase/migrations/${file}`, 'utf8'))).rejects.toMatchObject({ code: '23514' });
+  await db.exec('rollback');
+  expect((await db.query('select id, recurrence_parent_id from public.family_todos order by id')).rows)
+    .toEqual([{ id: id(1), recurrence_parent_id: null }, { id: id(2), recurrence_parent_id: id(1) }]);
+});

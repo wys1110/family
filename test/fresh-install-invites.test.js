@@ -101,3 +101,15 @@ test('membership removal and invitation revocation roll back together', async ()
   expect((await asUser(owner, 'select * from get_household_invite()')).rows[0].invite_code).toBe(old);
   expect((await asUser(expired, 'select name from babies')).rows).toHaveLength(1);
 });
+
+test('fresh-install todo recurrence also rejects other households before reserving a successor', async () => {
+  const otherUser = '44444444-4444-4444-8444-444444444444';
+  await db.query('insert into auth.users(id) values ($1)', [otherUser]);
+  const otherHome = (await asUser(otherUser, "select create_household('Other synthetic family') as id")).rows[0].id;
+  const parent = (await asUser(owner, `insert into family_todos(household_id, title, created_by)
+    values ('${home}', 'Synthetic parent', '${owner}') returning id`)).rows[0].id;
+  await expect(asUser(otherUser, `insert into family_todos(household_id, title, created_by, recurrence_parent_id)
+    values ('${otherHome}', 'Synthetic child', '${otherUser}', '${parent}')`)).rejects.toMatchObject({ code: '42501' });
+  expect((await asUser(owner, `insert into family_todos(household_id, title, created_by, recurrence_parent_id)
+    values ('${home}', 'Synthetic child', '${owner}', '${parent}') returning id`)).rows).toHaveLength(1);
+});

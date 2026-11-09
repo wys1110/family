@@ -463,8 +463,26 @@
           if (!quiet) announce('할 일을 추가했어요.');
           return saved;
         }
-        if (!isMissingTable(error) && error.code !== '23505') throw error;
-        if (error.code === '23505') return null;
+        if (error.code === '23505' && todo.parentId) {
+          // A duplicate is success only when this account can read the actual
+          // successor in this household. A hidden conflicting row is not one.
+          const { data: existing, error: lookupError } = await withAuthRecovery(() => context.supabase
+            .from('family_todos')
+            .select('id, title, due_date, assignee, note, recurrence, completed, completed_at, recurrence_parent_id, visibility, created_by, created_at, updated_at')
+            .eq('household_id', context.household.id)
+            .eq('recurrence_parent_id', todo.parentId)
+            .maybeSingle(), context);
+          if (lookupError) throw lookupError;
+          if (!existing) throw error;
+          const saved = normalizeTodo(existing);
+          const index = moduleState.todos.findIndex((item) => item.id === saved.id);
+          if (index >= 0) moduleState.todos[index] = saved;
+          else moduleState.todos.unshift(saved);
+          renderTodos();
+          decorateCalendar();
+          return saved;
+        }
+        if (!isMissingTable(error)) throw error;
         moduleState.storage = 'local';
       }
     }
