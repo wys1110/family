@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import { expect, test, vi } from 'vitest';
 const source=readFileSync('family-sleep.js','utf8');
 const flush=async()=>{for(let i=0;i<20;i++) await Promise.resolve();};
-function server() {
+function server(legacy = false) {
   const rows=new Map(), entries=new Map(), aliases=new Map(), channels=[];
   let lose=false;
   const client={
@@ -22,10 +22,15 @@ function server() {
         aliases.set(p.p_session_id,row.id);
       }else if(!row.ended_at&&!row.cancelled_at) {
         if(p.p_action==='cancel') row.cancelled_at=new Date().toISOString();
-        else {row.ended_at=p.p_ended_at;row.growth_entry_id=`record-${row.id}`;entries.set(row.growth_entry_id,{id:row.growth_entry_id,baby_id:row.baby_id,household_id:row.household_id,sleep_minutes:30});}
+        else {
+          row.ended_at=p.p_ended_at;
+          const recordId=legacy ? row.id : `record-${row.id}`;
+          if(!legacy) row.growth_entry_id=recordId;
+          entries.set(recordId,{id:recordId,baby_id:row.baby_id,household_id:row.household_id,sleep_minutes:30});
+        }
       }
       if(lose){lose=false;return {error:{message:'response lost'}};}
-      return {data:{session:{...row},entry:entries.get(row.growth_entry_id)||null}};
+      return {data:{session:{...row},entry:entries.get(legacy ? row.id : row.growth_entry_id)||null}};
     }),
   };
   return {client,rows,entries,loseNext:()=>{lose=true;},emit:async()=>{channels.forEach(ch=>ch.cb());await flush();}};
@@ -53,8 +58,8 @@ function harness(server,user='u1',storage=new Map(),local=null,nativeSync=null) 
   vm.runInContext(source,ctx);
   return {ctx,api:ctx.window.FAMILY_SLEEP,storage,listeners,elements};
 }
-test('two clients see identical starts, another member ends it, both can immediately restart',async()=>{
-  const s=server(), a=harness(s),b=harness(s,'u2'); await flush();
+test.each([false,true])('two clients share starts and completion and can restart (legacy schema: %s)',async legacy=>{
+  const s=server(legacy), a=harness(s),b=harness(s,'u2'); await flush();
   await a.api.start(); await s.emit();
   expect(a.ctx.careTimer.startedAt).toBe(b.ctx.careTimer.startedAt);
   expect(a.ctx.careTimer.sharedId).toBe(b.ctx.careTimer.sharedId);
@@ -63,6 +68,15 @@ test('two clients see identical starts, another member ends it, both can immedia
   expect(a.ctx.state.growthEntries).toHaveLength(1);expect(b.ctx.state.growthEntries).toHaveLength(1);
   expect(a.elements.get('[data-compact-sleep]').disabled).toBe(false);
   await a.api.start();await s.emit();expect(b.ctx.careTimer.sharedId).toBe('u1-2');
+});
+test('a deleted mapping never falls back to an unrelated record at the session ID',async()=>{
+  const s=server(),a=harness(s),b=harness(s,'u2');await flush();await a.api.start();await s.emit();
+  const id=a.ctx.careTimer.sharedId;
+  await b.api.stop();
+  const row=s.rows.get(id);s.entries.delete(row.growth_entry_id);row.growth_entry_id=null;
+  s.entries.set(id,{id,baby_id:'baby',household_id:'home',sleep_minutes:99});
+  await s.emit();
+  expect(a.ctx.careTimer).toBeNull();expect(a.ctx.state.growthEntries).toHaveLength(0);
 });
 test('lost end response resumes after reload with original ID/time and one record',async()=>{
   const s=server(),a=harness(s);await flush();await a.api.start();s.loseNext();
