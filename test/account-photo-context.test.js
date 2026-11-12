@@ -22,7 +22,7 @@ function harness() {
     clearTimeout: vi.fn(), authSessionKey: s => s?.user?.id || 'signed-out',
     isCurrentBootstrap: () => true, DEFAULT_FAMILY_MEMBERS: [],
     document: { documentElement: { dataset: { familyModulesReady: 'true' } } },
-    render: vi.fn(), renderWallpapers: vi.fn(), updateAuthGate: vi.fn(),
+    render: vi.fn(), renderWallpapers: vi.fn(), updateAuthGate: vi.fn(), resetEventDraft: vi.fn(),
     withAuthRecovery: async () => ({ data: [], error: null }),
     window: { FAMILY_MODULES_READY: Promise.resolve(), dispatchEvent: vi.fn(), FAMILY_AUTH_API: { isAuthError: () => false }, setTimeout: vi.fn() },
     selectInitialBaby: vi.fn(), validateCareTimerContext: vi.fn(), CustomEvent: class {},

@@ -96,6 +96,7 @@ let bootstrapRetryTimer = null;
 let eventSaveInProgress = false;
 const eventMovePromises = new Map();
 let eventDialogReturnPosition = null;
+let eventDialogContext = null;
 let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
@@ -271,6 +272,7 @@ async function init() {
         state.session = session;
         if (!session) state.onboardingPrompted = false;
         if (userChanged) {
+          resetEventDraft();
           state.wallpapers = { calendar: null, growth: null };
           resetPhotoViewer();
           renderWallpapers();
@@ -351,6 +353,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
   bootstrapRetryTimer = null;
   const requestId = ++bootstrapRequestId;
   const sessionKey = authSessionKey(state.session);
+  resetEventDraft();
   resetPhotoViewer();
   if (state.supabase) {
     state.wallpapers = { calendar: null, growth: null };
@@ -1524,9 +1527,35 @@ async function moveEventToDate(id, targetDate, offerUndo = true) {
   finally { if (eventMovePromises.get(id) === pending) eventMovePromises.delete(id); }
 }
 
-async function storeEvent(item) {
-  if (state.supabase && state.session) {
-    const { error } = await withAuthRecovery(() => state.supabase.from("events").upsert(toRemote(item)));
+function resetEventDraft() {
+  eventDialogContext = null;
+  eventDialogReturnPosition = null;
+  $("#eventDialog")?.close();
+  $("#eventForm")?.reset();
+  // Hidden inputs retain assigned values across form.reset().
+  $("#eventId").value = "";
+  $("#eventMember").value = "";
+  $("#eventMemberSelector").textContent = "";
+  eventSaveInProgress = false;
+  const submit = $("#eventSubmitButton");
+  submit.disabled = false;
+  submit.setAttribute("aria-busy", "false");
+  submit.textContent = "일정 추가";
+}
+
+function isCurrentEventDraft(context) {
+  return Boolean(context && eventDialogContext === context
+    && context.client === state.supabase && context.userId === state.session?.user?.id
+    && context.householdId === state.household?.id && context.generation === bootstrapRequestId);
+}
+
+async function storeEvent(item, context) {
+  if (!isCurrentEventDraft(context)) return false;
+  if (context.client) {
+    if (!context.userId || !context.householdId) return false;
+    const payload = { ...toRemote(item), household_id: context.householdId, created_by: context.userId };
+    const { error } = await withAuthRecovery(() => context.client.from("events").upsert(payload), context.client, context.userId, () => isCurrentEventDraft(context));
+    if (!isCurrentEventDraft(context)) return false;
     if (error) {
       toast(error.message?.includes("event_end_date") ? "Supabase 날짜 범위 업데이트가 필요해요" : "저장하지 못했어요");
       return false;
@@ -1536,6 +1565,9 @@ async function storeEvent(item) {
 }
 
 function openEventDialog(event = null) {
+  if (eventSaveInProgress) return toast("일정을 저장 중이에요");
+  eventDialogContext = { client: state.supabase, userId: state.session?.user?.id,
+    householdId: state.household?.id, generation: bootstrapRequestId };
   eventDialogReturnPosition = { x: window.scrollX, y: window.scrollY, view: state.activeView };
   $("#eventDialogTitle").textContent = event ? "일정 수정" : "새 일정";
   $("#eventSubmitButton").textContent = event ? "변경사항 저장" : "일정 추가";
@@ -1594,6 +1626,8 @@ function syncDateShortcutSelection() {
 async function saveEvent(event) {
   event.preventDefault();
   if (eventSaveInProgress) return;
+  const context = eventDialogContext;
+  if (!isCurrentEventDraft(context)) { resetEventDraft(); return toast("가족 공간이 변경됐어요. 일정을 다시 열어 주세요"); }
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const startDate = $("#eventDate").value;
   const endDate = $("#eventEndDate").value || startDate;
@@ -1605,36 +1639,56 @@ async function saveEvent(event) {
   submit.setAttribute("aria-busy", "true");
   submit.textContent = "저장 중…";
   try {
-    if (!await storeEvent(item)) return;
+    if (!await storeEvent(item, context) || !isCurrentEventDraft(context)) return;
     const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
     persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
+  } catch {
+    if (isCurrentEventDraft(context)) toast("저장하지 못했어요");
   } finally {
-    eventSaveInProgress = false;
-    submit.disabled = false;
-    submit.setAttribute("aria-busy", "false");
-    submit.textContent = $("#eventId").value ? "변경사항 저장" : "일정 추가";
+    if (eventDialogContext === context) {
+      eventSaveInProgress = false;
+      submit.disabled = false;
+      submit.setAttribute("aria-busy", "false");
+      submit.textContent = $("#eventId").value ? "변경사항 저장" : "일정 추가";
+    }
   }
 }
 
 async function deleteEvent() {
+  if (eventSaveInProgress) return;
+  const context = eventDialogContext;
+  if (!isCurrentEventDraft(context)) { resetEventDraft(); return; }
   const id = $("#eventId").value; if (!id || !confirm("이 일정을 삭제할까요?")) return;
-  if (state.supabase && state.session) { const { error } = await withAuthRecovery(() => state.supabase.from("events").delete().eq("household_id", state.household.id).eq("id", id)); if (error) return toast("삭제하지 못했어요"); }
-  const returnPosition = eventDialogReturnPosition;
-  state.events = state.events.filter((event) => event.id !== id);
-  persistLocal();
-  $("#eventDialog").close();
-  // Keep the selected month/day and mounted views; only event content changed.
-  renderHeader(); renderCalendar(); renderAgenda(); renderUpcomingEvents();
-  if (returnPosition && state.activeView === returnPosition.view) {
-    window.scrollTo({ left: returnPosition.x, top: returnPosition.y, behavior: "instant" });
-    requestAnimationFrame(() => {
-      if (state.activeView !== returnPosition.view || $("#eventDialog").open) return;
-      const selectedDay = $("#calendarGrid .calendar-day.selected");
-      selectedDay?.focus({ preventScroll: true });
+  eventSaveInProgress = true;
+  try {
+    if (context.client) {
+      if (!context.userId || !context.householdId) return;
+      const { error } = await withAuthRecovery(() => context.client.from("events").delete().eq("household_id", context.householdId).eq("id", id), context.client, context.userId, () => isCurrentEventDraft(context));
+      if (!isCurrentEventDraft(context)) return;
+      if (error) return toast("삭제하지 못했어요");
+    }
+    if (!isCurrentEventDraft(context)) return;
+    const returnPosition = eventDialogReturnPosition;
+    state.events = state.events.filter((event) => event.id !== id);
+    persistLocal();
+    $("#eventDialog").close();
+    // Keep the selected month/day and mounted views; only event content changed.
+    renderHeader(); renderCalendar(); renderAgenda(); renderUpcomingEvents();
+    if (returnPosition && state.activeView === returnPosition.view) {
       window.scrollTo({ left: returnPosition.x, top: returnPosition.y, behavior: "instant" });
-    });
+      requestAnimationFrame(() => {
+        if (!isCurrentEventDraft(context) || state.activeView !== returnPosition.view || $("#eventDialog").open) return;
+        const selectedDay = $("#calendarGrid .calendar-day.selected");
+        selectedDay?.focus({ preventScroll: true });
+        window.scrollTo({ left: returnPosition.x, top: returnPosition.y, behavior: "instant" });
+      });
+    }
+    toast("일정을 삭제했어요");
+  } catch {
+    if (isCurrentEventDraft(context)) toast("삭제하지 못했어요");
+  } finally {
+    if (eventDialogContext === context) eventSaveInProgress = false;
   }
-  toast("일정을 삭제했어요");
 }
 function persistLocal() { if (!state.supabase) localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); }
 

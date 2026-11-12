@@ -13,15 +13,19 @@ function harness({ confirmed = true, remoteError = false } = {}) {
   const window = { scrollTo: vi.fn() };
   if (remoteError) {
     const query = { delete: () => query, eq: () => query, then: resolve => resolve({ error: new Error('offline') }) };
-    Object.assign(state, { supabase: { from: () => query }, session: {}, household: { id: 'family' } });
+    Object.assign(state, { supabase: { from: () => query }, session: { user: { id: 'user' } }, household: { id: 'family' } });
   }
-  const context = { state, eventDialogReturnPosition: position, window, confirm: () => confirmed,
+  const context = { state, eventDialogReturnPosition: position, bootstrapRequestId: 1, eventSaveInProgress: false,
+    eventDialogContext: { client: state.supabase, userId: state.session?.user?.id, householdId: state.household?.id, generation: 1 },
+    window, confirm: () => confirmed,
     $: selector => selector === '#eventId' ? { value: 'delete' } : selector === '#eventDialog' ? dialog : selected,
     withAuthRecovery: fn => fn(), requestAnimationFrame: fn => frame.push(fn),
     persistLocal: vi.fn(), renderHeader: vi.fn(), renderCalendar: vi.fn(), renderAgenda: vi.fn(), renderUpcomingEvents: vi.fn(), toast: vi.fn(),
     render: () => { throw new Error('Must not remount the whole app'); },
   };
-  vm.createContext(context); vm.runInContext(source, context);
+  vm.createContext(context);
+  vm.runInContext(app.slice(app.indexOf('function resetEventDraft('), app.indexOf('async function storeEvent(')), context);
+  vm.runInContext(source, context);
   return { context, frame, state, selected, dialog, window };
 }
 

@@ -22,10 +22,10 @@ function server() {
         aliases.set(p.p_session_id,row.id);
       }else if(!row.ended_at&&!row.cancelled_at) {
         if(p.p_action==='cancel') row.cancelled_at=new Date().toISOString();
-        else {row.ended_at=p.p_ended_at;entries.set(row.id,{id:row.id,baby_id:row.baby_id,household_id:row.household_id,sleep_minutes:30});}
+        else {row.ended_at=p.p_ended_at;row.growth_entry_id=`record-${row.id}`;entries.set(row.growth_entry_id,{id:row.growth_entry_id,baby_id:row.baby_id,household_id:row.household_id,sleep_minutes:30});}
       }
       if(lose){lose=false;return {error:{message:'response lost'}};}
-      return {data:{session:{...row},entry:entries.get(row.id)||null}};
+      return {data:{session:{...row},entry:entries.get(row.growth_entry_id)||null}};
     }),
   };
   return {client,rows,entries,loseNext:()=>{lose=true;},emit:async()=>{channels.forEach(ch=>ch.cb());await flush();}};
