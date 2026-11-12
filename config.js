@@ -135,7 +135,7 @@ window.FAMILY_CONFIG = {
     { name: "tab-emojis", version: "20261018-parenting-chat-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20261109-recurrence-isolation-v1" },
-    { name: "notification-center", version: "20260830-auth-recovery-v2" },
+    { name: "notification-center", version: "20261112-event-save-context-v3" },
     { name: "family-onboarding", version: "20260830-auth-recovery-v2" },
     { name: "family-search", version: "20260805-family-search-v1" },
     { name: "adaptive-feeding", version: "20261023-family-review-fixes-v1" },

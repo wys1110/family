@@ -1583,6 +1583,7 @@ function openEventDialog(event = null) {
   syncRangeDates();
   syncDateShortcutSelection();
   $("#deleteEventButton").classList.toggle("visible", Boolean(event)); $("#eventDialog").showModal(); focusOnDesktop("#eventTitle");
+  return true;
 }
 
 function selectEventMember(member) {

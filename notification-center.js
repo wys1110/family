@@ -862,6 +862,8 @@
     if (typeof previousOpenEventDialog === 'function' && !previousOpenEventDialog.__notificationCenterWrapped) {
       const wrapped = function (event = null) {
         const result = previousOpenEventDialog(event);
+        if (result !== true) return result;
+        ensureScope();
         const config = event?.id ? eventReminderConfig(event.id) : { preset: 'none', customAt: '', enabled: false };
         preset.value = config.enabled ? config.preset : 'none';
         custom.value = config.customAt || '';
@@ -874,15 +876,18 @@
 
     const previousStoreEvent = window.storeEvent;
     if (typeof previousStoreEvent === 'function' && !previousStoreEvent.__notificationCenterWrapped) {
-      const wrapped = async function (item) {
-        const saved = await previousStoreEvent(item);
-        if (saved) {
-          const selectedPreset = EVENT_PRESETS.has(preset.value) ? preset.value : 'none';
-          store.eventReminders[item.id] = {
-            preset: selectedPreset,
-            customAt: selectedPreset === 'custom' ? custom.value : '',
-            enabled: selectedPreset !== 'none',
-          };
+      const wrapped = async function (item, context) {
+        // Keep the reminder and editor bound to the same submitted draft.
+        const selectedPreset = EVENT_PRESETS.has(preset.value) ? preset.value : 'none';
+        const reminder = {
+          preset: selectedPreset,
+          customAt: selectedPreset === 'custom' ? custom.value : '',
+          enabled: selectedPreset !== 'none',
+        };
+        const saved = await previousStoreEvent(item, context);
+        if (saved && isCurrentEventDraft(context)) {
+          ensureScope();
+          store.eventReminders[item.id] = reminder;
           persist();
           refresh({ forceRemote: true });
         }
