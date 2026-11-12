@@ -17,6 +17,6 @@ describe('data integrity review fixes', () => {
 
   test('remote mutations include the active household condition', () => {
     const source = read('app.js');
-    expect(source).toContain('.eq("household_id", state.household.id).eq("id", id)');
+    expect(source).toContain('.eq("household_id", context.householdId).eq("id", id)');
   });
 });

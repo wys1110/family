@@ -69,10 +69,19 @@
       const next = data || [];
       const finished = rows.filter(row => !next.some(item => item.id === row.id)).map(row => row.id);
       if (finished.length) {
-        const records = await recover(ctx, () => ctx.client.from('growth_entries').select('*').eq('household_id', ctx.home).in('id', finished));
+        const sessions = await recover(ctx, () => ctx.client.from('family_sleep_sessions').select('*').eq('household_id', ctx.home).in('id', finished));
         if (!current(ctx) || version !== readVersion) return;
-        if (records.error) throw records.error;
-        (records.data || []).forEach(mergeEntry);
+        if (sessions.error) throw sessions.error;
+        // Older schemas used the session ID. An explicit null in the new schema
+        // means cancelled/deleted, and must never fall back to a reused ID.
+        const recordIds = (sessions.data || []).filter(row => row.ended_at)
+          .map(row => 'growth_entry_id' in row ? row.growth_entry_id : row.id).filter(Boolean);
+        if (recordIds.length) {
+          const records = await recover(ctx, () => ctx.client.from('growth_entries').select('*').eq('household_id', ctx.home).in('id', recordIds));
+          if (!current(ctx) || version !== readVersion) return;
+          if (records.error) throw records.error;
+          (records.data || []).forEach(mergeEntry);
+        }
       }
       rows = next; ready = true;
       render();
