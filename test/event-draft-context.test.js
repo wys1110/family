@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import { expect, test, vi } from 'vitest';
 
 const app = readFileSync('app.js', 'utf8');
+const notifications = readFileSync('notification-center.js', 'utf8');
 const section = (a, b) => app.slice(app.indexOf(a), app.indexOf(b, app.indexOf(a)));
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 function harness() {
@@ -41,6 +42,95 @@ function harness() {
   const switchAccount = () => { context.state.session = { user: { id: 'user-b' } }; context.state.household = { id: 'home-b' }; };
   return { context, $, write, remove, open, switchAccount, save: () => context.saveEvent({ preventDefault() {} }) };
 }
+
+// Compose the real reminder installer with the real editor functions, as classic
+// scripts do in the browser. A core-only test misses arguments lost by wrappers.
+function withReminders(h = harness()) {
+  const { context, $ } = h;
+  context.window = Object.assign(context, context.window);
+  context.document.querySelector = $;
+  $('#eventForm').querySelector = () => null;
+  $('#eventTimeField').insertAdjacentElement = vi.fn();
+  const preset = $('#eventReminderPreset'), custom = $('#eventReminderCustomAt');
+  preset.addEventListener = vi.fn();
+  context.createReminderField = () => ({ querySelector: $ });
+  context.syncCustomField = vi.fn();
+  context.EVENT_PRESETS = new Set(['none', 'at-time', 'before-10', 'before-60', 'custom']);
+  context.store = { eventReminders: {} };
+  context.eventReminderConfig = id => context.store.eventReminders[id] || { preset: 'none', customAt: '', enabled: false };
+  context.ensureScope = vi.fn();
+  context.persist = vi.fn();
+  context.refresh = vi.fn();
+  const start = notifications.indexOf('  const installEventReminderField =');
+  const end = notifications.indexOf('  const waitForDialogClose =', start);
+  vm.runInContext(notifications.slice(start, end) + '\ninstallEventReminderField();', context);
+  return { ...h, preset, custom };
+}
+
+test.each(['new', 'existing'])('the installed reminder module saves a %s event and its selected reminder', async kind => {
+  const h = withReminders();
+  const original = { id: 'existing-id', title: 'before', date: '2026-11-12', member: 'family' };
+  if (kind === 'existing') h.context.state.events = [original];
+  h.context.openEventDialog(kind === 'existing' ? original : null);
+  h.$('#eventTitle').value = 'after';
+  h.preset.value = 'before-10';
+  await h.save();
+  const id = kind === 'existing' ? original.id : 'event-id';
+  expect(h.write).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id, title: 'after', household_id: 'home-a' }));
+  expect(h.context.state.events).toEqual([expect.objectContaining({ id, title: 'after' })]);
+  expect(h.context.store.eventReminders[id]).toEqual({ preset: 'before-10', customAt: '', enabled: true });
+  expect(h.$('#eventDialog').open).toBe(false);
+});
+
+test('reminder-enabled demo edits survive local persistence', async () => {
+  const h = withReminders(); h.context.state.supabase = null;
+  const original = { id: 'demo-event', title: 'before', date: '2026-11-12', member: 'family' };
+  h.context.state.events = [original]; h.context.openEventDialog(original);
+  h.$('#eventTitle').value = 'after'; await h.save();
+  expect(h.write).not.toHaveBeenCalled();
+  const stored = JSON.parse(h.context.localStorage.setItem.mock.calls.at(-1)[1]);
+  expect(stored).toEqual([expect.objectContaining({ id: original.id, title: 'after' })]);
+});
+
+test('reminder settings are captured with the submitted event, not read after a slow save', async () => {
+  const h = withReminders(), response = deferred(); h.open();
+  h.preset.value = 'custom'; h.custom.value = '2026-11-12T12:00';
+  h.write.mockReturnValue(response.promise); const pending = h.save();
+  h.preset.value = 'none'; h.custom.value = '';
+  response.resolve({ error: null }); await pending;
+  expect(h.context.store.eventReminders['event-id']).toEqual({ preset: 'custom', customAt: '2026-11-12T12:00', enabled: true });
+});
+
+test('an attempted open during saving does not reset the active reminder fields', async () => {
+  const h = withReminders(), response = deferred(); h.open();
+  h.preset.value = 'before-60'; h.write.mockReturnValue(response.promise);
+  const pending = h.save(); h.context.openEventDialog();
+  expect(h.preset.value).toBe('before-60');
+  response.resolve({ error: null }); await pending;
+});
+
+test('a failed wrapped save keeps the draft and reminder retryable', async () => {
+  const h = withReminders(); h.open(); h.preset.value = 'at-time';
+  h.write.mockResolvedValueOnce({ error: { message: 'offline' } });
+  await h.save();
+  expect(h.$('#eventDialog').open).toBe(true);
+  expect(h.context.persist).not.toHaveBeenCalled();
+  expect(h.preset.value).toBe('at-time');
+  await h.save();
+  expect(h.context.store.eventReminders['event-id']?.preset).toBe('at-time');
+  expect(h.$('#eventDialog').open).toBe(false);
+});
+
+test('account switching during a wrapped save cannot persist reminders or events into the new family', async () => {
+  const h = withReminders(), response = deferred(); h.open(); h.preset.value = 'before-10';
+  h.write.mockReturnValue(response.promise); const pending = h.save();
+  h.switchAccount(); h.context.store = { eventReminders: {} };
+  response.resolve({ error: null }); await pending;
+  expect(h.context.store.eventReminders).toEqual({});
+  expect(h.context.persist).not.toHaveBeenCalled();
+  expect(h.context.refresh).not.toHaveBeenCalled();
+  expect(h.context.state.events).toEqual([]);
+});
 
 test.each(['user', 'household', 'reload'])('a draft opened before %s changes cannot be saved', async change => {
   const h = harness(); h.open();
