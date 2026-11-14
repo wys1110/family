@@ -15,7 +15,9 @@
     const originalTab = view => originalNav.querySelector(`[data-view="${view}"]`);
     const navigate = view => {
       const target = originalTab(view);
-      if (target && !target.hidden && !target.disabled) target.click();
+      if (!target || target.hidden || target.disabled) return;
+      target.click();
+      if (view === 'calendar') $('#calendarView [data-calendar-mode="calendar"][aria-selected="false"]')?.click();
     };
 
     const dock = document.createElement('div'); dock.className = 'simple-bottom';
