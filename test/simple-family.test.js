@@ -36,6 +36,15 @@ function fixture() {
   for(const name of ['calendar','growth','assistant','english','travel','settings','admin']){const tab=add(nav,'button',`view-tab${name==='calendar'?' active':''}`);tab.dataset.view=name;tab.textContent=name;tab.addEventListener('click',vi.fn());tabs[name]=tab;}
   tabs.admin.hidden=true;
   const calendar=add(shell,'div','','calendarView');add(shell,'section','daily-verse-card');
+  const calendarButton=add(calendar,'button');
+  calendarButton.dataset.calendarMode='calendar';
+  calendarButton.setAttribute('aria-selected','false');
+  const calendarPanel=add(calendar,'div','family-calendar-panel');
+  calendarPanel.hidden=true;
+  calendarButton.addEventListener('click',()=>{
+    calendarPanel.hidden=false;
+    calendarButton.setAttribute('aria-selected','true');
+  });
   const growth=add(shell,'div','','growthView'),journal=add(growth,'div','','babyJournalContent');add(growth,'div','baby-header-actions');
   const profile=add(journal,'section','baby-profile-card');profile.dataset.wallpaperSurface='growth';const wallpaper=add(profile,'div','wallpaper-actions');const remove=add(wallpaper,'button');remove.dataset.wallpaperRemove='growth';
   const timer=add(journal,'section','','careTimerCard'),running=add(timer,'div','','careTimerRunning');running.hidden=true;
@@ -54,6 +63,16 @@ test('navigation delegates to original tabs and hides privileged entries',()=>{
   const dialog=f.document.querySelector('#simpleMore');expect(dialog.open).toBe(true);
   expect(dialog.textContent).toContain('여행');expect(dialog.textContent).not.toContain('관리');
   dialog.querySelectorAll('button').find(b=>b.textContent==='여행').click();expect(f.tabs.travel.listeners.click[0]).toHaveBeenCalledOnce();expect(dialog.open).toBe(false);
+});
+test('the bottom Today button reveals the calendar when the to-do list is selected',()=>{
+  const f=fixture();
+  const calendarPanel=f.document.querySelector('.family-calendar-panel');
+  expect(calendarPanel.hidden).toBe(true);
+  f.document.querySelector('[data-simple-view="growth"]').click();
+  expect(calendarPanel.hidden).toBe(true);
+  f.document.querySelector('[data-simple-view="calendar"]').click();
+  expect(f.tabs.calendar.listeners.click[0]).toHaveBeenCalledOnce();
+  expect(calendarPanel.hidden).toBe(false);
 });
 test('quick records reuse sources and follow pending and family context states',()=>{
   const f=fixture(),quick=f.document.querySelector('[data-quick="sleep"]');quick.click();expect(f.sources.sleep.listeners.click[0]).toHaveBeenCalledOnce();
