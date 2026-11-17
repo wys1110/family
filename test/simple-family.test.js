@@ -33,7 +33,7 @@ function fixture() {
   const root=new Node('html');const add=(parent,tag,classes='',id='')=>{const n=new Node(tag,classes,id);parent.append(n);return n;};
   const shell=add(root,'div','','appShell'),top=add(shell,'header','topbar');add(top,'h1');add(top,'button','','accountButton');
   const nav=add(shell,'nav','view-tabs');const tabs={};
-  for(const name of ['calendar','growth','assistant','english','travel','settings','admin']){const tab=add(nav,'button',`view-tab${name==='calendar'?' active':''}`);tab.dataset.view=name;tab.textContent=name;tab.addEventListener('click',vi.fn());tabs[name]=tab;}
+  for(const name of ['calendar','growth','assistant','travel','english','settings','admin']){const tab=add(nav,'button',`view-tab${name==='calendar'?' active':''}`);tab.dataset.view=name;tab.textContent=name;tab.addEventListener('click',vi.fn());tabs[name]=tab;}
   tabs.admin.hidden=true;
   const calendar=add(shell,'div','','calendarView');add(shell,'section','daily-verse-card');
   const calendarButton=add(calendar,'button');
@@ -58,11 +58,36 @@ function fixture() {
 }
 
 test('navigation delegates to original tabs and hides privileged entries',()=>{
-  const f=fixture();f.document.querySelector('[data-simple-view="growth"]').click();expect(f.tabs.growth.listeners.click[0]).toHaveBeenCalledOnce();
-  f.document.querySelector('#simpleNavigation').lastElementChild.click();
-  const dialog=f.document.querySelector('#simpleMore');expect(dialog.open).toBe(true);
-  expect(dialog.textContent).toContain('여행');expect(dialog.textContent).not.toContain('관리');
-  dialog.querySelectorAll('button').find(b=>b.textContent==='여행').click();expect(f.tabs.travel.listeners.click[0]).toHaveBeenCalledOnce();expect(dialog.open).toBe(false);
+  const f=fixture();
+  const navigation=f.document.querySelector('#simpleNavigation');
+  const travel=navigation.querySelector('[data-simple-view="travel"]');
+  const more=navigation.lastElementChild;
+  expect(navigation.children.map(b=>b.textContent)).toEqual(['오늘','성장','여행','동화','더보기']);
+  travel.click();
+  expect(f.tabs.travel.listeners.click[0]).toHaveBeenCalledOnce();
+
+  const syncNavigation=f.observers.find(o=>o.target.className==='view-tabs').fn;
+  f.tabs.calendar.className='view-tab';
+  f.tabs.travel.className='view-tab active';
+  syncNavigation();
+  expect(travel.attrs['aria-current']).toBe('page');
+  expect(more.attrs['aria-current']).toBeUndefined();
+
+  more.click();
+  const dialog=f.document.querySelector('#simpleMore');
+  const items=dialog.querySelectorAll('.simple-more-items button');
+  expect(dialog.open).toBe(true);
+  expect(items.map(b=>b.textContent)).toEqual(['일정 추가','육아','설정','오늘 화면 배경 사진','계정 및 저장 상태']);
+  items[1].click();
+  expect(f.tabs.assistant.listeners.click[0]).toHaveBeenCalledOnce();
+  expect(dialog.open).toBe(false);
+  expect(more.attrs['aria-expanded']).toBe('false');
+
+  f.tabs.travel.className='view-tab';
+  f.tabs.assistant.className='view-tab active';
+  syncNavigation();
+  expect(travel.attrs['aria-current']).toBeUndefined();
+  expect(more.attrs['aria-current']).toBe('page');
 });
 test('the bottom Today button reveals the calendar when the to-do list is selected',()=>{
   const f=fixture();
