@@ -243,7 +243,8 @@
   }
 
   function localKey(context = familyContext()) {
-    return context ? `${LOCAL_KEY}:${context.session.user.id}:${context.household.id}` : LOCAL_KEY;
+    const key = context ? `${LOCAL_KEY}:${context.session.user.id}:${context.household.id}` : LOCAL_KEY;
+    return window.FAMILY_DEMO?.storageKey(key) ?? key;
   }
 
   async function waitForFamilyContext() {

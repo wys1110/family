@@ -1,13 +1,23 @@
 (() => {
   const context = () => {
     const state = window.FAMILY_APP_STATE;
-    if (window.FAMILY_DEMO_MODE || !state?.supabase || !state.session?.user?.id || !state.household?.id) return null;
-    return { client: state.supabase, userId: state.session.user.id, householdId: state.household.id };
+    if (window.FAMILY_DEMO_MODE || !state?.supabase || state.authTransitionPending || !state.session?.user?.id || !state.household?.id) return null;
+    return { client: state.supabase, userId: state.session.user.id, householdId: state.household.id, authGeneration: state.authGeneration || 0 };
   };
   const run = async (ctx, operation) => {
-    const result = await window.FAMILY_AUTH_API.withRecovery(operation, {
+    const isCurrent = () => {
+      const now = context();
+      return !!now && now.client === ctx.client && now.userId === ctx.userId && now.householdId === ctx.householdId
+        && now.authGeneration === ctx.authGeneration;
+    };
+    const result = await window.FAMILY_AUTH_API.withRecovery(() => {
+      const token = window.FAMILY_APP_STATE.session?.access_token;
+      if (!isCurrent() || !token) return { data: null, error: Object.assign(new Error('가족 로그인을 확인해 주세요.'), { code: 'FAMILY_CONTEXT_CHANGED' }) };
+      // Pin the request to this account, even if the SDK reads a new session before fetch.
+      return operation().setHeader('Authorization', 'Bearer ' + token);
+    }, {
       supabase: ctx.client, userId: ctx.userId,
-      isCurrent: () => { const now=context(); return now?.client===ctx.client && now.userId===ctx.userId && now.householdId===ctx.householdId; },
+      isCurrent,
     });
     if (result.error) throw result.error;
     return result.data;
