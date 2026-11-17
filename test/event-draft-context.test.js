@@ -24,7 +24,8 @@ function harness() {
   const context = {
     $, eventDialogContext: null, eventDialogReturnPosition: null, eventSaveInProgress: false, bootstrapRequestId: 1,
     state: { supabase: client, session: { user: { id: 'user-a' } }, household: { id: 'home-a' }, selectedDate: '2026-11-12', events: [], familyMembers: [] },
-    window: { scrollX: 0, scrollY: 0, setTimeout: vi.fn(), scrollTo: vi.fn() },
+    window: { scrollX: 0, scrollY: 0, setTimeout: vi.fn(), scrollTo: vi.fn(), dispatchEvent: vi.fn() },
+    bootstrapRetryTimer: null, clearTimeout: vi.fn(), CustomEvent: class { constructor(type) { this.type = type; } },
     document: { querySelectorAll: () => [] }, focusOnDesktop() {},
     uid: () => 'event-id', parseDate: x => new Date(x), startOfMonth: x => x, dateKey: x => x.toISOString().slice(0, 10),
     render: vi.fn(), renderHeader: vi.fn(), renderCalendar: vi.fn(), renderAgenda: vi.fn(), renderUpcomingEvents: vi.fn(),
@@ -35,6 +36,7 @@ function harness() {
     resetPhotoViewer: vi.fn(), renderWallpapers: vi.fn(),
   };
   vm.createContext(context);
+  vm.runInContext(section('function setAuthUser(', 'function withAuthRecovery('), context);
   vm.runInContext(section('function toRemote(', 'function toGrowthRemote('), context);
   if (app.includes('function resetEventDraft(')) vm.runInContext(section('function resetEventDraft(', 'async function storeEvent('), context);
   vm.runInContext(section('async function storeEvent(', 'function renderGrowth('), context);
@@ -149,6 +151,9 @@ test.each([null, { user: { id: 'user-b' } }])('auth change clears the open draft
   expect(h.$('#eventDialog').open).toBe(false);
   expect(h.$('#eventTitle').value).toBe('');
   expect(h.$('#eventNote').value).toBe('');
+  expect(h.context.state.authTransitionPending).toBe(true);
+  expect(h.context.window.dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'family:auth-user-changed' }));
+  expect(h.context.window.dispatchEvent.mock.invocationCallOrder[0]).toBeLessThan(h.context.window.setTimeout.mock.invocationCallOrder[0]);
 });
 
 test('token refresh for the same user preserves an unsaved draft', () => {
@@ -156,6 +161,7 @@ test('token refresh for the same user preserves an unsaved draft', () => {
   vm.runInContext(section('        const nextKey = authSessionKey(session);', '\n      });'), h.context);
   expect(h.$('#eventDialog').open).toBe(true);
   expect(h.$('#eventNote').value).toBe('private A note');
+  expect(h.context.window.dispatchEvent).not.toHaveBeenCalled();
 });
 
 test('late save response does not append an old draft to a new household', async () => {

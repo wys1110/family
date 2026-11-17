@@ -31,6 +31,7 @@ function harness() {
     console: { error: vi.fn() }, describeRemoteError: () => 'synthetic offline', BOOTSTRAP_RETRY_DELAYS: [], lastAuthSessionKey: 'user-a',
   };
   vm.createContext(context);
+  vm.runInContext(section('function setAuthUser(', 'function withAuthRecovery('), context);
   const reset = app.includes('function resetPhotoViewer(') ? section('function resetPhotoViewer(', 'async function shareRecentPhoto(') : '';
   vm.runInContext(`${reset}\n${section('async function shareRecentPhoto(', '\nfunction filterGrowthEntries(')}\n${section('async function bootstrapData(', '\nfunction isCurrentBootstrap(')}`, context);
   return { context, state, photo, node };

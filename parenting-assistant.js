@@ -41,7 +41,7 @@
   const contextPreview = view.querySelector('#assistantContext');
   const savedStatus = view.querySelector('#assistantSavedStatus');
   const older = view.querySelector('#assistantOlder');
-  let oldestSaved = null, loadingOlder = false, scrollToLatest = true;
+  let oldestSaved = null, loadingOlder = null, scrollToLatest = true;
   const queueStatus = view.querySelector('#assistantQueueStatus');
   const cancel = view.querySelector('#assistantCancel');
   const retry = view.querySelector('#assistantRetry');
@@ -49,15 +49,20 @@
   const actionStatus = view.querySelector('#assistantActionStatus');
   const store = window.FAMILY_PARENTING_HISTORY;
   let selectedBabyId = null;
-  let saved = [], activeQuestion = null, loadingSaved = false, cloudBusy = false, lastSavedCheck = 0;
+  let saved = [], activeQuestion = null, loadingSaved = null, cloudBusy = false, lastSavedCheck = 0;
   const cloudContext = () => store?.context() || null;
-  let connection = null, pending = null, generation = 0;
+  let scopedContext = cloudContext(), accountChanging = false;
+  const sameContext = (a, b) => a === b || !!(a && b && a.client === b.client && a.userId === b.userId &&
+    a.householdId === b.householdId && a.authGeneration === b.authGeneration);
+  const isChanging = () => accountChanging || window.FAMILY_APP_STATE?.authTransitionPending;
+  let connection = null, localDiscovery = null, pending = null, generation = 0;
   const visibleTurns = new Map(), contextIds = new Set();
   let restoreContext = true;
   let history = [], workerStatus = null, uncertain = null, actionBusy = false;
-  const updateSend = () => { clear.disabled=!!pending || cloudBusy || !!uncertain || actionBusy; send.disabled = !!pending || cloudBusy || !!uncertain || actionBusy || !input.value.trim() || input.value.length > 2000; };
+  const isCurrent = (current, ctx) => !isChanging() && generation === current && sameContext(ctx, cloudContext());
+  const updateSend = () => { clear.disabled=!!isChanging() || !!pending || cloudBusy || !!uncertain || actionBusy; send.disabled = clear.disabled || !input.value.trim() || input.value.length > 2000; };
   const reset = (keepMessages = false) => {
-    generation++; pending?.abort(); pending=null; history=[]; contextIds.clear(); restoreContext=!keepMessages;
+    generation++; pending?.abort(); pending=null; actionBusy=false; history=[]; contextIds.clear(); restoreContext=!keepMessages;
     activeQuestion=null; retry.hidden=true; actionStatus.hidden=true; log.setAttribute('aria-busy','false');
     if (connection) send.textContent='질문 보내기 ↑';
     if (!keepMessages) { visibleTurns.clear(); oldestSaved=null; scrollToLatest=true; older.hidden=true; log.replaceChildren(); welcome.hidden=false; clear.hidden=true; }
@@ -67,7 +72,28 @@
     view.querySelector('.assistant-connection').textContent = status;
     view.querySelector('#assistantPrivacy').textContent = note;
   };
+  const resetAccount = (resetRecordChoice = false) => {
+    scopedContext = isChanging() ? null : cloudContext();
+    selectedBabyId=null; saved=[]; workerStatus=null; uncertain=null; cloudBusy=false;
+    loadingSaved=null; loadingOlder=null; lastSavedCheck=0;
+    if (resetRecordChoice) { connection=null; localDiscovery=null; useRecords.checked=useRecords.defaultChecked; }
+    reset();
+    queueStatus.hidden=true; cancel.hidden=true; resolve.hidden=true; older.disabled=false;
+    babySelect.replaceChildren(); babySelect.disabled=true; useRecords.disabled=true;
+    contextPreview.textContent='';
+    send.textContent=connection ? '질문 보내기 ↑' : '질문 남기기 ↑';
+    savedStatus.textContent='로그인하면 질문과 답변을 저장해요.';
+    setConnectionText('AI 연결 전', 'AI 답변은 아직 연결 전이에요. 질문은 이 화면에만 남고, 새로고침하면 사라져요.');
+  };
+  const ensureContext = () => {
+    if (isChanging()) return false;
+    if (sameContext(scopedContext, cloudContext())) return true;
+    accountChanging=true;
+    resetAccount(true);
+    return false;
+  };
   const refreshContext = () => {
+    if (isChanging()) return '';
     const state = window.FAMILY_APP_STATE || {};
     const babies = (state.babies || []).filter(baby => !baby.archivedAt);
     if (!babies.some(baby => baby.id === selectedBabyId)) { if (selectedBabyId) reset(); selectedBabyId = babies.find(baby => baby.id === state.activeBabyId)?.id || babies[0]?.id || null; }
@@ -78,18 +104,28 @@
     contextPreview.textContent = useRecords.checked ? context : '아이 기록을 보내지 않고 질문에만 답해요.';
     return useRecords.checked ? context : '';
   };
-  babySelect.addEventListener('change', () => { const draft=input.value; reset(); input.value=draft; saved=[]; selectedBabyId = babySelect.value; refreshContext(); loadSaved(); });
-  useRecords.addEventListener('change', () => { const draft=input.value; reset(true); input.value=draft; refreshContext(); updateSend(); });
+  babySelect.addEventListener('change', () => { if (!ensureContext()) return; const draft=input.value; reset(); input.value=draft; saved=[]; selectedBabyId = babySelect.value; refreshContext(); loadSaved(); });
+  useRecords.addEventListener('change', () => { if (!ensureContext()) return; const draft=input.value; reset(true); input.value=draft; refreshContext(); updateSend(); });
   refreshContext();
-  // Local/demo testing can still use the private server; signed-in users always use the durable queue.
-  if (!cloudContext() && (window.location?.origin === 'http://127.0.0.1:8775' || /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.ts\.net$/.test(window.location?.origin || ''))) {
+  // An approved private origin can use the local server when no family queue is available.
+  const privateOrigin = window.location?.origin === 'http://127.0.0.1:8775' || /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.ts\.net$/.test(window.location?.origin || '');
+  const canUseLocal = () => privateOrigin && !isChanging() && !cloudContext();
+  const discoverLocal = () => {
+    if (!canUseLocal() || connection || localDiscovery) return;
+    const marker={};
+    localDiscovery=marker;
+    const authGeneration = window.FAMILY_APP_STATE?.authGeneration;
+    const localScopeIsCurrent = () => localDiscovery === marker && canUseLocal() && authGeneration === window.FAMILY_APP_STATE?.authGeneration;
     fetch('/api/parenting/status', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(status => {
+      if (!localScopeIsCurrent()) return;
       if (status?.provider !== 'codex-local' || !status.token) throw new Error('offline');
       connection = status.token;
       setConnectionText('Codex · Luna', '연결된 Mac의 Codex 구독으로 답변받아요. 선택한 기록 요약·질문·최근 대화를 OpenAI로 보내요. 새로고침하면 대화가 사라져요. AI 답변은 틀릴 수 있어요.');
       send.textContent = '질문 보내기 ↑';
-    }).catch(() => setConnectionText('연결 끊김', 'Mac의 채팅 서버와 Tailscale 연결을 확인한 뒤 새로고침해 주세요.'));
-  }
+    }).catch(() => { if (localScopeIsCurrent()) setConnectionText('연결 끊김', 'Mac의 채팅 서버와 Tailscale 연결을 확인한 뒤 새로고침해 주세요.'); })
+      .finally(() => { if (localDiscovery === marker) localDiscovery=null; });
+  };
+  discoverLocal();
   const appendMessage = (kind, label, text) => {
     const message = document.createElement('article');
     message.className = `assistant-message assistant-message-${kind}`;
@@ -153,19 +189,21 @@
     updateSend();
   };
   async function loadSaved() {
+    if (!ensureContext()) return;
     const ctx=cloudContext();
     if (!ctx || loadingSaved) return;
-    const current=generation, baby=selectedBabyId;
-    loadingSaved=true; lastSavedCheck=Date.now();
+    const current=generation, baby=selectedBabyId, marker={};
+    loadingSaved=marker; lastSavedCheck=Date.now();
     try {
       // Status expires stale work before history is read.
       const status=await store.status(ctx);
+      if (!isCurrent(current,ctx)) return;
       const rows=await store.list(ctx,baby);
-      if (generation!==current || baby!==selectedBabyId) return;
+      if (!isCurrent(current,ctx)) return;
       workerStatus=status;
       if (uncertain && store.find) {
         const received=await store.find(ctx,uncertain.id);
-        if (generation!==current) return;
+        if (!isCurrent(current,ctx)) return;
         if (received) { uncertain=null; activeQuestion=received.id; input.value=''; refreshContext(); }
       }
       saved=rows || [];
@@ -179,42 +217,51 @@
       }
       refreshQueue();
     } catch {
-      if (generation===current) {
+      if (isCurrent(current,ctx)) {
         view.querySelector('.assistant-connection').textContent='저장소 연결 확인 필요';
         savedStatus.textContent='질문 상태를 확인하지 못했어요. 인터넷 연결을 확인해 주세요. Mac 연결 상태는 아직 알 수 없어요.';
         queueStatus.hidden=false; queueStatus.textContent=savedStatus.textContent;
       }
-    } finally { loadingSaved=false; if (generation!==current || baby!==selectedBabyId) loadSaved(); }
+    } finally {
+      if (loadingSaved === marker) {
+        loadingSaved=null;
+        if (!isCurrent(current,ctx)) loadSaved();
+      }
+    }
   }
   older.addEventListener('click', async () => {
+    if (!ensureContext()) return;
     const ctx=cloudContext(), current=generation, baby=selectedBabyId, before=oldestSaved;
     if (!ctx || !before || loadingOlder) return;
-    loadingOlder=true; older.disabled=true;
+    const marker={};
+    loadingOlder=marker; older.disabled=true;
     const anchor=log.firstElementChild, top=anchor?.getBoundingClientRect?.().top;
     try {
       const rows=await store.list(ctx,baby,before);
-      if (generation!==current || baby!==selectedBabyId) return;
+      if (!isCurrent(current,ctx)) return;
       for (const row of rows) showSaved(row,true);
       if (rows.length) oldestSaved=rows.at(-1);
       older.hidden=rows.length<20;
       if (Number.isFinite(top)) window.scrollBy(0,anchor.getBoundingClientRect().top-top);
       savedStatus.textContent='이전 대화를 불러왔어요. 위로 스크롤해서 볼 수 있어요.';
     } catch {
-      if (generation===current) savedStatus.textContent='이전 대화를 불러오지 못했어요. 다시 눌러 주세요.';
-    } finally { loadingOlder=false; older.disabled=false; }
+      if (isCurrent(current,ctx)) savedStatus.textContent='이전 대화를 불러오지 못했어요. 다시 눌러 주세요.';
+    } finally { if (loadingOlder === marker) { loadingOlder=null; older.disabled=false; } }
   });
   cancel.addEventListener('click',async()=>{
+    if (!ensureContext()) return;
     const ctx=cloudContext(), job=workerStatus?.pending || saved.find(row=>row.status==='queued');
     if (!ctx || !job || actionBusy) return;
     const current=generation; actionBusy=true; refreshQueue();
     try {
       const status=await store.cancel(ctx,job.id);
-      if (generation!==current) return;
+      if (!isCurrent(current,ctx)) return;
       actionStatus.hidden=false; actionStatus.textContent=status==='cancelled' ? '대기를 취소했어요.' : status==='processing' ? '이미 답변을 시작해서 취소할 수 없어요.' : '질문 상태가 바뀌었어요. 최신 상태를 확인해 주세요.';
-    } catch { if (generation===current) { actionStatus.hidden=false; actionStatus.textContent='취소 여부를 확인하지 못했어요. 상태를 다시 확인해 주세요.'; } }
-    finally { actionBusy=false; if (generation===current) { await loadSaved(); refreshQueue(); } }
+    } catch { if (isCurrent(current,ctx)) { actionStatus.hidden=false; actionStatus.textContent='취소 여부를 확인하지 못했어요. 상태를 다시 확인해 주세요.'; } }
+    finally { if (isCurrent(current,ctx)) { actionBusy=false; await loadSaved(); if (isCurrent(current,ctx)) refreshQueue(); } }
   });
   retry.addEventListener('click',()=>{
+    if (!ensureContext()) return;
     const row=saved.find(row=>row.id===activeQuestion);
     if (!row || !['failed','cancelled'].includes(row.status)) return;
     reset(true); refreshContext(); input.value=row.question;
@@ -222,17 +269,18 @@
     updateSend(); input.focus();
   });
   resolve.addEventListener('click',async()=>{
+    if (!ensureContext()) return;
     const ctx=cloudContext(), request=uncertain, current=generation;
     if (!ctx || !request || actionBusy) return;
     actionBusy=true; refreshQueue();
     try {
       const row=await store.find(ctx,request.id);
-      if (generation!==current) return;
+      if (!isCurrent(current,ctx)) return;
       if (!row) await store.enqueue(ctx,request);
-      if (generation!==current) return;
+      if (!isCurrent(current,ctx)) return;
       uncertain=null; activeQuestion=request.id; input.value=''; refreshContext();
-    } catch { if (generation===current) { actionStatus.hidden=false; actionStatus.textContent='접수를 확인하지 못했어요. 같은 질문 번호로 다시 확인할 수 있어요.'; } }
-    finally { actionBusy=false; if (generation===current) { await loadSaved(); refreshQueue(); } }
+    } catch { if (isCurrent(current,ctx)) { actionStatus.hidden=false; actionStatus.textContent='접수를 확인하지 못했어요. 같은 질문 번호로 다시 확인할 수 있어요.'; } }
+    finally { if (isCurrent(current,ctx)) { actionBusy=false; await loadSaved(); if (isCurrent(current,ctx)) refreshQueue(); } }
   });
   input.addEventListener('input', updateSend);
   input.addEventListener('keydown', event => {
@@ -241,14 +289,16 @@
     if (!event.repeat && !send.disabled) form.requestSubmit();
   });
   view.querySelectorAll('[data-assistant-prompt]').forEach(button => button.addEventListener('click', () => {
+    if (!ensureContext()) return;
     input.value = button.textContent; updateSend(); input.focus();
   }));
   clear.addEventListener('click', () => {
-    if (clear.disabled) return;
+    if (!ensureContext() || clear.disabled) return;
     reset(true); input.focus();
   });
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (!ensureContext()) return;
     const question = input.value.trim();
     if (pending || cloudBusy || uncertain || actionBusy || !question || input.value.length > 2000) return;
     const context = refreshContext();
@@ -265,23 +315,23 @@
       pending = new AbortController(); updateSend(); send.textContent = '질문 저장 중…';
       try {
         await store.enqueue(ctx, request);
-        if (generation !== current) return;
+        if (!isCurrent(current,ctx)) return;
         activeQuestion = id;
         node.children[0].textContent='접수 완료';
         node.children[1].textContent='질문을 저장했어요. 답변이 준비되면 이 대화에 표시됩니다.';
       } catch (error) {
-        if (generation !== current) return;
+        if (!isCurrent(current,ctx)) return;
         node.children[0].textContent='저장 확인 필요';
         node.children[1].textContent=error.message || '질문 저장을 확인하지 못했어요. 대화를 확인한 뒤 다시 보내 주세요.';
         input.value = question;
         if (!['P0001','23514','23503','42501'].includes(error.code)) uncertain=request;
         refreshContext(); refreshQueue();
       } finally {
-        if (generation === current) { pending=null; updateSend(); await loadSaved(); }
+        if (isCurrent(current,ctx)) { pending=null; updateSend(); await loadSaved(); }
       }
       return;
     }
-    if (!connection) {
+    if (!connection || !canUseLocal()) {
       appendMessage('notice', '연결 안내', '아직 AI 답변을 받을 수 없어요. 질문은 외부로 전송하지 않고 이 화면에만 표시했어요.');
       log.lastElementChild.scrollIntoView({ block: 'nearest' });
       return;
@@ -294,24 +344,24 @@
       const response = await fetch('/api/parenting/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Chat-Token': connection }, body: JSON.stringify({ messages, context }), signal: pending.signal });
       const result = await response.json();
       if (!response.ok || typeof result.answer !== 'string' || !result.answer.trim()) throw new Error(result.error || '답변을 받지 못했어요. 다시 시도해 주세요.');
-      if (generation !== current) return;
+      if (!isCurrent(current,ctx)) return;
       history = [...messages, { role: 'assistant', content: result.answer }];
       appendMessage('assistant', '육아 어시스턴트 · Codex', result.answer);
     } catch (error) {
-      if (generation !== current) return;
+      if (!isCurrent(current,ctx)) return;
       appendMessage('notice', '연결 안내', error.name === 'AbortError' ? '답변 요청을 취소했어요.' : error.message);
       if (!input.value) input.value = question;
     } finally {
-      if (generation === current) { pending = null; log.setAttribute('aria-busy', 'false'); send.textContent = '질문 보내기 ↑'; updateSend(); }
+      if (isCurrent(current,ctx)) { pending = null; log.setAttribute('aria-busy', 'false'); send.textContent = '질문 보내기 ↑'; updateSend(); }
     }
-    if (generation !== current) return;
+    if (!isCurrent(current,ctx)) return;
     log.lastElementChild.scrollIntoView({ block: 'nearest' });
   });
   const baseSwitch = window.switchView;
   const switchAssistant = function (next) {
     if (next !== 'assistant') { view.hidden = true; return baseSwitch(next); }
     baseSwitch('calendar');
-    refreshContext();
+    if (ensureContext()) refreshContext();
     loadSaved();
     main.querySelectorAll(':scope > [id$="View"]').forEach(other => { other.hidden = other !== view; });
     if (window.FAMILY_APP_STATE) window.FAMILY_APP_STATE.activeView = 'assistant';
@@ -327,8 +377,13 @@
   navigation.addEventListener('click', event => {
     if (event.target.closest?.('.view-tab[data-view="assistant"]')) window.switchView('assistant');
   });
+  window.addEventListener('family:auth-user-changed', () => { accountChanging=true; resetAccount(true); });
   window.addEventListener('familycontextchange', () => {
-    uncertain=null; workerStatus=null; reset(); selectedBabyId = null; saved=[]; cloudBusy=false; queueStatus.hidden=true; cancel.hidden=true; resolve.hidden=true;  refreshContext(); loadSaved();
+    const sameAccount = !accountChanging && !!scopedContext && sameContext(scopedContext, cloudContext());
+    const draft = sameAccount ? input.value : '';
+    accountChanging=false;
+    resetAccount(!sameAccount); input.value=draft;
+    refreshContext(); updateSend(); discoverLocal(); loadSaved();
   });
   loadSaved();
   setInterval(() => {

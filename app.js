@@ -116,7 +116,7 @@ window.addEventListener('family:auth-expired', (event) => {
   const detail = event.detail || {};
   if (!state.session?.user?.id || !detail.userId || state.session.user.id !== detail.userId) return;
   if (detail.supabase && state.supabase !== detail.supabase) return;
-  state.session = null;
+  setAuthUser(null);
   lastAuthSessionKey = authSessionKey(null);
   state.onboardingPrompted = false;
   updateAuthGate();
@@ -269,7 +269,8 @@ async function init() {
         const nextKey = authSessionKey(session);
         const userChanged = nextKey !== lastAuthSessionKey;
         lastAuthSessionKey = nextKey;
-        state.session = session;
+        if (userChanged) setAuthUser(session);
+        else state.session = session;
         if (!session) state.onboardingPrompted = false;
         if (userChanged) {
           resetEventDraft();
@@ -302,6 +303,15 @@ async function waitForCoreModules() {
 
 function authSessionKey(session) {
   return session?.user?.id || "signed-out";
+}
+
+function setAuthUser(session) {
+  state.session = session;
+  state.authGeneration = (state.authGeneration || 0) + 1;
+  state.authTransitionPending = true;
+  bootstrapRequestId++;
+  clearTimeout(bootstrapRetryTimer);
+  window.dispatchEvent(new CustomEvent("family:auth-user-changed"));
 }
 
 function withAuthRecovery(operation, supabase = state.supabase, userId = state.session?.user?.id, isCurrent) {
@@ -407,6 +417,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
   validateCareTimerContext();
   render();
   updateAuthGate();
+  state.authTransitionPending = false;
   window.dispatchEvent(new CustomEvent("familycontextchange", {
     detail: {
       userId: state.session?.user?.id || null,
