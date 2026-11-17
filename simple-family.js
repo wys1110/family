@@ -7,7 +7,7 @@
     if (!shell || !originalNav || $('#simpleNavigation')) return;
     root.dataset.simpleFamily = 'true';
     const labels = {calendar: '오늘', growth: '성장', assistant: '육아', english: '동화', travel: '여행', settings: '설정', admin: '관리'};
-    const mainViews = ['calendar', 'growth', 'assistant', 'english'];
+    const mainViews = ['calendar', 'growth', 'travel', 'english'];
     const icons = {calendar: 'calendar', growth: 'growth', assistant: 'chat', english: 'book', travel: 'map', settings: 'settings', admin: 'crown'};
     const text = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
     const icon = name => { const span = document.createElement('span'); span.className = 'simple-icon'; span.dataset.icon = name; span.setAttribute('aria-hidden', 'true'); return span; };
