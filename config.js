@@ -196,12 +196,11 @@ window.FAMILY_CONFIG = {
     { name: "nova-family", version: "20261017-design-harmony-v1" },
     { name: "travel-sharing", version: "20261023-family-review-fixes-v1", style: false },
     { name: "travel-data", version: "20261023-family-review-fixes-v1", style: false },
-    { name: "travel-map", version: "20261017-kakao-map-v1", style: false },
-    { name: "travel-management", version: "20261004-travel-bulk-v2", style: false },
+    { name: "travel-management", version: "20261117-travel-catalog-v1", style: false },
     { name: "parenting-context", version: "20261018-parenting-codex-v1", style: false },
     { name: "parenting-history", version: "20261101-parenting-bubbles-v1", style: false },
     { name: "parenting-assistant", version: "20261101-parenting-bubbles-v1" },
-    { name: "travel", version: "20261018-travel-summary-v1" },
+    { name: "travel", version: "20261117-preparation-report-v1" },
     { name: "simple-family", version: "20261117-travel-nav-v1" },
   ];
 
@@ -210,7 +209,7 @@ window.FAMILY_CONFIG = {
     english: ['english-stories', 'english-story-name'],
     settings: ['family-backup-media', 'settings-backup', 'settings-family-management', 'settings-data-export', 'feature-request'],
     admin: ['admin-resource-usage', 'platform-request-admin', 'admin-recent-activity', 'admin-ops'],
-    travel: ['travel-data', 'travel-map', 'travel-management', 'travel'],
+    travel: ['travel-data', 'travel-management', 'travel'],
   };
   const deferredNames = new Set(Object.values(deferredGroups).flat());
   const extraModules = [

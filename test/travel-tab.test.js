@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 
 const dataSource = readFileSync('travel-data.js', 'utf8');
 const travelSource = readFileSync('travel.js', 'utf8');
+const managementSource = readFileSync('travel-management.js', 'utf8');
 const configSource = readFileSync('config.js', 'utf8');
 const deferredSource = readFileSync('deferred-tabs.js', 'utf8');
 const appSource = readFileSync('app.js', 'utf8');
@@ -23,7 +24,7 @@ function loadData({ demoMode = false, savedTrips, shared = false, supabase, uuid
   window.CustomEvent = class { constructor(type, init) { this.type = type; this.detail = init?.detail; } };
   const context = { window, localStorage: window.localStorage, CustomEvent: window.CustomEvent, crypto: { randomUUID: uuid } };
   vm.createContext(context); vm.runInContext(dataSource, context);
-  return { api: window.FAMILY_TRAVEL_DATA, store };
+  return { api: window.FAMILY_TRAVEL_DATA, store, context };
 }
 
 test('demo travel mode seeds only a generic local sample and never shared records', () => {
@@ -195,35 +196,226 @@ test('history map groups all past destinations, retains archived dates and uses 
   expect(saved.items[0].place.lat).toBeNull();
 });
 
-test('travel summary opens first and stays separate from the management list and itinerary', () => {
-  expect(travelSource).toContain("const current = { page:'summary'");
-  expect(travelSource).toContain("clearItineraryFilters();current.page='summary';current.query=''");
-  expect(travelSource).toContain('해외 여행도 아래 요약과 여행 관리에 포함돼요.');
-  expect(travelSource).toContain('data.getTrips({ includeArchived: true })');
-  expect(travelSource).toContain('종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이');
-  expect(dataSource).toContain('여행지 미지정');
-  expect(travelSource).toContain('지난 여행 기록이 쌓이면 여행지가 여기에 표시돼요.');
-  expect(travelSource).toContain("current.page==='summary'?historySummary():active?");
-  expect(travelSource).toContain('data-travel-back');
-  expect(travelSource).not.toContain('data.getTrips()[0]');
-  expect(travelCssSource).toContain('@media (max-width:420px)');
-});
-
-test('travel tab loads only archive modules and has no booking-search workspace', () => {
-  expect(configSource).toContain("travel: ['travel-data', 'travel-map', 'travel-management', 'travel']");
-  expect(configSource).not.toContain("travel: ['travel-data', 'travel-providers', 'travel-map', 'travel']");
+test('travel tab loads its report and record modules without mounting a map or booking-search workspace', () => {
+  expect(configSource).toMatch(/travel:\s*\[\s*['"]travel-data['"],\s*['"]travel-management['"],\s*['"]travel['"]\s*\]/);
+  expect(configSource).not.toMatch(/name:\s*['"]travel-map['"]/);
   expect(deferredSource).toContain("createTab('travel', '✈️ 여행')");
-  expect(travelSource).not.toContain('FAMILY TRAVEL ARCHIVE');
-  expect(travelSource).toContain('data-travel-page="summary"');
+  expect(travelSource).not.toMatch(/FAMILY_TRAVEL_MAP|travel-history-map|map\.kakao\.com|data-travel-page="summary"/);
   expect(travelSource).toContain('data-travel-add-place');
   expect(travelSource).not.toContain('항공·숙소 찾기');
   expect(travelSource).not.toContain('예약처 열기');
   expect(travelSource).not.toMatch(/service_role|sk-[A-Za-z0-9]{20,}/i);
 });
 
-test('travel page introduction keeps Korean words together on narrow mobile headers', () => {
-  expect(travelCssSource).toMatch(/\.travel-page-header p:not\(\.eyebrow\)[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s);
-  expect(configSource).toContain('{ name: "travel", version: "20261018-travel-summary-v1" }');
+test('travel report prose keeps Korean words together and wraps long text', () => {
+  expect(travelCssSource).toMatch(/\.travel-plan-intro, \.travel-report-copy[^{]*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*anywhere;/s);
+  expect(configSource).toMatch(/name: "travel", version: "(?!20261018-travel-summary-v1|20261117-travel-report-v1)[^"]+"/);
+});
+
+function loadReport(savedTrips) {
+  const { api, context, store } = loadData({ savedTrips });
+  const windowListeners = {};
+  const viewListeners = {};
+  const addListener = (table, type, callback) => (table[type] ??= []).push(callback);
+  const modalTitle = { textContent: '' };
+  const modalContent = { innerHTML: '' };
+  const modal = {
+    dataset: {}, hidden: true, open: false,
+    style: { removeProperty() {}, setProperty() {} },
+    querySelector(selector) {
+      return { '#travelModalTitle': modalTitle, '#travelModalContent': modalContent }[selector] ?? null;
+    },
+    addEventListener() {},
+    setAttribute() { this.hidden = true; },
+    showModal() { this.open = true; },
+    close() { this.open = false; },
+  };
+  let cards = [];
+  const view = {
+    dataset: {}, markup: '',
+    get innerHTML() { return this.markup; },
+    set innerHTML(markup) {
+      this.markup = markup;
+      cards = [...markup.matchAll(/<details[^>]*data-travel-report-section="([^"]+)" data-trip-id="([^"]+)"/g)]
+        .map(([, travelReportSection, tripId]) => ({ open: false, dataset: { travelReportSection, tripId } }));
+    },
+    addEventListener(type, callback) { addListener(viewListeners, type, callback); },
+    querySelector: selector => selector === '#travelModal' ? modal : null,
+    querySelectorAll: selector => selector.endsWith('[open]') ? cards.filter(card => card.open) : cards,
+  };
+  Object.assign(context.window, {
+    addEventListener: (type, callback) => addListener(windowListeners, type, callback),
+    dispatchEvent: event => windowListeners[event.type]?.forEach(callback => callback(event)),
+    alert: message => { throw new Error(message); },
+  });
+  context.window.FAMILY_APP_STATE.activeView = 'travel';
+  Object.assign(context, {
+    document: { querySelector: selector => selector === '#travelView' ? view : null, addEventListener() {} },
+    Date: class extends Date {
+      constructor(...args) { super(...(args.length ? args : ['2026-11-17T03:00:00Z'])); }
+    },
+    URL, HTMLFormElement: class {},
+    FormData: class {
+      constructor(form) { this.values = form.values; }
+      entries() { return Object.entries(this.values); }
+    },
+  });
+  vm.runInContext(managementSource, context);
+  vm.runInContext(travelSource, context);
+
+  const click = async (attribute, dataset = {}) => {
+    const target = {
+      dataset,
+      matches: selector => selector === `[${attribute}]`,
+      closest: selector => selector.split(',').includes('button') ? target : null,
+    };
+    for (const listener of viewListeners.click) await listener({ target });
+  };
+  const submitReport = async (note, dataset) => {
+    const button = { disabled: false };
+    const error = { hidden: true };
+    const target = Object.assign(new context.HTMLFormElement(), {
+      id: 'travelReportForm', dataset, values: { note },
+      querySelector: selector => selector === '.travel-trip-error' ? error : button,
+    });
+    await viewListeners.submit[0]({ target, preventDefault() {} });
+    return error;
+  };
+  return { api, store, view, modal, modalContent, modalTitle, click, submitReport, cards: () => cards };
+}
+
+const reportTrip = {
+  id: 'sample-trip', title: '겨울 가족 여행', destinationLabel: '강릉',
+  startDate: '2026-12-02', endDate: '2026-12-06', intro: '쉬는 시간도 일정에 넣어요.', items: [],
+};
+
+test('family plan shows the ongoing trip first and otherwise the soonest unarchived trip', async () => {
+  const ongoing = { ...reportTrip, id: 'ongoing', title: '진행 중인 가족 여행', startDate: '2026-11-16', endDate: '2026-11-18' };
+  const later = { ...reportTrip, id: 'later', title: '다음 해 여행', startDate: '2027-01-01', endDate: '2027-01-03' };
+  const archived = { ...reportTrip, id: 'archived', archivedAt: '2026-10-01', startDate: '2026-11-19', endDate: '2026-11-19' };
+  const past = { ...reportTrip, id: 'past', startDate: '2026-10-03', endDate: '2026-10-05' };
+  expect(loadReport([later, archived, reportTrip, ongoing]).view.innerHTML).toContain('id="travelPlanTitle">진행 중인 가족 여행');
+
+  const app = loadReport([later, archived, past, reportTrip]);
+  expect(app.view.innerHTML).toContain('data-travel-page="plan" aria-pressed="true"');
+  expect(app.view.innerHTML).toContain('준비 보고서');
+  expect(app.view.innerHTML).toContain('id="travelPlanTitle">겨울 가족 여행');
+  expect(app.view.innerHTML).toContain('4박 5일');
+  expect(app.view.innerHTML).toContain('쉬는 시간도 일정에 넣어요.');
+  expect(app.view.innerHTML).toContain('이 기기에 저장됨');
+  expect(app.view.innerHTML).toContain('data-travel-open-itinerary="sample-trip"');
+  for (const section of ['예상 예산', '예약 전에 정할 일', '항공·숙소·교통 비교', '날짜별 일정안']) {
+    expect(app.view.innerHTML).toContain(section);
+  }
+  expect([...app.view.innerHTML.matchAll(/data-travel-report-section="([^"]+)"/g)].map(match => match[1])).toEqual(['flight', 'stay', 'transport', 'parking']);
+
+  await app.click('data-travel-page', { travelPage: 'manage' });
+  expect(app.view.innerHTML).toContain('data-travel-open="later"');
+  expect(app.view.innerHTML).toContain('data-travel-filter="past"');
+  expect(app.view.innerHTML).toContain('data-travel-filter="archived"');
+  await app.click('data-travel-open', { travelOpen: 'later' });
+  expect(app.view.innerHTML).toContain('id="travelPlanTitle">다음 해 여행');
+  expect(app.view.innerHTML).not.toContain('data-travel-tab="day-0"');
+  await app.click('data-travel-open-itinerary', { travelOpenItinerary: 'later' });
+  expect(app.view.innerHTML).toContain('data-travel-show-plan');
+  expect(app.view.innerHTML).toContain('data-travel-tab="day-0"');
+  await app.click('data-travel-show-plan');
+  expect(app.view.innerHTML).toContain('id="travelPlanTitle">다음 해 여행');
+});
+
+test('report reuses only undated notes with no clock time and matching report titles', async () => {
+  const items = [
+    { id: 'old', kind: 'note', title: '항공편', note: '이전 항공편 메모\n상세 항공편 비교' },
+    { id: 'extra', kind: 'note', title: '항공편', note: '두 번째 항공편 메모' },
+    { id: 'dated', kind: 'note', title: '항공편', date: reportTrip.startDate, note: '날짜가 있는 메모' },
+    { id: 'timed', kind: 'note', title: '항공편', startTime: '15:00', note: '시간이 있는 메모' },
+    { id: 'other', kind: 'note', title: '항공편 확인', note: '다른 제목의 메모' },
+    { id: 'place', type: 'place', title: '항공편', place: { name: '공항' }, note: '장소 메모' },
+  ];
+  const app = loadReport([{ ...reportTrip, items }]);
+  const flight = app.view.innerHTML.match(/<details[^>]*data-travel-report-section="flight"[\s\S]*?<\/details>/)?.[0];
+  expect(flight).toContain('class="travel-report-highlight">이전 항공편 메모</span>');
+  expect(flight).toContain('class="travel-report-copy">상세 항공편 비교</p>');
+  expect(flight).toContain('두 번째 항공편 메모');
+  expect(flight).toContain('data-item-id="old"');
+  expect(flight).toContain('data-item-id="extra"');
+  for (const item of items.slice(2)) expect(flight).not.toContain(item.note);
+
+  await app.click('data-travel-open-itinerary', { travelOpenItinerary: reportTrip.id });
+  expect(app.view.innerHTML).toContain('data-travel-item="dated"');
+  expect(app.view.innerHTML).toContain('data-travel-item="timed"');
+  expect(app.view.innerHTML).toContain('data-travel-item="place"');
+});
+
+test('report escapes text and makes only credential-free HTTPS URLs clickable', () => {
+  const intro = '<img src=x onerror=alert(1)>';
+  const note = [
+    '<script>alert(1)</script>',
+    '<b>예약처</b> | https://example.test/book?start=1&end=2',
+    'javascript:alert(1)',
+    'http://example.test/insecure',
+    'https://user:password@example.test/credentials',
+  ].join('\n');
+  const { view } = loadReport([{ ...reportTrip, title: '<여행>', intro, items: [{ id: 'flight', type: 'note', title: '항공편', note }] }]);
+  expect(view.innerHTML).toContain('&lt;여행&gt;');
+  expect(view.innerHTML).toContain('&lt;img src=x onerror=alert(1)&gt;');
+  expect(view.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+  expect(view.innerHTML).not.toMatch(/<(?:img|script|b)\b/);
+  expect(view.innerHTML.match(/<a\b/g)).toHaveLength(1);
+  expect(view.innerHTML).toContain('href="https://example.test/book?start=1&amp;end=2" target="_blank" rel="noopener noreferrer">&lt;b&gt;예약처&lt;/b&gt;</a>');
+  for (const link of note.split('\n').slice(2)) expect(view.innerHTML).toContain(link);
+});
+
+test('report presents the family budget separately from parking and displays decision and schedule lists', async () => {
+  const app = loadReport([{ ...reportTrip, items: [
+    { id: 'budget', type: 'note', title: '예상 예산', note: '가족 예상 합계 120만 원\n현지 이동 별도' },
+    { id: 'decisions', type: 'note', title: '예약 전에 정할 일', note: '항공편 고르기\n<유아 옵션> 확인' },
+    { id: 'parking', type: 'note', title: '발렛·주차', note: '공항 주차 약 4만 원' },
+    { id: 'schedule', type: 'note', title: '날짜별 일정안', note: '1일차 도착\n2일차 시내 산책' },
+  ] }]);
+  const html = app.view.innerHTML;
+  expect(html).toContain('<strong>가족 예상 합계 120만 원</strong>');
+  expect(html).toContain('현지 이동 별도</p>');
+  expect(html).toMatch(/data-travel-report-section="parking"[\s\S]*?공항 주차 약 4만 원/);
+  expect(html).toContain('<ol class="travel-report-list"><li>항공편 고르기</li><li>&lt;유아 옵션&gt; 확인</li></ol>');
+  expect(html).toContain('<ul class="travel-report-list"><li>1일차 도착</li><li>2일차 시내 산책</li></ul>');
+
+  await app.click('data-travel-report-edit', { tripId: reportTrip.id, travelReportEdit: 'budget', itemId: 'budget' });
+  expect(app.modalTitle.textContent).toBe('예상 예산');
+  await app.submitReport('가족 예상 합계 125만 원\n현지 이동 별도', { tripId: reportTrip.id, section: 'budget', itemId: 'budget' });
+  expect(app.view.innerHTML).toContain('<strong>가족 예상 합계 125만 원</strong>');
+  expect(app.api.getTrip(reportTrip.id).items.find(item => item.id === 'parking').note).toBe('공항 주차 약 4만 원');
+});
+
+test('report adds an unscheduled note, edits it in place and rejects empty saves', async () => {
+  const scheduled = { id: 'scheduled', type: 'note', title: '항공편', dayIndex: 0, note: '일정으로 남긴 항공편' };
+  const app = loadReport([{ ...reportTrip, items: [scheduled] }]);
+  const originalItems = app.api.getTrip(reportTrip.id).items;
+  const dataset = { tripId: reportTrip.id, section: 'flight', itemId: '' };
+  expect(app.cards().every(card => !card.open)).toBe(true);
+  app.cards()[0].open = true;
+  await app.click('data-travel-report-edit', { tripId: reportTrip.id, travelReportEdit: 'flight', itemId: '' });
+  expect(app.modal.open).toBe(true);
+  expect(app.modalTitle.textContent).toBe('항공편');
+  expect(app.modalContent.innerHTML).toContain('id="travelReportForm"');
+  const error = await app.submitReport('  ', dataset);
+  expect(error).toMatchObject({ hidden: false, textContent: '내용을 적어 주세요.' });
+  expect(app.api.getTrip(reportTrip.id).items).toEqual(originalItems);
+
+  await app.submitReport('  첫 항공편 비교  ', dataset);
+  const [, entry] = app.api.getTrip(reportTrip.id).items;
+  expect(entry).toMatchObject({ type: 'note', title: '항공편', dayIndex: null, time: null, note: '첫 항공편 비교' });
+  expect(app.modal.open).toBe(false);
+  expect(app.view.innerHTML).toContain('첫 항공편 비교');
+  expect(app.cards().filter(card => card.open).map(card => card.dataset.travelReportSection)).toEqual(['flight']);
+
+  await app.click('data-travel-report-edit', { tripId: reportTrip.id, travelReportEdit: 'flight', itemId: entry.id });
+  expect(app.modalContent.innerHTML).toContain('첫 항공편 비교</textarea>');
+  await app.submitReport('최신 항공편 비교', { ...dataset, itemId: entry.id });
+  const savedTrips = JSON.parse(app.store.get('family-travel-v1:household-a'));
+  const reopened = loadReport(savedTrips);
+  expect(reopened.api.getTrip(reportTrip.id).items).toEqual([...originalItems, { ...entry, note: '최신 항공편 비교' }]);
+  expect(reopened.view.innerHTML).toContain('최신 항공편 비교');
 });
 
 test('the dynamically-created travel tab remains navigable after its deferred load', () => {
@@ -400,7 +592,7 @@ test('trip save shows a safe inline error and retries with the entered preset', 
   const createdTrips = [];
   const alerts = [];
   const context = {
-    current: { bulkBusy: false, editingId: null, page: 'summary', tripId: null, tab: 'summary' },
+    current: { bulkBusy: false, editingId: null, page: 'plan', tripId: null, tab: 'all' },
     HTMLFormElement: TestForm,
     FormData: class { constructor() { } entries() { return Object.entries(fields); } },
     data: { createTrip: async trip => { if (!attempts++) throw new Error('<storage unavailable>'); createdTrips.push(trip); return { id: 'saved-trip' }; } },
@@ -427,16 +619,14 @@ test('trip save shows a safe inline error and retries with the entered preset', 
   expect(closeCount).toBe(1);
 });
 
-test('day-scoped add defaults and external map route use the selected date or inbox', () => {
+test('day-scoped forms and itinerary use the selected date or inbox', () => {
   const lines = travelSource.split('\n');
   const activeItems = travelSource.match(/  const activeItems = item => \{[\s\S]*?\n  \};/)?.[0];
   const functions = ['const itineraryOrder =', 'const defaultDayIndex =', 'const daySelect ='];
-  const route = travelSource.match(/  const routeUrl = item => \{[\s\S]*?\n  \};/)?.[0];
-  const extracted = [activeItems, route, ...functions.map(prefix => lines.find(line => line.trimStart().startsWith(prefix)))];
+  const extracted = [activeItems, ...functions.map(prefix => lines.find(line => line.trimStart().startsWith(prefix)))];
   expect(extracted.every(Boolean)).toBe(true);
   const context = {
     current: { tab: 'day-1' },
-    map: { placePoints: items => items.filter(item => Number.isFinite(item.place?.lat) && Number.isFinite(item.place?.lng)) },
     days: () => ['2026-10-01', '2026-10-02'],
     dayLabel: (_trip, index) => `DAY ${index + 1}`,
     fmtDate: value => value,
@@ -456,18 +646,12 @@ test('day-scoped add defaults and external map route use the selected date or in
     { id: 'inbox', type: 'place', title: '미정', dayIndex: null, order: 1, place: { address: '주소 미정' } },
   ] };
   context.trip = trip;
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/search/%EC%A3%BC%EC%86%8C%20B');
+  expect(vm.runInContext('activeItems(trip).map(item => item.id)', context)).toEqual(['b']);
   context.current.tab = 'inbox';
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/search/%EC%A3%BC%EC%86%8C%20%EB%AF%B8%EC%A0%95');
+  expect(vm.runInContext('defaultDayIndex()', context)).toBeNull();
+  expect(vm.runInContext('activeItems(trip).map(item => item.id)', context)).toEqual(['inbox']);
   context.current.tab = 'all';
-  const allUrl = vm.runInContext('decodeURIComponent(routeUrl(trip))', context);
-  expect(allUrl).toContain('주소 A');
-  expect(allUrl).not.toContain('google.com');
-  trip.items[0].place = { lat:37.56,lng:126.97 };
-  trip.items[1].place = { lat:37.57,lng:126.98 };
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/from/A,37.56,126.97/to/B,37.57,126.98');
-  context.current.tab = 'day-1';
-  expect(vm.runInContext('routeUrl(trip)', context)).toBe('https://map.kakao.com/link/map/B,37.57,126.98');
+  expect(vm.runInContext('activeItems(trip).map(item => item.id)', context)).toEqual(['a', 'b', 'inbox']);
 });
 
 test('planner capture controls preserve day context, details clicks, and null inbox moves', async () => {
