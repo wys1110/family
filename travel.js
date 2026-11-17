@@ -1,18 +1,15 @@
 (() => {
   if (window.FAMILY_TRAVEL_READY) return;
   const data = window.FAMILY_TRAVEL_DATA;
-  const maps = window.FAMILY_TRAVEL_MAP;
   const management = window.FAMILY_TRAVEL_MANAGEMENT;
-  if (!data || !maps || !management) return;
-  const map = maps.create(), historyMap = maps.create();
-  let historyItems = [], historyActiveId = null;
+  if (!data || !management) return;
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[char]));
   const $ = (selector, root = document) => root.querySelector(selector);
   const fmtDate = value => { const date = new Date(`${value}T12:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('ko-KR', { month:'short', day:'numeric', weekday:'short' }).format(date); };
   const days = trip => data.dateList(trip.startDate, trip.endDate);
   const dayLabel = (trip, index) => `DAY ${index + 1}`;
-  const current = { page:'summary', query:'', filter:'all', itineraryQuery:'', itineraryStatus:'all', selecting:false, selectedIds:new Set(), bulkDay:'choose', bulkBusy:false, bulkMessage:'', bulkError:false, tripId:null, tab:'all', layout:'map', activeItemId:null, editingId:null, modalMode:null, placeSaving:false, searchRequest:0 };
+  const current = { page:'plan', query:'', filter:'all', itineraryQuery:'', itineraryStatus:'all', selecting:false, selectedIds:new Set(), bulkDay:'choose', bulkBusy:false, bulkMessage:'', bulkError:false, tripId:null, tab:'all', editingId:null, modalMode:null, placeSaving:false, searchRequest:0 };
   let bulkRequest=0;
   let view;
   let refreshPromise = null;
@@ -25,7 +22,7 @@
   };
   const trip = () => data.getTrip(current.tripId) || null;
   const clearSelection = () => {bulkRequest++;current.selecting=false;current.selectedIds.clear();current.bulkDay='choose';current.bulkBusy=false;current.bulkMessage='';current.bulkError=false;};
-  const clearItineraryFilters = () => {current.itineraryQuery='';current.itineraryStatus='all';current.activeItemId=null;};
+  const clearItineraryFilters = () => {current.itineraryQuery='';current.itineraryStatus='all';};
   const bulkToolbar = item => {
     if(!current.selecting)return `<button type="button" class="travel-secondary-button" data-travel-bulk-start ${item.items.some(entry=>entry.type==='place')?'':'disabled'}>여러 장소 선택</button>`;
     const count=current.selectedIds.size, disabled=!count||current.bulkBusy;
@@ -86,32 +83,120 @@
       <div class="travel-search-row"><input name="query" aria-label="장소 이름 검색" maxlength="120" placeholder="장소 이름으로 찾기" autocomplete="off" enterkeyhint="search"><button type="button" class="travel-secondary-button" data-travel-search>검색</button></div>
       <div id="travelPlaceResults" class="travel-place-results" aria-live="polite"></div>
     </section>
-    <details class="travel-manual-place"><summary>이름으로 직접 추가</summary><label>장소 이름<input name="title" maxlength="120" placeholder="예: 여수 해상케이블카"></label><details class="travel-place-details"><summary>주소 · 시간 · 메모 (선택)</summary><label>주소<input name="address" maxlength="240"></label><label>시간<input name="time" type="time"></label><label>메모<textarea name="note" maxlength="2000" rows="2"></textarea></label></details><p class="travel-form-hint">이름만으로 저장할 수 있어요. 지도 위치는 검색 결과에서 추가할 때 함께 저장돼요.</p><button type="submit" class="travel-primary-button">추가하고 계속</button></details>
+    <details class="travel-manual-place"><summary>이름으로 직접 추가</summary><label>장소 이름<input name="title" maxlength="120" placeholder="예: 여수 해상케이블카"></label><details class="travel-place-details"><summary>주소 · 시간 · 메모 (선택)</summary><label>주소<input name="address" maxlength="240"></label><label>시간<input name="time" type="time"></label><label>메모<textarea name="note" maxlength="2000" rows="2"></textarea></label></details><p class="travel-form-hint">이름만으로 저장할 수 있어요. 검색 결과를 선택하면 주소가 함께 저장돼요.</p><button type="submit" class="travel-primary-button">추가하고 계속</button></details>
     <p class="travel-trip-error" role="alert" hidden></p><p class="travel-place-saved" role="status"></p><button type="button" class="travel-secondary-button" data-travel-close>완료</button>
   </form>`;
   const noteForm = (item, selectedDay = defaultDayIndex()) => `<form id="travelNoteForm"><label>메모 제목<input name="title" maxlength="120" required placeholder="예: 수유·낮잠 시간"></label>${daySelect(item,selectedDay)}<label>시간 (선택)<input name="time" type="time"></label><label>내용<textarea name="note" maxlength="2000" placeholder="항공 시간, 낮잠, 준비할 일을 적어 주세요"></textarea></label><button type="submit" class="travel-primary-button">메모 추가</button></form>`;
   const itemForm = (item, entry) => `<form id="travelItemForm" data-item-id="${esc(entry.id)}"><label>${entry.type==='place'?'장소':'메모'} 제목<input name="title" maxlength="120" required value="${esc(entry.title)}"></label>${daySelect(item,entry.dayIndex)}<label>시간 (선택)<input name="time" type="time" value="${esc(entry.time || '')}"></label><label>메모<textarea name="note" maxlength="2000">${esc(entry.note || '')}</textarea></label><button type="submit" class="travel-primary-button">변경 저장</button></form>`;
-  const statusBadge = item => data.isLocal() ? '<span class="travel-save-state">이 기기에 저장됨</span>' : '<span class="travel-save-state">가족과 공유됨</span>';
+  const statusBadge = () => data.isLocal() ? '<span class="travel-save-state">이 기기에 저장됨</span>' : '<span class="travel-save-state">가족과 공유됨</span>';
   const itemCount = item => item.items.length;
-  const pageHeader = () => `<header class="travel-page-header"><div><h2>우리 가족의 여행 지도</h2><p>여행을 찾고 관리하며, 다녀온 곳을 한눈에 돌아봐요.</p></div><button class="travel-primary-button" type="button" data-travel-new>＋ 새 여행</button></header>`;
-  const historySummary = () => {
-    const summary = data.summarizeTrips(data.getTrips({ includeArchived: true }));
-    historyItems = summary.historyDestinations;
-    const mapped = maps.placePoints(historyItems);
-    const missing = historyItems.filter(item => !mapped.includes(item));
-    const history = `<section class="travel-history-map"><h4>다녀온 여행지</h4><p class="travel-history-notice">카카오맵은 국내 상세지도 기준이에요. 해외 여행도 아래 요약과 여행 관리에 포함돼요.</p>${mapped.length ? historyMap.render({items:historyItems,activeId:historyActiveId,kind:'history'}) : '<p class="travel-history-empty">위치가 있는 지난 여행 기록이 쌓이면 지도에 표시돼요.</p>'}${missing.length ? `<p class="travel-history-notice">위치 정보 없음: ${missing.map(item=>esc(item.title)).join(', ')} · 해당 여행에 위치가 있는 장소를 추가하면 지도에 표시돼요.</p>` : ''}</section>`;
-    const maximum = Math.max(1, ...summary.topDestinations.map(item => item.trips));
-    const destinations = summary.topDestinations.length
-      ? `<ol class="travel-history-destinations">${summary.topDestinations.map(item => `<li><span class="travel-history-destination-name">${esc(item.name)}</span><span class="travel-history-bar-track" aria-hidden="true"><span style="width:${Math.round(item.trips / maximum * 100)}%"></span></span><span class="travel-history-destination-count">${item.trips}회 · ${item.nights}박</span></li>`).join('')}</ol>`
-      : '<p class="travel-history-empty">지난 여행 기록이 쌓이면 여행지가 여기에 표시돼요.</p>';
-    const invalidNotice = summary.invalidTrips ? `<p class="travel-history-notice" role="note">날짜가 누락되었거나 잘못된 여행 ${summary.invalidTrips}개는 집계에서 제외했어요.</p>` : '';
-    return `<section class="travel-history-summary" aria-labelledby="travelHistoryTitle"><div class="travel-history-heading"><div><p class="eyebrow">TRAVEL HISTORY</p><h3 id="travelHistoryTitle">우리 가족 여행 요약</h3></div><p class="travel-history-basis">종료일이 지난 일정 기준 · 박수는 시작일과 종료일의 차이</p></div>${history}<div class="travel-history-stats"><article><strong>${summary.pastTrips}회</strong><span>지난 여행</span></article><article><strong>${summary.totalNights}박</strong><span>누적 박수</span></article><article><strong>${summary.destinations}곳</strong><span>여행지 수</span></article></div><p class="travel-history-plans"><span>진행 중 <strong>${summary.ongoingTrips}</strong></span><span>예정 <strong>${summary.upcomingTrips}</strong></span></p><div class="travel-history-destination-section"><h4>자주 간 여행지 <span>지난 여행 횟수 · 누적 박수</span></h4>${destinations}</div>${invalidNotice}</section>`;
+  const budgetSection = { key:'budget', title:'예상 예산', hint:'가족 합계와 포함·별도 항목을 적어 보세요.' };
+  const decisionsSection = { key:'decisions', title:'예약 전에 정할 일', hint:'먼저 결정할 항목부터 한 줄씩 적어 보세요.', list:'ol' };
+  const scheduleSection = { key:'schedule', title:'날짜별 일정안', hint:'하루의 주요 일정과 이동 시간을 한 줄씩 적어 보세요.', list:'ul' };
+  const comparisonSections = [
+    { key:'flight', title:'항공편', hint:'항공편 후보, 수하물, 확인한 가격을 적어 보세요.' },
+    { key:'stay', title:'추천 숙소', hint:'숙소 후보와 객실, 요금, 취소 조건을 적어 보세요.' },
+    { key:'transport', title:'렌터카·이동', hint:'렌터카, 카시트, 대중교통 옵션을 적어 보세요.' },
+    { key:'parking', title:'발렛·주차', hint:'발렛과 주차 요금, 터미널과 예약 여부를 적어 보세요.' },
+  ];
+  const reportSections = [budgetSection, decisionsSection, ...comparisonSections, scheduleSection];
+  const reportNotes = (item, section) => item.items.filter(entry =>
+    entry.type === 'note' && entry.dayIndex == null && !entry.time && entry.title === section.title
+  );
+  const reportBody = (note, list) => {
+    const paragraphs = [];
+    const links = [];
+    for (const line of note.split(/\r?\n/)) {
+      const match = /^(?:(.+?)\s*[|:]\s*)?(https:\/\/\S+)$/i.exec(line.trim());
+      if (match) {
+        try {
+          const url = new URL(match[2]);
+          if (url.protocol === 'https:' && !url.username && !url.password) {
+            links.push(`<li><a href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${esc(match[1]?.trim() || url.hostname)}</a></li>`);
+            continue;
+          }
+        } catch { /* Keep an invalid link as text. */ }
+      }
+      paragraphs.push(line);
+    }
+    const lines = paragraphs.map(line => line.trim()).filter(Boolean);
+    let body = '';
+    if (list && lines.length) {
+      body = `<${list} class="travel-report-list">${lines.map(line => `<li>${esc(line)}</li>`).join('')}</${list}>`;
+    } else if (lines.length) {
+      body = `<p class="travel-report-copy">${esc(paragraphs.join('\n').trim())}</p>`;
+    }
+    return `${body}${links.length ? `<ul class="travel-report-links">${links.join('')}</ul>` : ''}`;
+  };
+  const reportButton = (item, section, entry) => `<button type="button" class="travel-report-edit"
+    data-travel-report-edit="${section.key}" data-trip-id="${esc(item.id)}"
+    data-item-id="${esc(entry?.id || '')}" aria-label="${section.title} ${entry?'편집':'추가'}">${entry?'편집':'추가'}</button>`;
+  const splitReportNote = note => {
+    const lines = note.trim().split(/\r?\n/);
+    const highlight = lines[0] && !/https?:\/\//i.test(lines[0]) ? lines.shift() : '';
+    return { highlight, body:lines.join('\n') };
+  };
+  const reportCard = (item, section) => {
+    const [first, ...others] = reportNotes(item, section);
+    const { highlight, body } = splitReportNote(first?.note || '');
+    return `<details class="travel-report-section" data-travel-report-section="${section.key}" data-trip-id="${esc(item.id)}">
+      <summary class="travel-report-summary">
+        <span class="travel-report-title">${section.title}</span>
+        <span class="travel-report-highlight">${esc(highlight || (first ? '내용 보기' : '아직 계획이 없어요'))}</span>
+      </summary>
+      <div class="travel-report-detail">
+        ${first ? reportBody(body) : `<p class="travel-report-empty">${section.hint}</p>`}
+        ${reportButton(item, section, first)}
+        ${others.map(entry => `<div class="travel-report-extra">${reportBody(entry.note)}${reportButton(item, section, entry)}</div>`).join('')}
+      </div>
+    </details>`;
+  };
+  const reportBlock = (item, section) => {
+    const [first, ...others] = reportNotes(item, section);
+    const { highlight, body } = section === budgetSection ? splitReportNote(first?.note || '') : { body:first?.note };
+    return `<section class="travel-report-block" aria-labelledby="travelReport-${section.key}">
+      <header class="travel-report-heading"><h3 id="travelReport-${section.key}">${section.title}</h3>${reportButton(item, section, first)}</header>
+      ${highlight ? `<div class="travel-budget-preview"><strong>${esc(highlight)}</strong></div>` : ''}
+      ${first ? reportBody(body, section.list) : `<p class="travel-report-empty">${section.hint}</p>`}
+      ${others.map(entry => `<div class="travel-report-extra">${reportBody(entry.note, section.list)}${reportButton(item, section, entry)}</div>`).join('')}
+    </section>`;
+  };
+  const reportForm = (item, section, entry) => `<form id="travelReportForm" data-trip-id="${esc(item.id)}"
+    data-section="${section.key}" data-item-id="${esc(entry?.id || '')}">
+    <label>내용<textarea name="note" rows="9" maxlength="2000" required>${esc(entry?.note || '').replace(/^\n/, '&#10;')}</textarea></label>
+    <p class="travel-muted-copy">${comparisonSections.includes(section) ? '첫 줄에 핵심을 적으면 접힌 상태에서도 보여요. ' : section.list ? '항목마다 줄을 바꿔 주세요. ' : '첫 줄에 예상 합계를 적어 주세요. '}출처 링크는 새 줄에 ‘사이트 이름 | https://주소’로 적어 주세요.</p>
+    <p class="travel-trip-error" role="alert" hidden></p>
+    <button type="submit" class="travel-primary-button">저장</button>
+  </form>`;
+  const planOverview = item => {
+    if (!item) return `<section class="travel-plan" aria-label="여행 계획"><p class="travel-plan-empty">예정된 여행이 없어요. 새 여행을 만들어 가족과 계획을 공유할 수 있어요.</p></section>`;
+    const dayCount = days(item).length;
+    const length = dayCount > 1 ? `${dayCount - 1}박 ${dayCount}일` : dayCount ? '당일' : '날짜 확인 필요';
+    const year = item.startDate.slice(0, 4);
+    const end = item.startDate !== item.endDate ? ` – ${item.endDate.startsWith(year) ? '' : `${esc(item.endDate.slice(0, 4))}년 `}${esc(fmtDate(item.endDate))}` : '';
+    return `<section class="travel-plan" aria-labelledby="travelPlanTitle">
+      <header class="travel-plan-hero">
+        <div class="travel-plan-head">
+          <h2 id="travelPlanTitle">${esc(item.title)}</h2>
+          <button class="travel-secondary-button" type="button" data-travel-open-itinerary="${esc(item.id)}">일정 기록</button>
+        </div>
+        <div class="travel-plan-meta"><span>${esc(year)}년 ${esc(fmtDate(item.startDate))}${end} · <span class="travel-plan-duration">${length}</span></span>${statusBadge()}</div>
+        ${item.intro ? `<p class="travel-plan-intro">${esc(item.intro)}</p>` : ''}
+      </header>
+      ${reportBlock(item, budgetSection)}
+      <section class="travel-report-comparisons" aria-labelledby="travelComparisonsTitle">
+        <h3 id="travelComparisonsTitle">항공·숙소·교통 비교</h3>
+        <div class="travel-report-grid">${comparisonSections.map(section => reportCard(item, section)).join('')}</div>
+      </section>
+      ${reportBlock(item, decisionsSection)}
+      ${reportBlock(item, scheduleSection)}
+    </section>`;
   };
   const dateTabs = item => `<nav class="travel-day-tabs" aria-label="여행 날짜"><button type="button" class="${current.tab==='inbox'?'active':''}" aria-pressed="${current.tab==='inbox'}" data-travel-tab="inbox"><small>미정</small><strong>보관함</strong><span>${item.items.filter(entry=>entry.dayIndex==null).length}</span></button><button type="button" class="${current.tab==='all'?'active':''}" aria-pressed="${current.tab==='all'}" data-travel-tab="all"><small>전체</small><strong>모든 기록</strong><span>${item.items.length}</span></button>${days(item).map((date,index)=>`<button type="button" class="${current.tab===`day-${index}`?'active':''}" aria-pressed="${current.tab===`day-${index}`}" data-travel-tab="day-${index}"><small>${dayLabel(item,index)}</small><strong>${esc(fmtDate(date))}</strong><span>${item.items.filter(entry=>entry.dayIndex===index).length}</span></button>`).join('')}</nav>`;
   const itemCard = (item, entry, index, count) => {
     const number = entry.type === 'place' ? dayPlaces(item, entry.dayIndex).findIndex(place => place.id === entry.id) + 1 : null;
     const moveOptions = `<option value="" ${entry.dayIndex == null ? 'selected' : ''}>보관함 (날짜 미정)</option>${days(item).map((date,day)=>`<option value="${day}" ${entry.dayIndex===day?'selected':''}>${dayLabel(item,day)} · ${esc(fmtDate(date))}</option>`).join('')}`;
-    return `<article class="travel-itinerary-item${current.selectedIds.has(entry.id)?' selected':''}${entry.id===current.activeItemId?' active':''}" data-map-item="${esc(entry.id)}"><div class="travel-item-leading">${current.selecting&&entry.type==='place'?`<label class="travel-place-selection"><input type="checkbox" data-travel-select-place="${esc(entry.id)}" aria-label="${esc(entry.title)} 선택" ${current.selectedIds.has(entry.id)?'checked':''} ${current.bulkBusy?'disabled':''}></label>`:''}${number == null ? '<span class="travel-note-mark" aria-hidden="true">✦</span>' : !map.placePoints([entry]).length ? `<span class="travel-item-number" aria-hidden="true">${number}</span>` : `<button type="button" class="travel-item-number" data-travel-select-item="${esc(entry.id)}" aria-label="${esc(entry.title)} 지도에서 보기">${number}</button>`}</div><button class="travel-item-main" type="button" data-travel-edit-item="${esc(entry.id)}" aria-label="${esc(entry.title)} 기록 편집"><span class="travel-item-meta">${entry.type==='place'?'장소':'메모'}${entry.time?` · ${esc(entry.time)}`:''}</span><strong>${esc(entry.title)}</strong><small>${entry.type==='place' ? esc(entry.place?.address || entry.address || '위치 미지정') : esc(entry.note || '내용을 추가해 주세요')}</small>${entry.type==='place'&&entry.visited?'<em class="travel-visited">방문함</em>':''}</button><div class="travel-item-actions">${entry.type==='place'?`<button type="button" class="travel-visited-toggle" data-travel-visited="${esc(entry.id)}" aria-pressed="${Boolean(entry.visited)}" aria-label="${esc(entry.title)} 방문 ${entry.visited?'완료':'전'}">${entry.visited?'방문함':'방문 체크'}</button>`:''}<details class="travel-item-more"><summary aria-label="${esc(entry.title)} 더보기">더보기</summary><div class="travel-item-menu"><div class="travel-item-order"><button type="button" data-travel-reorder="up" data-travel-reorder-id="${esc(entry.id)}" aria-label="${esc(entry.title)} 위로 이동" ${index===0?'disabled':''}>위로</button><button type="button" data-travel-reorder="down" data-travel-reorder-id="${esc(entry.id)}" aria-label="${esc(entry.title)} 아래로 이동" ${index===count-1?'disabled':''}>아래로</button></div><label>날짜 이동<select data-travel-move-select="${esc(entry.id)}">${moveOptions}</select></label><button type="button" data-travel-move="${esc(entry.id)}">이동</button><button type="button" class="travel-delete-action" data-travel-delete="${esc(entry.id)}">삭제</button></div></details></div></article>`;
+    return `<article class="travel-itinerary-item${current.selectedIds.has(entry.id)?' selected':''}" data-travel-item="${esc(entry.id)}"><div class="travel-item-leading">${current.selecting&&entry.type==='place'?`<label class="travel-place-selection"><input type="checkbox" data-travel-select-place="${esc(entry.id)}" aria-label="${esc(entry.title)} 선택" ${current.selectedIds.has(entry.id)?'checked':''} ${current.bulkBusy?'disabled':''}></label>`:''}${number == null ? '' : `<span class="travel-item-number" aria-hidden="true">${number}</span>`}</div><button class="travel-item-main" type="button" data-travel-edit-item="${esc(entry.id)}" aria-label="${esc(entry.title)} 기록 편집"><span class="travel-item-meta">${entry.type==='place'?'장소':'메모'}${entry.time?` · ${esc(entry.time)}`:''}</span><strong>${esc(entry.title)}</strong><small>${entry.type==='place' ? esc(entry.place?.address || entry.address || '위치 미지정') : esc(entry.note || '내용을 추가해 주세요')}</small>${entry.type==='place'&&entry.visited?'<em class="travel-visited">방문함</em>':''}</button><div class="travel-item-actions">${entry.type==='place'?`<button type="button" class="travel-visited-toggle" data-travel-visited="${esc(entry.id)}" aria-pressed="${Boolean(entry.visited)}" aria-label="${esc(entry.title)} 방문 ${entry.visited?'완료':'전'}">${entry.visited?'방문함':'방문 체크'}</button>`:''}<details class="travel-item-more"><summary aria-label="${esc(entry.title)} 더보기">더보기</summary><div class="travel-item-menu"><div class="travel-item-order"><button type="button" data-travel-reorder="up" data-travel-reorder-id="${esc(entry.id)}" aria-label="${esc(entry.title)} 위로 이동" ${index===0?'disabled':''}>위로</button><button type="button" data-travel-reorder="down" data-travel-reorder-id="${esc(entry.id)}" aria-label="${esc(entry.title)} 아래로 이동" ${index===count-1?'disabled':''}>아래로</button></div><label>날짜 이동<select data-travel-move-select="${esc(entry.id)}">${moveOptions}</select></label><button type="button" data-travel-move="${esc(entry.id)}">이동</button><button type="button" class="travel-delete-action" data-travel-delete="${esc(entry.id)}">삭제</button></div></details></div></article>`;
   };
   const groupMarkup = (item, index, shownItems) => {
     const entries=item.items.filter(entry=>index==null?entry.dayIndex==null:entry.dayIndex===index).sort(itineraryOrder);
@@ -125,30 +210,25 @@
     return current.tab==='all'?days(item).map((_,index)=>groupMarkup(item,index,shownItems)).join('')+groupMarkup(item,null,shownItems):groupMarkup(item,current.tab==='inbox'?null:Number(current.tab.slice(4)),shownItems);
   };
   const itineraryFilters = () => `<div class="travel-itinerary-filters"><label>일정 검색<input type="search" data-travel-itinerary-query value="${esc(current.itineraryQuery)}" placeholder="제목, 주소, 메모 검색" autocomplete="off"></label><label>방문 상태<select data-travel-itinerary-status><option value="all" ${current.itineraryStatus==='all'?'selected':''}>모든 기록</option><option value="visited" ${current.itineraryStatus==='visited'?'selected':''}>방문함</option><option value="unvisited" ${current.itineraryStatus==='unvisited'?'selected':''}>방문 전</option></select></label></div>`;
-  const routeUrl = item => {
-    const entries = activeItems(item).filter(entry => entry.type === 'place');
-    const points = map.placePoints(entries);
-    const location = entry => `${encodeURIComponent(entry.title)},${Number(entry.place.lat)},${Number(entry.place.lng)}`;
-    if (points.length > 1) return `https://map.kakao.com/link/from/${location(points[0])}/to/${location(points.at(-1))}`;
-    if (points.length === 1) return `https://map.kakao.com/link/map/${location(points[0])}`;
-    const query = entries[0]?.place?.address || entries[0]?.title;
-    return query ? `https://map.kakao.com/link/search/${encodeURIComponent(query)}` : '';
-  };
   const editor = item => {
     const shownItems = activeItems(item);
-    const mapItems = shownItems.filter(entry=>entry.type==='place');
     const dayIndex = defaultDayIndex();
-    return `<section class="travel-workspace"><header class="travel-workspace-head"><div><span class="travel-destination-kicker">${esc(item.destinationLabel)}</span><h2>${esc(item.title)}</h2><p>${fmtDate(item.startDate)} – ${fmtDate(item.endDate)} · ${itemCount(item)}개 기록</p></div><div class="travel-workspace-actions">${statusBadge(item)}<button class="travel-primary-button" type="button" data-travel-add-place>＋ 장소 추가</button><button class="travel-secondary-button" type="button" data-travel-edit>여행 정보</button></div></header><div class="travel-planner-note"><span aria-hidden="true">✦</span><p>방문할 곳은 순서대로, 날짜가 없으면 보관함에 남겨요.</p></div>${dateTabs(item)}${itineraryFilters()}<p class="travel-itinerary-count" role="status">현재 조건에 맞는 기록 ${shownItems.length}개</p><div class="travel-layout-toggle" role="group" aria-label="여행 일정 보기"><button type="button" data-travel-layout="list" aria-pressed="${current.layout==='list'}">일정</button><button type="button" data-travel-layout="map" aria-pressed="${current.layout==='map'}">지도·일정</button></div><div class="travel-itinerary-layout" data-mobile-layout="${current.layout}"><section class="travel-map-card"><div class="travel-card-heading"><div><p class="eyebrow">FAMILY ROUTE</p><h3>${current.tab==='all'?'전체 장소':current.tab==='inbox'?'보관함 위치':`선택한 날짜의 장소`}</h3></div>${routeUrl(item)?`<a class="travel-secondary-button" href="${routeUrl(item)}" target="_blank" rel="noopener noreferrer">카카오맵 ↗</a>`:''}</div>${map.render({items:mapItems,activeId:current.activeItemId,grouped:current.tab==='all'})}</section><section class="travel-itinerary-list"><div class="travel-card-heading"><div><p class="eyebrow">ITINERARY</p><h3>${current.tab==='all'?'날짜별 일정':current.tab==='inbox'?'보관함':`일정 기록`}</h3></div><div class="travel-list-actions"><button class="travel-primary-button small" type="button" data-travel-add-place ${current.tab==='inbox'?'data-travel-inbox':dayIndex==null?'':'data-travel-day-index="'+dayIndex+'"'}>＋ 장소</button><button class="travel-secondary-button small" type="button" data-travel-add-note ${current.tab==='inbox'?'data-travel-inbox':dayIndex==null?'':'data-travel-day-index="'+dayIndex+'"'}>＋ 메모</button></div></div><section class="travel-bulk-editor${current.selecting?' selecting':''}" data-travel-bulk aria-label="여러 장소 편집">${bulkToolbar(item)}</section>${listMarkup(item)}</section></div><footer class="travel-workspace-footer"><button class="travel-secondary-button" type="button" data-travel-archive>여행 보관하기</button></footer></section>`;
+    return `<section class="travel-workspace"><header class="travel-workspace-head"><div><span class="travel-destination-kicker">${esc(item.destinationLabel)}</span><h2>${esc(item.title)}</h2><p>${fmtDate(item.startDate)} – ${fmtDate(item.endDate)} · ${itemCount(item)}개 기록</p></div><div class="travel-workspace-actions">${statusBadge(item)}<button class="travel-primary-button" type="button" data-travel-add-place>＋ 장소 추가</button><button class="travel-secondary-button" type="button" data-travel-edit>여행 정보</button></div></header>${dateTabs(item)}${itineraryFilters()}<p class="travel-itinerary-count" role="status">현재 조건에 맞는 기록 ${shownItems.length}개</p><div class="travel-itinerary-layout"><section class="travel-itinerary-list"><div class="travel-card-heading"><div><h3>${current.tab==='all'?'날짜별 일정':current.tab==='inbox'?'보관함':`일정 기록`}</h3></div><div class="travel-list-actions"><button class="travel-primary-button small" type="button" data-travel-add-place ${current.tab==='inbox'?'data-travel-inbox':dayIndex==null?'':'data-travel-day-index="'+dayIndex+'"'}>＋ 장소</button><button class="travel-secondary-button small" type="button" data-travel-add-note ${current.tab==='inbox'?'data-travel-inbox':dayIndex==null?'':'data-travel-day-index="'+dayIndex+'"'}>＋ 메모</button></div></div><section class="travel-bulk-editor${current.selecting?' selecting':''}" data-travel-bulk aria-label="여러 장소 편집">${bulkToolbar(item)}</section>${listMarkup(item)}</section></div><footer class="travel-workspace-footer"><button class="travel-secondary-button" type="button" data-travel-archive>여행 보관하기</button></footer></section>`;
   };
-  const pageNavigation = () => `<nav class="travel-page-nav" aria-label="여행 화면"><button type="button" data-travel-page="summary" aria-pressed="${current.page==='summary'}">전체 요약</button><button type="button" data-travel-page="manage" aria-pressed="${current.page==='manage'}">여행 관리</button></nav>`;
+  const pageNavigation = () => `<nav class="travel-page-nav" aria-label="여행 화면"><button type="button" data-travel-page="plan" aria-pressed="${current.page==='plan'}">준비 보고서</button><button type="button" data-travel-page="manage" aria-pressed="${current.page==='manage'}">여행 목록</button></nav>`;
+  const featuredTrip = () => {
+    const trips = data.getTrips();
+    const now = new Date();
+    return management.selectTrips(trips, { filter:'ongoing', now })[0] ||
+      management.selectTrips(trips, { filter:'upcoming', now })[0];
+  };
   const render = () => {
     if(!view)return;
     const scrollY=window.scrollY||0, previousTab=view.dataset.renderedTab;
+    const openedReports = new Set([...view.querySelectorAll('[data-travel-report-section][open]')].map(node => `${node.dataset.tripId}/${node.dataset.travelReportSection}`));
     const previousFilters=$('.travel-itinerary-filters',view),previousFocus=document.activeElement;
     const focusedFilter=previousFilters?.contains(previousFocus);
     const selection=focusedFilter&&previousFocus.matches('[data-travel-itinerary-query]')?[previousFocus.selectionStart,previousFocus.selectionEnd]:null;
-    const previousMap=$('.travel-map-card .travel-kakao-map',view);
-    const previousHistoryMap=$('.travel-history-map .travel-kakao-map',view);
     const previousDateScroll=$('.travel-day-tabs',view)?.scrollLeft;
     const active=current.page==='manage'?trip():null;
     if(active){
@@ -156,11 +236,16 @@
       for(const id of current.selectedIds)if(!available.has(id))current.selectedIds.delete(id);
       if(current.tab==='all'&&active.items.length===0)current.tab='day-0';
       if(current.tab.startsWith('day-')&&(!Number.isInteger(Number(current.tab.slice(4)))||Number(current.tab.slice(4))>=days(active).length))current.tab=days(active).length?'day-0':'all';
-      if(current.activeItemId&&!activeItems(active).some(entry=>entry.id===current.activeItemId))current.activeItemId=null;
     }
     if($('#travelModal',view)?.open)closeModal();
-    const content=current.page==='summary'?historySummary():active?`<button type="button" class="travel-secondary-button travel-back" data-travel-back>← 여행 목록</button>${editor(active)}`:management.render(data.getTrips({includeArchived:true}),current);
-    view.innerHTML=`${pageHeader()}${pageNavigation()}${content}${modalShell()}`;
+    let content;
+    if (current.page === 'plan') content = planOverview(trip() || featuredTrip());
+    else if (active) content = `<div class="travel-plan-head"><button type="button" class="travel-secondary-button travel-back" data-travel-back>← 여행 목록</button><button type="button" class="travel-secondary-button travel-back" data-travel-show-plan>준비 보고서</button></div>${editor(active)}`;
+    else content = management.render(data.getTrips({ includeArchived:true }), current);
+    view.innerHTML=`<div class="travel-page-controls">${pageNavigation()}<button class="travel-primary-button small" type="button" data-travel-new>＋ 새 여행</button></div>${content}${modalShell()}`;
+    view.querySelectorAll('[data-travel-report-section]').forEach(node => {
+      node.open = openedReports.has(`${node.dataset.tripId}/${node.dataset.travelReportSection}`);
+    });
     const nextFilters=$('.travel-itinerary-filters',view);
     if(previousFilters&&nextFilters){
       nextFilters.replaceWith(previousFilters);
@@ -171,40 +256,12 @@
       if(focusedFilter){previousFocus.focus({preventScroll:true});if(selection)previousFocus.setSelectionRange(...selection);}
     }
     if(current.bulkBusy)$('.travel-workspace',view)?.querySelectorAll('button,input,select').forEach(control=>control.disabled=true);
-    restoreHistoryMap(previousHistoryMap);
-    const nextMap=$('.travel-map-card .travel-kakao-map',view);
-    if(previousMap&&nextMap)nextMap.replaceWith(previousMap);
-    if(!nextMap)map.destroy();
     view.dataset.renderedTab=current.tab;
     const dateStrip=$('.travel-day-tabs',view);
     if(dateStrip&&previousDateScroll!=null&&previousTab===current.tab)dateStrip.scrollLeft=previousDateScroll;
     else if(dateStrip){const selected=dateStrip.querySelector('[aria-pressed="true"]');if(selected)selected.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'});}
     window.scrollTo?.(0,scrollY);
     applyVisibility();
-    mountMap();
-    mountHistoryMap();
-  };
-  const selectMapItem = (id, fromCard = false) => {
-    current.activeItemId=id;
-    if(fromCard&&current.layout==='list'){current.layout='map';render();}
-    view.querySelectorAll('.travel-itinerary-item').forEach(node=>node.classList.toggle('active',node.dataset.mapItem===id));
-    mountMap(false,fromCard);
-    const card=[...view.querySelectorAll('.travel-itinerary-item')].find(node=>node.dataset.mapItem===id);
-    (fromCard ? $('.travel-map-card',view) : card)?.scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
-  };
-  const mountMap = (retry = false, focus = false) => {
-    const active=trip();
-    if(!active||!view||view.hidden||!$('.travel-map-card',view)||current.layout==='list'&&window.matchMedia('(max-width: 767px)').matches)return;
-    return map.mount($('.travel-map-card',view),{items:activeItems(active).filter(entry=>entry.type==='place'),activeId:current.activeItemId,grouped:current.tab==='all',scope:`${active.id}:${current.tab}`,center:[active.centerLat,active.centerLng],onSelect:selectMapItem,retry,focus});
-  };
-  const restoreHistoryMap = previous => {
-    const next=$('.travel-history-map .travel-kakao-map',view);
-    if(previous&&next)next.replaceWith(previous);
-    if(!next)historyMap.destroy();
-  };
-  const mountHistoryMap = (retry = false) => {
-    if(!view||view.hidden||!$('.travel-history-map',view))return;
-    return historyMap.mount($('.travel-history-map',view),{items:historyItems,kind:'history',activeId:historyActiveId,scope:'history',retry,onSelect:id=>{historyActiveId=id;mountHistoryMap();}});
   };
   const placeAlreadyAdded = place => Boolean(place.providerId && trip()?.items.some(entry=>entry.place?.provider===place.provider && entry.place?.providerId===place.providerId));
   const updateModalResults = (result, query) => {
@@ -256,14 +313,39 @@
     finally{current.placeSaving=false;form.removeAttribute('aria-busy');controls.forEach(control=>control.disabled=false);if(success&&button)button.disabled=true;if(success&&!button&&form.isConnected)form.elements.title.focus();if(!form.isConnected)render();}
   };
   const submit = async event => { const form=event.target; if(!(form instanceof HTMLFormElement))return; event.preventDefault(); const values=Object.fromEntries(new FormData(form).entries()); if(form.id==='travelBulkForm')return applyBulk(event.submitter?.dataset.travelBulkAction); if(current.bulkBusy)return; const errorNotice=form.querySelector('.travel-trip-error'); if(errorNotice)errorNotice.hidden=true; if(form.id==='travelTripForm'){values.destinationCustom=resolveDestination(values);values.destination='';} const active=trip(); try{
-    if(form.id==='travelTripForm'){ const destination=String(values.destinationCustom||values.destination||'').trim(); if(!destination)throw new Error('여행지를 선택하거나 직접 입력해 주세요.'); if(current.editingId&&active){ try{ await data.updateTrip(active.id,{title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); }catch(error){ if(error.code==='OUT_OF_RANGE'&&window.confirm('기간 밖에 있는 기록을 보관함으로 옮기고 날짜를 줄일까요?')) await data.moveOutOfRangeToInbox(active.id,{title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); else throw error; } } else { const created=await data.createTrip({title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); clearSelection(); clearItineraryFilters(); current.page='manage'; current.tripId=created.id; current.tab='day-0'; } current.editingId=null; closeModal(); render(); return; }
+    if(form.id==='travelReportForm') return await saveReport(form, values.note);
+    if(form.id==='travelTripForm'){ const destination=String(values.destinationCustom||values.destination||'').trim(); if(!destination)throw new Error('여행지를 선택하거나 직접 입력해 주세요.'); if(current.editingId&&active){ try{ await data.updateTrip(active.id,{title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); }catch(error){ if(error.code==='OUT_OF_RANGE'&&window.confirm('기간 밖에 있는 기록을 보관함으로 옮기고 날짜를 줄일까요?')) await data.moveOutOfRangeToInbox(active.id,{title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); else throw error; } } else { const created=await data.createTrip({title:values.title,destinationLabel:destination,destination,startDate:values.startDate,endDate:values.endDate,intro:values.intro}); clearSelection(); clearItineraryFilters(); current.page='plan'; current.tripId=created.id; current.tab='all'; } current.editingId=null; closeModal(); render(); return; }
     if(!active)return;
     if(form.id==='travelPlaceForm')return savePlace(form);
     if(form.id==='travelNoteForm'){ await data.addNote(active.id,{title:values.title,dayIndex:values.dayIndex===''?null:Number(values.dayIndex),time:values.time||null,note:values.note}); closeModal(); render(); return; }
     if(form.id==='travelItemForm'){ await data.updateItem(active.id,form.dataset.itemId,{title:values.title,dayIndex:values.dayIndex===''?null:Number(values.dayIndex),time:values.time||null,note:values.note}); closeModal(); render(); }
   }catch(error){ if(errorNotice){errorNotice.textContent=error.message||'저장하지 못했어요.';errorNotice.hidden=false;}else window.alert(error.message||'저장하지 못했어요.'); } };
+  const saveReport = async (form, value) => {
+    const button = form.querySelector('button[type="submit"]');
+    if (button.disabled) return;
+    const note = value.trim();
+    if (!note) throw new Error('내용을 적어 주세요.');
+    const item = data.getTrip(form.dataset.tripId);
+    const section = reportSections.find(section => section.key === form.dataset.section);
+    if (!item || !section) throw new Error('여행 계획을 찾을 수 없어요.');
+    const entries = reportNotes(item, section);
+    const id = form.dataset.itemId;
+    if (id ? !entries.some(entry => entry.id === id) : entries.length > 0) {
+      throw new Error('항목이 바뀌었어요. 닫고 다시 열어 주세요.');
+    }
+    button.disabled = true;
+    try {
+      if (id) await data.updateItem(item.id, id, { note });
+      else await data.addNote(item.id, { title:section.title, note });
+      closeModal();
+      render();
+      $(`[data-travel-report-edit="${section.key}"]`,view)?.focus({ preventScroll:true });
+    } finally {
+      button.disabled = false;
+    }
+  };
   const click = async event => {
-    const target=event.target.closest('button,a,[data-map-item]');
+    const target=event.target.closest('button,a');
     if(!target)return;
     const active=trip();
     if(current.bulkBusy&&!target.matches('[data-travel-page],[data-travel-back]'))return;
@@ -274,23 +356,30 @@
     if(target.matches('[data-travel-itinerary-clear]')){clearItineraryFilters();render();$('[data-travel-itinerary-query]',view)?.focus();return;}
     if(target.matches('[data-travel-close]')){closeModal();render();return;}
     if(target.matches('[data-travel-new]')){clearItineraryFilters();render();current.editingId=null;current.modalMode='trip';return showModal('새 여행',tripForm());}
-    if(target.matches('[data-travel-page]')){clearSelection();clearItineraryFilters();current.page=target.dataset.travelPage;current.tripId=null;current.activeItemId=null;return render();}
-    if(target.matches('[data-travel-back]')){clearSelection();clearItineraryFilters();current.tripId=null;current.activeItemId=null;return render();}
+    if(target.matches('[data-travel-page]')){clearSelection();clearItineraryFilters();current.page=target.dataset.travelPage;current.tripId=null;return render();}
+    if(target.matches('[data-travel-back]')){clearSelection();clearItineraryFilters();current.tripId=null;return render();}
     if(target.matches('[data-travel-filter]')){current.filter=target.dataset.travelFilter;view.querySelectorAll('[data-travel-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button===target)));$('[data-travel-results]',view).innerHTML=management.renderResults(data.getTrips({includeArchived:true}),current);return;}
-    if(target.matches('[data-travel-open]')){clearSelection();clearItineraryFilters();current.tripId=target.dataset.travelOpen;current.tab='all';current.activeItemId=null;render();$('.travel-back',view)?.focus();return;}
+    if(target.matches('[data-travel-open]')){clearSelection();clearItineraryFilters();current.page='plan';current.tripId=target.dataset.travelOpen;render();$('[data-travel-open-itinerary]',view)?.focus();return;}
+    if(target.matches('[data-travel-open-itinerary]')){clearSelection();clearItineraryFilters();current.page='manage';current.tripId=target.dataset.travelOpenItinerary;current.tab='all';render();$('.travel-back',view)?.focus();return;}
+    if(target.matches('[data-travel-show-plan]')){clearSelection();clearItineraryFilters();current.page='plan';render();$('[data-travel-open-itinerary]',view)?.focus();return;}
+    if (target.matches('[data-travel-report-edit]')) {
+      const item = data.getTrip(target.dataset.tripId);
+      const section = reportSections.find(section => section.key === target.dataset.travelReportEdit);
+      if (!item || !section) return;
+      const entry = reportNotes(item, section).find(entry => entry.id === target.dataset.itemId);
+      return showModal(section.title, reportForm(item, section, entry));
+    }
     if(target.matches('[data-travel-restore]')){target.disabled=true;try{await data.restoreTrip(target.dataset.travelRestore);current.filter='all';render();}finally{target.disabled=false;}return;}
     if(target.matches('[data-travel-search]'))return search();
     if(target.matches('[data-travel-category]'))return search(target.dataset.travelCategory);
     if(target.matches('[data-place-result]'))return savePlace(target.closest('form'),JSON.parse(target.dataset.placeResult),target);
     if(target.matches('[data-travel-external]'))return;
-    if(target.matches('[data-travel-map-retry]'))return target.closest('.travel-history-map')?mountHistoryMap(true):mountMap(true);
     if(!active)return;
     if(target.matches('[data-travel-edit]')){current.editingId=active.id;return showModal('여행 정보',tripForm(active));}
-    if(target.matches('[data-travel-tab]')){current.tab=target.dataset.travelTab;current.activeItemId=null;return render();}
+    if(target.matches('[data-travel-tab]')){current.tab=target.dataset.travelTab;return render();}
     if(target.matches('[data-travel-add-place]')){const day=target.hasAttribute('data-travel-inbox')?null:target.hasAttribute('data-travel-day-index')?Number(target.dataset.travelDayIndex):defaultDayIndex();current.modalMode='place';showModal('장소 추가',placeForm(active,day));return preparePlaceSearch();}
     if(target.matches('[data-travel-add-note]')){const day=target.hasAttribute('data-travel-inbox')?null:target.hasAttribute('data-travel-day-index')?Number(target.dataset.travelDayIndex):defaultDayIndex();current.modalMode='note';return showModal('메모 추가',noteForm(active,day));}
     if(target.matches('[data-travel-archive]')){if(window.confirm('이 여행을 보관함으로 옮길까요?')){await data.archiveTrip(active.id);clearSelection();clearItineraryFilters();current.tripId=null;current.tab='all';render();}return;}
-    if(target.matches('[data-travel-select-item]'))return selectMapItem(target.dataset.travelSelectItem,true);
     if(target.matches('[data-travel-edit-item]')){const entry=active.items.find(item=>item.id===target.dataset.travelEditItem);if(entry)return showModal(entry.type==='place'?'장소 편집':'메모 편집',itemForm(active,entry));}
     if(target.matches('[data-travel-reorder]')){await data.reorderItem(active.id,target.dataset.travelReorderId,target.dataset.travelReorder);render();return;}
     if(target.matches('[data-travel-visited]')){await data.toggleVisited(active.id,target.dataset.travelVisited);render();return;}
@@ -303,7 +392,6 @@
     if (!target) return;
     if(current.bulkBusy&&target.closest('.travel-workspace')){event.preventDefault();event.stopImmediatePropagation();return;}
     if (target.matches('.travel-item-more summary')) { event.stopImmediatePropagation(); return; }
-    if (target.matches('[data-travel-layout]')) { event.preventDefault(); event.stopImmediatePropagation(); current.layout=target.dataset.travelLayout; render(); return; }
     const add = target.closest('[data-travel-add-place],[data-travel-add-note]');
     if (add) {
       event.preventDefault(); event.stopImmediatePropagation();
@@ -333,18 +421,18 @@
       view.addEventListener('change',event=>{
         const target=event.target;
         if(current.bulkBusy)return;
-        if(target.matches('[data-travel-itinerary-status]')){current.itineraryStatus=target.value;current.activeItemId=null;render();return;}
+        if(target.matches('[data-travel-itinerary-status]')){current.itineraryStatus=target.value;render();return;}
         if(target.matches('[data-travel-select-place]')){const id=target.dataset.travelSelectPlace;if(!trip()?.items.some(entry=>entry.id===id&&entry.type==='place'))return;target.checked?current.selectedIds.add(id):current.selectedIds.delete(id);current.bulkMessage='';updateBulkView();}
         if(target.matches('[data-travel-bulk-day]')){current.bulkDay=target.value;const move=$('[data-travel-bulk-action="move"]',view);if(move)move.disabled=!current.selectedIds.size||target.value==='choose';}
       });
-      view.addEventListener('input',event=>{if(event.target.matches('[data-travel-itinerary-query]')){if(current.bulkBusy||event.isComposing)return;current.itineraryQuery=event.target.value;current.activeItemId=null;render();return;}if(!event.target.matches('[data-travel-query]'))return;current.query=event.target.value;const results=$('[data-travel-results]',view);if(results)results.innerHTML=management.renderResults(data.getTrips({includeArchived:true}),current);});
+      view.addEventListener('input',event=>{if(event.target.matches('[data-travel-itinerary-query]')){if(current.bulkBusy||event.isComposing)return;current.itineraryQuery=event.target.value;render();return;}if(!event.target.matches('[data-travel-query]'))return;current.query=event.target.value;const results=$('[data-travel-results]',view);if(results)results.innerHTML=management.renderResults(data.getTrips({includeArchived:true}),current);});
     }
     render();
     if(!data.isLocal()&&!refreshPromise){refreshPromise=data.refresh().then(()=>{render();}).catch(error=>{if(view&&window.FAMILY_APP_STATE?.activeView==='travel')window.alert(error.message||'가족 여행을 불러오지 못했어요.');}).finally(()=>{refreshPromise=null;});}
   };
   const baseSwitch=window.switchView;
-  window.switchView=function travelSwitch(next){if(next!=='travel'){clearSelection();if($('#travelModal',view)?.open)closeModal();view?.setAttribute('hidden','');return baseSwitch(next);}ensure();if(window.FAMILY_APP_STATE)window.FAMILY_APP_STATE.activeView='travel';document.querySelectorAll('.view-tab[data-view]').forEach(tab=>{const selected=tab.dataset.view==='travel';tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;});document.querySelector('main')?.querySelectorAll(':scope > [id$="View"]').forEach(other=>{if(other!==view)other.hidden=true;});$('#addEventButton')?.setAttribute('hidden','');view.hidden=false;mountMap();mountHistoryMap();};
+  window.switchView=function travelSwitch(next){if(next!=='travel'){clearSelection();if($('#travelModal',view)?.open)closeModal();view?.setAttribute('hidden','');return baseSwitch(next);}ensure();if(window.FAMILY_APP_STATE)window.FAMILY_APP_STATE.activeView='travel';document.querySelectorAll('.view-tab[data-view]').forEach(tab=>{const selected=tab.dataset.view==='travel';tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;});document.querySelector('main')?.querySelectorAll(':scope > [id$="View"]').forEach(other=>{if(other!==view)other.hidden=true;});$('#addEventButton')?.setAttribute('hidden','');view.hidden=false;};
   window.switchView.__familyTravelInstalled=true; window.FAMILY_TRAVEL_READY=true;
-  window.addEventListener('family:travel-change',()=>{if(!current.placeSaving&&view&&window.FAMILY_APP_STATE?.activeView==='travel')render();}); window.addEventListener('familycontextchange',()=>{map.destroy();historyMap.destroy();historyActiveId=null;historyItems=[];clearSelection();clearItineraryFilters();current.page='summary';current.query='';current.filter='all';current.tripId=null;current.activeItemId=null;current.tab='all';render();refreshPromise=null;if(view&&window.FAMILY_APP_STATE?.activeView==='travel')ensure();}); ensure();
+  window.addEventListener('family:travel-change',()=>{if(!current.placeSaving&&view&&window.FAMILY_APP_STATE?.activeView==='travel')render();}); window.addEventListener('familycontextchange',()=>{clearSelection();clearItineraryFilters();current.page='plan';current.query='';current.filter='all';current.tripId=null;current.tab='all';render();refreshPromise=null;if(view&&window.FAMILY_APP_STATE?.activeView==='travel')ensure();}); ensure();
   window.addEventListener('family:travel-remote-change',()=>{ if(!view||window.FAMILY_APP_STATE?.activeView!=='travel'||!$('#travelModal',view)?.hidden)return; data.refresh().then(()=>render()).catch(()=>{}); });
 })();
