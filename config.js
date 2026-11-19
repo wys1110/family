@@ -187,7 +187,7 @@ window.FAMILY_CONFIG = {
     { name: "wallpaper-editor", version: "20260815-v1" },
     { name: "motion-system", version: "20260915-tab-position-v1" },
     { name: "family-admin", version: "20261018-startup-review-v1", style: false },
-    { name: "deferred-tabs", version: "20261018-parenting-chat-v1", style: false },
+    { name: "deferred-tabs", version: "20261119-style-ready-v1", style: false },
     { name: "compact-family", version: "20261031-visible-sleep-controls-v1" },
     { name: "sleep-live-activity", version: "20261106-sleep-progress-v2", style: false },
     { name: "family-sleep", version: "20261112-record-isolation-v1", style: false },
@@ -222,13 +222,37 @@ window.FAMILY_CONFIG = {
 
   window.FAMILY_MODULE_SIGNATURE = [...modules, ...extraModules].map(({ name, version }) => `${name}@${version}`).join("|");
 
+  const coreDesignModule = modules.find(module => module.name === "simple-family");
+  const styleLoads = new Map();
+  const moduleStylesheet = name => document.querySelector(`link[data-module="${name}"]`);
+  const loadStylesheet = ({ name, version }, stylesheet = moduleStylesheet(name)) => {
+    if (!stylesheet) return Promise.reject(new Error(`Missing stylesheet for ${name}`));
+    if (styleLoads.has(name)) return styleLoads.get(name);
+    const promise = new Promise((resolve, reject) => {
+      const clearHandlers = () => { stylesheet.onload = null; stylesheet.onerror = null; };
+      stylesheet.onload = () => { clearHandlers(); resolve(); };
+      stylesheet.onerror = () => {
+        clearHandlers();
+        stylesheet.removeAttribute("href");
+        styleLoads.delete(name);
+        reject(new Error(`Failed to load ${name}.css`));
+      };
+      stylesheet.href = `${name}.css?v=${version}`;
+    });
+    styleLoads.set(name, promise);
+    return promise;
+  };
+
   modules.filter((module) => module.style !== false).forEach(({ name, version }) => {
-    if (document.querySelector(`link[data-module="${name}"]`)) return;
+    if (moduleStylesheet(name)) return;
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    // Reserve cascade order without requesting styles for unopened tabs.
-    if (!deferredNames.has(name)) stylesheet.href = `${name}.css?v=${version}`;
     stylesheet.dataset.module = name;
+    // Reserve cascade order without requesting styles for unopened tabs.
+    if (name === coreDesignModule.name) {
+      // Start before auth/data loading. The core loader owns error reporting and retry.
+      loadStylesheet(coreDesignModule, stylesheet).catch(() => {});
+    } else if (!deferredNames.has(name)) stylesheet.href = `${name}.css?v=${version}`;
     document.head.appendChild(stylesheet);
   });
 
@@ -296,10 +320,11 @@ window.FAMILY_CONFIG = {
     groups: deferredGroups,
     initialView,
     prepare: view => {
+      const styles = [];
       for (const name of deferredGroups[view]) {
         const module = [...modules, ...extraModules].find(item => item.name === name);
-        const stylesheet = document.querySelector(`link[data-module="${name}"]`);
-        if (stylesheet && !stylesheet.getAttribute("href")) stylesheet.href = `${name}.css?v=${module.version}`;
+        const stylesheet = moduleStylesheet(name);
+        if (stylesheet) styles.push(loadStylesheet(module, stylesheet));
         if (document.querySelector(`link[data-module-preload="${name}"]`)) continue;
         const preload = document.createElement("link");
         preload.rel = "preload";
@@ -308,6 +333,7 @@ window.FAMILY_CONFIG = {
         preload.dataset.modulePreload = name;
         document.head.appendChild(preload);
       }
+      return Promise.all(styles);
     },
     load: name => {
       if (deferredLoads.has(name)) return deferredLoads.get(name);
@@ -334,7 +360,7 @@ window.FAMILY_CONFIG = {
       if (document.documentElement.dataset.familyModulesLoading) return;
       document.documentElement.dataset.familyModulesLoading = "true";
       const scripts = modules.filter((module) => module.script !== false && !deferredNames.has(module.name));
-      const results = await Promise.allSettled(scripts.map(loadScript));
+      const results = await Promise.allSettled([loadStylesheet(coreDesignModule), ...scripts.map(loadScript)]);
       if (results.some((result) => result.status === "rejected")) {
         delete document.documentElement.dataset.familyModulesLoading;
         if (typeof toast === "function") {

@@ -30,18 +30,20 @@
     notice.appendChild(message);
     if (error) {
       const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '다시 시도';
-      retry.addEventListener('click', () => window.switchView(view)); notice.appendChild(retry);
+      retry.addEventListener('click', () => navigate(view)); notice.appendChild(retry);
     }
   };
   const ensure = view => {
     if (loaded.has(view)) return Promise.resolve();
     if (pending.has(view)) return pending.get(view);
-    api.prepare(view);
-    const task = (async () => {
+    const styles = api.prepare(view);
+    const scripts = (async () => {
       // Preserve declared dependency order; successful modules survive a retry.
       for (const name of groups[view]) await api.load(name);
-      loaded.add(view);
-    })().finally(() => pending.delete(view));
+    })();
+    const task = Promise.all([styles, scripts])
+      .then(() => { loaded.add(view); })
+      .finally(() => pending.delete(view));
     pending.set(view, task); return task;
   };
   const original = switchView;
@@ -55,9 +57,9 @@
     if (requestedView === 'admin' && nav.querySelector('[data-view="admin"]').hidden) return;
     loadingView = requestedView;
     const context = scope();
-    // Use the current lightweight settings shell when available.
+    // Update the navigation while keeping the destination hidden until its assets are ready.
     original(requestedView === 'settings' ? 'settings' : 'calendar');
-    if (requestedView !== 'settings') main.querySelectorAll(':scope > [id$="View"]').forEach(view => { view.hidden = true; });
+    main.querySelectorAll(':scope > [id$="View"]').forEach(view => { view.hidden = true; });
     state.activeView = requestedView;
     nav.querySelectorAll('.view-tab').forEach(tab => {
       const active = tab.dataset.view === requestedView;
@@ -84,7 +86,7 @@
     const tab = event.target.closest?.('.view-tab[data-view]');
     if (!tab || !groups[tab.dataset.view] || loaded.has(tab.dataset.view)) return;
     event.preventDefault(); event.stopImmediatePropagation();
-    window.switchView(tab.dataset.view);
+    navigate(tab.dataset.view);
   }, true);
   window.addEventListener('familycontextchange', () => {
     const wasLoading = Boolean(loadingView);

@@ -240,8 +240,6 @@ async function getInitialSession(supabase) {
 
 async function init() {
   const shell = $("#appShell");
-  shell.inert = true;
-  shell.ariaBusy = "true";
   lockMobileZoom();
   bindUi();
   document.body.classList.toggle("demo-mode", DEMO_MODE);
@@ -290,8 +288,10 @@ async function init() {
   const startupModulesReady = waitForCoreModules();
   await bootstrapData(0, startupModulesReady);
   await startupModulesReady;
-  shell.inert = false;
+  if (!$("#simpleNavigation")) throw new Error("가족 앱 메뉴를 준비하지 못했어요");
   shell.ariaBusy = "false";
+  updateAuthGate();
+  $("#familyStartupStatus").hidden = true;
   window.FAMILY_MOTION_API?.activate();
 }
 
@@ -1076,7 +1076,8 @@ function updateDesktopLogoutVisibility() {
 function updateAuthGate() {
   const loginRequired = Boolean(state.authReady && state.supabase && !state.session);
   $("#authGate").hidden = !loginRequired;
-  $("#appShell").toggleAttribute("inert", loginRequired);
+  const shell = $("#appShell");
+  shell.toggleAttribute("inert", loginRequired || shell.ariaBusy === "true");
   document.body.classList.toggle("auth-required", loginRequired);
   updateDesktopLogoutVisibility();
 }
@@ -2863,5 +2864,5 @@ init().catch((error) => {
   console.error("가족 앱 시작 실패", error);
   state.authReady = true;
   updateAuthGate();
-  toast("화면을 불러오지 못했어요. 다시 시도해 주세요");
+  $("#familyStartupStatus").textContent = "화면을 불러오지 못했어요. 새로고침해 주세요.";
 });
