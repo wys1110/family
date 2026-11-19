@@ -4,12 +4,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
 
-test('public packaging retains web assets and excludes server, database, test and local files', () => {
+test('public packaging includes demo mode and excludes standalone design previews and development files', () => {
   const root = mkdtempSync(join(tmpdir(), 'family-public-'));
-  const files = ['index.html', 'app.js', 'config.js', 'styles.css', 'service-worker.js', 'manifest.webmanifest', 'assets/icons/chat.svg'];
-  const privateFiles = ['.env', '.local.js', 'queue.json', 'README.md', 'vitest.config.js', 'docs/report.html', 'test/example.js', 'scripts/server.mjs', 'supabase/schema.sql', 'node_modules/example/index.js', 'android/config.json', 'dist/stale.js'];
+  const files = ['index.html', 'demo-mode.js', 'app.js', 'config.js', 'styles.css', 'service-worker.js', 'manifest.webmanifest', 'assets/icons/chat.svg'];
+  const excludedFiles = [
+    '.env', '.local.js', 'queue.json', 'README.md', 'vitest.config.js', 'docs/report.html',
+    'test/example.js', 'scripts/server.mjs', 'supabase/schema.sql', 'node_modules/example/index.js',
+    'android/config.json', 'dist/stale.js',
+    'design-preview.html', 'design-preview.js', 'design-preview.css', 'design-preview-palette.css',
+  ];
   try {
-    for (const file of [...files, ...privateFiles]) {
+    for (const file of [...files, ...excludedFiles]) {
       const path = join(root, file);
       mkdirSync(join(path, '..'), { recursive: true });
       writeFileSync(path, `fixture: ${file}`);

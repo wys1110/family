@@ -27,8 +27,22 @@ test('initialization starts data loading while modules are still pending',async(
  const modules=new Promise(r=>resolveModules=r),data=new Promise(r=>resolveData=r);
  const activate=vi.fn(),bootstrapData=vi.fn(async(_attempt,ready)=>{await data;await ready;});
  const state={};const window={dispatchEvent(){},FAMILY_MOTION_API:{activate}};
- const context={state,window,config:{},DEMO_MODE:false,document:{body:{classList:{toggle(){}}}},$:()=>({}),lockMobileZoom(){},bindUi(){},renderDailyVerse(){},updateCareTimerClock(){},setInterval(){},waitForCoreModules:()=>modules,bootstrapData,CustomEvent:class{},console};
+ const shell={ariaBusy:'true'},status={hidden:false};
+ const nodes={'#appShell':shell,'#familyStartupStatus':status,'#demoModeBanner':{},'#simpleNavigation':{}};
+ const updateAuthGate=vi.fn();
+ const context={state,window,config:{},DEMO_MODE:false,document:{body:{classList:{toggle(){}}}},$:selector=>nodes[selector],lockMobileZoom(){},bindUi(){},renderDailyVerse(){},updateCareTimerClock(){},updateAuthGate,setInterval(){},waitForCoreModules:()=>modules,bootstrapData,CustomEvent:class{},console};
  vm.createContext(context);vm.runInContext(source,context);const pending=context.init();
  expect(bootstrapData).toHaveBeenCalledWith(0,modules);expect(activate).not.toHaveBeenCalled();
- resolveData();await Promise.resolve();expect(activate).not.toHaveBeenCalled();resolveModules();await pending;expect(activate).toHaveBeenCalledOnce();
+ resolveData();await Promise.resolve();
+ expect(shell.ariaBusy).toBe('true');expect(status.hidden).toBe(false);
+ resolveModules();await pending;
+ expect(shell.ariaBusy).toBe('false');expect(status.hidden).toBe(true);
+ expect(updateAuthGate).toHaveBeenCalledOnce();expect(activate).toHaveBeenCalledOnce();
+});
+
+test('the initial HTML hides the original app shell while the current navigation loads',()=>{
+ const html=readFileSync('index.html','utf8');
+ expect(html).toMatch(/#appShell\[aria-busy="true"\]\s*\{\s*visibility:\s*hidden/);
+ expect(html).toContain('id="appShell" aria-busy="true" inert');
+ expect(html).toContain('id="familyStartupStatus" role="status"');
 });

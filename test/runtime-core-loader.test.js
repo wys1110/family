@@ -35,7 +35,7 @@ function createLoader() {
         addEventListener: vi.fn(),
         setAttribute(name, value) { this.attributes[name] = value; },
         getAttribute(name) { return this[name] || this.attributes[name] || null; },
-        removeAttribute(name) { delete this.attributes[name]; },
+        removeAttribute(name) { delete this.attributes[name]; delete this[name]; },
         remove() { this.removed = true; this.parentElement = null; },
       };
     },
@@ -49,7 +49,8 @@ function createLoader() {
   // config waits for core-ready unless the signal was already set before load.
   const eventHandler = window.addEventListener.mock.calls.find(([name]) => name === 'family:core-ready')?.[1];
   if (eventHandler) eventHandler();
-  return { window, document, scripts, links, toast, startModules: eventHandler };
+  const design = links.find(link => link.dataset.module === 'simple-family');
+  return { window, document, scripts, links, toast, design, startModules: eventHandler };
 }
 
 const settle = async () => { for (let i = 0; i < 8; i += 1) await Promise.resolve(); };
@@ -60,6 +61,7 @@ test('core readiness does not wait for a saved deferred tab', async () => {
   const ready = vi.fn();
   loader.window.FAMILY_MODULES_READY.then(ready);
   for (const script of loader.scripts) script.onload();
+  loader.design.onload();
   await settle();
   expect(ready).toHaveBeenCalledOnce();
   expect(loader.window.FAMILY_DEFERRED_TABS.restoreInitial).not.toHaveBeenCalled();
@@ -88,6 +90,7 @@ test('core failures remain unready and retry only failed scripts', async () => {
   const failed = loader.scripts[0];
   const siblings = loader.scripts.filter(script => script !== failed);
   failed.onerror();
+  loader.design.onload();
   await settle();
 
   expect(loader.toast).not.toHaveBeenCalled();
@@ -130,8 +133,31 @@ test('core failures remain unready and retry only failed scripts', async () => {
   expect(loader.document.documentElement.dataset.familyModulesReady).toBe('true');
 });
 
+test('the core waits for the current design CSS and retries its original cascade slot on failure', async () => {
+  const loader = createLoader();
+  const ready = vi.fn();
+  loader.window.FAMILY_MODULES_READY.then(ready);
+  const assetUrl = loader.design.href;
+  const scriptCount = loader.scripts.length;
+  for (const script of loader.scripts) script.onload();
+  await settle();
+  expect(ready).not.toHaveBeenCalled();
+  loader.design.onerror();
+  await settle();
+  expect(ready).not.toHaveBeenCalled();
+  expect(loader.design.href).toBeUndefined();
 
-test('deferred styles keep their cascade slots and script downloads are discovered together', () => {
+  loader.toast.mock.calls[0][1].run();
+  expect(loader.design.href).toBe(assetUrl);
+  expect(loader.scripts).toHaveLength(scriptCount);
+  expect(loader.links.filter(link => link.dataset.module === 'simple-family')).toEqual([loader.design]);
+  loader.design.onload();
+  await loader.window.FAMILY_MODULES_READY;
+  expect(ready).toHaveBeenCalledOnce();
+});
+
+
+test('deferred styles keep their cascade slots and script downloads are discovered together', async () => {
   const { window, links, scripts } = createLoader();
   const api = window.FAMILY_DEFERRED_MODULES;
   const stylesheetLinks = links.filter(link => link.rel === 'stylesheet');
@@ -142,15 +168,35 @@ test('deferred styles keep their cascade slots and script downloads are discover
   expect(links.filter(link => link.rel === 'preload')).toHaveLength(0);
   expect(scripts.some(script => script.dataset.module === 'admin-ops')).toBe(false);
   const order = stylesheetLinks.map(link => link.dataset.module);
-  api.prepare('settings');
+  const first = api.prepare('settings');
   const preloads = links.filter(link => link.rel === 'preload');
   expect(preloads.map(link => link.dataset.modulePreload)).toEqual(api.groups.settings);
   expect(preloads.every(link => link.as === 'script')).toBe(true);
   expect(stylesheetLinks.map(link => link.dataset.module)).toEqual(order);
   expect(dormant.find(link => link.dataset.module === 'feature-request').href).toContain('feature-request.css?v=');
   expect(dormant.find(link => link.dataset.module === 'travel').href).toBeUndefined();
-  api.prepare('settings');
+  const retry = api.prepare('settings');
   expect(links.filter(link => link.rel === 'preload')).toHaveLength(5);
+  dormant.find(link => link.dataset.module === 'feature-request').onload();
+  dormant.find(link => link.dataset.module === 'settings-family-management').onload();
+  await Promise.all([first, retry]);
+});
+
+test('a failed deferred stylesheet retries with a new request in the same slot', async () => {
+  const { window, links } = createLoader();
+  const api = window.FAMILY_DEFERRED_MODULES;
+  const stylesheet = links.find(link => link.dataset.module === 'travel');
+  const first = api.prepare('travel');
+  const href = stylesheet.href;
+  const rejected = expect(first).rejects.toThrow('Failed to load travel.css');
+  stylesheet.onerror();
+  await rejected;
+  expect(stylesheet.href).toBeUndefined();
+  const retry = api.prepare('travel');
+  expect(stylesheet.href).toBe(href);
+  expect(links.filter(link => link.dataset.module === 'travel')).toEqual([stylesheet]);
+  stylesheet.onload();
+  await retry;
 });
 
 test('a failed deferred script can retry while successful prerequisites remain cached', async () => {

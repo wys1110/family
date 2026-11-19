@@ -11,6 +11,15 @@
     <script src="theme-bootstrap.js?v=20260804-theme-bootstrap-v1"></script>
     <link rel="stylesheet" href="styles.css?v=20261027-private-cashflow-v1" />
     <style data-theme-critical-inline>
+      #appShell[aria-busy="true"] { visibility: hidden; }
+      #familyStartupStatus {
+        position: fixed;
+        inset: max(4rem, calc(env(safe-area-inset-top) + 2rem)) 0 auto;
+        padding: 0 1rem;
+        margin: 0;
+        color: var(--label, #1b1d1f);
+        text-align: center;
+      }
       html[data-family-theme-choice="white"] {
         --bg: #f7f7f5; --surface: #fff; --surface-2: #ededeb; --label: #1b1d1f;
         --secondary: #666b70; --tertiary: #979ca1; --separator: rgba(24,27,30,.12);
@@ -71,7 +80,8 @@
       </div>
     </section>
 
-    <div class="app-shell" id="appShell">
+    <p id="familyStartupStatus" role="status">가족 앱을 불러오는 중이에요.</p>
+    <div class="app-shell" id="appShell" aria-busy="true" inert>
       <header class="topbar">
         <div>
           <p class="eyebrow">우리 가족의 하루</p>
@@ -111,11 +121,7 @@
             <h2 id="todaySummary">오늘도 우리답게</h2>
           </div>
           <img class="family-mascot" src="assets/family-logo-20260914.png" alt="아기를 꼭 안고 있는 우리 가족 로고" />
-          <div class="family-stack" aria-label="가족 구성원">
-            <span class="family-chip dad">용석</span>
-            <span class="family-chip mom">수빈</span>
-            <span class="family-chip baby">도윤</span>
-          </div>
+          <div class="family-stack" aria-label="가족 구성원"></div>
           <div class="wallpaper-actions"><button type="button" data-wallpaper-change="calendar">사진 변경</button><button type="button" data-wallpaper-remove="calendar" hidden>삭제</button></div>
         </section>
 
@@ -611,10 +617,10 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMessage"></span><button id="toastAction" type="button" hidden></button></div>
     <script src="demo-mode.js?v=20260727-isolated-v1"></script>
     <script src="native-bridge.js?v=20261106-ios-auth-v2"></script>
-    <script src="config.js?v=20261117-account-isolation-v1"></script>
+    <script src="config.js?v=20261119-current-design-v1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="family-auth.js?v=20261013-code-reliability-v1" data-module="family-auth"></script>
     <script src="family-data.js?v=20261018-review-performance-v1"></script>
-    <script src="app.js?v=20261117-account-isolation-v1"></script>
+    <script src="app.js?v=20261119-current-design-v1"></script>
   </body>
 </html>
