@@ -92,8 +92,11 @@ let suppressCalendarClickUntil = 0;
 let monthSwipeAnimating = false;
 let lastAuthSessionKey = null;
 let bootstrapRequestId = 0;
+let completedBootstrapRequestId = 0;
 let bootstrapRetryTimer = null;
+let calendarRefreshRequest = null;
 let eventSaveInProgress = false;
+let bulkEventSaveInProgress = false;
 const eventMovePromises = new Map();
 let eventDialogReturnPosition = null;
 let eventDialogContext = null;
@@ -101,6 +104,7 @@ let babySaveInProgress = false;
 const DOUBLE_TAP_WINDOW_MS = 420;
 const MAX_CALENDAR_EVENT_LANES = 4;
 const BOOTSTRAP_RETRY_DELAYS = [1000, 3000, 10000, 30000];
+const CALENDAR_REFRESH_INTERVAL_MS = 30000;
 const NOTIFICATION_ROLES = ["엄마", "아빠"];
 
 window.addEventListener('family:auth-session-refreshed', (event) => {
@@ -418,6 +422,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
   render();
   updateAuthGate();
   state.authTransitionPending = false;
+  completedBootstrapRequestId = requestId;
   window.dispatchEvent(new CustomEvent("familycontextchange", {
     detail: {
       userId: state.session?.user?.id || null,
@@ -519,10 +524,11 @@ function seedDemoData() {
 
 async function loadRemoteData(requestId, sessionKey, householdId) {
   const supabase = state.supabase;
-  const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey, () => isCurrentBootstrap(requestId, sessionKey) && state.household?.id === householdId);
+  const current = () => isCurrentBootstrap(requestId, sessionKey) && state.household?.id === householdId;
+  const remoteQuery = (operation) => withAuthRecovery(operation, supabase, sessionKey, current);
   const [babiesResult, eventsResult, growthResult, membersResult, wallpapersResult] = await Promise.all([
     remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("babies").select("*").eq("household_id", householdId).order("birth_date"))),
-    remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("events").select("*").eq("household_id", householdId).order("event_date"))),
+    remoteQuery(() => readHouseholdEvents(supabase, householdId, current)),
     remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("growth_entries").select("*").eq("household_id", householdId).order("entry_date", { ascending: false }))),
     remoteQuery(() => window.FAMILY_DATA.readAll(() => supabase.from("calendar_members").select("*").eq("household_id", householdId).order("sort_order"))),
     remoteQuery(() => supabase.from("household_wallpapers").select("*").eq("household_id", householdId)),
@@ -563,6 +569,58 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
     else state.growthEntries.forEach((entry) => { if (!entry.babyId) entry.babyId = babyId; });
   }
   return ![babiesResult, eventsResult, growthResult, membersResult, wallpapersResult].some((result) => result.error);
+}
+
+function readHouseholdEvents(supabase, householdId, isCurrent) {
+  // readAll adds the event ID as the pagination tie-breaker for equal dates.
+  return window.FAMILY_DATA.readAll(() => supabase.from("events")
+    .select("id,title,event_date,event_end_date,event_time,member,note")
+    .eq("household_id", householdId).order("event_date"), { isCurrent });
+}
+
+function canRefreshCalendarEvents() {
+  return !DEMO_MODE && !document.hidden && state.activeView === "calendar"
+    && !$("#calendarView").hidden && !$("#calendarView .family-calendar-panel[hidden]")
+    && $("#appShell").ariaBusy !== "true" && !state.authTransitionPending
+    && completedBootstrapRequestId === bootstrapRequestId
+    && !eventSaveInProgress && !bulkEventSaveInProgress && !eventMovePromises.size && !dragState
+    && !$("#eventDialog").open && !$("#bulkEventDialog").open;
+}
+
+function sameCalendarEvent(a, b) {
+  return a && b && a.id === b.id && a.title === b.title && a.date === b.date && a.endDate === b.endDate
+    && a.time === b.time && a.member === b.member && a.note === b.note;
+}
+
+async function refreshCalendarEvents() {
+  const client = state.supabase;
+  const householdId = state.household?.id;
+  const userId = state.session?.user?.id;
+  const generation = bootstrapRequestId;
+  if (!client || !householdId || !userId || !canRefreshCalendarEvents() || calendarRefreshRequest?.generation === generation) return;
+  const request = { generation };
+  const current = () => state.supabase === client && state.household?.id === householdId
+    && isCurrentBootstrap(generation, userId);
+  calendarRefreshRequest = request;
+  const snapshot = state.events.map(event => ({ ...event }));
+  try {
+    const result = await withAuthRecovery(() => readHouseholdEvents(client, householdId, current), client, userId, current);
+    if (!current() || !canRefreshCalendarEvents() || result.error) return;
+    // An earlier read must not overwrite a save or a drag that finished while it was in flight.
+    if (snapshot.length !== state.events.length || snapshot.some((event, index) => !sameCalendarEvent(event, state.events[index]))) return;
+    const previous = new Map(state.events.map(event => [event.id, event]));
+    const events = result.data.map(fromRemote).map(event => {
+      const existing = previous.get(event.id);
+      return sameCalendarEvent(existing, event) ? existing : event;
+    });
+    if (events.length === state.events.length && events.every((event, index) => event === state.events[index])) return;
+    state.events = events;
+    renderHeader(); renderCalendar(); renderAgenda(); renderUpcomingEvents();
+  } catch {
+    // Keep the last visible calendar and try again on the next refresh.
+  } finally {
+    if (calendarRefreshRequest === request) calendarRefreshRequest = null;
+  }
 }
 
 function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
@@ -888,6 +946,15 @@ function releaseTouchTabFocus(event) {
 }
 
 function bindUi() {
+  if (!DEMO_MODE) {
+    document.addEventListener("visibilitychange", refreshCalendarEvents);
+    document.addEventListener("click", (event) => {
+      if (event.target.closest('.view-tab[data-view="calendar"], [data-calendar-mode="calendar"]')) void refreshCalendarEvents();
+    });
+    window.addEventListener("pageshow", refreshCalendarEvents);
+    window.addEventListener("focus", refreshCalendarEvents);
+    window.setInterval(refreshCalendarEvents, CALENDAR_REFRESH_INTERVAL_MS);
+  }
   $("#prevMonth").addEventListener("click", () => slideMonth(-1));
   $("#nextMonth").addEventListener("click", () => slideMonth(1));
   $("#calendarViewControls").addEventListener("click", (event) => {
@@ -1383,18 +1450,24 @@ function renderBulkEventPreview() {
 
 async function saveBulkEvents(event) {
   event.preventDefault();
+  if (bulkEventSaveInProgress) return;
   if (state.supabase && !state.household) return toast("먼저 가족 공간을 만들어주세요");
   const { items, errors } = parseBulkEvents();
   if (errors.length || !items.length) return renderBulkEventPreview();
   const submit = $("#bulkEventSubmit"); submit.disabled = true; submit.textContent = "저장 중…";
-  if (state.supabase && state.session) {
-    const { error } = await withAuthRecovery(() => state.supabase.from("events").insert(items.map(toRemote)));
-    if (error) { submit.disabled = false; renderBulkEventPreview(); return toast("일정을 한꺼번에 저장하지 못했어요"); }
+  bulkEventSaveInProgress = true;
+  try {
+    if (state.supabase && state.session) {
+      const { error } = await withAuthRecovery(() => state.supabase.from("events").insert(items.map(toRemote)));
+      if (error) { submit.disabled = false; renderBulkEventPreview(); return toast("일정을 한꺼번에 저장하지 못했어요"); }
+    }
+    state.events.push(...items); persistLocal();
+    state.selectedDate = items[0].date; state.viewDate = startOfMonth(parseDate(items[0].date));
+    $("#bulkEventDialog").close(); render();
+    toast(`${items.length}개 일정을 추가했어요`);
+  } finally {
+    bulkEventSaveInProgress = false;
   }
-  state.events.push(...items); persistLocal();
-  state.selectedDate = items[0].date; state.viewDate = startOfMonth(parseDate(items[0].date));
-  $("#bulkEventDialog").close(); render();
-  toast(`${items.length}개 일정을 추가했어요`);
 }
 
 function openMemberDialog() {
