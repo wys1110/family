@@ -198,7 +198,7 @@ window.FAMILY_CONFIG = {
     { name: "family-sleep", version: "20261112-record-isolation-v1", style: false },
     { name: "live-sleep-pattern", version: "20261106-live-sleep-v1", style: false },
     { name: "growth-swipe-delete", version: "20261031-all-record-lists-v2" },
-    { name: "nova-family", version: "20261017-design-harmony-v1" },
+    { name: "nova-family", version: "20261124-account-artwork-v1" },
     { name: "travel-sharing", version: "20261023-family-review-fixes-v1", style: false },
     { name: "travel-data", version: "20261023-family-review-fixes-v1", style: false },
     { name: "travel-management", version: "20261117-travel-catalog-v1", style: false },
