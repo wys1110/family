@@ -24,7 +24,7 @@ function harness(existing = null, lookupError = null) {
     withAuthRecovery: operation => operation(),
     normalizeTodo: todo => ({ ...todo, parentId: todo.parentId ?? todo.recurrence_parent_id }),
     toRemote: todo => todo, uid: () => 'new', isMissingTable: () => false,
-    renderTodos: vi.fn(), decorateCalendar: vi.fn(), announce: vi.fn(), writeLocalTodos: vi.fn(),
+    renderTodos: vi.fn(), announce: vi.fn(), writeLocalTodos: vi.fn(),
     updateTodo: vi.fn(async (id, patch) => ({ id, ...patch })),
     addRecurrence: () => '2026-11-10', recurrenceLabel: () => '매일',
   };

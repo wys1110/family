@@ -141,7 +141,7 @@ window.FAMILY_CONFIG = {
     { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
     { name: "tab-emojis", version: "20261018-parenting-chat-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
-    { name: "family-todo", version: "20261117-account-isolation-v1" },
+    { name: "family-todo", version: "20261123-calendar-no-todo-badges-v1" },
     { name: "notification-center", version: "20261112-event-save-context-v3" },
     { name: "family-onboarding", version: "20260830-auth-recovery-v2" },
     { name: "family-search", version: "20260805-family-search-v1" },

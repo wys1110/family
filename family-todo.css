@@ -341,28 +341,6 @@
 
 .family-todo-fab[hidden] { display: none !important; }
 
-.todo-day-indicator {
-  position: absolute;
-  z-index: 3;
-  top: 27px;
-  right: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 4px;
-  border: 2px solid var(--surface);
-  border-radius: 999px;
-  color: white;
-  background: var(--pink);
-  box-shadow: 0 2px 7px rgba(80, 55, 65, .16);
-  font-size: 7px;
-  font-weight: 850;
-  line-height: 1;
-  pointer-events: none;
-}
-
 .family-todo-dialog .todo-form-row { grid-template-columns: 1fr 1.15fr; }
 .family-todo-dialog select:disabled { opacity: .65; cursor: not-allowed; }
 .family-todo-dialog .todo-dialog-help {
