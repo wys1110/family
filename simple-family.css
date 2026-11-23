@@ -34,13 +34,17 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="diaper"] { --simple-icon: url('assets/icons/diaper.svg'); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"] { background: none; mask: none; position: relative; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"]::after { content: '•••'; position: absolute; inset: -6px 0 0; font-size: 22px; letter-spacing: 1px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 10px 2px 4px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; margin: 10px 2px 4px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick[hidden] { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button { display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 11px; min-height: 50px; padding: 8px 3px; font-size: 14px; font-weight: 600; box-shadow: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick .simple-icon { width: 20px; height: 20px; flex-basis: 20px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="sleep"] { color: var(--simple-sleep); background: var(--nova-lilac); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="feed"] { color: var(--simple-feed); background: var(--simple-feed-soft); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="diaper"] { color: var(--simple-diaper); background: var(--simple-diaper-soft); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="music"] { mask: none; background: none; font-size: 20px; line-height: 1; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="music"]::before { content: "♪"; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="lullaby"] { color: var(--nova-accent); background: var(--nova-lilac); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="lullaby"][aria-pressed="true"] [data-icon="music"]::before { content: "■"; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button:disabled { opacity: .45; cursor: default; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more { width: min(440px,calc(100% - 32px)); border: 1px solid var(--nova-line); border-radius: 20px; padding: 20px; background: var(--nova-card); color: var(--nova-text); max-height: 80dvh; overflow: auto; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more::backdrop { background: color-mix(in srgb,var(--nova-text) 35%,transparent); }
@@ -148,3 +152,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard #careTimerCancel { font-size: 12px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #growthView #careTimerCard.is-running .simple-record-tools { margin-top: 6px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(#growthView,#calendarView,#settingsView,#englishView,#assistantView,#travelView) { background: transparent !important; }
+
+@media (max-width: 380px) {
+  html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button { flex-direction: column; gap: 2px; padding: 4px 1px; font-size: 12px; }
+}
