@@ -432,6 +432,23 @@
     } catch {}
     (w(), x(), $(), t || s("오늘의 영어 동화를 들었어요 📖"));
   }
+  function closeLullaby() {
+    const panel = document.querySelector("#lullabyPanel");
+    if (!panel || panel.hidden) return;
+    panel.hidden = true;
+    document.querySelector("#lullabyPanel > iframe")?.remove();
+    document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "false");
+  }
+
+  function toggleLullaby() {
+    const panel = document.querySelector("#lullabyPanel");
+    if (!panel.hidden) return closeLullaby();
+    C();
+    panel.prepend(document.querySelector("#lullabyPlayer").content.cloneNode(true));
+    panel.hidden = false;
+    document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "true");
+  }
+
   function m() {
     if ("function" != typeof switchView || switchView.__englishStoriesInstalled)
       return;
@@ -440,7 +457,7 @@
         const o = document.querySelector("#englishView"),
           s = document.querySelector("#addEventButton");
         if (i !== e)
-          return (C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
+          return (closeLullaby(), C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
         n("calendar");
         const r = a();
         r && (r.activeView = e);
@@ -598,6 +615,7 @@
       return;
     }
     if (!Number.isInteger(e) || !d().lines[e]) return;
+    closeLullaby();
     C(!1);
     const t = d(),
       n = ++o.playToken;
@@ -726,7 +744,13 @@
 
       <section class="english-today-card">
         <button type="button" id="englishOpenToday" aria-label="오늘의 동화 보기">오늘의 동화 보기 <i aria-hidden="true">›</i></button>
+        <button type="button" id="lullabyToggle" aria-expanded="false" aria-controls="lullabyPanel">부스럭선생 자장가 <i aria-hidden="true">›</i></button>
       </section>
+
+      <div id="lullabyPanel" hidden>
+        <template id="lullabyPlayer"><iframe title="부스럭선생 자장가 · 아기 울음 그치는 소리" src="https://www.youtube-nocookie.com/embed/Zum-dn_jJbM" style="width:100%;aspect-ratio:16/9;border:0" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></template>
+        <a href="https://www.youtube.com/watch?v=Zum-dn_jJbM" target="_blank" rel="noopener noreferrer">YouTube에서 듣기</a>
+      </div>
 
       <section class="english-story-player" id="englishStoryPlayer">
         <div class="english-story-cover">
@@ -763,6 +787,7 @@
     document
       .querySelector("#englishOpenToday")
       ?.addEventListener("click", () => b(l().id)),
+    document.querySelector("#lullabyToggle")?.addEventListener("click", toggleLullaby),
     document.querySelector("#englishPlayButton")?.addEventListener("click", E),
     document.querySelector("#englishRestartButton")?.addEventListener("click", () => B(0)),
     document.querySelector("#englishSpeedButton")?.addEventListener("click", k),
@@ -803,6 +828,7 @@
       setTimeout(() => n(i + 1), 100);
     })(),
     window.addEventListener("familycontextchange", () => {
+      closeLullaby();
       C();
       A();
       p();
