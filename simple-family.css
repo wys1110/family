@@ -18,7 +18,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,input,select) { touch-action: manipulation; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,a,input,select,textarea,summary):focus-visible { outline: 3px solid var(--nova-accent); outline-offset: 3px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-bottom { position: fixed; inset: auto 0 0; z-index: 70; max-width: 780px; margin: auto; padding: 0 12px env(safe-area-inset-bottom); background: var(--nova-card); border-top: 1px solid var(--nova-line); }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; padding: 6px 0 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; padding: 6px 0 8px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-height: 54px; border: 0; border-radius: 12px; background: transparent; color: var(--nova-muted); font-size: 11px; font-weight: 550; padding: 5px 2px; box-shadow: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleNavigation button[aria-current="page"] { color: var(--nova-accent); background: var(--nova-lilac); font-weight: 700; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-icon { display: inline-block; width: 23px; height: 23px; flex: 0 0 23px; background: currentColor; mask: var(--simple-icon) center / contain no-repeat; }
@@ -32,9 +32,7 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="sleep"] { --simple-icon: url('assets/icons/moon.svg'); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="feed"] { --simple-icon: url('assets/icons/bottle.svg'); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="diaper"] { --simple-icon: url('assets/icons/diaper.svg'); }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"] { background: none; mask: none; position: relative; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] [data-icon="more"]::after { content: '•••'; position: absolute; inset: -6px 0 0; font-size: 22px; letter-spacing: 1px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; margin: 10px 2px 4px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) minmax(92px,1.3fr); gap: 4px; margin: 10px 2px 4px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick[hidden] { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button { display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 11px; min-height: 50px; padding: 8px 3px; font-size: 14px; font-weight: 600; box-shadow: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick .simple-icon { width: 20px; height: 20px; flex-basis: 20px; }
@@ -46,17 +44,10 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="lullaby"] { color: var(--nova-accent); background: var(--nova-lilac); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick [data-quick="lullaby"][aria-pressed="true"] [data-icon="music"]::before { content: "■"; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button:disabled { opacity: .45; cursor: default; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more { width: min(440px,calc(100% - 32px)); border: 1px solid var(--nova-line); border-radius: 20px; padding: 20px; background: var(--nova-card); color: var(--nova-text); max-height: 80dvh; overflow: auto; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more::backdrop { background: color-mix(in srgb,var(--nova-text) 35%,transparent); }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more h2 { margin: 0; font-size: 24px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more button { min-height: 48px; color: var(--nova-accent); background: transparent; border: 0; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more-items button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 4px; text-align: left; color: var(--nova-text); border-bottom: 1px solid var(--nova-line); font-size: 17px; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-more-items .simple-icon { color: var(--nova-accent); }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-care-status { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; padding: 13px 16px; border: 0; border-radius: 14px; margin: 0 0 16px; background: var(--nova-lilac); color: var(--simple-sleep); font-size: 14px; line-height: 1.55; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-care-status[hidden] { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .hero-card:not(.has-wallpaper) { display: none !important; }
-html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .compact-primary-actions { display: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .compact-primary-actions { display: flex; justify-content: flex-end; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView .compact-primary-actions h2 { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .compact-primary-actions #addEventButton.fab { width: auto; min-height: 44px; background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; border-radius: 12px; padding: 10px 16px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #calendarView #addEventButton.fab { background: var(--nova-accent) !important; color: var(--nova-on-accent) !important; }
@@ -156,3 +147,16 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 @media (max-width: 380px) {
   html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-quick button { flex-direction: column; gap: 2px; padding: 4px 1px; font-size: 12px; }
 }
+
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby { display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: stretch; border-radius: 11px; background: var(--nova-lilac); color: var(--nova-accent); }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby [data-quick="lullaby"] { flex-direction: column; gap: 1px; font-size: 12px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby-picker { display: grid; position: relative; place-items: center; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby-picker::before { content: ""; position: absolute; left: 0; height: 18px; border-left: 1px solid currentColor; opacity: .3; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby-picker::after { content: ""; width: 7px; height: 7px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby-select { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .simple-lullaby-picker:focus-within { outline: 2px solid currentColor; border-radius: 8px; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleSettings { display: inline-grid; place-content: center; min-width: 44px; min-height: 44px; color: var(--nova-muted); background: transparent; border: 0; border-radius: 50%; padding: 0; }
+html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] #simpleSettings[aria-current="page"] { color: var(--nova-accent); background: var(--nova-lilac); }
+html[data-simple-family] #simpleSettingsLinks { display: flex; flex-wrap: wrap; gap: 8px; }
+html[data-simple-family] #simpleSettingsLinks button:not([hidden]) { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; min-height: 44px; border: 1px solid var(--nova-line); border-radius: 12px; color: var(--nova-text); background: var(--nova-card); }
+html[data-simple-family] #simpleSettingsLinks button[hidden] { display: none; }

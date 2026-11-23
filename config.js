@@ -108,8 +108,8 @@ window.FAMILY_CONFIG = {
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "lullaby", version: "20261123-public-audio-v1", style: false },
-    { name: "english-stories", version: "20261123-account-playback-v1" },
+    { name: "lullaby", version: "20261123-lullaby-choices-v1", style: false },
+    { name: "english-stories", version: "20261123-lullaby-choices-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261106-live-sleep-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
@@ -123,7 +123,7 @@ window.FAMILY_CONFIG = {
     { name: "refresh-button", version: "20260722-bottom-refresh-v6" },
     { name: "sticky-tabs", version: "20260722-utility-clearance-v1" },
     { name: "family-permissions", version: "20260805-family-permissions-v1", style: false },
-    { name: "settings", version: "20261018-startup-review-v1" },
+    { name: "settings", version: "20261123-lullaby-choices-v1" },
     { name: "family-backup-media", version: "20261018-startup-review-v1", style: false },
     { name: "family-journal", version: "20261023-family-review-fixes-v1" },
     { name: "settings-backup", version: "20260913-records-v1", style: false },
@@ -206,7 +206,7 @@ window.FAMILY_CONFIG = {
     { name: "parenting-history", version: "20261117-account-isolation-v1", style: false },
     { name: "parenting-assistant", version: "20261117-account-isolation-v1" },
     { name: "travel", version: "20261117-preparation-report-v1" },
-    { name: "simple-family", version: "20261123-account-playback-v1" },
+    { name: "simple-family", version: "20261123-lullaby-choices-v1" },
   ];
 
   const deferredGroups = {

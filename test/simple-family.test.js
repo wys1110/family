@@ -35,6 +35,7 @@ function fixture() {
   const nav=add(shell,'nav','view-tabs');const tabs={};
   for(const name of ['calendar','growth','assistant','travel','english','settings','admin']){const tab=add(nav,'button',`view-tab${name==='calendar'?' active':''}`);tab.dataset.view=name;tab.textContent=name;tab.addEventListener('click',vi.fn());tabs[name]=tab;}
   tabs.admin.hidden=true;
+  const settings=add(shell,'div','','settingsView');add(settings,'nav','','simpleSettingsLinks');
   const calendar=add(shell,'div','','calendarView');add(shell,'section','daily-verse-card');
   const calendarButton=add(calendar,'button');
   calendarButton.dataset.calendarMode='calendar';
@@ -60,34 +61,36 @@ function fixture() {
 test('navigation delegates to original tabs and hides privileged entries',()=>{
   const f=fixture();
   const navigation=f.document.querySelector('#simpleNavigation');
-  const travel=navigation.querySelector('[data-simple-view="travel"]');
-  const more=navigation.lastElementChild;
-  expect(navigation.children.map(b=>b.textContent)).toEqual(['오늘','성장','여행','동화','더보기']);
-  travel.click();
+  const settings=f.document.querySelector('#simpleSettings');
+  expect(navigation.children.map(b=>b.textContent)).toEqual(['오늘','성장']);
+  expect(settings.parentElement).toBe(f.document.querySelector('#accountButton').parentElement);
+  expect(settings.attrs['aria-label']).toBe('설정');
+  settings.click();
+  expect(f.tabs.settings.listeners.click[0]).toHaveBeenCalledOnce();
+  const links=f.document.querySelector('#settingsView #simpleSettingsLinks');
+  const visible=()=>links.children.filter(button=>!button.hidden).map(button=>button.textContent);
+  expect(visible()).toEqual(['동화','여행 기록']);
+  links.querySelector('[data-settings-view="travel"]').click();
   expect(f.tabs.travel.listeners.click[0]).toHaveBeenCalledOnce();
+  expect(f.document.querySelector('#simpleMore')).toBeNull();
 
   const syncNavigation=f.observers.find(o=>o.target.className==='view-tabs').fn;
   f.tabs.calendar.className='view-tab';
-  f.tabs.travel.className='view-tab active';
+  f.tabs.settings.className='view-tab active';
   syncNavigation();
-  expect(travel.attrs['aria-current']).toBe('page');
-  expect(more.attrs['aria-current']).toBeUndefined();
+  expect(settings.attrs['aria-current']).toBe('page');
 
-  more.click();
-  const dialog=f.document.querySelector('#simpleMore');
-  const items=dialog.querySelectorAll('.simple-more-items button');
-  expect(dialog.open).toBe(true);
-  expect(items.map(b=>b.textContent)).toEqual(['일정 추가','육아','설정','오늘 화면 배경 사진','계정 및 저장 상태']);
-  items[1].click();
-  expect(f.tabs.assistant.listeners.click[0]).toHaveBeenCalledOnce();
-  expect(dialog.open).toBe(false);
-  expect(more.attrs['aria-expanded']).toBe('false');
-
-  f.tabs.travel.className='view-tab';
-  f.tabs.assistant.className='view-tab active';
+  f.tabs.admin.hidden=false;
   syncNavigation();
-  expect(travel.attrs['aria-current']).toBeUndefined();
-  expect(more.attrs['aria-current']).toBe('page');
+  expect(visible()).toEqual(['동화','여행 기록','관리']);
+  const admin=links.querySelector('[data-settings-view="admin"]');
+  admin.click();
+  expect(f.tabs.admin.listeners.click[0]).toHaveBeenCalledOnce();
+  f.tabs.admin.disabled=true;
+  f.events.familycontextchange();
+  expect(visible()).toEqual(['동화','여행 기록']);
+  admin.click();
+  expect(f.tabs.admin.listeners.click[0]).toHaveBeenCalledOnce();
 });
 test('the bottom Today button reveals the calendar when the to-do list is selected',()=>{
   const f=fixture();
