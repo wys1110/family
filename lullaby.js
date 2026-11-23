@@ -1,6 +1,6 @@
 (() => {
   const tracks = [
-    { id: "rustle", label: "바스락선생", src: "assets/buseureok.m4a" },
+    { id: "rustle", label: "바스락선생", src: "assets/buseureok.m4a?v=2" },
     { id: "rain", label: "잔잔한 빗소리", src: "assets/lullaby-rain.m4a" },
     { id: "waves", label: "파도 소리", src: "assets/lullaby-waves.m4a" },
   ];
@@ -19,7 +19,17 @@
   audio.style.maxWidth = "100%";
 
   let open = false;
+  let requested = false;
+  let interrupted = false;
+  let retryTimer;
+  let retryDelay = 1000;
   let attempt = 0;
+  const session = navigator.audioSession;
+
+  function setSessionType(type) {
+    if (!session || session.type === type) return;
+    try { session.type = type; } catch { /* The media element can still play without session hints. */ }
+  }
 
   function render() {
     const playing = open && !audio.paused;
@@ -27,16 +37,16 @@
     const panel = document.querySelector("#lullabyPanel");
     if (panel) {
       panel.hidden = !open;
-      document.querySelector("#lullabyStatus").textContent = open ? "연속 반복" : "";
+      document.querySelector("#lullabyStatus").textContent = playing ? "연속 반복" : requested ? "재생 대기 중" : "";
       const button = document.querySelector("#lullabyToggle");
-      button.textContent = playing ? "자장가 정지" : "자장가 재생";
-      button.setAttribute("aria-label", selected.label + (playing ? " 정지" : " 재생"));
+      button.textContent = requested ? "자장가 정지" : "자장가 재생";
+      button.setAttribute("aria-label", selected.label + (requested ? " 정지" : " 재생"));
       button.setAttribute("aria-expanded", String(open));
       document.querySelector("#lullabyTrack").value = selected.id;
     }
     audio.hidden = !open;
     window.dispatchEvent(new CustomEvent("family:lullaby-playback", {
-      detail: { playing, label: selected.label, id: selected.id },
+      detail: { playing, requested, label: selected.label, id: selected.id },
     }));
   }
 
@@ -53,33 +63,66 @@
   function stop() {
     if (!open) return;
     open = false;
+    requested = false;
+    interrupted = false;
+    clearTimeout(retryTimer);
+    retryDelay = 1000;
     attempt++;
     audio.pause();
     audio.removeAttribute("src");
     audio.load();
+    if (session?.type === "playback") setSessionType("auto");
     render();
+  }
+
+  function retryNetwork() {
+    clearTimeout(retryTimer);
+    if (!requested || navigator.onLine === false) return;
+    const current = attempt;
+    retryTimer = setTimeout(() => {
+      if (!requested || current !== attempt) return;
+      audio.load();
+      play();
+    }, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, 30000);
   }
 
   function reportError() {
     if (!open || !audio.error) return;
+    if (audio.error.code === 2 || navigator.onLine === false) {
+      retryNetwork();
+      render();
+      return;
+    }
     stop();
     window.toast?.("자장가를 불러오지 못했어요. 다시 눌러 주세요.");
   }
 
   async function play() {
     const current = ++attempt;
+    requested = true;
+    clearTimeout(retryTimer);
+    setSessionType("playback");
     render();
     try {
       await audio.play();
     } catch {
       if (current !== attempt) return;
+      if (session?.state === "interrupted") {
+        interrupted = true;
+        return;
+      }
+      if (audio.error?.code === 2 || navigator.onLine === false) {
+        retryNetwork();
+        return;
+      }
       stop();
       window.toast?.("자장가를 재생하지 못했어요. 다시 눌러 주세요.");
     }
   }
 
   function toggle() {
-    if (open && !audio.paused) return stop();
+    if (requested) return stop();
     if (!open) {
       open = true;
       window.dispatchEvent(new Event("family:lullaby-start"));
@@ -91,7 +134,7 @@
   function select(id, { playNow = false } = {}) {
     const track = tracks.find(item => item.id === id);
     if (!track) return;
-    const wasPlaying = open && !audio.paused;
+    const wasPlaying = requested;
     if (track !== selected) {
       selected = track;
       try { if (storageKey) localStorage.setItem(storageKey, track.id); } catch { /* Remember for this session. */ }
@@ -105,11 +148,43 @@
     render();
   }
 
-  audio.addEventListener("play", render);
-  audio.addEventListener("pause", render);
+  audio.addEventListener("playing", () => {
+    if (!open || audio.paused) return;
+    requested = true;
+    setSessionType("playback");
+    retryDelay = 1000;
+    render();
+  });
+  audio.addEventListener("pause", () => {
+    if (!audio.paused) return;
+    if (!audio.ended && !audio.error && !interrupted && session?.state !== "interrupted") {
+      requested = false;
+      attempt++;
+      clearTimeout(retryTimer);
+      setSessionType("auto");
+    }
+    render();
+  });
+  // Native looping normally skips ended. Some media engines instead stop at the boundary.
+  audio.addEventListener("ended", () => {
+    if (!requested || !audio.ended) return;
+    audio.currentTime = 0;
+    play();
+  });
   audio.addEventListener("error", reportError);
+  window.addEventListener("online", () => {
+    if (requested && audio.error) retryNetwork();
+  });
+  session?.addEventListener("statechange", () => {
+    if (session.state === "interrupted") {
+      interrupted = requested;
+    } else if (interrupted) {
+      interrupted = false;
+      if (requested && audio.paused) play();
+    }
+  });
   window.FAMILY_LULLABY = {
-    tracks, get selected() { return selected.id; }, select, attach, toggle, stop,
+    tracks, get selected() { return selected.id; }, get active() { return requested; }, select, attach, toggle, stop,
   };
   if (document.querySelector("#lullabyPlayerSlot")) attach();
 })();

@@ -11,6 +11,7 @@
   let checking = false;
   let lastCheckedAt = 0;
   let reloadScheduled = false;
+  let pendingSignature = "";
   const hadControllerAtStart = Boolean(navigator.serviceWorker?.controller);
 
   const moduleSignatureFromSource = (source) => {
@@ -31,23 +32,29 @@
   };
 
   const scheduleReload = (signature) => {
-    if (reloadScheduled) return;
+    pendingSignature = signature;
+    if (reloadScheduled || window.FAMILY_LULLABY?.active) return;
     const versionKey = compactHash(signature || String(Date.now()));
     const guardKey = `${RELOAD_GUARD_PREFIX}${versionKey}`;
-    try {
-      if (sessionStorage.getItem(guardKey)) return;
-      sessionStorage.setItem(guardKey, "1");
-    } catch { /* 세션 저장이 막혀도 한 번은 갱신 */ }
 
     reloadScheduled = true;
-    if (typeof toast === "function") toast("새 버전을 적용하고 있어요… 🔄");
-
     window.setTimeout(() => {
+      reloadScheduled = false;
+      if (window.FAMILY_LULLABY?.active) return;
+      pendingSignature = "";
+      try {
+        if (sessionStorage.getItem(guardKey)) return;
+        sessionStorage.setItem(guardKey, "1");
+      } catch { /* 세션 저장이 막혀도 한 번은 갱신 */ }
+      if (typeof toast === "function") toast("새 버전을 적용하고 있어요… 🔄");
       const target = new URL(window.location.href);
       target.searchParams.set("__appv", versionKey);
       window.location.replace(target.href);
     }, 350);
   };
+  window.addEventListener("family:lullaby-playback", () => {
+    if (pendingSignature && !window.FAMILY_LULLABY?.active) scheduleReload(pendingSignature);
+  });
 
   const checkConfigVersion = async ({ force = false } = {}) => {
     if (checking || reloadScheduled || !navigator.onLine) return;
