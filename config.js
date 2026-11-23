@@ -108,7 +108,7 @@ window.FAMILY_CONFIG = {
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "lullaby", version: "20261123-lullaby-menu-v1", style: false },
+    { name: "lullaby", version: "20261124-continuous-lullaby-v1", style: false },
     { name: "english-stories", version: "20261123-lullaby-choices-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261106-live-sleep-v1" },
@@ -136,7 +136,7 @@ window.FAMILY_CONFIG = {
     { name: "feeding-reminder", version: "20261023-family-review-fixes-v1" },
     { name: "daily-briefing", version: "20261014-mobile-copy-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
-    { name: "app-update", version: "20260720-auto-refresh-v1", style: false },
+    { name: "app-update", version: "20261124-continuous-lullaby-v1", style: false },
     { name: "tab-emojis", version: "20261018-parenting-chat-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20261123-calendar-no-todo-badges-v1" },
@@ -206,7 +206,7 @@ window.FAMILY_CONFIG = {
     { name: "parenting-history", version: "20261117-account-isolation-v1", style: false },
     { name: "parenting-assistant", version: "20261117-account-isolation-v1" },
     { name: "travel", version: "20261117-preparation-report-v1" },
-    { name: "simple-family", version: "20261123-lullaby-menu-v1" },
+    { name: "simple-family", version: "20261124-continuous-lullaby-v1" },
   ];
 
   const deferredGroups = {

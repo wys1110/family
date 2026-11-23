@@ -74,10 +74,10 @@
     chooser.append(chooserHeader, trackList, stopLullaby);
     shell.append(chooser);
 
-    const syncLullaby = (playing, id, label) => {
+    const syncLullaby = (playing, id, label, requested = playing) => {
       lullaby.dataset.playing = String(playing);
       lullaby.setAttribute('aria-label', playing ? `자장가 선택, ${label} 재생 중` : '자장가 선택');
-      stopLullaby.hidden = !playing;
+      stopLullaby.hidden = !requested;
       for (const item of trackList.children) {
         const current = item.dataset.lullabyTrack === id;
         item.setAttribute('aria-current', String(current));
@@ -85,7 +85,7 @@
       }
     };
     syncLullaby(false, player?.selected, '');
-    window.addEventListener('family:lullaby-playback', ({ detail }) => syncLullaby(detail.playing, detail.id, detail.label));
+    window.addEventListener('family:lullaby-playback', ({ detail }) => syncLullaby(detail.playing, detail.id, detail.label, detail.requested));
     lullaby.addEventListener('click', () => {
       chooser.showModal();
       lullaby.setAttribute('aria-expanded', 'true');
