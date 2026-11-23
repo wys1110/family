@@ -111,7 +111,8 @@ window.FAMILY_CONFIG = {
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "english-stories", version: "20261123-quick-lullaby-v1" },
+    { name: "lullaby", version: "20261123-account-playback-v1", style: false },
+    { name: "english-stories", version: "20261123-account-playback-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261106-live-sleep-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
@@ -208,7 +209,7 @@ window.FAMILY_CONFIG = {
     { name: "parenting-history", version: "20261117-account-isolation-v1", style: false },
     { name: "parenting-assistant", version: "20261117-account-isolation-v1" },
     { name: "travel", version: "20261117-preparation-report-v1" },
-    { name: "simple-family", version: "20261123-quick-lullaby-v1" },
+    { name: "simple-family", version: "20261123-account-playback-v1" },
   ];
 
   const deferredGroups = {
