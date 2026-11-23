@@ -88,17 +88,20 @@
     return play();
   }
 
-  function select(id) {
+  function select(id, { playNow = false } = {}) {
     const track = tracks.find(item => item.id === id);
-    if (!track || track === selected) return;
-    selected = track;
-    try { if (storageKey) localStorage.setItem(storageKey, track.id); } catch { /* Remember for this session. */ }
-    if (open) {
-      const resume = !audio.paused;
-      attempt++;
-      audio.src = track.src;
-      if (resume) return play();
+    if (!track) return;
+    const wasPlaying = open && !audio.paused;
+    if (track !== selected) {
+      selected = track;
+      try { if (storageKey) localStorage.setItem(storageKey, track.id); } catch { /* Remember for this session. */ }
+      if (open) {
+        attempt++;
+        audio.src = track.src;
+        if (wasPlaying) return play();
+      }
     }
+    if (playNow && !wasPlaying) return toggle();
     render();
   }
 
