@@ -432,21 +432,69 @@
     } catch {}
     (w(), x(), $(), t || s("오늘의 영어 동화를 들었어요 📖"));
   }
+  let lullabyRequest = null;
+  let lullabyUrl = "";
+
   function closeLullaby() {
     const panel = document.querySelector("#lullabyPanel");
     if (!panel || panel.hidden) return;
+    lullabyRequest?.abort();
+    lullabyRequest = null;
+    const audio = document.querySelector("#lullabyAudio");
+    if (lullabyUrl) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      URL.revokeObjectURL(lullabyUrl);
+      lullabyUrl = "";
+    }
     panel.hidden = true;
-    document.querySelector("#lullabyPanel > iframe")?.remove();
     document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "false");
   }
 
-  function toggleLullaby() {
+  async function toggleLullaby() {
     const panel = document.querySelector("#lullabyPanel");
     if (!panel.hidden) return closeLullaby();
     C();
-    panel.prepend(document.querySelector("#lullabyPlayer").content.cloneNode(true));
     panel.hidden = false;
     document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "true");
+    const audio = document.querySelector("#lullabyAudio");
+    const status = document.querySelector("#lullabyStatus");
+    audio.hidden = true;
+    status.textContent = "자장가를 준비하고 있어요.";
+    const request = new AbortController();
+    lullabyRequest = request;
+    try {
+      const pendingKey = window.FAMILY_DEMO_MODE ? "demo-lullaby-activation" : "lullaby-activation";
+      const savedKey = storageKey("family-lullaby-key-v1");
+      const activation = sessionStorage.getItem(pendingKey);
+      const hex = activation || localStorage.getItem(savedKey);
+      if (!hex || !/^[a-f0-9]{64}$/.test(hex)) {
+        status.textContent = "이 기기에서 처음 들을 때는 개인용 자장가 링크를 열어 주세요.";
+        return;
+      }
+      const raw = Uint8Array.from(hex.match(/../g), pair => parseInt(pair, 16));
+      const key = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+      const response = await fetch("assets/buseureok-audio.bin", { signal: request.signal });
+      if (!response.ok) throw new Error("Audio download failed");
+      const data = new Uint8Array(await response.arrayBuffer());
+      const bytes = await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.subarray(0, 12) }, key, data.subarray(12));
+      if (request.signal.aborted || savedKey !== storageKey("family-lullaby-key-v1")) return;
+      if (activation) {
+        try {
+          localStorage.setItem(savedKey, activation);
+          sessionStorage.removeItem(pendingKey);
+        } catch { /* Playback still works for the current session. */ }
+      }
+      lullabyUrl = URL.createObjectURL(new Blob([bytes], { type: "audio/mp4" }));
+      audio.src = lullabyUrl;
+      audio.hidden = false;
+      status.textContent = "연속 반복";
+      // Mobile browsers may require a second tap on the native play control.
+      await audio.play().catch(() => {});
+    } catch {
+      if (!request.signal.aborted) status.textContent = "자장가를 불러오지 못했어요. 개인용 링크를 다시 열어 주세요.";
+    }
   }
 
   function m() {
@@ -457,7 +505,7 @@
         const o = document.querySelector("#englishView"),
           s = document.querySelector("#addEventButton");
         if (i !== e)
-          return (closeLullaby(), C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
+          return (C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
         n("calendar");
         const r = a();
         r && (r.activeView = e);
@@ -748,8 +796,8 @@
       </section>
 
       <div id="lullabyPanel" hidden>
-        <template id="lullabyPlayer"><iframe title="부스럭선생 자장가 · 아기 울음 그치는 소리" src="https://www.youtube-nocookie.com/embed/Zum-dn_jJbM" style="width:100%;aspect-ratio:16/9;border:0" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></template>
-        <a href="https://www.youtube.com/watch?v=Zum-dn_jJbM" target="_blank" rel="noopener noreferrer">YouTube에서 듣기</a>
+        <audio id="lullabyAudio" aria-label="부스럭선생 자장가" controls loop preload="none" style="max-width:100%" hidden></audio>
+        <p id="lullabyStatus" role="status"></p>
       </div>
 
       <section class="english-story-player" id="englishStoryPlayer">

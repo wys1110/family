@@ -18,6 +18,13 @@ window.FAMILY_CONFIG = {
   document.addEventListener("gestureend", preventViewportZoom, { passive: false });
 
   const demoMode = window.FAMILY_DEMO_MODE === true;
+  const lullabyLink = /^#lullaby=([a-f0-9]{64})$/.exec(window.location.hash);
+  if (lullabyLink) {
+    try {
+      sessionStorage.setItem(demoMode ? "demo-lullaby-activation" : "lullaby-activation", lullabyLink[1]);
+      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    } catch { /* The original link remains available when storage is disabled. */ }
+  }
   const themeStorageKey = demoMode ? "family-demo-theme-v1" : "family-theme-v1";
   const themeChoiceStorageKey = demoMode ? "family-demo-theme-choice-v1" : "family-theme-choice-v1";
   const themeV2Choice = new URLSearchParams(window.location.search).get("theme-v2");
@@ -104,7 +111,7 @@ window.FAMILY_CONFIG = {
     { name: "family-auth", version: "20261013-code-reliability-v1", style: false },
     { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
-    { name: "english-stories", version: "20261123-lullaby-v1" },
+    { name: "english-stories", version: "20261123-loop-audio-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261106-live-sleep-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
