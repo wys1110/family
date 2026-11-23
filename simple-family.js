@@ -20,6 +20,17 @@
       if (view === 'calendar') $('#calendarView [data-calendar-mode="calendar"][aria-selected="false"]')?.click();
     };
 
+    const notifications = $('#notificationCenterButton');
+    const search = $('#familySearchButton');
+    if (notifications && search) {
+      const tools = document.createElement('div');
+      tools.className = 'simple-header-tools';
+      tools.setAttribute('role', 'group');
+      tools.setAttribute('aria-label', '알림 및 검색');
+      notifications.before(tools);
+      tools.append(notifications, search);
+    }
+
     const dock = document.createElement('div'); dock.className = 'simple-bottom';
     const quick = document.createElement('div'); quick.className = 'simple-quick'; quick.setAttribute('aria-label', '빠른 돌봄');
     const sources = {sleep: '#careTimerCard [data-compact-sleep]', feed: '#careTimerCard [data-growth-quick="수유·이유식"]', diaper: '#careTimerCard [data-growth-quick="기저귀"]'};

@@ -13,6 +13,73 @@ html[data-family-design="nova"][data-family-theme-choice][data-family-theme][dat
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar h1 strong { font-size: 34px; font-weight: 750; line-height: 1.2; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar-account-actions { gap: 2px; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .topbar-account-actions #desktopLogoutButton { display: none; }
+/* Two independent actions share the capsule. Each retains its own focus and hit area. */
+.simple-header-tools {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border: 1px solid var(--nova-line);
+  border-radius: 999px;
+  background: var(--nova-card);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--nova-text) 4%, transparent);
+}
+.simple-header-tools::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 15px;
+  background: var(--nova-line);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  content: "";
+}
+.simple-header-tools > button[id] {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nova-muted);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.simple-header-tools > button > span {
+  display: block;
+  width: 21px;
+  height: 21px;
+  font-size: 0;
+  background: currentColor;
+  -webkit-mask: var(--header-icon) center / contain no-repeat;
+  mask: var(--header-icon) center / contain no-repeat;
+}
+.simple-header-tools #notificationCenterButton { --header-icon: url("assets/icons/bell.svg"); }
+.simple-header-tools #familySearchButton { --header-icon: url("assets/icons/search.svg"); }
+.simple-header-tools #notificationCenterBadge {
+  box-sizing: border-box;
+  top: 10px;
+  right: 10px;
+  width: 9px;
+  min-width: 0;
+  height: 9px;
+  padding: 0;
+  border: 1.5px solid var(--nova-card);
+  border-radius: 50%;
+  background: var(--red);
+  font-size: 0;
+}
+.simple-header-tools #notificationCenterBadge[hidden] { display: none; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] .app-shell .view-tabs[hidden] { display: none !important; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,input,select,textarea) { font-family: inherit; }
 html[data-family-design="nova"][data-family-theme-choice][data-family-theme][data-simple-family] :is(button,input,select) { touch-action: manipulation; }

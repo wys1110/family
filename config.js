@@ -206,7 +206,7 @@ window.FAMILY_CONFIG = {
     { name: "parenting-history", version: "20261117-account-isolation-v1", style: false },
     { name: "parenting-assistant", version: "20261117-account-isolation-v1" },
     { name: "travel", version: "20261117-preparation-report-v1" },
-    { name: "simple-family", version: "20261123-lullaby-choices-v1" },
+    { name: "simple-family", version: "20261123-header-capsule-v1" },
   ];
 
   const deferredGroups = {
