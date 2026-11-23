@@ -42,37 +42,60 @@
     }
     const lullaby = button('자장가', 'music');
     lullaby.dataset.quick = 'lullaby';
-    lullaby.setAttribute('aria-pressed', 'false');
+    lullaby.setAttribute('aria-haspopup', 'dialog');
+    lullaby.setAttribute('aria-controls', 'quickLullabyDialog');
+    lullaby.setAttribute('aria-expanded', 'false');
     const player = window.FAMILY_LULLABY;
-    const list = document.createElement('select');
-    list.className = 'simple-lullaby-select';
+    const chooser = document.createElement('dialog');
+    chooser.id = 'quickLullabyDialog';
+    const chooserHeader = document.createElement('header');
+    const chooserTitle = document.createElement('h2');
+    chooserTitle.id = 'quickLullabyTitle';
+    chooserTitle.textContent = '자장가 선택';
+    chooser.setAttribute('aria-labelledby', chooserTitle.id);
+    const dismiss = button('닫기');
+    dismiss.addEventListener('click', () => chooser.close());
+    chooserHeader.append(chooserTitle, dismiss);
+
+    const trackList = document.createElement('div');
+    trackList.className = 'quick-lullaby-tracks';
     for (const track of player?.tracks || []) {
-      const option = document.createElement('option');
-      option.value = track.id;
-      option.textContent = track.label;
-      list.append(option);
+      const item = button(track.label);
+      item.dataset.lullabyTrack = track.id;
+      item.addEventListener('click', () => {
+        player.select(track.id, { playNow: true });
+        chooser.close();
+      });
+      trackList.append(item);
     }
+    const stopLullaby = button('정지');
+    stopLullaby.dataset.lullabyStop = '';
+    stopLullaby.addEventListener('click', () => { player.stop(); chooser.close(); });
+    chooser.append(chooserHeader, trackList, stopLullaby);
+    shell.append(chooser);
+
     const syncLullaby = (playing, id, label) => {
-      list.value = id;
-      list.setAttribute('aria-label', `자장가 선택, 현재 ${label}`);
-      lullaby.setAttribute('aria-pressed', String(playing));
-      lullaby.setAttribute('aria-label', `${label} 자장가 ${playing ? '정지' : '재생'}`);
-      text(lullaby.lastElementChild, playing ? '정지' : '자장가');
+      lullaby.dataset.playing = String(playing);
+      lullaby.setAttribute('aria-label', playing ? `자장가 선택, ${label} 재생 중` : '자장가 선택');
+      stopLullaby.hidden = !playing;
+      for (const item of trackList.children) {
+        const current = item.dataset.lullabyTrack === id;
+        item.setAttribute('aria-current', String(current));
+        item.dataset.playing = String(current && playing);
+      }
     };
-    if (player) {
-      const track = player.tracks.find(item => item.id === player.selected);
-      syncLullaby(false, track.id, track.label);
-    }
+    syncLullaby(false, player?.selected, '');
     window.addEventListener('family:lullaby-playback', ({ detail }) => syncLullaby(detail.playing, detail.id, detail.label));
-    lullaby.addEventListener('click', () => player.toggle());
-    list.addEventListener('change', () => player.select(list.value));
-    const group = document.createElement('div');
-    group.className = 'simple-lullaby';
-    const picker = document.createElement('div');
-    picker.className = 'simple-lullaby-picker';
-    picker.append(list);
-    group.append(lullaby, picker);
-    quick.append(group);
+    lullaby.addEventListener('click', () => {
+      chooser.showModal();
+      lullaby.setAttribute('aria-expanded', 'true');
+      trackList.querySelector('[aria-current="true"]')?.focus();
+    });
+    chooser.addEventListener('close', () => {
+      lullaby.setAttribute('aria-expanded', 'false');
+      lullaby.focus();
+    });
+    quick.append(lullaby);
     const navigation = document.createElement('nav'); navigation.id = 'simpleNavigation'; navigation.setAttribute('aria-label', '가족 앱 메뉴');
     for (const view of mainViews) {
       const tab = button(labels[view], icons[view]);
