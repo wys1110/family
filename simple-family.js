@@ -7,7 +7,7 @@
     if (!shell || !originalNav || $('#simpleNavigation')) return;
     root.dataset.simpleFamily = 'true';
     const labels = {calendar: '오늘', growth: '성장', assistant: '육아', english: '동화', travel: '여행 기록', settings: '설정', admin: '관리'};
-    const mainViews = ['calendar', 'growth'];
+    const mainViews = ['calendar', 'growth', 'english', 'settings', 'admin'];
     const icons = {calendar: 'calendar', growth: 'growth', assistant: 'chat', english: 'book', travel: 'map', settings: 'settings', admin: 'crown'};
     const text = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
     const icon = name => { const span = document.createElement('span'); span.className = 'simple-icon'; span.dataset.icon = name; span.setAttribute('aria-hidden', 'true'); return span; };
@@ -63,25 +63,20 @@
     group.append(lullaby, picker);
     quick.append(group);
     const navigation = document.createElement('nav'); navigation.id = 'simpleNavigation'; navigation.setAttribute('aria-label', '가족 앱 메뉴');
-    for (const view of mainViews) { const tab = button(labels[view], icons[view]); tab.dataset.simpleView = view; tab.addEventListener('click', () => navigate(view)); navigation.append(tab); }
+    for (const view of mainViews) {
+      const tab = button(labels[view], icons[view]);
+      tab.dataset.simpleView = view;
+      tab.hidden = view === 'admin';
+      tab.addEventListener('click', () => navigate(view));
+      navigation.append(tab);
+    }
     dock.append(quick, navigation); shell.append(dock);
 
-    const settings = button('', 'settings');
-    settings.id = 'simpleSettings';
-    settings.setAttribute('aria-label', '설정');
-    settings.title = '설정';
-    settings.addEventListener('click', () => navigate('settings'));
-    $('#accountButton').before(settings);
-
     // Original tabs own lazy loading, restoration and permission checks.
-    const settingsLinks = $('#simpleSettingsLinks');
-    for (const view of ['english', 'travel', 'admin']) {
-      const item = button(labels[view], icons[view]);
-      item.dataset.settingsView = view;
-      item.hidden = true;
-      item.addEventListener('click', () => navigate(view));
-      settingsLinks?.append(item);
-    }
+    const travelLink = button(labels.travel, icons.travel);
+    travelLink.dataset.settingsView = 'travel';
+    travelLink.addEventListener('click', () => navigate('travel'));
+    $('#simpleSettingsLinks')?.append(travelLink);
 
     const heading = $('.topbar h1'); heading.replaceChildren();
     const subtitle = document.createElement('span'); subtitle.textContent = '우리 가족';
@@ -126,16 +121,14 @@
       text(title, labels[active] || '우리 가족');
       text(subtitle, active === 'calendar' ? new Date().toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'}) : '우리 가족');
       navigation.querySelectorAll('[data-simple-view]').forEach(tab => {
-        const selected = tab.dataset.simpleView === active;
+        const original = originalTab(tab.dataset.simpleView);
+        tab.disabled = !original || original.hidden || original.disabled;
+        tab.hidden = tab.dataset.simpleView === 'admin' && tab.disabled;
+        const selected = !tab.hidden && tab.dataset.simpleView === active;
         if (selected) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
       });
-      if (active === 'settings') settings.setAttribute('aria-current', 'page'); else settings.removeAttribute('aria-current');
-      const settingsTab = originalTab('settings');
-      settings.disabled = !settingsTab || settingsTab.hidden || settingsTab.disabled;
-      settingsLinks?.querySelectorAll('[data-settings-view]').forEach(item => {
-        const tab = originalTab(item.dataset.settingsView);
-        item.hidden = !tab || tab.hidden || tab.disabled;
-      });
+      const travelTab = originalTab('travel');
+      travelLink.hidden = !travelTab || travelTab.hidden || travelTab.disabled;
       syncCare();
     };
     new MutationObserver(syncNavigation).observe(originalNav, {subtree:true, childList:true, attributes:true, attributeFilter:['class','hidden','disabled']});

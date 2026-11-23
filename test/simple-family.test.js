@@ -61,15 +61,17 @@ function fixture() {
 test('navigation delegates to original tabs and hides privileged entries',()=>{
   const f=fixture();
   const navigation=f.document.querySelector('#simpleNavigation');
-  const settings=f.document.querySelector('#simpleSettings');
-  expect(navigation.children.map(b=>b.textContent)).toEqual(['오늘','성장']);
-  expect(settings.parentElement).toBe(f.document.querySelector('#accountButton').parentElement);
-  expect(settings.attrs['aria-label']).toBe('설정');
+  const settings=navigation.querySelector('[data-simple-view="settings"]');
+  const visibleTabs=()=>navigation.children.filter(b=>!b.hidden).map(b=>b.textContent);
+  expect(visibleTabs()).toEqual(['오늘','성장','동화','설정']);
+  expect(f.document.querySelector('#simpleSettings')).toBeNull();
+  navigation.querySelector('[data-simple-view="english"]').click();
+  expect(f.tabs.english.listeners.click[0]).toHaveBeenCalledOnce();
   settings.click();
   expect(f.tabs.settings.listeners.click[0]).toHaveBeenCalledOnce();
   const links=f.document.querySelector('#settingsView #simpleSettingsLinks');
   const visible=()=>links.children.filter(button=>!button.hidden).map(button=>button.textContent);
-  expect(visible()).toEqual(['동화','여행 기록']);
+  expect(visible()).toEqual(['여행 기록']);
   links.querySelector('[data-settings-view="travel"]').click();
   expect(f.tabs.travel.listeners.click[0]).toHaveBeenCalledOnce();
   expect(f.document.querySelector('#simpleMore')).toBeNull();
@@ -82,15 +84,21 @@ test('navigation delegates to original tabs and hides privileged entries',()=>{
 
   f.tabs.admin.hidden=false;
   syncNavigation();
-  expect(visible()).toEqual(['동화','여행 기록','관리']);
-  const admin=links.querySelector('[data-settings-view="admin"]');
+  expect(visibleTabs()).toEqual(['오늘','성장','동화','설정','관리']);
+  expect(visible()).toEqual(['여행 기록']);
+  const admin=navigation.querySelector('[data-simple-view="admin"]');
   admin.click();
   expect(f.tabs.admin.listeners.click[0]).toHaveBeenCalledOnce();
+  f.tabs.settings.className='view-tab';
+  f.tabs.admin.className='view-tab active';
+  syncNavigation();
+  expect(admin.attrs['aria-current']).toBe('page');
   f.tabs.admin.disabled=true;
-  f.events.familycontextchange();
-  expect(visible()).toEqual(['동화','여행 기록']);
   admin.click();
   expect(f.tabs.admin.listeners.click[0]).toHaveBeenCalledOnce();
+  f.events.familycontextchange();
+  expect(visibleTabs()).toEqual(['오늘','성장','동화','설정']);
+  expect(admin.attrs['aria-current']).toBeUndefined();
 });
 test('the bottom Today button reveals the calendar when the to-do list is selected',()=>{
   const f=fixture();
