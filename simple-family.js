@@ -6,8 +6,8 @@
     const shell = $('#appShell'), originalNav = $('.view-tabs');
     if (!shell || !originalNav || $('#simpleNavigation')) return;
     root.dataset.simpleFamily = 'true';
-    const labels = {calendar: '오늘', growth: '성장', assistant: '육아', english: '동화', travel: '여행', settings: '설정', admin: '관리'};
-    const mainViews = ['calendar', 'growth', 'travel', 'english'];
+    const labels = {calendar: '오늘', growth: '성장', assistant: '육아', english: '동화', travel: '여행 기록', settings: '설정', admin: '관리'};
+    const mainViews = ['calendar', 'growth', 'english', 'settings', 'admin'];
     const icons = {calendar: 'calendar', growth: 'growth', assistant: 'chat', english: 'book', travel: 'map', settings: 'settings', admin: 'crown'};
     const text = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
     const icon = name => { const span = document.createElement('span'); span.className = 'simple-icon'; span.dataset.icon = name; span.setAttribute('aria-hidden', 'true'); return span; };
@@ -32,43 +32,51 @@
     const lullaby = button('자장가', 'music');
     lullaby.dataset.quick = 'lullaby';
     lullaby.setAttribute('aria-pressed', 'false');
-    lullaby.setAttribute('aria-label', '부스럭선생 자장가 재생');
-    window.addEventListener('family:lullaby-playback', event => {
-      const playing = event.detail.playing;
+    const player = window.FAMILY_LULLABY;
+    const list = document.createElement('select');
+    list.className = 'simple-lullaby-select';
+    for (const track of player?.tracks || []) {
+      const option = document.createElement('option');
+      option.value = track.id;
+      option.textContent = track.label;
+      list.append(option);
+    }
+    const syncLullaby = (playing, id, label) => {
+      list.value = id;
+      list.setAttribute('aria-label', `자장가 선택, 현재 ${label}`);
       lullaby.setAttribute('aria-pressed', String(playing));
-      lullaby.setAttribute('aria-label', playing ? '부스럭선생 자장가 정지' : '부스럭선생 자장가 재생');
+      lullaby.setAttribute('aria-label', `${label} 자장가 ${playing ? '정지' : '재생'}`);
       text(lullaby.lastElementChild, playing ? '정지' : '자장가');
-    });
-    lullaby.addEventListener('click', () => window.FAMILY_LULLABY.toggle());
-    quick.append(lullaby);
-    const navigation = document.createElement('nav'); navigation.id = 'simpleNavigation'; navigation.setAttribute('aria-label', '가족 앱 메뉴');
-    for (const view of mainViews) { const tab = button(labels[view], icons[view]); tab.dataset.simpleView = view; tab.addEventListener('click', () => navigate(view)); navigation.append(tab); }
-    const more = button('더보기', 'more'); more.setAttribute('aria-haspopup', 'dialog'); more.setAttribute('aria-controls', 'simpleMore'); navigation.append(more);
-    dock.append(quick, navigation); shell.append(dock);
-    // Keep original nodes and listeners for deferred loading, permissions and route restoration.
-
-    const moreDialog = document.createElement('dialog'); moreDialog.id = 'simpleMore'; moreDialog.className = 'simple-more'; moreDialog.setAttribute('aria-labelledby', 'simpleMoreTitle');
-    const moreHeader = document.createElement('header'), moreTitle = document.createElement('h2'), close = button('닫기');
-    moreTitle.id = 'simpleMoreTitle'; moreTitle.textContent = '더보기'; close.addEventListener('click', () => moreDialog.close()); moreHeader.append(moreTitle, close);
-    const moreItems = document.createElement('div'); moreItems.className = 'simple-more-items'; moreDialog.append(moreHeader, moreItems); shell.append(moreDialog);
-    const renderMore = () => {
-      moreItems.replaceChildren();
-      const addEvent = button('일정 추가', 'calendar');
-      addEvent.addEventListener('click', () => { moreDialog.close(); navigate('calendar'); $('#addEventButton')?.click(); });
-      moreItems.append(addEvent);
-      originalNav.querySelectorAll('.view-tab[data-view]').forEach(tab => {
-        const view = tab.dataset.view;
-        if (mainViews.includes(view) || tab.hidden || tab.disabled) return;
-        const item = button(labels[view] || tab.textContent.trim(), icons[view] || 'settings');
-        item.addEventListener('click', () => { moreDialog.close(); navigate(view); }); moreItems.append(item);
-      });
-      const wallpaper = button('오늘 화면 배경 사진', 'calendar'); wallpaper.addEventListener('click', () => { moreDialog.close(); navigate('calendar'); $('#calendarView [data-wallpaper-change]')?.click(); }); moreItems.append(wallpaper);
-      const account = button('계정 및 저장 상태', 'settings'); account.addEventListener('click', () => { moreDialog.close(); $('#accountButton')?.click(); }); moreItems.append(account);
     };
-    more.addEventListener('click', () => { renderMore(); moreDialog.showModal(); });
-    moreDialog.addEventListener('close', () => more.setAttribute('aria-expanded', 'false'));
-    moreDialog.addEventListener('click', event => { if (event.target === moreDialog) moreDialog.close(); });
-    more.addEventListener('click', () => more.setAttribute('aria-expanded', 'true'));
+    if (player) {
+      const track = player.tracks.find(item => item.id === player.selected);
+      syncLullaby(false, track.id, track.label);
+    }
+    window.addEventListener('family:lullaby-playback', ({ detail }) => syncLullaby(detail.playing, detail.id, detail.label));
+    lullaby.addEventListener('click', () => player.toggle());
+    list.addEventListener('change', () => player.select(list.value));
+    const group = document.createElement('div');
+    group.className = 'simple-lullaby';
+    const picker = document.createElement('div');
+    picker.className = 'simple-lullaby-picker';
+    picker.append(list);
+    group.append(lullaby, picker);
+    quick.append(group);
+    const navigation = document.createElement('nav'); navigation.id = 'simpleNavigation'; navigation.setAttribute('aria-label', '가족 앱 메뉴');
+    for (const view of mainViews) {
+      const tab = button(labels[view], icons[view]);
+      tab.dataset.simpleView = view;
+      tab.hidden = view === 'admin';
+      tab.addEventListener('click', () => navigate(view));
+      navigation.append(tab);
+    }
+    dock.append(quick, navigation); shell.append(dock);
+
+    // Original tabs own lazy loading, restoration and permission checks.
+    const travelLink = button(labels.travel, icons.travel);
+    travelLink.dataset.settingsView = 'travel';
+    travelLink.addEventListener('click', () => navigate('travel'));
+    $('#simpleSettingsLinks')?.append(travelLink);
 
     const heading = $('.topbar h1'); heading.replaceChildren();
     const subtitle = document.createElement('span'); subtitle.textContent = '우리 가족';
@@ -113,17 +121,20 @@
       text(title, labels[active] || '우리 가족');
       text(subtitle, active === 'calendar' ? new Date().toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'}) : '우리 가족');
       navigation.querySelectorAll('[data-simple-view]').forEach(tab => {
-        const selected = tab.dataset.simpleView === active;
+        const original = originalTab(tab.dataset.simpleView);
+        tab.disabled = !original || original.hidden || original.disabled;
+        tab.hidden = tab.dataset.simpleView === 'admin' && tab.disabled;
+        const selected = !tab.hidden && tab.dataset.simpleView === active;
         if (selected) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
       });
-      if (mainViews.includes(active)) more.removeAttribute('aria-current'); else more.setAttribute('aria-current', 'page');
-      if (moreDialog.open) renderMore();
+      const travelTab = originalTab('travel');
+      travelLink.hidden = !travelTab || travelTab.hidden || travelTab.disabled;
       syncCare();
     };
     new MutationObserver(syncNavigation).observe(originalNav, {subtree:true, childList:true, attributes:true, attributeFilter:['class','hidden','disabled']});
     const timer = $('#careTimerCard');
     if (timer) new MutationObserver(syncCare).observe(timer, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:['hidden','disabled']});
-    for (const event of ['familycontextchange','familybabychange']) window.addEventListener(event, () => { if (moreDialog.open) moreDialog.close(); syncNavigation(); });
+    for (const event of ['familycontextchange','familybabychange']) window.addEventListener(event, syncNavigation);
     const descriptions = {white:'라벤더 바탕과 따뜻한 피치 포인트', black:'차분한 어둠과 부드러운 라벤더·피치'};
     document.querySelectorAll('[data-theme-option]').forEach(option => text(option.querySelector('.theme-option-copy small'), descriptions[option.dataset.themeOption]));
     syncNavigation();

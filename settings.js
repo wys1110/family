@@ -61,6 +61,7 @@
   view.dataset.themeSettingsModule = '';
   view.hidden = true;
   view.innerHTML = `
+    <nav id="simpleSettingsLinks" aria-label="가족 메뉴"></nav>
     <section class="settings-card" aria-labelledby="themeSettingsTitle">
       <div class="settings-heading">
         <span class="settings-mark" aria-hidden="true">◐</span>
@@ -88,6 +89,7 @@
           </button>
         `).join('')}
       </div>
+      <button type="button" data-wallpaper-change="calendar">오늘 화면 배경 사진</button>
       <div class="theme-save-note">
         <span aria-hidden="true">✓</span>
         <p><strong>선택한 테마는 자동 저장돼요</strong><small>이 기기에서 다음 방문에도 그대로 적용됩니다.</small></p>

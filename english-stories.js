@@ -727,7 +727,8 @@
 
       <section class="english-today-card">
         <button type="button" id="englishOpenToday" aria-label="오늘의 동화 보기">오늘의 동화 보기 <i aria-hidden="true">›</i></button>
-        <button type="button" id="lullabyToggle" aria-expanded="false" aria-controls="lullabyPanel">부스럭선생 자장가 <i aria-hidden="true">›</i></button>
+        <button type="button" id="lullabyToggle" aria-expanded="false" aria-controls="lullabyPanel">자장가 재생</button>
+        <select id="lullabyTrack" aria-label="자장가 소리 선택"></select>
       </section>
 
       <div id="lullabyPanel" hidden>
@@ -772,7 +773,8 @@
       ?.addEventListener("click", () => b(l().id)),
     window.FAMILY_LULLABY?.attach(),
     window.addEventListener("family:lullaby-start", () => C()),
-    document.querySelector("#lullabyToggle")?.addEventListener("click", () => window.FAMILY_LULLABY.toggle()),
+    document.querySelector("#lullabyToggle")?.addEventListener("click", () => window.FAMILY_LULLABY?.toggle()),
+    document.querySelector("#lullabyTrack")?.addEventListener("change", event => window.FAMILY_LULLABY?.select(event.target.value)),
     document.querySelector("#englishPlayButton")?.addEventListener("click", E),
     document.querySelector("#englishRestartButton")?.addEventListener("click", () => B(0)),
     document.querySelector("#englishSpeedButton")?.addEventListener("click", k),
