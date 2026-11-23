@@ -17,16 +17,26 @@ jobs:
       - run: npm ci
       - run: npm run ios:sync
       - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/family-ios-build CODE_SIGNING_ALLOWED=NO build
-      - name: Build unsigned iPhone app
-        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath /tmp/family-ios-device-build CODE_SIGNING_ALLOWED=NO build
+      - name: Archive unsigned iPhone release
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Family.xcarchive" CODE_SIGNING_ALLOWED=NO archive
       - name: Package unsigned iPhone app with file permissions
         run: |
-          test -x /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app/App
-          test -d /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app/PlugIns/SleepWidget.appex
-          ditto -c -k --sequesterRsrc --keepParent /tmp/family-ios-device-build/Build/Products/Debug-iphoneos/App.app "$RUNNER_TEMP/family-ios-unsigned-device.zip"
+          app="$RUNNER_TEMP/Family.xcarchive/Products/Applications/App.app"
+          test -x "$app/App"
+          test -d "$app/PlugIns/SleepWidget.appex"
+          cmp "$app/public/assets/buseureok-audio.bin" assets/buseureok-audio.bin
+          cmp "$app/public/simple-family.js" simple-family.js
+          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/family-ios-unsigned-device.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$RUNNER_TEMP/Family.xcarchive" "$RUNNER_TEMP/family-ios-archive.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: family-ios-unsigned-device
           path: ${{ runner.temp }}/family-ios-unsigned-device.zip
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: family-ios-release-archive
+          path: ${{ runner.temp }}/family-ios-archive.zip
           if-no-files-found: error
           compression-level: 0

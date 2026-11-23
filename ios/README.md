@@ -25,9 +25,13 @@ Google 로그인은 기존 Capacitor Browser로 열고 App 플러그인의 warm/
 
 참고: [Supabase 모바일 deep linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking), [PKCE](https://supabase.com/docs/guides/auth/sessions/pkce-flow), [Capacitor App](https://capacitorjs.com/docs/apis/app).
 
+## 자장가
+
+오늘·성장 화면의 빠른 돌봄 줄에서 기저귀 오른쪽의 **자장가**를 누르면 부스럭선생 음원이 반복 재생된다. **정지**를 누르면 멈춘다. iPhone 앱에서 처음 사용할 때는 개인 문서의 **가족 앱에서 자장가 열기** 링크를 복사해 앱의 입력창에 붙여넣는다. 링크는 기기에서 처리하며 복호화에 성공한 뒤 현재 사용자 저장소에 보관한다.
+
 ## CI 실기용 빌드 산출물
 
-`Validate iOS sleep activity` 워크플로는 기존 iOS Simulator 검증 후 `iphoneos` SDK로 실기용 App 및 SleepWidget을 서명 없이 빌드합니다. `family-ios-unsigned-device` artifact의 `family-ios-unsigned-device.zip`에는 실행 권한을 보존해 압축한 `App.app`과 내부 확장이 들어갑니다. 이 산출물은 Simulator 빌드와 구분됩니다.
+`Validate iOS sleep activity` 워크플로는 기존 iOS Simulator 검증 후 `iphoneos` SDK로 App 및 SleepWidget을 포함하는 Release 아카이브를 서명 없이 빌드합니다. `family-ios-release-archive` 산출물에는 전체 `Family.xcarchive`가 들어 있습니다. `family-ios-unsigned-device` artifact의 `family-ios-unsigned-device.zip`에는 실행 권한을 보존해 압축한 `App.app`과 내부 확장이 들어갑니다. 이 산출물은 Simulator 빌드와 구분됩니다.
 
 **서명과 기기 프로비저닝이 없으므로 현재 산출물 그대로는 iPhone에 설치하거나 실행할 수 없습니다.** 다운로드·압축 해제는 설치가 아닙니다. 실제 설치에는 기존 Apple Account와 Xcode로 App 및 SleepWidget의 서명·프로비저닝을 준비해야 합니다. 실기용 컴파일 성공도 서명·설치·잠금화면 알림 검증을 대신하지 않습니다.
 
