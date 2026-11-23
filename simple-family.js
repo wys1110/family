@@ -39,20 +39,7 @@
       lullaby.setAttribute('aria-label', playing ? '부스럭선생 자장가 정지' : '부스럭선생 자장가 재생');
       text(lullaby.lastElementChild, playing ? '정지' : '자장가');
     });
-    let lullabyContext = 0;
-    window.addEventListener('familycontextchange', () => { lullabyContext++; });
-    lullaby.addEventListener('click', async () => {
-      const context = lullabyContext;
-      try {
-        if (!window.FAMILY_LULLABY) {
-          lullaby.disabled = true;
-          await window.FAMILY_DEFERRED_TABS.ensure('english');
-        }
-        if (context === lullabyContext) await window.FAMILY_LULLABY.toggleQuick();
-      } catch {
-        window.toast?.('자장가를 불러오지 못했어요. 다시 눌러 주세요.');
-      } finally { lullaby.disabled = false; }
-    });
+    lullaby.addEventListener('click', () => window.FAMILY_LULLABY.toggle());
     quick.append(lullaby);
     const navigation = document.createElement('nav'); navigation.id = 'simpleNavigation'; navigation.setAttribute('aria-label', '가족 앱 메뉴');
     for (const view of mainViews) { const tab = button(labels[view], icons[view]); tab.dataset.simpleView = view; tab.addEventListener('click', () => navigate(view)); navigation.append(tab); }

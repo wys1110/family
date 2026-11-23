@@ -27,6 +27,7 @@ const access = {
   family_trips: { authenticated: ["select", "insert", "update"] },
   parenting_questions: { authenticated: ["select"] },
   family_sleep_sessions: { authenticated: ["select"] },
+  lullaby_playback: {}, // Only individual columns are readable.
   // These tables are intentionally reached through checked SECURITY DEFINER RPCs.
   platform_admins: {}, app_activity_logs: {}, platform_admin_audit_logs: {}, household_join_attempts: {},
 };
@@ -175,4 +176,17 @@ test("only server role can manage push subscriptions and create notification inb
   await asRole(db, "service_role", null, `insert into notifications(household_id,user_id,title,dedupe_key) values ('${home}','${member}','서버 합성 알림','server')`);
   expect((await asRole(db, "service_role", null, "update notifications set delivered_at=now() where dedupe_key='server' returning id")).rows).toHaveLength(1);
   await expect(asRole(db, "service_role", null, "delete from notifications")).rejects.toThrow("permission denied");
+});
+
+test("only the registered listener can read a ready lullaby key", async () => {
+  await todoDb.exec(read("supabase/migrations/20261123_lullaby_playback.sql"));
+  await todoDb.exec(`insert into public.lullaby_playback values
+    ('${owner}', repeat('a', 64), true), ('${member}', repeat('b', 64), false)`);
+  const select = "select playback_key from public.lullaby_playback";
+  expect((await asRole(todoDb, "authenticated", owner, select)).rows).toEqual([{ playback_key: "a".repeat(64) }]);
+  for (const id of [member, outsider]) {
+    expect((await asRole(todoDb, "authenticated", id, select)).rows).toEqual([]);
+  }
+  await expect(asRole(todoDb, "anon", "", select)).rejects.toThrow(/permission denied/);
+  await expect(asRole(todoDb, "authenticated", owner, "update public.lullaby_playback set ready = true")).rejects.toThrow(/permission denied/);
 });

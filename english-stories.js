@@ -432,95 +432,6 @@
     } catch {}
     (w(), x(), $(), t || s("오늘의 영어 동화를 들었어요 📖"));
   }
-  let lullabyRequest = null;
-  let lullabyUrl = "";
-
-  function closeLullaby() {
-    const panel = document.querySelector("#lullabyPanel");
-    if (!panel || panel.hidden) return;
-    lullabyRequest?.abort();
-    lullabyRequest = null;
-    const audio = document.querySelector("#lullabyAudio");
-    if (lullabyUrl) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-      URL.revokeObjectURL(lullabyUrl);
-      lullabyUrl = "";
-    }
-    panel.hidden = true;
-    document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "false");
-  }
-
-  async function toggleLullaby(quick = false) {
-    const panel = document.querySelector("#lullabyPanel");
-    const audio = document.querySelector("#lullabyAudio");
-    if (!panel.hidden) {
-      if (quick && lullabyUrl && audio.paused) {
-        await audio.play().catch(() => s("자장가 재생을 시작하지 못했어요. 다시 눌러 주세요."));
-        return;
-      }
-      return closeLullaby();
-    }
-    C();
-    panel.hidden = false;
-    document.querySelector("#lullabyToggle").setAttribute("aria-expanded", "true");
-    const status = document.querySelector("#lullabyStatus");
-    audio.hidden = true;
-    status.textContent = "자장가를 준비하고 있어요.";
-    const request = new AbortController();
-    lullabyRequest = request;
-    try {
-      const pendingKey = window.FAMILY_DEMO_MODE ? "demo-lullaby-activation" : "lullaby-activation";
-      const savedKey = storageKey("family-lullaby-key-v1");
-      let activation = sessionStorage.getItem(pendingKey);
-      if (!activation && !localStorage.getItem(savedKey) && window.Capacitor?.getPlatform?.() === "ios") {
-        const link = window.prompt("이 iPhone 앱에서 처음 들을 때는 개인 문서의 ‘가족 앱에서 자장가 열기’ 링크를 복사해 붙여넣어 주세요.");
-        if (!link) return closeLullaby();
-        activation = /^https:\/\/wys1110\.github\.io\/family\/#lullaby=([a-f0-9]{64})$/.exec(link.trim())?.[1];
-      }
-      const hex = activation || localStorage.getItem(savedKey);
-      if (!hex || !/^[a-f0-9]{64}$/.test(hex)) {
-        status.textContent = "이 기기에서 처음 들을 때는 개인용 자장가 링크를 열어 주세요.";
-        if (quick) { s(status.textContent); closeLullaby(); }
-        return;
-      }
-      const raw = Uint8Array.from(hex.match(/../g), pair => parseInt(pair, 16));
-      const key = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
-      const response = await fetch("assets/buseureok-audio.bin", { signal: request.signal });
-      if (!response.ok) throw new Error("Audio download failed");
-      const data = new Uint8Array(await response.arrayBuffer());
-      const bytes = await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.subarray(0, 12) }, key, data.subarray(12));
-      if (request.signal.aborted || savedKey !== storageKey("family-lullaby-key-v1")) return;
-      if (activation) {
-        try {
-          localStorage.setItem(savedKey, activation);
-          sessionStorage.removeItem(pendingKey);
-        } catch { /* Playback still works for the current session. */ }
-      }
-      lullabyUrl = URL.createObjectURL(new Blob([bytes], { type: "audio/mp4" }));
-      audio.src = lullabyUrl;
-      audio.hidden = false;
-      status.textContent = "연속 반복";
-      // Mobile browsers may require a second tap on the native play control.
-      await audio.play().catch(() => {
-        if (quick && !request.signal.aborted) s("자장가를 한 번 더 눌러 재생해 주세요.");
-      });
-    } catch {
-      if (!request.signal.aborted) {
-        status.textContent = "자장가를 불러오지 못했어요. 개인용 링크를 확인해 주세요.";
-        if (quick) { s(status.textContent); closeLullaby(); }
-      }
-    }
-  }
-
-  function notifyLullabyPlayback(event) {
-    window.dispatchEvent(new CustomEvent("family:lullaby-playback", {
-      detail: { playing: !event.currentTarget.paused },
-    }));
-  }
-  window.FAMILY_LULLABY = { toggleQuick: () => toggleLullaby(true) };
-
   function m() {
     if ("function" != typeof switchView || switchView.__englishStoriesInstalled)
       return;
@@ -687,7 +598,7 @@
       return;
     }
     if (!Number.isInteger(e) || !d().lines[e]) return;
-    closeLullaby();
+    window.FAMILY_LULLABY?.stop();
     C(!1);
     const t = d(),
       n = ++o.playToken;
@@ -820,7 +731,7 @@
       </section>
 
       <div id="lullabyPanel" hidden>
-        <audio id="lullabyAudio" aria-label="부스럭선생 자장가" controls loop preload="none" style="max-width:100%" hidden></audio>
+        <span id="lullabyPlayerSlot"></span>
         <p id="lullabyStatus" role="status"></p>
       </div>
 
@@ -859,9 +770,9 @@
     document
       .querySelector("#englishOpenToday")
       ?.addEventListener("click", () => b(l().id)),
-    document.querySelector("#lullabyToggle")?.addEventListener("click", () => toggleLullaby()),
-    document.querySelector("#lullabyAudio")?.addEventListener("play", notifyLullabyPlayback),
-    document.querySelector("#lullabyAudio")?.addEventListener("pause", notifyLullabyPlayback),
+    window.FAMILY_LULLABY?.attach(),
+    window.addEventListener("family:lullaby-start", () => C()),
+    document.querySelector("#lullabyToggle")?.addEventListener("click", () => window.FAMILY_LULLABY.toggle()),
     document.querySelector("#englishPlayButton")?.addEventListener("click", E),
     document.querySelector("#englishRestartButton")?.addEventListener("click", () => B(0)),
     document.querySelector("#englishSpeedButton")?.addEventListener("click", k),
@@ -902,7 +813,6 @@
       setTimeout(() => n(i + 1), 100);
     })(),
     window.addEventListener("familycontextchange", () => {
-      closeLullaby();
       C();
       A();
       p();
