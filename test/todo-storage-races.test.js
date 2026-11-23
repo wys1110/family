@@ -29,7 +29,7 @@ function harness() {
     window: { FAMILY_DATA: { readAll: async () => ({ data: [...remote], error: null }) } },
     localStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) },
     normalizeTodo: (todo) => ({ ...todo }), toRemote: (todo) => todo,
-    renderTodos: vi.fn(), decorateCalendar: vi.fn(), updateStorageNote: vi.fn(), announce: vi.fn(),
+    renderTodos: vi.fn(), updateStorageNote: vi.fn(), announce: vi.fn(),
     isMissingTable: () => false, uid: () => 'new', openTodoDialog: vi.fn(),
   };
   vm.createContext(h);
@@ -37,7 +37,7 @@ function harness() {
   vm.runInContext(section('  function readLocalTodos(', '  function toRemote('), h);
   vm.runInContext(section('  function assertTodoWritable(', '  async function loadTodos('), h);
   vm.runInContext(section('  async function loadTodos(', '  function recurrenceLabel('), h);
-  vm.runInContext(section('  window.FAMILY_TODO_API = {', '  function decorateCalendar('), h);
+  vm.runInContext(section('  window.FAMILY_TODO_API = {', '  function setMode('), h);
   vm.runInContext(section('  async function toggleTodo(', "  subnav.addEventListener('click'"), h);
   storage.set(h.localKey(), JSON.stringify([original]));
   return { h, storage, context, original, remote, finish: (error = null, throws = false) => finishImport(error, throws) };

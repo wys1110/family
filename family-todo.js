@@ -12,7 +12,6 @@
 
   const calendarView = document.querySelector('#calendarView');
   const appShell = document.querySelector('#appShell');
-  const calendarGrid = document.querySelector('#calendarGrid');
   if (!calendarView || !appShell) return;
 
   const moduleState = {
@@ -364,7 +363,6 @@
       moduleState.loaded = true;
       moduleState.loading = false;
       renderTodos();
-      decorateCalendar();
       return;
     }
 
@@ -393,7 +391,6 @@
       moduleState.loaded = true;
       moduleState.loading = false;
       renderTodos();
-      decorateCalendar();
       if (!silent && !isMissingTable(error)) announce('할 일을 불러오지 못했어요. 다시 시도해 주세요.');
       return;
     }
@@ -414,7 +411,6 @@
         moduleState.loaded = true;
         moduleState.loading = false;
         renderTodos();
-        decorateCalendar();
         announce('임시 저장한 할 일을 동기화하지 못했어요. 이 기기에 보관하고 있어요.');
         return;
       }
@@ -428,7 +424,6 @@
     moduleState.loaded = true;
     moduleState.loading = false;
     renderTodos();
-    decorateCalendar();
   }
 
   async function createTodo(input, { quiet = false } = {}) {
@@ -460,7 +455,6 @@
           const saved = normalizeTodo(data);
           moduleState.todos.unshift(saved);
           renderTodos();
-          decorateCalendar();
           if (!quiet) announce('할 일을 추가했어요.');
           return saved;
         }
@@ -480,7 +474,6 @@
           if (index >= 0) moduleState.todos[index] = saved;
           else moduleState.todos.unshift(saved);
           renderTodos();
-          decorateCalendar();
           return saved;
         }
         if (!isMissingTable(error)) throw error;
@@ -492,7 +485,6 @@
     try { writeLocalTodos(); }
     catch (error) { moduleState.todos.shift(); throw error; }
     renderTodos();
-    decorateCalendar();
     if (!quiet) announce('할 일을 추가했어요.');
     return todo;
   }
@@ -531,7 +523,6 @@
           if (currentIndex < 0) return null;
           moduleState.todos[currentIndex] = normalizeTodo(data);
           renderTodos();
-          decorateCalendar();
           if (!quiet) announce('할 일을 수정했어요.');
           return moduleState.todos[currentIndex];
         }
@@ -547,7 +538,6 @@
     try { writeLocalTodos(); }
     catch (error) { moduleState.todos[localIndex] = previous; throw error; }
     renderTodos();
-    decorateCalendar();
     if (!quiet) announce('할 일을 수정했어요.');
     return moduleState.todos[localIndex];
   }
@@ -578,7 +568,6 @@
       catch (error) { moduleState.todos.splice(currentIndex, 0, removed); throw error; }
     }
     renderTodos();
-    decorateCalendar();
     announce('할 일을 삭제했어요.');
   }
 
@@ -725,33 +714,6 @@
     toggle: (id) => toggleTodo(moduleState.todos.find((todo) => todo.id === id)),
   };
 
-  function decorateCalendar() {
-    if (!calendarGrid) return;
-    const counts = new Map();
-    moduleState.todos.filter((todo) => todo.visibility === 'family').forEach((todo) => {
-      if (!todo.completed && todo.dueDate) counts.set(todo.dueDate, (counts.get(todo.dueDate) || 0) + 1);
-    });
-    calendarGrid.querySelectorAll('.calendar-day[data-date]').forEach((button) => {
-      button.querySelector('.todo-day-indicator')?.remove();
-      button.classList.remove('has-family-todos');
-      const currentLabel = button.getAttribute('aria-label') || '';
-      const baseLabel = button.dataset.todoBaseAria || currentLabel.replace(/, 할 일 \d+개$/, '');
-      button.dataset.todoBaseAria = baseLabel;
-      const count = counts.get(button.dataset.date) || 0;
-      if (!count) {
-        button.setAttribute('aria-label', baseLabel);
-        return;
-      }
-      button.classList.add('has-family-todos');
-      const indicator = document.createElement('span');
-      indicator.className = 'todo-day-indicator';
-      indicator.textContent = count > 1 ? `✓${count}` : '✓';
-      indicator.setAttribute('aria-hidden', 'true');
-      button.appendChild(indicator);
-      button.setAttribute('aria-label', `${baseLabel}, 할 일 ${count}개`);
-    });
-  }
-
   function setMode(mode, { persist = true } = {}) {
     moduleState.mode = mode === 'todo' ? 'todo' : 'calendar';
     if (persist) {
@@ -768,7 +730,7 @@
     if (moduleState.mode === 'todo') {
       if (!moduleState.loaded) loadTodos();
       else renderTodos();
-    } else decorateCalendar();
+    }
   }
 
   function syncFab() {
@@ -980,16 +942,6 @@
     }).observe(eventFab, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  if (calendarGrid) {
-    const gridObserver = new MutationObserver((mutations) => {
-      const calendarChanged = mutations.some((mutation) => [...mutation.addedNodes].some((node) => (
-        node.nodeType === 1 && (node.matches?.('.calendar-day') || node.querySelector?.('.calendar-day'))
-      )));
-      if (calendarChanged) requestAnimationFrame(decorateCalendar);
-    });
-    gridObserver.observe(calendarGrid, { childList: true });
-  }
-
   document.querySelector('.view-tabs')?.addEventListener('click', () => setTimeout(syncFab, 0));
   window.addEventListener('focus', () => {
     if (moduleState.mode === 'todo' && moduleState.storage === 'remote') loadTodos({ silent: true });
@@ -1003,7 +955,6 @@
     moduleState.todos = [];
     moduleState.busyIds.clear();
     renderTodos();
-    decorateCalendar();
     loadTodos({ silent: true });
   });
 
