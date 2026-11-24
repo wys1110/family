@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="styles.css?v=20261027-private-cashflow-v1" />
     <style data-theme-critical-inline>
       #appShell[aria-busy="true"] { visibility: hidden; }
+      body:has(#appShell[aria-busy="true"]) > #addEventButton { visibility: hidden; }
       #familyStartupStatus {
         position: fixed;
         inset: max(4rem, calc(env(safe-area-inset-top) + 2rem)) 0 auto;

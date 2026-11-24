@@ -65,23 +65,10 @@
   history.after($('#recentPhotoSection'));
   if (tools) journal.appendChild(tools);
 
-  // Primary actions stay in document flow: no calendar dates or records are covered.
-  const action = $('#addEventButton');
-  const calendarActions = document.createElement('header');
-  calendarActions.className = 'compact-primary-actions calendar-page-header';
-  calendarActions.innerHTML = '<h2>일정</h2>';
-  $('#calendarView').prepend(calendarActions);
   const growthActions = document.createElement('div');
   growthActions.className = 'compact-primary-actions';
+  growthActions.appendChild($('#addEventButton'));
   timer.appendChild(growthActions);
-  const placeAction = () => {
-    const target = state.activeView === 'growth' ? growthActions : calendarActions;
-    if (action.parentElement !== target) target.appendChild(action);
-  };
-  const previousSwitch = switchView;
-  const navigate = function(...args) { const result = previousSwitch.apply(this, args); placeAction(); return result; };
-  Object.assign(navigate, previousSwitch); switchView = navigate;
-  placeAction();
 
   const renderSummary = () => {
     const today = dateKey(new Date());

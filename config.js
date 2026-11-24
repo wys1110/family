@@ -193,7 +193,7 @@ window.FAMILY_CONFIG = {
     { name: "motion-system", version: "20260915-tab-position-v1" },
     { name: "family-admin", version: "20261018-startup-review-v1", style: false },
     { name: "deferred-tabs", version: "20261119-style-ready-v1", style: false },
-    { name: "compact-family", version: "20261031-visible-sleep-controls-v1" },
+    { name: "compact-family", version: "20261124-growth-record-action-v1" },
     { name: "sleep-live-activity", version: "20261106-sleep-progress-v2", style: false },
     { name: "family-sleep", version: "20261112-record-isolation-v1", style: false },
     { name: "live-sleep-pattern", version: "20261106-live-sleep-v1", style: false },
