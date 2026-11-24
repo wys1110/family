@@ -136,7 +136,7 @@ window.FAMILY_CONFIG = {
     { name: "feeding-reminder", version: "20261023-family-review-fixes-v1" },
     { name: "daily-briefing", version: "20261014-mobile-copy-v1" },
     { name: "event-change-push", version: "20260830-auth-recovery-v2", style: false },
-    { name: "app-update", version: "20261124-continuous-lullaby-v1", style: false },
+    { name: "app-update", version: "20261124-manifest-cache-key-v1", style: false },
     { name: "tab-emojis", version: "20261018-parenting-chat-v1" },
     { name: "family-utility", version: "20260805-family-utility-v1", style: false },
     { name: "family-todo", version: "20261123-calendar-no-todo-badges-v1" },

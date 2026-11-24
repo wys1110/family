@@ -1,4 +1,5 @@
-import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,4 +23,11 @@ for (const entry of await readdir(root)) {
   }
   if (publicExtensions.has(extname(entry).toLowerCase())) await cp(source, join(dist, entry));
 }
+// Refresh navigations reload the HTML. Give each manifest its own browser cache key.
+const configHash = createHash('sha256').update(await readFile(join(dist, 'config.js'))).digest('hex').slice(0, 16);
+const indexPath = join(dist, 'index.html');
+const html = await readFile(indexPath, 'utf8');
+const entry = '<script src="config.js"></script>';
+if (!html.includes(entry)) throw new Error('Missing config.js entry in index.html');
+await writeFile(indexPath, html.replace(entry, `<script src="config.js?v=${configHash}"></script>`));
 console.log(`Prepared Capacitor web assets in ${dist}`);
