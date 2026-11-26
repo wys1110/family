@@ -18,7 +18,7 @@ function harness(activeView = 'calendar') {
   const rendered = [];
   const context = {
     state, $, document: { querySelectorAll: () => tabs }, ACTIVE_VIEW_KEY: 'demo-view',
-    localStorage: { setItem: vi.fn() }, closePhotoAlbum: vi.fn(),
+    localStorage: { setItem: vi.fn() }, closePhotoAlbum: vi.fn(), finishEventDrag: vi.fn(),
     renderHeader: vi.fn(), renderMemberControls: vi.fn(), renderCalendar: vi.fn(),
     renderAgenda: vi.fn(), renderUpcomingEvents: vi.fn(), renderWallpapers: vi.fn(), updateSyncBadge: vi.fn(),
     renderGrowth: vi.fn(() => rendered.push({ baby: state.activeBabyId, records: [...state.growthEntries] })),
@@ -47,6 +47,7 @@ test('direct and saved growth entry each render once after making the view visib
   context.renderGrowth.mockClear();
   context.switchView('calendar');
   context.switchView('growth');
+  expect(context.finishEventDrag).toHaveBeenCalledTimes(2);
   expect(context.renderGrowth).toHaveBeenCalledOnce();
 });
 

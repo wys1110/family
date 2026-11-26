@@ -49,8 +49,9 @@ test('the initial HTML hides the original app shell while the current navigation
 
 function calendarRefreshHarness() {
  const app = readFileSync('app.js', 'utf8');
- const source = app.slice(app.indexOf('function readHouseholdEvents('), app.indexOf('function toRemote('));
- const base = { id: 'event-1', title: '기존 일정', date: '2026-11-19', endDate: '2026-11-19', time: '', member: '아빠', note: '' };
+ const source = app.slice(app.indexOf('const EVENT_FIELDS'), app.indexOf('function toRemote('));
+ const baseRow = { id: 'event-1', title: '기존 일정', event_date: '2026-11-19', event_end_date: '2026-11-19', event_time: null, member: '아빠', note: null, updated_at: '2026-11-19T00:00:01Z' };
+ const base = { id: baseRow.id, title: baseRow.title, date: baseRow.event_date, endDate: baseRow.event_end_date, time: '', member: '아빠', note: '', remote: baseRow };
  const row = { id: 'event-2', title: '새 가족 일정', event_date: '2026-11-20', event_end_date: '2026-11-20', event_time: null, member: '아빠', note: null };
  const nodes = { '#calendarView': {}, '#appShell': { ariaBusy: 'false' }, '#eventDialog': { open: false }, '#bulkEventDialog': { open: false } };
  let resolve;
@@ -77,7 +78,7 @@ test('calendar refresh reads only the active family, coalesces overlapping reque
  await h.context.refreshCalendarEvents();
  expect(h.from).toHaveBeenCalledExactlyOnceWith('events');
  expect(h.eq).toHaveBeenCalledExactlyOnceWith('household_id', 'home-1');
- const originalRow = { ...h.row, id: h.base.id, title: h.base.title, event_date: h.base.date, event_end_date: h.base.endDate };
+ const originalRow = { ...h.base.remote };
  h.resolve({ data: [originalRow, h.row], error: null });
  await refresh;
  expect(h.state.events).toEqual([h.base, expect.objectContaining({ id: 'event-2', member: '아빠', date: '2026-11-20' })]);
@@ -116,4 +117,13 @@ test.each([
  await refresh;
  expect(h.state.events).toBe(current);
  expect(h.renderCalendar).not.toHaveBeenCalled();
+});
+
+test('refresh updates the edit revision without a visible title or date change', async () => {
+ const h = calendarRefreshHarness();
+ const refresh = h.context.refreshCalendarEvents();
+ const updated = { ...h.base.remote, updated_at: '2026-11-19T00:00:02Z' };
+ h.resolve({ data: [updated], error: null });
+ await refresh;
+ expect(h.state.events[0].remote).toEqual(updated);
 });

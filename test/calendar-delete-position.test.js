@@ -12,11 +12,13 @@ function harness({ confirmed = true, remoteError = false } = {}) {
   const dialog = { open: true, close: vi.fn(() => { dialog.open = false; window.scrollTo({ top: 0 }); }) };
   const window = { scrollTo: vi.fn() };
   if (remoteError) {
-    const query = { delete: () => query, eq: () => query, then: resolve => resolve({ error: new Error('offline') }) };
+    const query = { delete: () => query, eq: () => query, select: () => query,
+      maybeSingle: () => ({ error: new Error('offline') }) };
     Object.assign(state, { supabase: { from: () => query }, session: { user: { id: 'user' } }, household: { id: 'family' } });
   }
   const context = { state, eventDialogReturnPosition: position, bootstrapRequestId: 1, eventSaveInProgress: false,
-    eventDialogContext: { client: state.supabase, userId: state.session?.user?.id, householdId: state.household?.id, generation: 1 },
+    eventDialogContext: { client: state.supabase, userId: state.session?.user?.id, householdId: state.household?.id, generation: 1,
+      original: { id: 'delete', remote: { title: 'synthetic', updated_at: '2026-11-17T00:00:00Z' } } },
     window, confirm: () => confirmed,
     $: selector => selector === '#eventId' ? { value: 'delete' } : selector === '#eventDialog' ? dialog : selected,
     withAuthRecovery: fn => fn(), requestAnimationFrame: fn => frame.push(fn),
@@ -24,6 +26,7 @@ function harness({ confirmed = true, remoteError = false } = {}) {
     render: () => { throw new Error('Must not remount the whole app'); },
   };
   vm.createContext(context);
+  vm.runInContext(app.slice(app.indexOf('const EVENT_FIELDS'), app.indexOf('function readHouseholdEvents(')), context);
   vm.runInContext(app.slice(app.indexOf('function resetEventDraft('), app.indexOf('async function storeEvent(')), context);
   vm.runInContext(source, context);
   return { context, frame, state, selected, dialog, window };

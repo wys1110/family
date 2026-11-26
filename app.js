@@ -310,6 +310,7 @@ function authSessionKey(session) {
 }
 
 function setAuthUser(session) {
+  finishEventDrag();
   state.session = session;
   state.authGeneration = (state.authGeneration || 0) + 1;
   state.authTransitionPending = true;
@@ -367,6 +368,7 @@ async function bootstrapData(attempt = 0, displayReady = null) {
   bootstrapRetryTimer = null;
   const requestId = ++bootstrapRequestId;
   const sessionKey = authSessionKey(state.session);
+  finishEventDrag();
   resetEventDraft();
   resetPhotoViewer();
   if (state.supabase) {
@@ -571,10 +573,13 @@ async function loadRemoteData(requestId, sessionKey, householdId) {
   return ![babiesResult, eventsResult, growthResult, membersResult, wallpapersResult].some((result) => result.error);
 }
 
+const EVENT_FIELDS = ["title", "event_date", "event_end_date", "event_time", "member", "note"];
+const EVENT_COLUMNS = ["id", ...EVENT_FIELDS, "updated_at"].join(",");
+
 function readHouseholdEvents(supabase, householdId, isCurrent) {
   // readAll adds the event ID as the pagination tie-breaker for equal dates.
   return window.FAMILY_DATA.readAll(() => supabase.from("events")
-    .select("id,title,event_date,event_end_date,event_time,member,note")
+    .select(EVENT_COLUMNS)
     .eq("household_id", householdId).order("event_date"), { isCurrent });
 }
 
@@ -589,7 +594,9 @@ function canRefreshCalendarEvents() {
 
 function sameCalendarEvent(a, b) {
   return a && b && a.id === b.id && a.title === b.title && a.date === b.date && a.endDate === b.endDate
-    && a.time === b.time && a.member === b.member && a.note === b.note;
+    && a.time === b.time && a.member === b.member && a.note === b.note
+    && a.remote?.updated_at === b.remote?.updated_at && a.remote?.event_time === b.remote?.event_time
+    && a.remote?.note === b.remote?.note;
 }
 
 async function refreshCalendarEvents() {
@@ -599,8 +606,8 @@ async function refreshCalendarEvents() {
   const generation = bootstrapRequestId;
   if (!client || !householdId || !userId || !canRefreshCalendarEvents() || calendarRefreshRequest?.generation === generation) return;
   const request = { generation };
-  const current = () => state.supabase === client && state.household?.id === householdId
-    && isCurrentBootstrap(generation, userId);
+  const current = () => calendarRefreshRequest === request && state.supabase === client
+    && state.household?.id === householdId && isCurrentBootstrap(generation, userId);
   calendarRefreshRequest = request;
   const snapshot = state.events.map(event => ({ ...event }));
   try {
@@ -623,8 +630,14 @@ async function refreshCalendarEvents() {
   }
 }
 
-function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "" }); }
-function toRemote(event) { return { id: event.id, household_id: state.household.id, title: event.title, event_date: event.date, event_end_date: event.endDate || event.date, event_time: event.time || null, member: event.member, note: event.note || null, created_by: state.session.user.id }; }
+function fromRemote(row) { return normalizeEvent({ id: row.id, title: row.title, date: row.event_date, endDate: row.event_end_date, time: row.event_time?.slice(0, 5) || "", member: row.member, note: row.note || "", remote: row }); }
+function eventChanges(event) {
+  return { title: event.title, event_date: event.date, event_end_date: event.endDate || event.date,
+    event_time: event.time || null, member: event.member, note: event.note || null };
+}
+function toRemote(event) {
+  return { ...eventChanges(event), id: event.id, household_id: state.household.id, created_by: state.session.user.id };
+}
 function fromBabyRemote(row) { return { id: row.id, name: row.name, birthDate: row.birth_date, birthTime: row.birth_time?.slice(0, 5) || "", sex: row.sex || "", birthWeight: row.birth_weight_kg, birthHeight: row.birth_height_cm, archivedAt: row.archived_at || null }; }
 function toBabyRemote(baby) { return { id: baby.id, household_id: state.household.id, name: baby.name, birth_date: baby.birthDate, birth_time: baby.birthTime || null, sex: baby.sex || null, birth_weight_kg: baby.birthWeight || null, birth_height_cm: baby.birthHeight || null, created_by: state.session.user.id }; }
 function fromGrowthRemote(row) {
@@ -955,6 +968,11 @@ function bindUi() {
     window.addEventListener("focus", refreshCalendarEvents);
     window.setInterval(refreshCalendarEvents, CALENDAR_REFRESH_INTERVAL_MS);
   }
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".view-tab, [data-calendar-mode]")) finishEventDrag();
+  }, true);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) finishEventDrag(); });
+  window.addEventListener("pagehide", () => finishEventDrag());
   $("#prevMonth").addEventListener("click", () => slideMonth(-1));
   $("#nextMonth").addEventListener("click", () => slideMonth(1));
   $("#calendarViewControls").addEventListener("click", (event) => {
@@ -989,6 +1007,7 @@ function bindUi() {
   $("#bulkDefaultDate").addEventListener("change", renderBulkEventPreview);
   $("#bulkDefaultMember").addEventListener("change", renderBulkEventPreview);
   $("#eventForm").addEventListener("submit", saveEvent);
+  $("#eventDialog").addEventListener("close", refreshAfterEventConflict);
   $("#deleteEventButton").addEventListener("click", deleteEvent);
   $("#eventAllDay").addEventListener("change", syncAllDayControl);
   $("#eventDate").addEventListener("change", syncRangeDates);
@@ -1162,6 +1181,7 @@ function resetDemoMode() {
 }
 function switchView(view) {
   const nextView = view === "growth" ? "growth" : "calendar";
+  if (nextView !== state.activeView) finishEventDrag();
   if (nextView !== "growth" && $("#growthView").classList.contains("album-open")) closePhotoAlbum(false);
   state.activeView = nextView;
   try { localStorage.setItem(ACTIVE_VIEW_KEY, nextView); } catch { /* 저장이 막힌 브라우저에서는 현재 화면만 유지 */ }
@@ -1456,12 +1476,15 @@ async function saveBulkEvents(event) {
   if (errors.length || !items.length) return renderBulkEventPreview();
   const submit = $("#bulkEventSubmit"); submit.disabled = true; submit.textContent = "저장 중…";
   bulkEventSaveInProgress = true;
+  let savedItems = items;
   try {
     if (state.supabase && state.session) {
-      const { error } = await withAuthRecovery(() => state.supabase.from("events").insert(items.map(toRemote)));
+      const { data, error } = await withAuthRecovery(() => state.supabase.from("events").insert(items.map(toRemote)).select(EVENT_COLUMNS));
       if (error) { submit.disabled = false; renderBulkEventPreview(); return toast("일정을 한꺼번에 저장하지 못했어요"); }
+      const rowsById = new Map(data.map(row => [row.id, row]));
+      savedItems = items.map(item => fromRemote(rowsById.get(item.id)));
     }
-    state.events.push(...items); persistLocal();
+    state.events.push(...savedItems); persistLocal();
     state.selectedDate = items[0].date; state.viewDate = startOfMonth(parseDate(items[0].date));
     $("#bulkEventDialog").close(); render();
     toast(`${items.length}개 일정을 추가했어요`);
@@ -1518,9 +1541,9 @@ function bindDragHandle(handle, event) {
 }
 
 function beginEventDrag(pointerEvent, event, source) {
-  if (dragState) finishEventDrag(null);
+  if (dragState) return;
   const ghost = $("#dragGhost");
-  dragState = { pointerId: pointerEvent.pointerId, event, source, targetDate: null };
+  dragState = { pointerId: pointerEvent.pointerId, move: captureEventMove(event), source, targetDate: null };
   source.setPointerCapture?.(pointerEvent.pointerId);
   ghost.style.setProperty("--member-color", memberColor(event.member));
   ghost.innerHTML = `<i class="bar"></i><span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.member)} · 날짜 이동</small></span>`;
@@ -1530,6 +1553,7 @@ function beginEventDrag(pointerEvent, event, source) {
   source.addEventListener("pointermove", updateEventDrag);
   source.addEventListener("pointerup", finishEventDrag);
   source.addEventListener("pointercancel", finishEventDrag);
+  source.addEventListener("lostpointercapture", finishEventDrag);
   if (navigator.vibrate) navigator.vibrate(10);
 }
 
@@ -1552,64 +1576,120 @@ function updateEventDrag(pointerEvent) {
 
 function finishEventDrag(pointerEvent) {
   if (!dragState || (pointerEvent && pointerEvent.pointerId !== dragState.pointerId)) return;
-  const { source, event } = dragState;
-  const targetDate = pointerEvent?.type === "pointercancel" ? null : dragState.targetDate;
+  const { source, move, pointerId, targetDate } = dragState;
+  dragState = null;
   source.removeEventListener("pointermove", updateEventDrag);
   source.removeEventListener("pointerup", finishEventDrag);
   source.removeEventListener("pointercancel", finishEventDrag);
+  source.removeEventListener("lostpointercapture", finishEventDrag);
+  if (!pointerEvent && source.hasPointerCapture?.(pointerId)) source.releasePointerCapture(pointerId);
   document.querySelectorAll(".calendar-day.drop-target").forEach((day) => day.classList.remove("drop-target"));
   $("#dragGhost").classList.remove("show");
   document.body.classList.remove("dragging-event");
-  dragState = null;
+  if (pointerEvent?.type !== "pointerup") return;
   if (!targetDate) return toast("이동할 날짜 위에 놓아주세요");
-  moveEventToDate(event.id, targetDate);
+  return moveEventToDate(move.event.id, targetDate, true, move);
 }
 
-async function moveEventToDate(id, targetDate, offerUndo = true) {
-  const client = state.supabase, userId = state.session?.user?.id, householdId = state.household?.id;
-  const contextGeneration = bootstrapRequestId;
-  const event = state.events.find((item) => item.id === id);
-  const current = () => state.supabase === client && state.session?.user?.id === userId
-    && state.household?.id === householdId && bootstrapRequestId === contextGeneration && state.events.includes(event);
+function captureEventMove(event) {
+  if (!event) return null;
+  return { event, date: event.date, endDate: event.endDate || event.date, preceding: eventMovePromises.get(event.id),
+    client: state.supabase, userId: state.session?.user?.id, householdId: state.household?.id, generation: bootstrapRequestId };
+}
+
+async function moveEventToDate(id, targetDate, offerUndo = true, move = captureEventMove(state.events.find(item => item.id === id))) {
+  if (!move) return;
+  const { client, userId, householdId, generation } = move;
+  const sameScope = () => state.supabase === client && state.session?.user?.id === userId
+    && state.household?.id === householdId && bootstrapRequestId === generation && !state.authTransitionPending;
+  if (!sameScope()) return;
+  const event = state.events.find(item => item.id === id);
   const previousMove = eventMovePromises.get(id);
-  // Serialize each event so the last requested move cannot be undone by an older response.
+  const current = () => sameScope() && state.events.includes(event);
+  let refresh = false;
+  const reportConflict = () => {
+    refresh = true;
+    toast("다른 곳에서 일정이 변경됐어요. 최신 일정을 확인해 주세요");
+  };
+
   const pending = (async () => {
     if (previousMove) await previousMove.catch(() => {});
+    if (!sameScope()) return;
+    if (!event) return reportConflict();
     if (!current()) return;
-    if (!event || event.date === targetDate) return toast("같은 날짜의 일정이에요");
     const previousDate = event.date;
-    const previousEndDate = event.endDate || event.date;
+    const previousEndDate = event.endDate || previousDate;
+    // A queued drag in this calendar follows our own confirmed move or rollback.
+    const followsLocalMove = offerUndo && move.preceding && move.event === event;
+    if (!followsLocalMove && (previousDate !== move.date || previousEndDate !== move.endDate)) return reportConflict();
+    if (previousDate === targetDate) return toast("같은 날짜의 일정이에요");
     const duration = dayDistance(previousDate, previousEndDate);
     const endDate = addDays(targetDate, duration);
+    const selectedDate = state.selectedDate, viewDate = state.viewDate, view = state.activeView;
+    const optimisticView = startOfMonth(parseDate(targetDate));
     event.date = targetDate;
     event.endDate = endDate;
     state.selectedDate = targetDate;
-    state.viewDate = startOfMonth(parseDate(targetDate));
+    state.viewDate = optimisticView;
     render();
+    const rollback = () => {
+      finishEventDrag();
+      event.date = previousDate;
+      event.endDate = previousEndDate;
+      if (state.activeView === view && state.selectedDate === targetDate && state.viewDate === optimisticView) {
+        state.selectedDate = selectedDate;
+        state.viewDate = viewDate;
+      }
+      render();
+    };
     try {
-      if (client && state.session) {
-        const { error } = await withAuthRecovery(() => client.from("events").update({ event_date: targetDate, event_end_date: endDate, updated_at: new Date().toISOString() }).eq("household_id", householdId).eq("id", id), client, userId, current);
+      if (client) {
+        refresh = true;
+        const dates = { event_date: targetDate, event_end_date: endDate, updated_at: new Date().toISOString() };
+        const { data, error, status } = await withAuthRecovery(() => client.from("events").update(dates)
+          .eq("household_id", householdId).eq("id", id)
+          .eq("event_date", previousDate).eq("event_end_date", previousEndDate)
+          .select(EVENT_COLUMNS).maybeSingle(), client, userId, current);
         if (!current()) return;
+        if (eventMutationConflict({ data, error, status }, id)) {
+          rollback();
+          return reportConflict();
+        }
         if (error) throw error;
+        const confirmed = fromRemote(data);
+        const displayChanged = ["title", "date", "endDate", "time", "member", "note"]
+          .some(field => event[field] !== confirmed[field]);
+        Object.assign(event, confirmed);
+        if (displayChanged) {
+          finishEventDrag();
+          render();
+        }
       } else {
         persistLocal();
       }
-    } catch (error) {
+    } catch {
       if (!current()) return;
-      event.date = previousDate;
-      event.endDate = previousEndDate;
-      state.selectedDate = previousDate;
-      state.viewDate = startOfMonth(parseDate(previousDate));
-      render();
+      rollback();
       return toast("일정을 이동하지 못했어요");
     }
     if (!current()) return;
-    const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(targetDate));
-    toast(`${formatted}로${duration ? ` ${duration + 1}일 기간을` : ""} 이동했어요`, offerUndo ? { label: "되돌리기", run: () => { if (current()) moveEventToDate(id, previousDate, false); } } : null);
+    const confirmedMove = captureEventMove(event);
+    const formatted = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parseDate(event.date));
+    toast(`${formatted}로${duration ? ` ${duration + 1}일 기간을` : ""} 이동했어요`,
+      offerUndo ? { label: "되돌리기", run: () => moveEventToDate(id, previousDate, false, confirmedMove) } : null);
   })();
   eventMovePromises.set(id, pending);
   try { await pending; }
-  finally { if (eventMovePromises.get(id) === pending) eventMovePromises.delete(id); }
+  finally {
+    if (eventMovePromises.get(id) === pending) {
+      eventMovePromises.delete(id);
+      // Focus and polling skip pending moves. Read again after the last queued move settles.
+      if (client && (refresh || previousMove) && sameScope()) {
+        calendarRefreshRequest = null;
+        void refreshCalendarEvents();
+      }
+    }
+  }
 }
 
 function resetEventDraft() {
@@ -1626,6 +1706,8 @@ function resetEventDraft() {
   submit.disabled = false;
   submit.setAttribute("aria-busy", "false");
   submit.textContent = "일정 추가";
+  $("#eventConflict").hidden = true;
+  $("#deleteEventButton").disabled = false;
 }
 
 function isCurrentEventDraft(context) {
@@ -1634,25 +1716,90 @@ function isCurrentEventDraft(context) {
     && context.householdId === state.household?.id && context.generation === bootstrapRequestId);
 }
 
+function refreshAfterEventConflict() {
+  const context = eventDialogContext;
+  if ($("#eventDialog").open || !context?.conflicted || !isCurrentEventDraft(context)) return;
+  eventDialogContext = null;
+  void refreshCalendarEvents();
+}
+
+function matchEventSnapshot(query, previous) {
+  // Older app versions can change fields without advancing updated_at.
+  for (const field of [...EVENT_FIELDS, "updated_at"]) {
+    query = previous[field] === null ? query.is(field, null) : query.eq(field, previous[field]);
+  }
+  return query;
+}
+
+function eventMutationConflict({ data, error, status }, id) {
+  return (!error && data?.id !== id) || status === 401 || status === 403 || error?.code === "42501";
+}
+
+function markEventConflict(context) {
+  context.conflicted = true;
+  $("#eventConflict").hidden = false;
+  $("#eventSubmitButton").disabled = true;
+  $("#deleteEventButton").disabled = true;
+  return null;
+}
+
 async function storeEvent(item, context) {
-  if (!isCurrentEventDraft(context)) return false;
-  if (context.client) {
-    if (!context.userId || !context.householdId) return false;
-    const payload = { ...toRemote(item), household_id: context.householdId, created_by: context.userId };
-    const { error } = await withAuthRecovery(() => context.client.from("events").upsert(payload), context.client, context.userId, () => isCurrentEventDraft(context));
-    if (!isCurrentEventDraft(context)) return false;
-    if (error) {
-      toast(error.message?.includes("event_end_date") ? "Supabase 날짜 범위 업데이트가 필요해요" : "저장하지 못했어요");
-      return false;
+  if (!isCurrentEventDraft(context)) return null;
+  if (!context.client) return item;
+  if (!context.userId || !context.householdId) return null;
+  const { client, original, householdId, userId } = context;
+  const current = () => isCurrentEventDraft(context);
+  const { id } = item;
+  const changes = eventChanges(item);
+  let result;
+  if (original) {
+    const previous = original.remote;
+    if (!previous) return markEventConflict(context);
+    if (item.title === original.title) changes.title = previous.title;
+    if (item.time === original.time) changes.event_time = previous.event_time;
+    if (item.note === original.note) changes.note = previous.note;
+    result = await withAuthRecovery(() => {
+      const query = client.from("events").update({ ...changes, updated_at: new Date().toISOString() })
+        .eq("household_id", householdId).eq("id", id);
+      return matchEventSnapshot(query, previous).select(EVENT_COLUMNS).maybeSingle();
+    }, client, userId, current);
+  } else {
+    const payload = { ...changes, id, household_id: householdId, created_by: userId };
+    result = await withAuthRecovery(() => client.from("events").insert(payload)
+      .select(EVENT_COLUMNS).single(), client, userId, current);
+    if (current() && result.error?.code === "23505") {
+      // A previous attempt can commit before the connection is lost.
+      result = await withAuthRecovery(() => client.from("events").select(EVENT_COLUMNS)
+        .eq("id", id).eq("household_id", householdId).eq("created_by", userId).maybeSingle(),
+      client, userId, current);
+      const saved = result.data;
+      const time = changes.event_time?.length === 5 ? changes.event_time + ":00" : changes.event_time;
+      if (saved && EVENT_FIELDS.some((field) => saved[field] !== (field === "event_time" ? time : changes[field]))) {
+        return current() ? markEventConflict(context) : null;
+      }
     }
   }
-  return true;
+  if (!current()) return null;
+  const { data, error } = result;
+  if (eventMutationConflict(result, id)) {
+    return markEventConflict(context);
+  }
+  if (error) {
+    toast(error.message?.includes("event_end_date") ? "Supabase 날짜 범위 업데이트가 필요해요" : "저장하지 못했어요");
+    return null;
+  }
+  return fromRemote(data);
 }
 
 function openEventDialog(event = null) {
   if (eventSaveInProgress) return toast("일정을 저장 중이에요");
+  calendarRefreshRequest = null;
   eventDialogContext = { client: state.supabase, userId: state.session?.user?.id,
-    householdId: state.household?.id, generation: bootstrapRequestId };
+    householdId: state.household?.id, generation: bootstrapRequestId,
+    id: event?.id || uid(), original: event ? { ...event } : null };
+  $("#eventConflict").hidden = true;
+  $("#deleteEventButton").disabled = false;
+  $("#eventSubmitButton").disabled = false;
   eventDialogReturnPosition = { x: window.scrollX, y: window.scrollY, view: state.activeView };
   $("#eventDialogTitle").textContent = event ? "일정 수정" : "새 일정";
   $("#eventSubmitButton").textContent = event ? "변경사항 저장" : "일정 추가";
@@ -1711,47 +1858,58 @@ function syncDateShortcutSelection() {
 
 async function saveEvent(event) {
   event.preventDefault();
-  if (eventSaveInProgress) return;
   const context = eventDialogContext;
+  if (eventSaveInProgress || context?.conflicted) return;
   if (!isCurrentEventDraft(context)) { resetEventDraft(); return toast("가족 공간이 변경됐어요. 일정을 다시 열어 주세요"); }
   if (state.supabase && !state.household) { $("#eventDialog").close(); return toast("먼저 가족 공간을 만들어주세요"); }
   const startDate = $("#eventDate").value;
   const endDate = $("#eventEndDate").value || startDate;
   if (endDate < startDate) return toast("종료일은 시작일 이후로 선택해 주세요");
-  const item = { id: $("#eventId").value || uid(), title: $("#eventTitle").value.trim(), date: startDate, endDate, time: $("#eventTime").value, member: $("#eventMember").value, note: $("#eventNote").value.trim() };
+  const title = $("#eventTitle").value;
+  const note = $("#eventNote").value;
+  const item = { id: context.id, title: title === context.original?.title ? title : title.trim(), date: startDate, endDate, time: $("#eventTime").value, member: $("#eventMember").value, note: note === context.original?.note ? note : note.trim() };
   const submit = $("#eventSubmitButton");
   eventSaveInProgress = true;
   submit.disabled = true;
   submit.setAttribute("aria-busy", "true");
   submit.textContent = "저장 중…";
   try {
-    if (!await storeEvent(item, context) || !isCurrentEventDraft(context)) return;
-    const index = state.events.findIndex((e) => e.id === item.id); if (index >= 0) state.events[index] = item; else state.events.push(item);
+    const saved = await storeEvent(item, context);
+    if (!saved || !isCurrentEventDraft(context)) return;
+    const index = state.events.findIndex((event) => event.id === saved.id);
+    if (index >= 0) state.events[index] = saved; else state.events.push(saved);
     persistLocal(); state.selectedDate = item.date; state.viewDate = startOfMonth(parseDate(item.date)); $("#eventDialog").close(); render(); toast(index >= 0 ? "일정을 수정했어요" : "일정을 추가했어요");
   } catch {
     if (isCurrentEventDraft(context)) toast("저장하지 못했어요");
   } finally {
     if (eventDialogContext === context) {
       eventSaveInProgress = false;
-      submit.disabled = false;
+      submit.disabled = Boolean(context.conflicted);
       submit.setAttribute("aria-busy", "false");
-      submit.textContent = $("#eventId").value ? "변경사항 저장" : "일정 추가";
+      submit.textContent = context.original ? "변경사항 저장" : "일정 추가";
     }
   }
 }
 
 async function deleteEvent() {
-  if (eventSaveInProgress) return;
   const context = eventDialogContext;
+  if (eventSaveInProgress || context?.conflicted) return;
   if (!isCurrentEventDraft(context)) { resetEventDraft(); return; }
-  const id = $("#eventId").value; if (!id || !confirm("이 일정을 삭제할까요?")) return;
+  const id = context.original?.id;
+  if (!id || !confirm("이 일정을 삭제할까요?")) return;
   eventSaveInProgress = true;
   try {
     if (context.client) {
       if (!context.userId || !context.householdId) return;
-      const { error } = await withAuthRecovery(() => context.client.from("events").delete().eq("household_id", context.householdId).eq("id", id), context.client, context.userId, () => isCurrentEventDraft(context));
+      const previous = context.original.remote;
+      if (!previous) return markEventConflict(context);
+      const result = await withAuthRecovery(() => {
+        const query = context.client.from("events").delete().eq("household_id", context.householdId).eq("id", id);
+        return matchEventSnapshot(query, previous).select("id").maybeSingle();
+      }, context.client, context.userId, () => isCurrentEventDraft(context));
       if (!isCurrentEventDraft(context)) return;
-      if (error) return toast("삭제하지 못했어요");
+      if (eventMutationConflict(result, id)) return markEventConflict(context);
+      if (result.error) return toast("삭제하지 못했어요");
     }
     if (!isCurrentEventDraft(context)) return;
     const returnPosition = eventDialogReturnPosition;
