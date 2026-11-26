@@ -374,6 +374,7 @@
             <input id="eventMember" type="hidden" value="가족" />
           </fieldset>
           <label>메모<textarea id="eventNote" maxlength="300" rows="3" placeholder="준비물이나 장소를 적어두세요"></textarea></label>
+          <p id="eventConflict" role="alert" hidden>일정이 바뀌었거나 접근 권한이 달라졌어요. 입력한 내용을 복사한 뒤 창을 닫고 최신 일정을 확인해 주세요.</p>
         </div>
         <div class="dialog-actions">
           <button type="button" class="danger-button" id="deleteEventButton">삭제</button>
@@ -623,6 +624,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="family-auth.js?v=20261013-code-reliability-v1" data-module="family-auth"></script>
     <script src="family-data.js?v=20261018-review-performance-v1"></script>
-    <script src="app.js?v=20261119-calendar-refresh-v1"></script>
+    <script src="app.js?v=20261126-calendar-actions-v2"></script>
   </body>
 </html>

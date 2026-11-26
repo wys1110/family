@@ -21,10 +21,12 @@
   let open = false;
   let requested = false;
   let interrupted = false;
+  let hiddenPlaybackFailure = false;
   let retryTimer;
   let retryDelay = 1000;
   let attempt = 0;
   const session = navigator.audioSession;
+  const showPlaybackFailure = () => window.toast?.("자장가를 재생하지 못했어요. 다시 눌러 주세요.");
 
   function setSessionType(type) {
     if (!session || session.type === type) return;
@@ -32,7 +34,8 @@
   }
 
   function render() {
-    const playing = open && !audio.paused;
+    const playing = open && !audio.paused && !audio.ended && !audio.error
+      && audio.readyState >= audio.HAVE_FUTURE_DATA;
     audio.setAttribute("aria-label", selected.label + " 자장가");
     const panel = document.querySelector("#lullabyPanel");
     if (panel) {
@@ -61,6 +64,7 @@
   }
 
   function stop() {
+    hiddenPlaybackFailure = false;
     if (!open) return;
     open = false;
     requested = false;
@@ -100,13 +104,14 @@
 
   async function play() {
     const current = ++attempt;
+    hiddenPlaybackFailure = false;
     requested = true;
     clearTimeout(retryTimer);
     setSessionType("playback");
     render();
     try {
       await audio.play();
-    } catch {
+    } catch (error) {
       if (current !== attempt) return;
       if (session?.state === "interrupted") {
         interrupted = true;
@@ -117,7 +122,12 @@
         return;
       }
       stop();
-      window.toast?.("자장가를 재생하지 못했어요. 다시 눌러 주세요.");
+      // WebKit can reject a pending media request after hiding the document and before pagehide.
+      if (error?.name === "NotSupportedError" && document.visibilityState === "hidden") {
+        hiddenPlaybackFailure = true;
+      } else {
+        showPlaybackFailure();
+      }
     }
   }
 
@@ -136,6 +146,7 @@
     if (!track) return;
     const wasPlaying = requested;
     if (track !== selected) {
+      hiddenPlaybackFailure = false;
       selected = track;
       try { if (storageKey) localStorage.setItem(storageKey, track.id); } catch { /* Remember for this session. */ }
       if (open) {
@@ -155,6 +166,9 @@
     retryDelay = 1000;
     render();
   });
+  audio.addEventListener("waiting", () => {
+    if (open) render();
+  });
   audio.addEventListener("pause", () => {
     if (!audio.paused) return;
     if (!audio.ended && !audio.error && !interrupted && session?.state !== "interrupted") {
@@ -172,6 +186,12 @@
     play();
   });
   audio.addEventListener("error", reportError);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || !hiddenPlaybackFailure) return;
+    hiddenPlaybackFailure = false;
+    showPlaybackFailure();
+  });
+  window.addEventListener("pagehide", stop);
   window.addEventListener("online", () => {
     if (requested && audio.error) retryNetwork();
   });
