@@ -169,10 +169,10 @@ body:has(#englishView.storybook-view:not([hidden])) .simple-bottom {
   word-break: keep-all;
 }
 
-.storybook-view :is(.storybook-shelf, .storybook-settings) {
+.storybook-view :is(.storybook-shelf, .storybook-settings, .storybook-motion-link) {
   border-top: 1px solid var(--theme-story-rule);
 }
-.storybook-view summary {
+.storybook-view :is(summary, .storybook-motion-link) {
   display: flex;
   align-items: center;
   gap: .6rem;
@@ -184,11 +184,19 @@ body:has(#englishView.storybook-view:not([hidden])) .simple-bottom {
   cursor: pointer;
   list-style: none;
 }
+.storybook-motion-link { text-decoration: none; }
+.storybook-motion-link small {
+  display: inline-block;
+  margin-inline-start: .35rem;
+  color: var(--theme-story-muted);
+  font-size: .82rem;
+  font-weight: 450;
+}
 .storybook-view summary::-webkit-details-marker { display: none; }
-.storybook-view summary > :last-child:not(:first-child) { margin-left: auto; }
+.storybook-view :is(summary, .storybook-motion-link) > :last-child:not(:first-child) { margin-left: auto; }
 .storybook-view details[open] > summary > :last-child:not(:first-child) { transform: rotate(90deg); }
 .storybook-view summary svg { display: block; width: 18px; height: 18px; flex: none; }
-.storybook-view :is(button, summary, select, input):focus-visible {
+.storybook-view :is(a, button, summary, select, input):focus-visible {
   outline: 2px solid var(--theme-story-action);
   outline-offset: 2px;
 }
@@ -271,7 +279,7 @@ body:has(#englishView.storybook-view:not([hidden])) .simple-bottom {
   .storybook-cover { grid-column: 1; grid-row: 2 / 4; aspect-ratio: 1.5; }
   .storybook-titles { grid-column: 2; grid-row: 2; align-self: end; margin: 0 0 1.2rem; }
   .storybook-play { grid-column: 2; grid-row: 3; align-self: start; }
-  .storybook-reader, .storybook-shelf, .storybook-settings { grid-column: 1 / -1; }
+  .storybook-reader, .storybook-motion-link, .storybook-shelf, .storybook-settings { grid-column: 1 / -1; }
   .storybook-reader { padding: 1.2rem 0 1.4rem; }
   .storybook-sentence #englishLineEnglish { font-size: clamp(2rem, 4.6cqi, 2.35rem); }
   .storybook-sentence #englishLineKorean { font-size: 1.2rem; color: var(--theme-story-ink); }

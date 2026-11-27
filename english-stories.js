@@ -481,6 +481,7 @@
   }
   function storyIcon(name) {
     const path = {
+      motion: "M3 5.5h18v13H3z M10 9l4.5 3-4.5 3z",
       previous: "m14.5 6-6 6 6 6",
       next: "m9.5 6 6 6-6 6",
       shelf: "M4 4v15m4-15v15m4-12v12m3-13 4 12M3 21h18",
@@ -772,6 +773,9 @@
           <div id="englishSentenceList" class="storybook-sentence" aria-live="polite" aria-atomic="true"><p id="englishLineEnglish" lang="en"></p><p id="englishLineKorean"></p></div>
         </section>
 
+        <a class="storybook-motion-link" href="assets/story-motion/milo/index.html">
+          ${storyIcon("motion")}<span>움직이는 동화책 <small>짝꿍 양말은 어디에?</small></span>${storyIcon("next")}
+        </a>
         <details id="englishLibrarySection" class="storybook-shelf">
           <summary>${storyIcon("shelf")}<span>다른 동화 고르기</span>${storyIcon("next")}</summary>
           <div id="englishLibrary" class="storybook-library"></div>
