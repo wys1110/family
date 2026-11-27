@@ -15,6 +15,7 @@ function harness() {
   const $ = key => {
     if (!nodes.has(key)) {
       const node = { value: '', open: false, events: {}, addEventListener(type, fn) { this.events[type] = fn; }, classList: { toggle() {} }, setAttribute() {} };
+      node.append = child => { child.parentElement = node; };
       node.showModal = vi.fn(() => { node.open = true; });
       node.close = vi.fn(() => { node.open = false; node.events.close?.(); });
       nodes.set(key, node);
@@ -115,6 +116,18 @@ test.each(['new', 'existing'])('the installed reminder module saves a %s event a
   expect(h.context.state.events).toEqual([expect.objectContaining({ id, title: 'after' })]);
   expect(h.context.store.eventReminders[id]).toEqual({ preset: 'before-10', customAt: '', enabled: true });
   expect(h.$('#eventDialog').open).toBe(false);
+});
+
+test('editing and then adding an event moves the same submit button between the header and footer', () => {
+  const h = harness();
+  const submit = h.$('#eventSubmitButton');
+  h.context.openEventDialog(h.context.fromRemote(existing));
+  expect(submit.parentElement).toBe(h.$('#eventEditorHeader'));
+  expect(submit.textContent).toBe('업데이트');
+  h.$('#eventDialog').close();
+  h.context.openEventDialog();
+  expect(submit.parentElement).toBe(h.$('#eventFooterActions'));
+  expect(submit.textContent).toBe('일정 추가');
 });
 
 test('reminder-enabled demo edits survive local persistence', async () => {

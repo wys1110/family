@@ -1799,10 +1799,13 @@ function openEventDialog(event = null) {
     id: event?.id || uid(), original: event ? { ...event } : null };
   $("#eventConflict").hidden = true;
   $("#deleteEventButton").disabled = false;
-  $("#eventSubmitButton").disabled = false;
+  const submit = $("#eventSubmitButton");
+  submit.disabled = false;
+  $("#eventForm").classList.toggle("editing-event", Boolean(event));
+  $(event ? "#eventEditorHeader" : "#eventFooterActions").append(submit);
   eventDialogReturnPosition = { x: window.scrollX, y: window.scrollY, view: state.activeView };
   $("#eventDialogTitle").textContent = event ? "일정 수정" : "새 일정";
-  $("#eventSubmitButton").textContent = event ? "변경사항 저장" : "일정 추가";
+  submit.textContent = event ? "업데이트" : "일정 추가";
   $("#eventId").value = event?.id || "";
   $("#eventTitle").value = event?.title || "";
   $("#eventDate").value = event?.date || state.selectedDate;
@@ -1886,7 +1889,7 @@ async function saveEvent(event) {
       eventSaveInProgress = false;
       submit.disabled = Boolean(context.conflicted);
       submit.setAttribute("aria-busy", "false");
-      submit.textContent = context.original ? "변경사항 저장" : "일정 추가";
+      submit.textContent = context.original ? "업데이트" : "일정 추가";
     }
   }
 }

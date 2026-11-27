@@ -5,7 +5,7 @@ const config = readFileSync("config.js", "utf8");
 const style = readFileSync("event-dialog-frame-polish.css", "utf8");
 
 test("일정 편집 프레임 보정 모듈을 마지막에 불러온다", () => {
-  expect(config).toContain('{ name: "event-dialog-frame-polish", version: "20261014-footer-layout-v1", script: false }');
+  expect(config).toContain('{ name: "event-dialog-frame-polish", version: "20261127-event-update-header", script: false }');
   expect(config.indexOf('name: "event-dialog-frame-polish"')).toBeGreaterThan(config.indexOf('name: "event-dialog-layout-polish"'));
 });
 
