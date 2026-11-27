@@ -403,6 +403,8 @@
     h = () => storageKey("family-english-story-history-v1"),
     j = () => storageKey(n),
     progress = () => o.progress[d().id] || 0;
+  const movingStoryId = "milo-other-sock";
+  let movingCover;
   function u() {
     try {
       localStorage.setItem(
@@ -442,8 +444,10 @@
       i = function (i) {
         const o = document.querySelector("#englishView"),
           s = document.querySelector("#addEventButton");
-        if (i !== e)
+        if (i !== e) {
+          movingCover?.hide();
           return (C(), o && (o.hidden = !0), s && (s.hidden = !1), n(i));
+        }
         n("calendar");
         const r = a();
         r && (r.activeView = e);
@@ -494,6 +498,128 @@
     o.readerLine = saved < d().lines.length ? saved : 0;
     o.readFromHere = false;
   }
+  function createMovingCover() {
+    const view = document.querySelector("#englishView");
+    const canvas = document.querySelector("#englishMotionCanvas");
+    const context = canvas?.getContext?.("2d");
+    if (!context) return;
+    const toggle = document.querySelector("#englishMotionToggle");
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let enabled = !preference.matches;
+    let active = false;
+    let onScreen = true;
+    let scene = -1;
+    let artwork;
+    let loadFailed = false;
+    let ready = false;
+    let frame = 0;
+    let lastPaint = 0;
+    let elapsed = 0;
+    let pageActive = true;
+
+    function loadArtwork() {
+      const base = "assets/story-motion/milo/";
+      const room = new Image();
+      const roomReady = new Promise((resolve, reject) => {
+        room.onload = resolve;
+        room.onerror = reject;
+      });
+      room.src = base + "room.webp";
+      const rendererReady = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.onload = () => resolve(window.miloArtworkReady);
+        script.onerror = reject;
+        script.src = base + "art.js";
+        document.head.appendChild(script);
+      });
+      return Promise.all([rendererReady, roomReady]).then(([loaded]) => {
+        if (!loaded) throw new Error("Artwork palette unavailable");
+        window.storyRoomImage = room;
+        ready = true;
+        update();
+      });
+    }
+    function stopFrames() {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      lastPaint = 0;
+    }
+    function visible() {
+      return active && pageActive && !view.hidden && !document.hidden && onScreen;
+    }
+    function paint() {
+      const phase = 1 - Math.abs(1 - (elapsed / 2600) % 2);
+      window.drawStoryFrame(context, scene, phase);
+    }
+    function animate(now) {
+      frame = 0;
+      if (!visible() || !enabled) return;
+      if (!lastPaint) lastPaint = now;
+      const delta = now - lastPaint;
+      if (delta >= 1000 / 24) {
+        elapsed += Math.min(delta, 100);
+        lastPaint = now;
+        paint();
+      }
+      frame = requestAnimationFrame(animate);
+    }
+    function update() {
+      if (!visible()) {
+        stopFrames();
+        return;
+      }
+      if (!ready) {
+        if (!artwork) artwork = loadArtwork().catch(() => { loadFailed = true; });
+        return;
+      }
+      paint();
+      canvas.hidden = false;
+      toggle.hidden = false;
+      toggle.textContent = enabled ? "그림 멈추기" : "그림 움직이기";
+      if (!enabled) stopFrames();
+      else if (!frame) frame = requestAnimationFrame(animate);
+    }
+    function hide() {
+      active = false;
+      canvas.hidden = true;
+      toggle.hidden = true;
+      stopFrames();
+    }
+    toggle.addEventListener("click", () => {
+      enabled = !enabled;
+      update();
+    });
+    preference.addEventListener("change", () => {
+      enabled = !preference.matches;
+      if (!enabled) elapsed = 1700;
+      update();
+    });
+    document.addEventListener("visibilitychange", update);
+    window.addEventListener("pagehide", () => { pageActive = false; stopFrames(); });
+    window.addEventListener("pageshow", () => { pageActive = true; update(); });
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(([entry]) => {
+        onScreen = entry.isIntersecting;
+        update();
+      }).observe(canvas.parentElement);
+    }
+    return {
+      hide,
+      show(index) {
+        if (!active && loadFailed) {
+          loadFailed = false;
+          artwork = null;
+        }
+        if (!active || scene !== index) {
+          scene = index;
+          elapsed = enabled ? 0 : 1700;
+          lastPaint = 0;
+        }
+        active = true;
+        update();
+      },
+    };
+  }
   function renderSentence() {
     const story = d();
     const line = story.lines[o.readerLine];
@@ -505,6 +631,13 @@
     document.querySelector("#englishLinePosition").textContent = `${o.readerLine + 1} / ${story.lines.length}`;
     document.querySelector("#englishPrevLine").disabled = o.readerLine === 0;
     document.querySelector("#englishNextLine").disabled = o.readerLine === story.lines.length - 1;
+    if (story.id === movingStoryId) {
+      const reader = document.querySelector("#englishNarratedMotionBook");
+      reader.href = `assets/story-motion/milo/index.html?page=${o.readerLine + 1}`;
+      movingCover?.show(o.readerLine);
+    } else {
+      movingCover?.hide();
+    }
   }
   function turnPage(offset) {
     const next = o.readerLine + offset;
@@ -518,6 +651,8 @@
   }
   function v() {
     const story = d();
+    document.querySelector("#englishOpenMotionBook").hidden = story.id === movingStoryId;
+    document.querySelector("#englishNarratedMotionBook").hidden = story.id !== movingStoryId;
     const cover = document.querySelector("#englishCoverImage");
     if (cover.dataset.storyId !== story.id) {
       cover.dataset.storyId = story.id;
@@ -756,8 +891,17 @@
         (a.hidden = !0),
         (a.innerHTML = `
       <section class="storybook-player" id="englishStoryPlayer" aria-labelledby="englishStoryKoreanTitle">
-        <div class="storybook-meta"><span id="englishFeatureLabel"></span><span id="englishStoryTheme"></span></div>
-        <div class="storybook-cover"><img id="englishCoverImage" alt=""><span id="englishCoverFallback" aria-hidden="true" hidden></span></div>
+        <div class="storybook-intro">
+          <button class="storybook-motion-link" id="englishOpenMotionBook" type="button" hidden>
+            ${storyIcon("motion")}<span>움직이는 동화책 <small>짝꿍 양말은 어디에?</small></span>${storyIcon("next")}
+          </button>
+          <div class="storybook-meta"><span id="englishFeatureLabel"></span><span id="englishStoryTheme"></span></div>
+        </div>
+        <div class="storybook-cover">
+          <img id="englishCoverImage" alt=""><span id="englishCoverFallback" aria-hidden="true" hidden></span>
+          <canvas id="englishMotionCanvas" width="720" height="450" role="img" aria-describedby="englishSentenceList" aria-label="움직이는 동화 삽화" hidden></canvas>
+          <button id="englishMotionToggle" type="button" aria-controls="englishMotionCanvas" hidden>그림 멈추기</button>
+        </div>
         <div class="storybook-titles"><h2 id="englishStoryKoreanTitle" tabindex="-1"></h2><p id="englishStoryTitle" lang="en"></p></div>
         <button class="storybook-play" id="englishPlayButton" type="button"><span aria-hidden="true">▶</span><strong>동화 듣기</strong></button>
 
@@ -773,8 +917,8 @@
           <div id="englishSentenceList" class="storybook-sentence" aria-live="polite" aria-atomic="true"><p id="englishLineEnglish" lang="en"></p><p id="englishLineKorean"></p></div>
         </section>
 
-        <a class="storybook-motion-link" href="assets/story-motion/milo/index.html">
-          ${storyIcon("motion")}<span>움직이는 동화책 <small>짝꿍 양말은 어디에?</small></span>${storyIcon("next")}
+        <a id="englishNarratedMotionBook" class="storybook-motion-link" href="assets/story-motion/milo/index.html" hidden>
+          ${storyIcon("motion")}<span>한국어 낭독과 함께 보기</span>${storyIcon("next")}
         </a>
         <details id="englishLibrarySection" class="storybook-shelf">
           <summary>${storyIcon("shelf")}<span>다른 동화 고르기</span>${storyIcon("next")}</summary>
@@ -812,6 +956,8 @@
         n.appendChild(a));
     })(),
     m(),
+    (movingCover = createMovingCover()),
+    document.querySelector("#englishOpenMotionBook")?.addEventListener("click", () => b(movingStoryId)),
     document
       .querySelector('[data-view="english"]')
       ?.addEventListener("click", () => switchView(e)),

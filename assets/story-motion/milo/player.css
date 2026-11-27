@@ -25,6 +25,7 @@ h1 { font-size: clamp(1.72rem, 4.1vw, 3rem); line-height: 1.18; font-weight: 760
 .original { margin: .3rem 0 0; font-size: clamp(.94rem, 1.9vw, 1.18rem); font-style: italic; line-height: 1.45; }
 .spread { display: grid; justify-items: stretch; align-items: center; gap: clamp(1.15rem, 3.4vw, 2rem); }
 .illustration { overflow: hidden; position: relative; margin: 0; width: 100%; border-radius: 1.1rem .32rem .32rem 1.1rem; background: var(--paper); }
+.motion-toggle { position: absolute; right: .55rem; bottom: .55rem; z-index: 1; min-height: 44px; padding: .45rem .85rem; border: 1px solid var(--rule); border-radius: 2rem; color: var(--ink); background: var(--paper); font-size: .8rem; font-weight: 650; box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 10%, transparent); }
 .illustration::after { position: absolute; pointer-events: none; content: ""; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent); background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 17%, transparent) 0%, color-mix(in srgb, var(--rule) 22%, transparent) .45%, color-mix(in srgb, var(--ink) 10%, transparent) 1%, transparent 2.2%); }
 #scene, #book-cover { display: block; width: 100%; height: auto; aspect-ratio: 8 / 5; }
 #book-cover { object-fit: cover; }

@@ -6,10 +6,10 @@
   <meta name="color-scheme" content="light">
   <title>짝꿍 양말은 어디에? · 움직이는 동화책</title>
   <link rel="stylesheet" href="../../../theme-critical.css?v=20261127-storybook-v1">
-  <link rel="stylesheet" href="player.css">
+  <link rel="stylesheet" href="player.css?v=20261127-visible-motion-v1">
   <script defer src="art.js"></script>
   <script defer src="timing.js"></script>
-  <script defer src="player.js"></script>
+  <script defer src="player.js?v=20261127-visible-motion-v1"></script>
 </head>
 <body>
   <main class="book" aria-labelledby="title">
@@ -33,6 +33,7 @@
       <figure class="illustration">
         <img id="book-cover" src="../../stories/milo-other-sock.webp" alt="파란 줄무늬 양말을 든 마일로" width="720" height="450">
         <canvas id="scene" width="720" height="450" role="img" aria-label="마일로가 양말 한 짝을 들어요." hidden></canvas>
+        <button type="button" class="motion-toggle" id="motion-toggle" aria-controls="scene" hidden>그림 멈추기</button>
       </figure>
       <section class="reader" aria-label="동화 읽기">
         <p class="page-count"><span id="page-num">1</span><span aria-hidden="true">/</span><span>7장</span></p>

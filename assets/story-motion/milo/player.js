@@ -15,6 +15,7 @@
   const ctx = canvas.getContext("2d");
   const cover = document.querySelector("#book-cover");
   const artNotice = document.querySelector("#art-notice");
+  const motionToggle = document.querySelector("#motion-toggle");
   let artworkLoaded = false;
   let artworkFailed = false;
 
@@ -23,6 +24,8 @@
     artworkFailed = true;
     canvas.hidden = true;
     cover.hidden = false;
+    motionToggle.hidden = true;
+    stopFrames();
     artNotice.hidden = false;
   }
 
@@ -42,7 +45,11 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const still = .65;
   let page = 0;
-  let phase = still;
+  let motionEnabled = !reduced.matches;
+  let pageActive = true;
+  let phase = motionEnabled ? .22 : still;
+  let direction = 1;
+  let lastFrame = null;
   let frame = 0;
   let playing = false;
   let starting = false;
@@ -64,7 +71,8 @@
     ctx.save();
     try {
       ctx.setTransform(width / 720, 0, 0, height / 450, 0, 0);
-      window.drawStoryFrame(ctx, page, reduced.matches ? still : position);
+      window.drawStoryFrame(ctx, page, position);
+      motionToggle.hidden = false;
       canvas.hidden = false;
       cover.hidden = true;
     } catch {
@@ -108,23 +116,60 @@
     return [index, Math.min(1, Math.max(0, (time - begin) / (end - begin)))];
   }
 
-  function sync() {
-    if (manual || finished || !timing) return;
+  function updateNarratedPage() {
+    if (!playing || manual || finished || !timing) return;
     const [index, progress] = timeOnPage();
-    if (index !== page) setPage(index);
-    draw(progress);
+    const changed = page !== index;
+    if (changed) setPage(index);
+    if (motionEnabled) draw(progress);
+    else if (changed) draw(still);
   }
 
-  function animate() {
+  function canAnimate() {
+    return motionEnabled && artworkLoaded && window.storyRoomImage?.naturalWidth && pageActive && !document.hidden;
+  }
+
+  function scheduleFrame() {
+    if (!frame && canAnimate()) frame = requestAnimationFrame(animate);
+  }
+
+  function animate(timestamp) {
     frame = 0;
-    if (!playing || document.hidden) return;
-    sync();
-    if (!reduced.matches && !artworkFailed) frame = requestAnimationFrame(animate);
+    if (!canAnimate()) return;
+    if (lastFrame === null) lastFrame = timestamp;
+    const elapsed = timestamp - lastFrame;
+    if (elapsed >= 1000 / 24) {
+      lastFrame = timestamp;
+      if (playing) updateNarratedPage();
+      else {
+        // Walk the scene forward then backward so the illustration has no jump at the loop boundary.
+        const step = Math.min(elapsed, 100) / 2600;
+        let nextPhase = phase + direction * step;
+        if (nextPhase >= 1 || nextPhase <= 0) {
+          nextPhase = nextPhase >= 1 ? 2 - nextPhase : -nextPhase;
+          direction *= -1;
+        }
+        draw(nextPhase);
+      }
+    }
+    scheduleFrame();
   }
 
   function stopFrames() {
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
+    lastFrame = null;
+  }
+
+  function updateMotion() {
+    stopFrames();
+    motionToggle.textContent = motionEnabled ? "그림 멈추기" : "그림 움직이기";
+    scheduleFrame();
+  }
+
+  function prepareArtwork() {
+    draw(phase);
+    scheduleFrame();
   }
 
   function seek(seconds) {
@@ -147,7 +192,9 @@
     notice.textContent = "";
     setPage(index);
     if (timing) seek(timing.starts[index]);
-    draw(still);
+    direction = 1;
+    draw(motionEnabled ? .22 : still);
+    scheduleFrame();
     updateButton();
   }
 
@@ -156,7 +203,7 @@
       voice.pause();
       playing = false;
       starting = false;
-      stopFrames();
+      scheduleFrame();
       updateButton();
       return;
     }
@@ -190,14 +237,14 @@
     playing = true;
     played = true;
     updateButton();
-    stopFrames();
-    animate();
+    updateNarratedPage();
+    scheduleFrame();
   });
   voice.addEventListener("pause", () => {
     if (!voice.paused) return;
     starting = false;
     playing = false;
-    stopFrames();
+    scheduleFrame();
     updateButton();
   });
   voice.addEventListener("ended", () => {
@@ -205,20 +252,23 @@
     playing = false;
     starting = false;
     finished = true;
-    stopFrames();
+    const changed = page !== lines.length - 1;
     setPage(lines.length - 1);
-    draw(1);
+    if (motionEnabled) draw(1);
+    else if (changed) draw(still);
+    direction = -1;
+    scheduleFrame();
     updateButton();
   });
   voice.addEventListener("error", () => {
     playing = false;
     starting = false;
-    stopFrames();
+    scheduleFrame();
     notice.textContent = "낭독을 불러오지 못했어요. 화살표로 넘겨 읽을 수 있어요.";
     updateButton();
   });
   voice.addEventListener("timeupdate", () => {
-    if (playing && (!frame || reduced.matches)) sync();
+    if (playing && !document.hidden && !frame) updateNarratedPage();
   });
 
   const back = document.querySelector("#back");
@@ -251,12 +301,24 @@
     });
   }
 
-  window.addEventListener("pagehide", () => {
+  function pauseBackground() {
+    stopFrames();
     voice.pause();
     playing = false;
     starting = false;
-    stopFrames();
     updateButton();
+  }
+  window.addEventListener("pagehide", () => {
+    pageActive = false;
+    pauseBackground();
+  });
+  window.addEventListener("pageshow", () => {
+    pageActive = true;
+    scheduleFrame();
+  });
+  motionToggle.addEventListener("click", () => {
+    motionEnabled = !motionEnabled;
+    updateMotion();
   });
 
   previous.addEventListener("click", () => turnTo(page - 1));
@@ -269,18 +331,17 @@
     turnTo(page + (event.key === "ArrowRight" ? 1 : -1));
   });
   document.addEventListener("visibilitychange", () => {
-    stopFrames();
-    if (!document.hidden && playing) animate();
+    if (document.hidden) pauseBackground();
+    else scheduleFrame();
   });
   reduced.addEventListener("change", () => {
-    stopFrames();
-    if (playing) animate();
-    else draw(phase);
+    motionEnabled = !reduced.matches;
+    updateMotion();
   });
   if ("ResizeObserver" in window) new ResizeObserver(() => draw(phase)).observe(canvas.parentElement);
   else window.addEventListener("resize", () => draw(phase));
   window.storyRoomImage = new Image();
-  window.storyRoomImage.onload = () => draw(phase);
+  window.storyRoomImage.onload = prepareArtwork;
   window.storyRoomImage.onerror = showCover;
   window.storyRoomImage.src = "room.webp";
   Promise.resolve(window.miloArtworkReady).then(ready => {
@@ -289,9 +350,12 @@
       return;
     }
     artworkLoaded = true;
-    draw(phase);
+    prepareArtwork();
   }, showCover);
-  setPage(0);
-  draw(still);
+  const requestedPage = new URLSearchParams(location.search).get("page");
+  const entryIndex = lines.findIndex((_, index) => String(index + 1) === requestedPage);
+  setPage(entryIndex < 0 ? 0 : entryIndex);
+  updateMotion();
+  draw(phase);
   updateButton();
 })();
