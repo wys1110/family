@@ -109,7 +109,7 @@ window.FAMILY_CONFIG = {
     { name: "growth-delete-sync", version: "20261031-swipe-delete-v1" },
     { name: "calendar-swipe", version: "20260801-month-picker-v1" },
     { name: "lullaby", version: "20261126-lullaby-playback-v2", style: false },
-    { name: "english-stories", version: "20261123-lullaby-choices-v1" },
+    { name: "english-stories", version: "20261127-storybook-v1" },
     { name: "photo-viewer-navigation", version: "20260716-swipe-buttons" },
     { name: "feeding-pattern-split", version: "20261106-live-sleep-v1" },
     { name: "care-time-emphasis", version: "20261012-hourly-record-emojis-v1" },
@@ -218,7 +218,7 @@ window.FAMILY_CONFIG = {
   };
   const deferredNames = new Set(Object.values(deferredGroups).flat());
   const extraModules = [
-    {name:'english-story-name', version:'20260801-v1'},
+    {name:'english-story-name', version:'20261127-storybook-v1'},
     {name:'admin-resource-usage', version:'20260830-auth-recovery-v2'},
     {name:'platform-request-admin', version:'20260830-auth-recovery-v2'},
     {name:'admin-recent-activity', version:'20260830-auth-recovery-v2'},

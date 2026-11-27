@@ -228,3 +228,21 @@ html[data-family-design="nova"] [data-theme-option="black"] {
   --preview-bg: #17161d !important; --preview-surface: #24232c !important;
   --preview-accent: #c7a9ed !important; --preview-highlight: #493630 !important; --preview-text: #f4f1f6 !important;
 }
+
+/* Picture-book paper and type share one palette across the cover and reader. */
+:root {
+  --theme-story-paper: #fdfaf3;
+  --theme-story-ink: #392d2b;
+  --theme-story-muted: #766a62;
+  --theme-story-rule: #ded8ca;
+  --theme-story-action: #613f62;
+  --theme-story-on-action: #fff;
+}
+html[data-family-theme-choice="black"] {
+  --theme-story-paper: var(--theme-canvas);
+  --theme-story-ink: var(--theme-text);
+  --theme-story-muted: var(--theme-text-muted);
+  --theme-story-rule: var(--theme-border);
+  --theme-story-action: var(--theme-accent);
+  --theme-story-on-action: var(--theme-accent-contrast);
+}
