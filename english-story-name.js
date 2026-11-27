@@ -177,7 +177,9 @@
     editor.dataset.storyNameUi = '';
     editor.setAttribute('aria-haspopup', 'dialog');
     editor.innerHTML = '<span aria-hidden="true">👶</span><div><small>동화 속 아기 이름</small><strong></strong></div><i>수정 ›</i>';
-    view.querySelector('.english-page-header')?.insertAdjacentElement('afterend', editor);
+    const settingsSlot = view.querySelector('#englishNameSettings');
+    if (settingsSlot) settingsSlot.appendChild(editor);
+    else view.querySelector('.english-page-header')?.insertAdjacentElement('afterend', editor);
 
     const dialog = document.createElement('dialog');
     dialog.className = 'english-name-dialog';

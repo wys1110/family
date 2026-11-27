@@ -49,7 +49,9 @@ function setup({ user = 'a', store = new Map(), demo = false, today = '2026-10-2
   return { node, choose, context, state, events, spoken, notices, store, play: () => node('englishPlayButton').click(),
     today: () => node('englishOpenToday').click(),
     leave: () => context.switchView('calendar'), end: () => spoken.at(-1).onend(),
-    line: index => node('englishSentenceList').click({ closest: () => ({ dataset: { playLine: String(index) } }) }),
+    next: () => node('englishNextLine').click(),
+    previous: () => node('englishPrevLine').click(),
+    playLine: () => node('englishPlayLine').click(),
   };
 }
 
@@ -109,7 +111,7 @@ test('account changes and demo/device stores isolate progress and history withou
   h.state.session = { user: { id: 'b' } }; h.events.familycontextchange();
   cancelled.onend(); cancelled.onerror({ error: 'canceled' });
   expect(h.store.get(settingsKey('a'))).toBe(savedA); expect(h.store.has(settingsKey('b'))).toBe(false);
-  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('전체 듣기');
+  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('동화 듣기');
   h.choose(storyId); h.play(); expect(h.spoken.at(-1).text).toBe('Doyun looked up at the quiet night sky.');
   h.state.session = { user: { id: 'a' } }; h.events.familycontextchange(); h.play();
   expect(h.spoken.at(-1).text).toBe('Are you alone up there? Doyun asked.');
@@ -121,7 +123,9 @@ test('account changes and demo/device stores isolate progress and history withou
 });
 
 test('single-sentence listening retains its mode on speed change and pause does not autoplay on speed change', () => {
-  const h = setup(); h.choose(storyId); h.line(3); h.node('englishSpeedButton').click();
+  const h = setup(); h.choose(storyId);
+  h.next(); h.next(); h.next(); h.playLine();
+  h.node('englishSpeedButton').click();
   expect(h.spoken.at(-1).text).toBe('No, said the star. Love is always near me.');
   const count = h.spoken.length; h.end(); expect(h.spoken).toHaveLength(count);
   h.play(); h.play(); h.node('englishSpeedButton').click();
@@ -162,7 +166,7 @@ test('speech cannot write the newly selected account before its context event ar
   expect(h.store.has(settingsKey('b'))).toBe(false);
   expect(JSON.parse(h.store.get(settingsKey('a'))).progress[storyId]).toBe(2);
   h.events.familycontextchange();
-  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('전체 듣기');
+  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('동화 듣기');
 });
 
 test('a finished sentence callback cannot stop or duplicate the following sentence', () => {
@@ -172,4 +176,45 @@ test('a finished sentence callback cannot stop or duplicate the following senten
   expect(h.spoken).toHaveLength(2);
   expect(h.spoken.at(-1)).toBe(current);
   expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('잠시 멈춤');
+});
+
+test('paging shows the same English and Korean sentence without starting speech or advancing listening history', () => {
+  const h = setup();
+  h.choose(storyId);
+  const saved = h.store.get(settingsKey('a'));
+  expect(h.node('englishPrevLine').disabled).toBe(true);
+  h.next();
+  expect(h.node('englishLinePosition').textContent).toBe('2 / 7');
+  expect(h.node('englishLineEnglish').textContent).toBe('A tiny star blinked and said, Hello, Doyun.');
+  expect(h.node('englishLineKorean').textContent).toBe('작은 별이 반짝이며 말했어요. 안녕, 도윤아.');
+  h.previous();
+  expect(h.node('englishLinePosition').textContent).toBe('1 / 7');
+  for (let line = 1; line < 7; line++) h.next();
+  expect(h.node('englishNextLine').disabled).toBe(true);
+  expect(h.spoken).toHaveLength(0);
+  expect(h.store.get(settingsKey('a'))).toBe(saved);
+  const reloaded = setup({ store: h.store });
+  expect(reloaded.node('englishLinePosition').textContent).toBe('1 / 7');
+});
+
+test('continuous reading starts on the chosen page, advances the visible sentence and restores it per book', () => {
+  const h = setup();
+  h.choose(storyId);
+  h.next();
+  h.next();
+  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('여기서 듣기');
+  h.play();
+  expect(h.spoken.at(-1).text).toBe('Are you alone up there? Doyun asked.');
+  h.end();
+  const interrupted = h.spoken.at(-1);
+  expect(h.node('englishLineEnglish').textContent).toBe(interrupted.text);
+  expect(h.node('englishLinePosition').textContent).toBe('4 / 7');
+  h.choose('moon-soft-blanket');
+  interrupted.onend();
+  expect(h.node('englishLinePosition').textContent).toBe('1 / 7');
+  expect(h.node('englishLineEnglish').textContent).toBe('The moon opened a soft silver blanket.');
+  h.choose(storyId);
+  expect(h.node('englishLineEnglish').textContent).toBe(interrupted.text);
+  expect(h.node('englishPlayButton').querySelector('strong').textContent).toBe('이어 듣기');
+  expect(h.spoken).toHaveLength(2);
 });

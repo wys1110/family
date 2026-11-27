@@ -459,7 +459,7 @@ describe('family wallpaper', () => {
   });
 
   test('delivers the wallpaper editor assets past mobile and PWA caches', () => {
-    expect(html).toContain('theme-critical.css?v=20261101-lilac-v1');
+    expect(html).toContain('theme-critical.css?v=20261127-storybook-v1');
     expect(html).toContain('<script src="config.js"></script>');
     expect(html).toContain('app.js?v=20261127-event-update-header');
     expect(config).toContain('{ name: "family-wallpapers", version: "20260914-original-photo-v2", script: false }');

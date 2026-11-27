@@ -362,6 +362,8 @@
       showKorean: !0,
       rate: 0.78,
       activeLine: -1,
+      readerLine: 0,
+      readFromHere: false,
       playing: !1,
       paused: !1,
       playToken: 0,
@@ -423,6 +425,7 @@
   }
   function g(e, t = !1) {
     if (!t) C();
+    o.readFromHere = false;
     o.progress[e] = i.find((story) => story.id === e).lines.length;
     u();
     const n = y();
@@ -476,46 +479,76 @@
   function p() {
     (v(), S(), w());
   }
+  function storyIcon(name) {
+    const path = {
+      previous: "m14.5 6-6 6 6 6",
+      next: "m9.5 6 6 6-6 6",
+      shelf: "M4 4v15m4-15v15m4-12v12m3-13 4 12M3 21h18",
+      settings: "M3 7h4m4 0h10M3 17h10m4 0h4m-10-10a2 2 0 1 0 4 0 2 2 0 0 0-4 0m6 10a2 2 0 1 0 4 0 2 2 0 0 0-4 0"
+    };
+    return `<svg class="storybook-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${path[name]}"/></svg>`;
+  }
+  function resetReader() {
+    const saved = progress();
+    o.readerLine = saved < d().lines.length ? saved : 0;
+    o.readFromHere = false;
+  }
+  function renderSentence() {
+    const story = d();
+    const line = story.lines[o.readerLine];
+    document.querySelector("#englishSentenceList").setAttribute("aria-live", o.playing ? "off" : "polite");
+    document.querySelector("#englishLineEnglish").textContent = line[0];
+    const translation = document.querySelector("#englishLineKorean");
+    translation.textContent = line[1];
+    translation.hidden = !o.showKorean;
+    document.querySelector("#englishLinePosition").textContent = `${o.readerLine + 1} / ${story.lines.length}`;
+    document.querySelector("#englishPrevLine").disabled = o.readerLine === 0;
+    document.querySelector("#englishNextLine").disabled = o.readerLine === story.lines.length - 1;
+  }
+  function turnPage(offset) {
+    const next = o.readerLine + offset;
+    if (!d().lines[next]) return;
+    if (o.playing) C();
+    o.readerLine = next;
+    o.readFromHere = true;
+    renderSentence();
+    x();
+    $();
+  }
   function v() {
-    const e = d();
-    ((document.querySelector("#englishCoverEmoji").textContent = e.emoji),
-      (document.querySelector("#englishStoryTheme").textContent =
-        `${e.theme} · ${e.age}`),
-      (document.querySelector("#englishStoryTitle").textContent = e.title),
-      (document.querySelector("#englishStoryKoreanTitle").textContent =
-        e.koreanTitle),
-      (document.querySelector("#englishStorySummary").textContent = e.summary));
-    document.querySelector("#englishSentenceList").innerHTML = e.lines
-      .map(
-        ([e, t], n) => `
-      <article class="english-sentence ${n === o.activeLine ? "active" : ""}" data-line-index="${n}">
-        <button type="button" data-play-line="${n}" aria-label="${n + 1}번째 문장 듣기"><span>${n + 1}</span><i aria-hidden="true">🔊</i></button>
-        <div><p>${c(e)}</p><small ${o.showKorean ? "" : "hidden"}>${c(t)}</small></div>
-      </article>`,
-      )
-      .join("");
-    const t = document.querySelector("#englishTranslationButton");
-    (t.classList.toggle("active", o.showKorean),
-      (t.querySelector("strong").textContent = o.showKorean
-        ? "뜻 숨기기"
-        : "한글 뜻"));
-    const n = document.querySelector("#englishSpeedButton");
-    (n.classList.toggle("active", 0.78 === o.rate),
-      (n.querySelector("strong").textContent =
-        0.78 === o.rate ? "천천히" : "보통 속도"),
-      x(),
-      $());
+    const story = d();
+    const cover = document.querySelector("#englishCoverImage");
+    if (cover.dataset.storyId !== story.id) {
+      cover.dataset.storyId = story.id;
+      cover.hidden = false;
+      const fallback = document.querySelector("#englishCoverFallback");
+      fallback.textContent = story.emoji;
+      fallback.hidden = true;
+      cover.src = `assets/stories/${story.id}.webp`;
+    }
+    document.querySelector("#englishFeatureLabel").textContent = story.id === l().id ? "오늘의 동화" : "고른 동화";
+    document.querySelector("#englishStoryTheme").textContent = `${story.age} · ${story.lines.length}문장`;
+    document.querySelector("#englishStoryKoreanTitle").textContent = story.koreanTitle;
+    document.querySelector("#englishStoryTitle").textContent = story.title;
+    document.querySelector("#englishStorySummary").textContent = story.summary;
+    const translation = document.querySelector("#englishTranslationButton");
+    translation.setAttribute("aria-pressed", String(o.showKorean));
+    translation.querySelector("strong").textContent = o.showKorean ? "뜻 숨기기" : "한글 뜻 보기";
+    const speed = document.querySelector("#englishSpeedButton");
+    speed.setAttribute("aria-pressed", String(o.rate === 0.78));
+    speed.querySelector("strong").textContent = o.rate === 0.78 ? "천천히" : "보통 속도";
+    renderSentence();
+    x();
+    $();
   }
   function S() {
-    const e = d().id;
-    document.querySelector("#englishLibrary").innerHTML = i
-      .map(
-        (t) => `
-      <button type="button" class="english-library-card ${t.id === e ? "active" : ""}" data-story-id="${c(t.id)}">
-        <span>${t.emoji}</span><div><small>${c(t.theme)}</small><strong>${c(t.title)}</strong><em>${c(t.koreanTitle)}</em></div><i>›</i>
-      </button>`,
-      )
-      .join("");
+    const selected = d().id;
+    document.querySelector("#englishLibrary").innerHTML = i.map(story => `
+      <button type="button" class="storybook-library-item" data-story-id="${c(story.id)}" aria-pressed="${selected === story.id}">
+        <img src="assets/stories/${c(story.id)}.webp" alt="" loading="lazy" width="52" height="52">
+        <span><strong>${c(story.koreanTitle)}</strong><small lang="en">${c(story.title)}</small></span>
+        ${storyIcon("next")}
+      </button>`).join("");
   }
   function w() {
     const e = y(),
@@ -525,18 +558,17 @@
       (n.classList.toggle("done", t),
       (n.textContent = t ? "✓ 이 동화 완료" : "✓ 오늘 들었어요"));
   }
-  function b(e) {
-    i.some((t) => t.id === e) &&
-      (C(),
-      (o.selectedId = e),
-      (o.activeLine = -1),
-      u(),
-      v(),
-      S(),
-      w(),
-      document
-        .querySelector("#englishStoryPlayer")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  function b(id) {
+    if (!i.some(story => story.id === id)) return;
+    C();
+    o.selectedId = id;
+    resetReader();
+    u();
+    p();
+    document.querySelector("#englishLibrarySection").open = false;
+    document.querySelector("#englishStorySettings").open = false;
+    document.querySelector("#englishStoryKoreanTitle").focus?.({ preventScroll: true });
+    document.querySelector("#englishStoryPlayer")?.scrollIntoView({ block: "start" });
   }
   function f(e) {
     const t = (i.findIndex((e) => e.id === d().id) + e + i.length) % i.length;
@@ -545,10 +577,6 @@
   function T(e) {
     const t = e.target.closest("[data-story-id]");
     t && b(t.dataset.storyId);
-  }
-  function L(e) {
-    const t = e.target.closest("[data-play-line]");
-    t && B(Number(t.dataset.playLine), !1);
   }
   function k() {
     const line = o.activeLine, playAll = o.playAll, restart = o.playing && !o.paused;
@@ -580,17 +608,25 @@
     })();
     return (n && (t.voice = n), t);
   }
+  function nextListeningLine() {
+    if (o.readFromHere) return o.readerLine;
+    const saved = progress();
+    return saved < d().lines.length ? saved : 0;
+  }
   function E() {
-    if (
-      window.speechSynthesis &&
-      "undefined" != typeof SpeechSynthesisUtterance
-    )
-      return o.playing && !o.paused
-        ? (window.speechSynthesis.pause(), (o.paused = !0), x(), void $())
-        : o.playing && o.paused
-          ? (window.speechSynthesis.resume(), (o.paused = !1), x(), void $())
-          : void B(progress() < d().lines.length ? progress() : 0);
-    s("이 브라우저에서는 음성 읽기를 지원하지 않아요");
+    if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") {
+      s("이 브라우저에서는 음성 읽기를 지원하지 않아요");
+      return;
+    }
+    if (!o.playing) {
+      B(nextListeningLine());
+      return;
+    }
+    if (o.paused) window.speechSynthesis.resume();
+    else window.speechSynthesis.pause();
+    o.paused = !o.paused;
+    x();
+    $();
   }
   function B(e, playAll = !0) {
     if (!window.speechSynthesis || "undefined" === typeof SpeechSynthesisUtterance) {
@@ -603,6 +639,7 @@
     const t = d(),
       n = ++o.playToken;
     ((o.playing = !0), (o.paused = !1), (o.playAll = playAll));
+    o.readFromHere = false;
     const i = (e) => {
       if (n !== o.playToken) return;
       if (e >= t.lines.length)
@@ -612,11 +649,15 @@
           (o.activeLine = -1),
           x(),
           $(),
-          V(),
           g(t.id, !0),
           void s("동화를 끝까지 들었어요 🌙")
         );
-      ((o.activeLine = e), (o.progress[t.id] = e), u(), V(), $());
+      o.activeLine = e;
+      o.readerLine = e;
+      o.progress[t.id] = e;
+      u();
+      renderSentence();
+      $();
       const a = I(t.lines[e][0]);
       ((a.onend = () => {
           if (n !== o.playToken || o.activeLine !== e) return;
@@ -627,7 +668,7 @@
             o.playing = !1;
             o.paused = !1;
             o.activeLine = -1;
-            x(); $(); V();
+            x(); $();
           }
         }),
         (a.onerror = () => {
@@ -646,20 +687,18 @@
       (o.paused = !1),
       e && (o.activeLine = -1),
       x(),
-      $(),
-      V());
+      $());
   }
   function x() {
-    const e = document.querySelector("#englishPlayButton");
-    if (!e) return;
-    const t = e.querySelector("span"),
-      n = e.querySelector("strong");
-    o.playing && o.paused
-      ? ((t.textContent = "▶"), (n.textContent = "계속 듣기"))
-      : o.playing
-        ? ((t.textContent = "Ⅱ"), (n.textContent = "잠시 멈춤"))
-        : ((t.textContent = "▶"), (n.textContent = progress() === d().lines.length
-          ? "다시 듣기" : Object.hasOwn(o.progress, d().id) ? "이어 듣기" : "전체 듣기"));
+    const button = document.querySelector("#englishPlayButton");
+    if (!button) return;
+    let label = "동화 듣기";
+    if (o.playing) label = o.paused ? "계속 듣기" : "잠시 멈춤";
+    else if (o.readFromHere) label = "여기서 듣기";
+    else if (progress() === d().lines.length) label = "다시 듣기";
+    else if (Object.hasOwn(o.progress, d().id)) label = "이어 듣기";
+    button.querySelector("strong").textContent = label;
+    button.querySelector("span").textContent = o.playing && !o.paused ? "Ⅱ" : "▶";
   }
   function $() {
     const e = d(),
@@ -667,22 +706,15 @@
       t = (completed / e.lines.length) * 100,
       n = document.querySelector("#englishProgressBar");
     n && (n.style.width = `${t}%`);
-    const status = completed === e.lines.length ? `${completed} / ${e.lines.length}문장 완료`
+    const status = !o.readFromHere && completed === e.lines.length ? `${completed} / ${e.lines.length}문장 완료`
       : o.playing ? `${o.activeLine + 1} / ${e.lines.length}번째 문장 · ${o.paused ? "잠시 멈춤" : "재생 중"}`
-        : `${completed} / ${e.lines.length}문장 완료 · ${completed + 1}번째 문장부터 듣기`;
+        : `${completed} / ${e.lines.length}문장 완료 · ${nextListeningLine() + 1}번째 문장부터 듣기`;
     const bar = document.querySelector("#englishProgress");
     bar?.setAttribute("aria-valuemax", e.lines.length);
     bar?.setAttribute("aria-valuenow", completed);
     bar?.setAttribute("aria-valuetext", status);
     const label = document.querySelector("#englishProgressStatus");
     if (label) label.textContent = status;
-  }
-  function V() {
-    document.querySelectorAll(".english-sentence").forEach((e) => {
-      const t = Number(e.dataset.lineIndex) === o.activeLine;
-      (e.classList.toggle("active", t),
-        t && e.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-    });
   }
   function A() {
     o.storageOwner = a()?.session?.user?.id || "device";
@@ -704,6 +736,7 @@
     } catch {
       o.selectedId = l().id;
     }
+    resetReader();
   }
   (A(),
     (function () {
@@ -718,49 +751,59 @@
         t.insertBefore(o, t.querySelector('[data-view="settings"]')));
       const a = document.createElement("div");
       ((a.id = "englishView"),
+        (a.className = "storybook-view"),
         (a.hidden = !0),
         (a.innerHTML = `
-      <header class="english-page-header">
-        <div><p class="eyebrow">ENGLISH STORY TIME</p><h2>영어동화</h2><span>하루 한 편, 천천히 듣고 사랑스럽게 따라 읽어요.</span></div>
-        <span class="english-book-mark" aria-hidden="true">📚</span>
-      </header>
+      <section class="storybook-player" id="englishStoryPlayer" aria-labelledby="englishStoryKoreanTitle">
+        <div class="storybook-meta"><span id="englishFeatureLabel"></span><span id="englishStoryTheme"></span></div>
+        <div class="storybook-cover"><img id="englishCoverImage" alt=""><span id="englishCoverFallback" aria-hidden="true" hidden></span></div>
+        <div class="storybook-titles"><h2 id="englishStoryKoreanTitle" tabindex="-1"></h2><p id="englishStoryTitle" lang="en"></p></div>
+        <button class="storybook-play" id="englishPlayButton" type="button"><span aria-hidden="true">▶</span><strong>동화 듣기</strong></button>
 
-      <section class="english-today-card">
-        <button type="button" id="englishOpenToday" aria-label="오늘의 동화 보기">오늘의 동화 보기 <i aria-hidden="true">›</i></button>
-        <button type="button" id="lullabyToggle" aria-expanded="false" aria-controls="lullabyPanel">자장가 재생</button>
-        <select id="lullabyTrack" aria-label="자장가 소리 선택"></select>
-      </section>
+        <section class="storybook-reader" aria-labelledby="englishReadHeading">
+          <div class="storybook-reader-head">
+            <h3 id="englishReadHeading">한 문장씩 읽기</h3>
+            <div class="storybook-turns">
+              <span id="englishLinePosition"></span>
+              <button type="button" id="englishPrevLine" aria-label="이전 문장">${storyIcon("previous")}</button>
+              <button type="button" id="englishNextLine" aria-label="다음 문장">${storyIcon("next")}</button>
+            </div>
+          </div>
+          <div id="englishSentenceList" class="storybook-sentence" aria-live="polite" aria-atomic="true"><p id="englishLineEnglish" lang="en"></p><p id="englishLineKorean"></p></div>
+        </section>
 
-      <div id="lullabyPanel" hidden>
-        <span id="lullabyPlayerSlot"></span>
-        <p id="lullabyStatus" role="status"></p>
-      </div>
-
-      <section class="english-story-player" id="englishStoryPlayer">
-        <div class="english-story-cover">
-          <span class="english-cover-emoji" id="englishCoverEmoji">⭐</span>
-          <div><p id="englishStoryTheme"></p><h2 id="englishStoryTitle"></h2><span id="englishStoryKoreanTitle"></span></div>
-        </div>
-        <p class="english-story-summary" id="englishStorySummary"></p>
-        <div class="english-player-actions">
-          <button class="english-play-main" id="englishPlayButton" type="button"><span aria-hidden="true">▶</span><strong>전체 듣기</strong></button>
-          <button id="englishRestartButton" type="button"><span aria-hidden="true">↺</span><strong>처음부터 듣기</strong></button>
-          <button id="englishSpeedButton" type="button"><span aria-hidden="true">🐢</span><strong>천천히</strong></button>
-          <button id="englishTranslationButton" type="button"><span aria-hidden="true">가</span><strong>한글 뜻</strong></button>
-        </div>
-        <p class="english-progress-status" id="englishProgressStatus" role="status" aria-live="polite" aria-atomic="true"></p>
-        <div class="english-progress" id="englishProgress" role="progressbar" aria-label="동화 문장 진행" aria-valuemin="0"><i id="englishProgressBar"></i></div>
-        <div class="english-sentence-list" id="englishSentenceList"></div>
-        <div class="english-story-footer">
-          <button type="button" id="englishPrevStory" aria-label="이전 동화">‹</button>
-          <button type="button" id="englishMarkRead">✓ 오늘 들었어요</button>
-          <button type="button" id="englishNextStory" aria-label="다음 동화">›</button>
-        </div>
-      </section>
-
-      <section class="english-library-section" aria-labelledby="englishLibraryTitle">
-        <div class="section-heading"><div><p class="eyebrow">STORY LIBRARY</p><h2 id="englishLibraryTitle">동화책장</h2></div><span class="count-badge">${i.length}편</span></div>
-        <div class="english-library" id="englishLibrary"></div>
+        <details id="englishLibrarySection" class="storybook-shelf">
+          <summary>${storyIcon("shelf")}<span>다른 동화 고르기</span>${storyIcon("next")}</summary>
+          <div id="englishLibrary" class="storybook-library"></div>
+        </details>
+        <details id="englishStorySettings" class="storybook-settings">
+          <summary>${storyIcon("settings")}<span>읽기 설정</span>${storyIcon("next")}</summary>
+          <div class="storybook-tools">
+            <p id="englishStorySummary"></p>
+            <div class="storybook-tool-buttons">
+              <button id="englishPlayLine" type="button">이 문장 듣기</button>
+              <button id="englishRestartButton" type="button">처음부터 듣기</button>
+              <button id="englishSpeedButton" type="button" aria-label="천천히 읽기"><strong>천천히</strong></button>
+              <button id="englishTranslationButton" type="button" aria-label="한글 뜻 표시"><strong>뜻 숨기기</strong></button>
+            </div>
+            <div id="englishNameSettings"></div>
+            <div class="storybook-progress-wrap">
+              <p id="englishProgressStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+              <div class="storybook-progress" id="englishProgress" role="progressbar" aria-label="동화 문장 진행" aria-valuemin="0"><i id="englishProgressBar"></i></div>
+            </div>
+            <div class="storybook-tool-buttons">
+              <button type="button" id="englishMarkRead">오늘 들었어요</button>
+              <button type="button" id="englishOpenToday">오늘의 동화 보기</button>
+              <button type="button" id="englishPrevStory">이전 동화</button>
+              <button type="button" id="englishNextStory">다음 동화</button>
+            </div>
+            <div class="storybook-lullaby">
+              <label for="lullabyTrack">자장가</label><select id="lullabyTrack" aria-label="자장가 소리 선택"></select>
+              <button type="button" id="lullabyToggle" aria-expanded="false" aria-controls="lullabyPanel">자장가 재생</button>
+              <div id="lullabyPanel" hidden><span id="lullabyPlayerSlot"></span><p id="lullabyStatus" role="status"></p></div>
+            </div>
+          </div>
+        </details>
       </section>`),
         n.appendChild(a));
     })(),
@@ -781,9 +824,13 @@
     document
       .querySelector("#englishTranslationButton")
       ?.addEventListener("click", q),
-    document
-      .querySelector("#englishSentenceList")
-      ?.addEventListener("click", L),
+    document.querySelector("#englishPrevLine")?.addEventListener("click", () => turnPage(-1)),
+    document.querySelector("#englishNextLine")?.addEventListener("click", () => turnPage(1)),
+    document.querySelector("#englishPlayLine")?.addEventListener("click", () => B(o.readerLine, false)),
+    document.querySelector("#englishCoverImage")?.addEventListener("error", event => {
+      event.currentTarget.hidden = true;
+      document.querySelector("#englishCoverFallback").hidden = false;
+    }),
     document.querySelector("#englishLibrary")?.addEventListener("click", T),
     document
       .querySelector("#englishPrevStory")
