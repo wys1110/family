@@ -4,6 +4,7 @@
   --event-frame-line-soft: color-mix(in srgb, var(--label) 11%, transparent);
   --event-frame-footer: color-mix(in srgb, var(--event-sheet-bg) 96%, transparent);
   --event-dialog-max-height: calc(100dvh - 32px);
+  --event-body-inline: 20px;
   box-sizing: border-box;
   width: min(calc(100% - 28px), 560px);
   max-height: var(--event-dialog-max-height);
@@ -30,7 +31,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 10px 20px 12px;
+  padding: 10px var(--event-body-inline) 12px;
   scroll-padding-top: 12px;
   scrollbar-width: none;
 }
@@ -123,15 +124,11 @@ html[data-family-theme="night"] #eventDialog {
 @media (max-width: 520px) {
   #eventDialog {
     width: calc(100% - 28px);
+    --event-body-inline: 18px;
   }
 
   #eventDialog #eventForm {
     padding: 0;
-  }
-
-  #eventDialog .event-dialog-body {
-    padding-right: 18px;
-    padding-left: 18px;
   }
 
   #eventDialog .dialog-actions {
@@ -145,15 +142,11 @@ html[data-family-theme="night"] #eventDialog {
   #eventDialog {
     width: calc(100% - 20px);
     border-radius: 26px;
+    --event-body-inline: 15px;
   }
 
   #eventDialog #eventForm {
     padding: 0;
-  }
-
-  #eventDialog .event-dialog-body {
-    padding-right: 15px;
-    padding-left: 15px;
   }
 
   #eventDialog .dialog-actions {
@@ -161,4 +154,92 @@ html[data-family-theme="night"] #eventDialog {
     padding-right: 15px;
     padding-left: 15px;
   }
+}
+
+#eventDialog #eventForm.editing-event {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+#eventDialog .editing-event #eventFooterActions {
+  display: none;
+}
+
+#eventDialog .editing-event .event-dialog-body {
+  padding-top: 0;
+  scroll-padding-top: 90px;
+}
+
+#eventDialog .editing-event .event-editor-heading {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  margin: 0 calc(-1 * var(--event-body-inline)) 14px;
+  padding: 9px 17px 0;
+  border-bottom: 1px solid var(--event-frame-line-soft);
+  background: var(--event-sheet-bg);
+}
+
+#eventDialog .editing-event .sheet-handle {
+  margin: 0 auto 8px;
+}
+
+#eventDialog .editing-event #eventEditorHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "close title submit";
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 0 0 11px;
+}
+
+#eventDialog .editing-event #eventEditorHeader > div {
+  grid-area: title;
+  text-align: center;
+}
+
+#eventDialog .editing-event #eventDialogTitle {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+#eventDialog .editing-event .eyebrow {
+  margin: 0 0 2px;
+}
+
+#eventDialog .editing-event .close-button {
+  grid-area: close;
+  justify-self: start;
+  position: static;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--secondary);
+  font-size: 27px;
+}
+
+#eventDialog .editing-event #eventSubmitButton {
+  grid-area: submit;
+  justify-self: end;
+  width: auto;
+  min-width: 82px;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--blue);
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#eventDialog #deleteEventButton {
+  width: auto;
+  min-height: 44px;
+  margin: 8px 0 2px;
+  border-radius: 14px;
 }

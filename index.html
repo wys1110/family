@@ -346,10 +346,12 @@
     <dialog id="eventDialog" class="sheet-dialog">
       <form id="eventForm" method="dialog">
         <div class="event-dialog-body">
-          <div class="sheet-handle"></div>
-          <div class="dialog-header">
-            <div><p class="eyebrow">가족 일정</p><h2 id="eventDialogTitle">새 일정</h2></div>
-            <button type="button" class="close-button" data-close="eventDialog" aria-label="닫기">×</button>
+          <div class="event-editor-heading">
+            <div class="sheet-handle"></div>
+            <div class="dialog-header" id="eventEditorHeader">
+              <div><p class="eyebrow">가족 일정</p><h2 id="eventDialogTitle">새 일정</h2></div>
+              <button type="button" class="close-button" data-close="eventDialog" aria-label="닫기">×</button>
+            </div>
           </div>
           <input type="hidden" id="eventId" />
           <label class="title-field">일정 이름<input id="eventTitle" maxlength="60" placeholder="예: 도윤이 예방접종" autocomplete="off" required /></label>
@@ -375,9 +377,9 @@
           </fieldset>
           <label>메모<textarea id="eventNote" maxlength="300" rows="3" placeholder="준비물이나 장소를 적어두세요"></textarea></label>
           <p id="eventConflict" role="alert" hidden>일정이 바뀌었거나 접근 권한이 달라졌어요. 입력한 내용을 복사한 뒤 창을 닫고 최신 일정을 확인해 주세요.</p>
-        </div>
-        <div class="dialog-actions">
           <button type="button" class="danger-button" id="deleteEventButton">삭제</button>
+        </div>
+        <div class="dialog-actions" id="eventFooterActions">
           <button type="submit" class="primary-button" id="eventSubmitButton">일정 추가</button>
         </div>
       </form>
@@ -624,6 +626,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="family-auth.js?v=20261013-code-reliability-v1" data-module="family-auth"></script>
     <script src="family-data.js?v=20261018-review-performance-v1"></script>
-    <script src="app.js?v=20261126-calendar-actions-v2"></script>
+    <script src="app.js?v=20261127-event-update-header"></script>
   </body>
 </html>

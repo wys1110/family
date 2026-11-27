@@ -433,7 +433,7 @@ describe('family auth recovery', () => {
     const serviceWorker = read('service-worker.js');
 
     expect(index).toContain('<script src="family-auth.js?v=20261013-code-reliability-v1" data-module="family-auth"></script>');
-    expect(index).toContain('<script src="app.js?v=20261126-calendar-actions-v2"></script>');
+    expect(index).toContain('<script src="app.js?v=20261127-event-update-header"></script>');
     expect(config).toContain('{ name: "family-auth", version: "20261013-code-reliability-v1", style: false }');
     expect(packageJson).toContain('node --check family-auth.js');
     expect(index).toContain('<script src="config.js"></script>');
