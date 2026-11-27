@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>짝꿍 양말은 어디에? · 움직이는 동화책</title>
+  <link rel="stylesheet" href="../../../theme-critical.css?v=20261127-storybook-v1">
+  <link rel="stylesheet" href="player.css">
+  <script defer src="art.js"></script>
+  <script defer src="timing.js"></script>
+  <script defer src="player.js"></script>
+</head>
+<body>
+  <main class="book" aria-labelledby="title">
+    <header class="book-head">
+      <div class="series-row">
+        <a id="back" href="../../../index.html" aria-label="가족 앱으로 돌아가기" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>가족 앱</span>
+        </a>
+      <p class="series">
+        <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+          <path d="M12 6C8.7 3.8 5.2 3.8 2.8 5v13.4c3.1-1.2 6.1-.9 9.2 1.3 3.1-2.2 6.1-2.5 9.2-1.3V5c-2.4-1.2-5.9-1.2-9.2 1Zm0 0v13.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        움직이는 동화책
+      </p>
+      </div>
+      <h1 id="title">짝꿍 양말은 어디에?</h1>
+      <p class="original" lang="en">Where Is the Other Sock?</p>
+    </header>
+    <div class="spread">
+      <figure class="illustration">
+        <img id="book-cover" src="../../stories/milo-other-sock.webp" alt="파란 줄무늬 양말을 든 마일로" width="720" height="450">
+        <canvas id="scene" width="720" height="450" role="img" aria-label="마일로가 양말 한 짝을 들어요." hidden></canvas>
+      </figure>
+      <section class="reader" aria-label="동화 읽기">
+        <p class="page-count"><span id="page-num">1</span><span aria-hidden="true">/</span><span>7장</span></p>
+        <div class="sentences" aria-live="polite" aria-atomic="true">
+          <p id="line-ko">마일로가 양말 한 짝을 찾았어요.</p>
+          <p id="line-en" lang="en">Milo finds one sock.</p>
+        </div>
+        <div class="position" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="controls">
+          <button type="button" id="play" class="play" aria-label="한국어로 듣기">
+            <svg class="play-shape" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 4.8c-.9-.5-2 .1-2 1.1v12.2c0 1 1.1 1.6 2 1.1l10-6.1c.8-.5.8-1.7 0-2.2z" fill="currentColor"/></svg>
+            <svg class="pause-shape" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M8.5 5v14m7-14v14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>
+            <span id="play-label">한국어로 듣기</span>
+          </button>
+          <div class="pager" aria-label="직접 장 넘기기">
+            <button type="button" id="prev" aria-label="이전 장" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.4 5.4-6.5 6.6 6.5 6.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" id="next" aria-label="다음 장">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.6 5.4 6.5 6.6-6.5 6.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <p id="art-notice" role="status" hidden>움직이는 그림을 불러올 수 없어 동화 표지를 표시했어요.</p>
+        <p id="notice" role="status"></p>
+      </section>
+    </div>
+    <audio id="voice" preload="metadata" src="narration.m4a"></audio>
+  </main>
+</body>
+</html>
