@@ -275,7 +275,7 @@ body:has(#englishView.storybook-view:not([hidden])) .simple-bottom {
     grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
     column-gap: clamp(1.5rem, 4cqi, 2.5rem);
   }
-  .storybook-meta { grid-column: 1 / -1; }
+  .storybook-intro { grid-column: 1 / -1; }
   .storybook-cover { grid-column: 1; grid-row: 2 / 4; aspect-ratio: 1.5; }
   .storybook-titles { grid-column: 2; grid-row: 2; align-self: end; margin: 0 0 1.2rem; }
   .storybook-play { grid-column: 2; grid-row: 3; align-self: start; }
@@ -283,4 +283,41 @@ body:has(#englishView.storybook-view:not([hidden])) .simple-bottom {
   .storybook-reader { padding: 1.2rem 0 1.4rem; }
   .storybook-sentence #englishLineEnglish { font-size: clamp(2rem, 4.6cqi, 2.35rem); }
   .storybook-sentence #englishLineKorean { font-size: 1.2rem; color: var(--theme-story-ink); }
+}
+
+/* The book cover remains underneath while the illustrated scene loads. */
+#englishView #englishMotionCanvas:not([hidden]) {
+  display: block;
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+#englishView #englishMotionToggle:not([hidden]) {
+  position: absolute;
+  right: .5rem;
+  bottom: .5rem;
+  z-index: 1;
+  min-height: 44px;
+  padding: .4rem .8rem;
+  border: 1px solid var(--theme-story-rule);
+  border-radius: 1.5rem;
+  background: var(--theme-story-paper) !important;
+  color: var(--theme-story-ink) !important;
+  font-size: .8rem;
+  font-weight: 650;
+}
+#englishView #englishOpenMotionBook:not([hidden]) {
+  width: 100%;
+  padding: .35rem 0;
+  margin: 0 0 .45rem;
+  border: 0;
+  border-bottom: 1px solid var(--theme-story-rule);
+  background: transparent !important;
+  color: var(--theme-story-action) !important;
+  text-align: start;
+}
+#englishView :is(#englishMotionCanvas, #englishMotionToggle, #englishOpenMotionBook, #englishNarratedMotionBook)[hidden] {
+  display: none !important;
 }
